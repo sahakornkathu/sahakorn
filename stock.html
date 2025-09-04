@@ -4,37 +4,31 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ระบบบันทึกออเดอร์</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/supabase.min.js"></script>
+  <script src="https://unpkg.com/@supabase/supabase-js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
   <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6">
     <h2 class="text-2xl font-bold text-center mb-6">📋 ระบบบันทึกออเดอร์</h2>
 
-    <!-- ฟอร์มบันทึกออเดอร์ -->
+    <!-- ฟอร์ม -->
     <form id="orderForm" class="space-y-4">
       <div>
         <label class="block text-sm font-medium text-gray-700">เลือกลูกค้า</label>
         <select id="customer" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"></select>
       </div>
+
       <div>
         <label class="block text-sm font-medium text-gray-700">ราคา</label>
         <input type="number" id="price" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
       </div>
+
       <button type="submit" class="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition">บันทึกออเดอร์</button>
     </form>
 
     <p id="status" class="text-center text-sm mt-4 text-gray-600"></p>
 
-    <!-- กรองลูกค้า -->
-    <div class="mt-4">
-      <label class="block text-sm font-medium text-gray-700">กรองตามลูกค้า</label>
-      <select id="filterCustomer" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
-        <option value="">ทั้งหมด</option>
-      </select>
-    </div>
-
-    <!-- ตารางออเดอร์ -->
+    <!-- ตารางแสดงออเดอร์ -->
     <h3 class="text-lg font-semibold mt-8 mb-3">📊 รายการออเดอร์ล่าสุด</h3>
     <div class="overflow-x-auto">
       <table class="w-full text-sm border-collapse">
@@ -44,16 +38,15 @@
             <th class="border p-2">กลุ่ม</th>
             <th class="border p-2">ราคา</th>
             <th class="border p-2">เวลา</th>
-            <th class="border p-2">จัดการ</th>
           </tr>
         </thead>
         <tbody id="orderTable"></tbody>
       </table>
     </div>
-    <p id="totalSales" class="text-right font-bold mt-2">ยอดรวม: 0 บาท</p>
   </div>
 
   <script>
+    // 🔑 ตั้งค่า Supabase ของคุณ
     const SUPABASE_URL = "https://fxbcdfjsimnecrpsosov.supabase.co";
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ4YmNkZmpzaW1uZWNycHNvc292Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwODg4NjAsImV4cCI6MjA3MTY2NDg2MH0.3hWqTZfuj_lmJ3uKdx_1cas8nQEdRJ8e08l0EWJcN7w"; // ใช้ anon key
     const { createClient } = supabase;
@@ -62,74 +55,35 @@
     // โหลดลูกค้า
     async function loadCustomers() {
       const { data, error } = await db.from("customers").select("*").order("name");
-      const select = document.getElementById("customer");
-      const filter = document.getElementById("filterCustomer");
-      select.innerHTML = "";
-      filter.innerHTML = '<option value="">ทั้งหมด</option>';
-
       if (error) return console.error(error);
-      if (!data || data.length === 0) {
-        select.innerHTML = '<option value="">ไม่มีลูกค้า</option>';
-        return;
-      }
 
+      const select = document.getElementById("customer");
+      select.innerHTML = "";
       data.forEach(c => {
         const option = document.createElement("option");
         option.value = JSON.stringify(c);
         option.textContent = `${c.name} (${c.group})`;
         select.appendChild(option);
-
-        const optionFilter = document.createElement("option");
-        optionFilter.value = c.userId;
-        optionFilter.textContent = `${c.name} (${c.group})`;
-        filter.appendChild(optionFilter);
       });
     }
 
-    // เพิ่มแถวออเดอร์
-    function addOrderRow(o) {
-      const table = document.getElementById("orderTable");
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td class="border p-2">${o.name}</td>
-        <td class="border p-2">${o.group}</td>
-        <td class="border p-2">${o.price}</td>
-        <td class="border p-2">${new Date(o.created_at).toLocaleString()}</td>
-        <td class="border p-2">
-          <button class="bg-red-500 text-white px-2 py-1 rounded" onclick='deleteOrder("${o.id}")'>ลบ</button>
-        </td>
-      `;
-      table.prepend(tr);
-    }
-
-    // โหลดออเดอร์
+    // โหลดรายการออเดอร์
     async function loadOrders() {
-      let query = db.from("orders").select("*").order("created_at", { ascending: false }).limit(50);
-      const filterUserId = document.getElementById("filterCustomer").value;
-      if (filterUserId) query = query.eq("userId", filterUserId);
-
-      const { data, error } = await query;
+      const { data, error } = await db.from("orders").select("*").order("created_at", { ascending: false }).limit(10);
       if (error) return console.error(error);
 
       const table = document.getElementById("orderTable");
       table.innerHTML = "";
-      data.forEach(o => addOrderRow(o));
-
-      updateTotalSales(data);
-    }
-
-    // ลบออเดอร์
-    async function deleteOrder(id) {
-      if (!confirm("ต้องการลบออเดอร์นี้ใช่หรือไม่?")) return;
-      const { error } = await db.from("orders").delete().eq("id", id);
-      if (error) return alert("ลบไม่สำเร็จ: " + error.message);
-      loadOrders();
-    }
-
-    // อัปเดตยอดรวม
-    function updateTotalSales(data) {
-      const total = data.reduce((sum, o) => sum + Number(o.price), 0);
-      document.getElementById("totalSales").innerText = `ยอดรวม: ${total} บาท`;
+      data.forEach(o => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td class="border p-2">${o.name}</td>
+          <td class="border p-2">${o.group}</td>
+          <td class="border p-2">${o.price}</td>
+          <td class="border p-2">${new Date(o.created_at).toLocaleString()}</td>
+        `;
+        table.appendChild(tr);
+      });
     }
 
     // ฟอร์ม submit
@@ -137,6 +91,7 @@
       e.preventDefault();
       const customer = JSON.parse(document.getElementById("customer").value);
       const price = Number(document.getElementById("price").value);
+
       document.getElementById("status").innerText = "⏳ กำลังบันทึก...";
 
       const { error } = await db.from("orders").insert([{
@@ -159,9 +114,6 @@
     // โหลดข้อมูลตอนเปิดเว็บ
     loadCustomers();
     loadOrders();
-
-    // กรองลูกค้า
-    document.getElementById("filterCustomer").addEventListener("change", loadOrders);
   </script>
 </body>
 </html>
