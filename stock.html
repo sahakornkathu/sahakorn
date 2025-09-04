@@ -49,13 +49,13 @@
 
   <script>
     // 🔑 Supabase
-    const SUPABASE_URL = "https://YOUR_PROJECT.supabase.co";
-    const SUPABASE_KEY = "YOUR_PUBLIC_ANON_KEY";
+    const SUPABASE_URL = "https://fxbcdfjsimnecrpsosov.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ4YmNkZmpzaW1uZWNycHNvc292Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwODg4NjAsImV4cCI6MjA3MTY2NDg2MH0.3hWqTZfuj_lmJ3uKdx_1cas8nQEdRJ8e08l0EWJcN7w";
     const { createClient } = supabase;
     const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
     // 🔑 LINE Token
-    const LINE_TOKEN = "YOUR_LINE_CHANNEL_ACCESS_TOKEN";
+    const LINE_TOKEN = "3gFA+FtaM96UAfFmwRLs0OjFUwLZ8UlAAJ+NnbtNO7VputhmRICoT/MzWYwr3fbrs+rTiVQuHlU1xbQiLPir/rT+Kq7AxduRR0Oz3iYxB8xsj8WjQtzM2jrnEhig+utjOFXq0UoH0tDAwn6ujdTDPgdB04t89/1O/w1cDnyilFU=";
 
     // โหลดลูกค้า
     async function loadCustomers() {
