@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>บันทึกข้อมูลเข้า Supabase</title>
+  <script src="https://unpkg.com/@supabase/supabase-js"></script>
+</head>
+<body style="font-family: sans-serif; padding: 20px;">
+  <h2>ฟอร์มบันทึกข้อมูล</h2>
+  <form id="dataForm">
+    <label>ชื่อ: </label><br>
+    <input type="text" id="name" required style="width: 100%; padding: 8px; margin: 5px 0;"><br>
+
+    <label>เบอร์โทร: </label><br>
+    <input type="text" id="phone" required style="width: 100%; padding: 8px; margin: 5px 0;"><br>
+
+    <button type="submit" style="padding: 10px 20px; margin-top: 10px;">บันทึก</button>
+  </form>
+
+  <p id="status"></p>
+
+  <script>
+    // 🔑 ตั้งค่า Supabase ของคุณ
+    const SUPABASE_URL = "https://fxbcdfjsimnecrpsosov.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ4YmNkZmpzaW1uZWNycHNvc292Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwODg4NjAsImV4cCI6MjA3MTY2NDg2MH0.3hWqTZfuj_lmJ3uKdx_1cas8nQEdRJ8e08l0EWJcN7w"; // ห้ามใช้ service_role key
+    const { createClient } = supabase;
+    const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // จัดการฟอร์ม
+    document.getElementById("dataForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const name = document.getElementById("name").value;
+      const phone = document.getElementById("phone").value;
+
+      document.getElementById("status").innerText = "⏳ กำลังบันทึก...";
+
+      const { data, error } = await db
+        .from("users") // 🔹 ชื่อตารางใน Supabase
+        .insert([
+          { name: name, phone: phone, created_at: new Date().toISOString() }
+        ]);
+
+      if (error) {
+        console.error(error);
+        document.getElementById("status").innerText = "❌ บันทึกไม่สำเร็จ: " + error.message;
+      } else {
+        document.getElementById("status").innerText = "✅ บันทึกสำเร็จ!";
+        document.getElementById("dataForm").reset();
+      }
+    });
+  </script>
+</body>
+</html>
