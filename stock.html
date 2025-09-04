@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ระบบบันทึกออเดอร์</title>
+  <title>ระบบบันทึกออเดอร์ Realtime</title>
   <script src="https://unpkg.com/@supabase/supabase-js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
   <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6">
-    <h2 class="text-2xl font-bold text-center mb-6">📋 ระบบบันทึกออเดอร์</h2>
+    <h2 class="text-2xl font-bold text-center mb-6">📋 ระบบบันทึกออเดอร์ Realtime</h2>
 
     <!-- ฟอร์ม -->
     <form id="orderForm" class="space-y-4">
@@ -46,9 +46,8 @@
   </div>
 
   <script>
-    // 🔑 ตั้งค่า Supabase ของคุณ
     const SUPABASE_URL = "https://fxbcdfjsimnecrpsosov.supabase.co";
-    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ4YmNkZmpzaW1uZWNycHNvc292Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwODg4NjAsImV4cCI6MjA3MTY2NDg2MH0.3hWqTZfuj_lmJ3uKdx_1cas8nQEdRJ8e08l0EWJcN7w"; // ใช้ anon key
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ4YmNkZmpzaW1uZWNycHNvc292Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwODg4NjAsImV4cCI6MjA3MTY2NDg2MH0.3hWqTZfuj_lmJ3uKdx_1cas8nQEdRJ8e08l0EWJcN7w";
     const { createClient } = supabase;
     const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -67,23 +66,27 @@
       });
     }
 
-    // โหลดรายการออเดอร์
+    // โหลดออเดอร์ล่าสุด
     async function loadOrders() {
       const { data, error } = await db.from("orders").select("*").order("created_at", { ascending: false }).limit(10);
       if (error) return console.error(error);
 
       const table = document.getElementById("orderTable");
       table.innerHTML = "";
-      data.forEach(o => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td class="border p-2">${o.name}</td>
-          <td class="border p-2">${o.group}</td>
-          <td class="border p-2">${o.price}</td>
-          <td class="border p-2">${new Date(o.created_at).toLocaleString()}</td>
-        `;
-        table.appendChild(tr);
-      });
+      data.forEach(o => addOrderRow(o));
+    }
+
+    // ฟังก์ชันเพิ่มแถวออเดอร์
+    function addOrderRow(o) {
+      const table = document.getElementById("orderTable");
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td class="border p-2">${o.name}</td>
+        <td class="border p-2">${o.group}</td>
+        <td class="border p-2">${o.price}</td>
+        <td class="border p-2">${new Date(o.created_at).toLocaleString()}</td>
+      `;
+      table.prepend(tr); // เพิ่มบนสุด
     }
 
     // ฟอร์ม submit
@@ -107,13 +110,17 @@
       } else {
         document.getElementById("status").innerText = "✅ บันทึกออเดอร์สำเร็จ!";
         document.getElementById("orderForm").reset();
-        loadOrders();
       }
     });
 
     // โหลดข้อมูลตอนเปิดเว็บ
     loadCustomers();
     loadOrders();
+
+    // Realtime subscription
+    db.from("orders").on("INSERT", payload => {
+      addOrderRow(payload.new);
+    }).subscribe();
   </script>
 </body>
 </html>
