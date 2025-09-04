@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ระบบบันทึกออเดอร์ Realtime</title>
-  <script src="https://unpkg.com/@supabase/supabase-js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/supabase.min.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
@@ -48,7 +48,7 @@
   <script>
     // 🔑 ตั้งค่า Supabase ของคุณ
     const SUPABASE_URL = "https://fxbcdfjsimnecrpsosov.supabase.co";
-    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ4YmNkZmpzaW1uZWNycHNvc292Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwODg4NjAsImV4cCI6MjA3MTY2NDg2MH0.3hWqTZfuj_lmJ3uKdx_1cas8nQEdRJ8e08l0EWJcN7w"; // ต้องใช้ anon key
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ4YmNkZmpzaW1uZWNycHNvc292Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwODg4NjAsImV4cCI6MjA3MTY2NDg2MH0.3hWqTZfuj_lmJ3uKdx_1cas8nQEdRJ8e08l0EWJcN7w"; // ใช้ anon key
     const { createClient } = supabase;
     const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -56,8 +56,6 @@
     async function loadCustomers() {
       const { data, error } = await db.from("customers").select("*").order("name");
       if (error) return console.error("Load customers error:", error);
-
-      console.log("Customers:", data);
 
       const select = document.getElementById("customer");
       select.innerHTML = "";
@@ -120,10 +118,12 @@
     loadCustomers();
     loadOrders();
 
-    // Realtime subscription
-    db.from("orders").on("INSERT", payload => {
-      addOrderRow(payload.new);
-    }).subscribe();
+    // 🔹 Realtime subscription (Supabase JS v2)
+    db.channel('public:orders')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, payload => {
+        addOrderRow(payload.new);
+      })
+      .subscribe();
   </script>
 </body>
 </html>
