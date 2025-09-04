@@ -4,70 +4,68 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>บันทึกข้อมูลผู้ใช้</title>
-    <style>
-        body { font-family: Arial, sans-serif; padding: 20px; }
-        .form-container { max-width: 500px; margin: auto; padding: 20px; border: 1px solid #ccc; border-radius: 8px; }
-        label, input, button { display: block; margin-bottom: 10px; width: 100%; }
-        input { padding: 8px; box-sizing: border-box; }
-        button { padding: 10px; background-color: #4CAF50; color: white; border: none; cursor: pointer; }
-    </style>
 </head>
 <body>
 
-    <div class="form-container">
-        <h2>บันทึกข้อมูลผู้ใช้</h2>
-        <form id="profileForm">
-            <label for="prefixInput">คำนำหน้า:</label>
-            <input type="text" id="prefixInput" name="prefix" required>
+    <h2>บันทึกข้อมูลผู้ใช้</h2>
+    <form id="profileForm">
+        <label for="prefixInput">คำนำหน้า:</label>
+        <input type="text" id="prefixInput" name="prefix" required>
 
-            <label for="nameInput">ชื่อ:</label>
-            <input type="text" id="nameInput" name="name" required>
+        <label for="nameInput">ชื่อ:</label>
+        <input type="text" id="nameInput" name="name" required>
 
-            <label for="lastnameInput">นามสกุล:</label>
-            <input type="text" id="lastnameInput" name="lastname" required>
+        <label for="lastnameInput">นามสกุล:</label>
+        <input type="text" id="lastnameInput" name="lastname" required>
 
-            <label for="groupInput">กลุ่ม:</label>
-            <input type="text" id="groupInput" name="group" required>
+        <label for="groupInput">กลุ่ม:</label>
+        <input type="text" id="groupInput" name="group" required>
 
-            <button type="submit">บันทึกข้อมูล</button>
-        </form>
-        <p id="statusMessage"></p>
-    </div>
+        <button type="submit">บันทึกข้อมูล</button>
+    </form>
+    <p id="statusMessage"></p>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        // ใส่ URL และ Public Key ของ Supabase ของคุณที่นี่
+        // แก้ไขชื่อตัวแปรให้ชัดเจนขึ้น
         const SUPABASE_URL = 'https://fxbcdfjsimnecrpsosov.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ4YmNkZmpzaW1uZWNycHNvc292Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwODg4NjAsImV4cCI6MjA3MTY2NDg2MH0.3hWqTZfuj_lmJ3uKdx_1cas8nQEdRJ8e08l0EWJcN7w';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ4YmNkZmpzaW1uZWNycHNvc292Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwODg4NjAsImV4cCI6MjA3MTY2NDg2MH0.3hWqTZfuj_lmJ3uKdx_1cas8nQEdRJ8e08l0EWJcN7w'; 
         
-        // สร้าง client เพื่อเชื่อมต่อกับ Supabase
-        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        // ตรวจสอบให้แน่ใจว่าใช้ createClient อย่างถูกต้อง
+        const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // ดึงฟอร์มและปุ่มจาก DOM
+        const profileForm = document.getElementById('profileForm');
+        const statusMessage = document.getElementById('statusMessage');
 
         // ฟังก์ชันสำหรับบันทึกข้อมูล
-        async function saveUserProfile(profileData) {
-            const { data, error } = await supabase
-                .from('profile') // ชื่อตารางของคุณ
-                .insert([profileData])
-                .select();
-            
-            const statusMessage = document.getElementById('statusMessage');
+        const saveUserProfile = async (profileData) => {
+            // ใช้ try-catch เพื่อดักจับข้อผิดพลาด
+            try {
+                // แก้ไขการเรียกใช้ .from() และ .insert() ให้ถูกต้อง
+                const { data, error } = await supabase
+                    .from('profile') 
+                    .insert([profileData])
+                    .select();
+                
+                if (error) {
+                    throw error; // ส่งข้อผิดพลาดไปที่ catch
+                }
 
-            if (error) {
-                console.error('Error saving data:', error);
-                statusMessage.textContent = 'เกิดข้อผิดพลาดในการบันทึกข้อมูล';
+                console.log('บันทึกข้อมูลสำเร็จ:', data);
+                statusMessage.textContent = 'บันทึกข้อมูลสำเร็จแล้ว!';
+                statusMessage.style.color = 'green';
+                profileForm.reset(); // รีเซ็ตฟอร์ม
+                
+            } catch (error) {
+                console.error('เกิดข้อผิดพลาด:', error.message);
+                statusMessage.textContent = `เกิดข้อผิดพลาด: ${error.message}`;
                 statusMessage.style.color = 'red';
-                return;
             }
-
-            console.log('Data saved successfully:', data);
-            statusMessage.textContent = 'บันทึกข้อมูลสำเร็จแล้ว!';
-            statusMessage.style.color = 'green';
-            // รีเซ็ตฟอร์มหลังจากบันทึกสำเร็จ
-            document.getElementById('profileForm').reset();
-        }
+        };
 
         // เพิ่ม Event Listener ให้กับฟอร์ม
-        document.getElementById('profileForm').addEventListener('submit', function(event) {
+        profileForm.addEventListener('submit', (event) => {
             event.preventDefault(); // ป้องกันการรีโหลดหน้าเว็บ
 
             const profileData = {
@@ -77,9 +75,9 @@
                 group: document.getElementById('groupInput').value
             };
 
+            // เรียกใช้ฟังก์ชันบันทึกข้อมูล
             saveUserProfile(profileData);
         });
     </script>
-
 </body>
 </html>
