@@ -46,15 +46,18 @@
   </div>
 
   <script>
-    const SUPABASE_URL = "https://fxbcdfjsimnecrpsosov.supabase.co";
-    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ4YmNkZmpzaW1uZWNycHNvc292Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwODg4NjAsImV4cCI6MjA3MTY2NDg2MH0.3hWqTZfuj_lmJ3uKdx_1cas8nQEdRJ8e08l0EWJcN7w";
+    // 🔑 ตั้งค่า Supabase ของคุณ
+    const SUPABASE_URL = "https://YOUR_PROJECT.supabase.co";
+    const SUPABASE_KEY = "YOUR_PUBLIC_ANON_KEY"; // ต้องใช้ anon key
     const { createClient } = supabase;
     const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
     // โหลดลูกค้า
     async function loadCustomers() {
       const { data, error } = await db.from("customers").select("*").order("name");
-      if (error) return console.error(error);
+      if (error) return console.error("Load customers error:", error);
+
+      console.log("Customers:", data);
 
       const select = document.getElementById("customer");
       select.innerHTML = "";
@@ -64,16 +67,6 @@
         option.textContent = `${c.name} (${c.group})`;
         select.appendChild(option);
       });
-    }
-
-    // โหลดออเดอร์ล่าสุด
-    async function loadOrders() {
-      const { data, error } = await db.from("orders").select("*").order("created_at", { ascending: false }).limit(10);
-      if (error) return console.error(error);
-
-      const table = document.getElementById("orderTable");
-      table.innerHTML = "";
-      data.forEach(o => addOrderRow(o));
     }
 
     // ฟังก์ชันเพิ่มแถวออเดอร์
@@ -87,6 +80,16 @@
         <td class="border p-2">${new Date(o.created_at).toLocaleString()}</td>
       `;
       table.prepend(tr); // เพิ่มบนสุด
+    }
+
+    // โหลดรายการออเดอร์ล่าสุด
+    async function loadOrders() {
+      const { data, error } = await db.from("orders").select("*").order("created_at", { ascending: false }).limit(10);
+      if (error) return console.error("Load orders error:", error);
+
+      const table = document.getElementById("orderTable");
+      table.innerHTML = "";
+      data.forEach(o => addOrderRow(o));
     }
 
     // ฟอร์ม submit
@@ -105,7 +108,7 @@
       }]);
 
       if (error) {
-        console.error(error);
+        console.error("Insert error:", error);
         document.getElementById("status").innerText = "❌ บันทึกไม่สำเร็จ: " + error.message;
       } else {
         document.getElementById("status").innerText = "✅ บันทึกออเดอร์สำเร็จ!";
