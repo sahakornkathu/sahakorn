@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ระบบบันทึกออเดอร์</title>
-  <script src="https://unpkg.com/@supabase/supabase-js"></script>
+  <title>ระบบบันทึกออเดอร์ + ส่ง Flex Message</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/supabase.min.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
@@ -27,30 +27,17 @@
     </form>
 
     <p id="status" class="text-center text-sm mt-4 text-gray-600"></p>
-
-    <!-- ตารางแสดงออเดอร์ -->
-    <h3 class="text-lg font-semibold mt-8 mb-3">📊 รายการออเดอร์ล่าสุด</h3>
-    <div class="overflow-x-auto">
-      <table class="w-full text-sm border-collapse">
-        <thead>
-          <tr class="bg-gray-200">
-            <th class="border p-2">ลูกค้า</th>
-            <th class="border p-2">กลุ่ม</th>
-            <th class="border p-2">ราคา</th>
-            <th class="border p-2">เวลา</th>
-          </tr>
-        </thead>
-        <tbody id="orderTable"></tbody>
-      </table>
-    </div>
   </div>
 
   <script>
-    // 🔑 ตั้งค่า Supabase ของคุณ
+    // 🔑 Supabase
     const SUPABASE_URL = "https://fxbcdfjsimnecrpsosov.supabase.co";
-    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ4YmNkZmpzaW1uZWNycHNvc292Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwODg4NjAsImV4cCI6MjA3MTY2NDg2MH0.3hWqTZfuj_lmJ3uKdx_1cas8nQEdRJ8e08l0EWJcN7w"; // ใช้ anon key
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ4YmNkZmpzaW1uZWNycHNvc292Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwODg4NjAsImV4cCI6MjA3MTY2NDg2MH0.3hWqTZfuj_lmJ3uKdx_1cas8nQEdRJ8e08l0EWJcN7w";
     const { createClient } = supabase;
     const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // 🔑 LINE Channel Access Token
+    const LINE_TOKEN = "3gFA+FtaM96UAfFmwRLs0OjFUwLZ8UlAAJ+NnbtNO7VputhmRICoT/MzWYwr3fbrs+rTiVQuHlU1xbQiLPir/rT+Kq7AxduRR0Oz3iYxB8xsj8WjQtzM2jrnEhig+utjOFXq0UoH0tDAwn6ujdTDPgdB04t89/1O/w1cDnyilFU=";
 
     // โหลดลูกค้า
     async function loadCustomers() {
@@ -67,22 +54,35 @@
       });
     }
 
-    // โหลดรายการออเดอร์
-    async function loadOrders() {
-      const { data, error } = await db.from("orders").select("*").order("created_at", { ascending: false }).limit(10);
-      if (error) return console.error(error);
+    // ส่ง Flex Message
+    async function sendFlexMessage(userId, price, name) {
+      const flexMessage = {
+        type: "flex",
+        altText: "📋 ออเดอร์ใหม่",
+        contents: {
+          type: "bubble",
+          body: {
+            type: "box",
+            layout: "vertical",
+            contents: [
+              { type: "text", text: `สวัสดี ${name}`, weight: "bold", size: "lg" },
+              { type: "text", text: `ออเดอร์ของคุณ: ${price} บาท`, size: "md" },
+              { type: "text", text: "ขอบคุณที่ใช้บริการ!", size: "sm", color: "#888888" }
+            ]
+          }
+        }
+      };
 
-      const table = document.getElementById("orderTable");
-      table.innerHTML = "";
-      data.forEach(o => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td class="border p-2">${o.name}</td>
-          <td class="border p-2">${o.group}</td>
-          <td class="border p-2">${o.price}</td>
-          <td class="border p-2">${new Date(o.created_at).toLocaleString()}</td>
-        `;
-        table.appendChild(tr);
+      await fetch("https://api.line.me/v2/bot/message/push", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${LINE_TOKEN}`
+        },
+        body: JSON.stringify({
+          to: userId,
+          messages: [flexMessage]
+        })
       });
     }
 
@@ -94,6 +94,7 @@
 
       document.getElementById("status").innerText = "⏳ กำลังบันทึก...";
 
+      // บันทึกออเดอร์ลง Supabase
       const { error } = await db.from("orders").insert([{
         userId: customer.userId,
         name: customer.name,
@@ -107,13 +108,14 @@
       } else {
         document.getElementById("status").innerText = "✅ บันทึกออเดอร์สำเร็จ!";
         document.getElementById("orderForm").reset();
-        loadOrders();
+
+        // ส่ง Flex Message ไปหา LINE User
+        sendFlexMessage(customer.userId, price, customer.name).catch(console.error);
       }
     });
 
-    // โหลดข้อมูลตอนเปิดเว็บ
+    // โหลดลูกค้าตอนเปิดเว็บ
     loadCustomers();
-    loadOrders();
   </script>
 </body>
 </html>
