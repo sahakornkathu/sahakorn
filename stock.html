@@ -1,175 +1,125 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ระบบบันทึกออเดอร์ + Flex Message</title>
+  <title>Supabase Profile & Order</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/supabase.min.js"></script>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    form { margin-bottom: 30px; }
+    input, select { margin-bottom: 10px; padding: 5px; width: 200px; }
+    button { padding: 5px 10px; }
+    p { font-weight: bold; }
+  </style>
 </head>
-<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
-  <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6">
-    <h2 class="text-2xl font-bold text-center mb-6">📋 ระบบบันทึกออเดอร์</h2>
+<body>
 
-    <!-- ฟอร์มบันทึกออเดอร์ -->
-    <form id="orderForm" class="space-y-4">
-      <div>
-        <label class="block text-sm font-medium text-gray-700">เลือกลูกค้า</label>
-        <select id="customer" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
-          <option>กำลังโหลดลูกค้า...</option>
-        </select>
-      </div>
+<h2>เพิ่มผู้ใช้ (Profile)</h2>
+<form id="profileForm">
+  <input type="text" id="userId" placeholder="User ID" required><br>
+  <input type="text" id="prefix" placeholder="คำนำหน้า"><br>
+  <input type="text" id="name" placeholder="ชื่อ" required><br>
+  <input type="text" id="lastname" placeholder="นามสกุล" required><br>
+  <input type="text" id="group" placeholder="กลุ่ม/แผนก"><br>
+  <button type="submit">บันทึกผู้ใช้</button>
+</form>
+<p id="profileStatus"></p>
 
-      <div>
-        <label class="block text-sm font-medium text-gray-700">ราคา</label>
-        <input type="number" id="price" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
-      </div>
+<hr>
 
-      <button type="submit" class="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition">บันทึกออเดอร์</button>
-    </form>
+<h2>สร้างคำสั่งซื้อ (Order)</h2>
+<form id="orderForm">
+  <select id="userSelect" required>
+    <option value="">เลือกผู้ใช้</option>
+  </select><br>
+  <input type="number" id="price" placeholder="ราคา" required><br>
+  <button type="submit">บันทึก Order</button>
+</form>
+<p id="orderStatus"></p>
 
-    <p id="status" class="text-center text-sm mt-4 text-gray-600"></p>
+<script>
+  // 1. ใส่ URL และ ANON KEY ของ Supabase
+  const supabaseUrl = "https://fxbcdfjsimnecrpsosov.supabase.co";
+  const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ4YmNkZmpzaW1uZWNycHNvc292Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwODg4NjAsImV4cCI6MjA3MTY2NDg2MH0.3hWqTZfuj_lmJ3uKdx_1cas8nQEdRJ8e08l0EWJcN7w";
+  const supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
-    <!-- ตารางแสดงออเดอร์ -->
-    <h3 class="text-lg font-semibold mt-8 mb-3">📊 รายการออเดอร์ล่าสุด</h3>
-    <div class="overflow-x-auto">
-      <table class="w-full text-sm border-collapse">
-        <thead>
-          <tr class="bg-gray-200">
-            <th class="border p-2">ลูกค้า</th>
-            <th class="border p-2">กลุ่ม</th>
-            <th class="border p-2">ราคา</th>
-            <th class="border p-2">เวลา</th>
-          </tr>
-        </thead>
-        <tbody id="orderTable"></tbody>
-      </table>
-    </div>
-  </div>
+  const profileForm = document.getElementById("profileForm");
+  const profileStatus = document.getElementById("profileStatus");
+  const orderForm = document.getElementById("orderForm");
+  const orderStatus = document.getElementById("orderStatus");
+  const userSelect = document.getElementById("userSelect");
 
-  <script>
-    // 🔑 Supabase
-    const SUPABASE_URL = "https://fxbcdfjsimnecrpsosov.supabase.co";
-    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ4YmNkZmpzaW1uZWNycHNvc292Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwODg4NjAsImV4cCI6MjA3MTY2NDg2MH0.3hWqTZfuj_lmJ3uKdx_1cas8nQEdRJ8e08l0EWJcN7w";
-    const { createClient } = supabase;
-    const db = createClient(SUPABASE_URL, SUPABASE_KEY);
-
-    // 🔑 LINE Token
-    const LINE_TOKEN = "3gFA+FtaM96UAfFmwRLs0OjFUwLZ8UlAAJ+NnbtNO7VputhmRICoT/MzWYwr3fbrs+rTiVQuHlU1xbQiLPir/rT+Kq7AxduRR0Oz3iYxB8xsj8WjQtzM2jrnEhig+utjOFXq0UoH0tDAwn6ujdTDPgdB04t89/1O/w1cDnyilFU=";
-
-    // โหลดลูกค้า
-    async function loadCustomers() {
-      const select = document.getElementById("customer");
-      select.innerHTML = "<option>กำลังโหลดลูกค้า...</option>";
-
-      try {
-        const { data, error } = await db.from("customers").select("*").order("name");
-        if (error) throw error;
-        if (!data || data.length === 0) {
-          select.innerHTML = "<option>ไม่มีลูกค้า</option>";
-          return;
-        }
-
-        select.innerHTML = "";
-        data.forEach(c => {
-          const option = document.createElement("option");
-          option.value = JSON.stringify(c);
-          option.textContent = `${c.name} (${c.group})`;
-          select.appendChild(option);
-        });
-      } catch (err) {
-        console.error("❌ Load customers failed:", err);
-        select.innerHTML = "<option>โหลดลูกค้าไม่สำเร็จ</option>";
-      }
-    }
-
-    // โหลดออเดอร์
-    async function loadOrders() {
-      try {
-        const { data, error } = await db.from("orders").select("*").order("created_at", { ascending: false }).limit(10);
-        if (error) throw error;
-
-        const table = document.getElementById("orderTable");
-        table.innerHTML = "";
-        data.forEach(o => {
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td class="border p-2">${o.name}</td>
-            <td class="border p-2">${o.group}</td>
-            <td class="border p-2">${o.price}</td>
-            <td class="border p-2">${new Date(o.created_at).toLocaleString()}</td>
-          `;
-          table.appendChild(tr);
-        });
-      } catch (err) {
-        console.error("❌ Load orders failed:", err);
-      }
-    }
-
-    // ส่ง Flex Message ไปหา LINE User
-    async function sendFlexMessage(userId, price, name) {
-      const flexMessage = {
-        type: "flex",
-        altText: "📋 ออเดอร์ใหม่",
-        contents: {
-          type: "bubble",
-          body: {
-            type: "box",
-            layout: "vertical",
-            contents: [
-              { type: "text", text: `สวัสดี ${name}`, weight: "bold", size: "lg" },
-              { type: "text", text: `ออเดอร์ของคุณ: ${price} บาท`, size: "md" },
-              { type: "text", text: "ขอบคุณที่ใช้บริการ!", size: "sm", color: "#888888" }
-            ]
-          }
-        }
-      };
-
-      await fetch("https://api.line.me/v2/bot/message/push", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${LINE_TOKEN}`
-        },
-        body: JSON.stringify({
-          to: userId,
-          messages: [flexMessage]
-        })
+  // ฟังก์ชันโหลดผู้ใช้ไปยัง select
+  async function loadUsers() {
+    const { data, error } = await supabase.from("profile").select("*");
+    if (!error) {
+      userSelect.innerHTML = '<option value="">เลือกผู้ใช้</option>';
+      data.forEach(user => {
+        const option = document.createElement("option");
+        option.value = user.userId;
+        option.textContent = `${user.prefix || ''} ${user.name} ${user.lastname} (${user.group || ''})`;
+        userSelect.appendChild(option);
       });
     }
+  }
 
-    // ฟอร์ม submit
-    document.getElementById("orderForm").addEventListener("submit", async e => {
-      e.preventDefault();
-      const customer = JSON.parse(document.getElementById("customer").value);
-      const price = Number(document.getElementById("price").value);
+  loadUsers();
 
-      document.getElementById("status").innerText = "⏳ กำลังบันทึก...";
+  // 2. บันทึก Profile
+  profileForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const userId = document.getElementById("userId").value;
+    const prefix = document.getElementById("prefix").value;
+    const name = document.getElementById("name").value;
+    const lastname = document.getElementById("lastname").value;
+    const group = document.getElementById("group").value;
 
-      try {
-        const { error } = await db.from("orders").insert([{
-          userId: customer.userId,
-          name: customer.name,
-          group: customer.group,
-          price: price
-        }]);
-        if (error) throw error;
+    const { data, error } = await supabase.from("profile").insert([{ userId, prefix, name, lastname, group }]);
+    if (error) {
+      profileStatus.textContent = "เกิดข้อผิดพลาด: " + error.message;
+      profileStatus.style.color = "red";
+    } else {
+      profileStatus.textContent = "บันทึกผู้ใช้สำเร็จ!";
+      profileStatus.style.color = "green";
+      profileForm.reset();
+      loadUsers(); // รีโหลดผู้ใช้ใน select
+    }
+  });
 
-        document.getElementById("status").innerText = "✅ บันทึกออเดอร์สำเร็จ!";
-        document.getElementById("orderForm").reset();
-        loadOrders();
+  // 3. บันทึก Order
+  orderForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const userId = userSelect.value;
+    const price = parseFloat(document.getElementById("price").value);
 
-        // ส่ง Flex Message
-        await sendFlexMessage(customer.userId, price, customer.name);
-      } catch (err) {
-        console.error("❌ Save order failed:", err);
-        document.getElementById("status").innerText = "❌ บันทึกไม่สำเร็จ";
-      }
-    });
+    if (!userId) {
+      orderStatus.textContent = "กรุณาเลือกผู้ใช้";
+      orderStatus.style.color = "red";
+      return;
+    }
 
-    // โหลดข้อมูลตอนเปิดเว็บ
-    loadCustomers();
-    loadOrders();
-  </script>
+    // ดึงข้อมูลผู้ใช้จาก profile
+    const { data: userData, error: userError } = await supabase.from("profile").select("*").eq("userId", userId).single();
+    if (userError || !userData) {
+      orderStatus.textContent = "ไม่พบผู้ใช้";
+      orderStatus.style.color = "red";
+      return;
+    }
+
+    const { prefix, name, lastname, group } = userData;
+
+    const { data, error } = await supabase.from("Order").insert([{ userId, prefix, name, lastname, "group": group, price }]);
+    if (error) {
+      orderStatus.textContent = "เกิดข้อผิดพลาด: " + error.message;
+      orderStatus.style.color = "red";
+    } else {
+      orderStatus.textContent = "บันทึก Order สำเร็จ!";
+      orderStatus.style.color = "green";
+      orderForm.reset();
+    }
+  });
+</script>
+
 </body>
 </html>
