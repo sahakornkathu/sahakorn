@@ -1,124 +1,198 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Supabase Profile & Order</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/supabase.min.js"></script>
-<style>
-  body { font-family: Arial; padding: 20px; }
-  form { margin-bottom: 20px; }
-  input, select { margin-bottom: 10px; padding: 5px; width: 200px; }
-  button { padding: 5px 10px; }
-  p { font-weight: bold; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>บันทึกข้อมูล Order</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .form-container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 500px;
+        }
+        h1, h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        hr {
+            border-top: 1px dashed #ccc;
+            margin: 20px 0;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: bold;
+        }
+        input[type="text"],
+        input[type="number"],
+        input[type="date"],
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #message {
+            margin-top: 20px;
+            text-align: center;
+            font-weight: bold;
+        }
+        .success {
+            color: green;
+        }
+        .error {
+            color: red;
+        }
+    </style>
 </head>
 <body>
 
-<h2>เพิ่มผู้ใช้ (Profile)</h2>
-<form id="profileForm">
-  <input type="text" id="userId" placeholder="User ID" required><br>
-  <input type="text" id="prefix" placeholder="คำนำหน้า"><br>
-  <input type="text" id="name" placeholder="ชื่อ" required><br>
-  <input type="text" id="lastname" placeholder="นามสกุล" required><br>
-  <input type="text" id="group" placeholder="กลุ่ม/แผนก"><br>
-  <button type="submit">บันทึกผู้ใช้</button>
-</form>
-<p id="profileStatus"></p>
+<div class="form-container">
+    <h1>บันทึกข้อมูล Order</h1>
+    <form id="orderForm">
+        
+        <hr>
+        <h2>ข้อมูลลูกค้า</h2>
+        <div class="form-group">
+            <label for="userid">User ID</label>
+            <input type="text" id="userid" name="userid" placeholder="กรอก User ID ของลูกค้า" required>
+        </div>
+        <div class="form-group">
+            <label for="prefix">คำนำหน้า</label>
+            <select id="prefix" name="prefix">
+                <option value="นาย">นาย</option>
+                <option value="นาง">นาง</option>
+                <option value="นางสาว">นางสาว</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="name">ชื่อ</label>
+            <input type="text" id="name" name="name" placeholder="ชื่อลูกค้า" required>
+        </div>
+        <div class="form-group">
+            <label for="lastname">นามสกุล</label>
+            <input type="text" id="lastname" name="lastname" placeholder="นามสกุลลูกค้า" required>
+        </div>
+        <div class="form-group">
+            <label for="group">กลุ่มลูกค้า</label>
+            <input type="text" id="group" name="group" placeholder="เช่น VIP, ลูกค้าใหม่">
+        </div>
+        
+        <hr>
+        <h2>ข้อมูลการสั่งซื้อ</h2>
+        <div class="form-group">
+            <label for="price">ราคา</label>
+            <input type="number" id="price" name="price" placeholder="ราคารวมของ Order" required>
+        </div>
+        <div class="form-group">
+            <label for="date">วันที่</label>
+            <input type="date" id="date" name="date" required>
+        </div>
 
-<hr>
+        <button type="submit">บันทึกข้อมูล</button>
+    </form>
+    <p id="message"></p>
+</div>
 
-<h2>สร้างคำสั่งซื้อ (Order)</h2>
-<form id="orderForm">
-  <select id="userSelect" required>
-    <option value="">เลือกผู้ใช้</option>
-  </select><br>
-  <input type="number" id="price" placeholder="ราคา" required><br>
-  <button type="submit">บันทึก Order</button>
-</form>
-<p id="orderStatus"></p>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
-  // ใส่ URL และ ANON KEY ของคุณ
-  const supabaseUrl = "https://fxbcdfjsimnecrpsosov.supabase.co";
-  const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ4YmNkZmpzaW1uZWNycHNvc292Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwODg4NjAsImV4cCI6MjA3MTY2NDg2MH0.3hWqTZfuj_lmJ3uKdx_1cas8nQEdRJ8e08l0EWJcN7w";
-  const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+    // --- ตั้งค่า Supabase ของคุณที่นี่ ---
+    const SUPABASE_URL = 'https://fxbcdfjsimnecrpsosov.supabase.co'; // เปลี่ยน YOUR_PROJECT_ID เป็น ID ของคุณ
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ4YmNkZmpzaW1uZWNycHNvc292Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwODg4NjAsImV4cCI6MjA3MTY2NDg2MH0.3hWqTZfuj_lmJ3uKdx_1cas8nQEdRJ8e08l0EWJcN7w'; // เปลี่ยน YOUR_SUPABASE_KEY เป็น Public Key ของคุณ
 
-  const profileForm = document.getElementById("profileForm");
-  const profileStatus = document.getElementById("profileStatus");
-  const orderForm = document.getElementById("orderForm");
-  const orderStatus = document.getElementById("orderStatus");
-  const userSelect = document.getElementById("userSelect");
+    // สร้าง Supabase client
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  // โหลดผู้ใช้ไปยัง select
-  async function loadUsers() {
-    const { data, error } = await supabase.from("profile").select("*");
-    if (!error) {
-      userSelect.innerHTML = '<option value="">เลือกผู้ใช้</option>';
-      data.forEach(user => {
-        const option = document.createElement("option");
-        option.value = user.userId;
-        option.textContent = `${user.prefix || ''} ${user.name} ${user.lastname} (${user.group || ''})`;
-        userSelect.appendChild(option);
-      });
-    }
-  }
+    const orderForm = document.getElementById('orderForm');
+    const messageEl = document.getElementById('message');
 
-  loadUsers();
+    orderForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
 
-  // บันทึก Profile
-  profileForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const userId = document.getElementById("userId").value;
-    const prefix = document.getElementById("prefix").value;
-    const name = document.getElementById("name").value;
-    const lastname = document.getElementById("lastname").value;
-    const group = document.getElementById("group").value;
+        const formData = new FormData(orderForm);
+        const data = Object.fromEntries(formData.entries());
 
-    const { error } = await supabase.from("profile").insert([{ userId, prefix, name, lastname, "group": group }]);
-    if (error) {
-      profileStatus.textContent = "เกิดข้อผิดพลาด: " + error.message;
-      profileStatus.style.color = "red";
-    } else {
-      profileStatus.textContent = "บันทึกผู้ใช้สำเร็จ!";
-      profileStatus.style.color = "green";
-      profileForm.reset();
-      loadUsers();
-    }
-  });
+        messageEl.textContent = 'กำลังบันทึกข้อมูล...';
+        messageEl.className = '';
 
-  // บันทึก Order
-  orderForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const userId = userSelect.value;
-    const price = parseFloat(document.getElementById("price").value);
+        try {
+            // Step 1: Insert or update data in the 'profile' table
+            const { error: profileError } = await supabase
+                .from('profile')
+                .upsert({
+                    userid: data.userid,
+                    prefix: data.prefix,
+                    name: data.name,
+                    lastname: data.lastname,
+                    group: data.group
+                }, { onConflict: 'userid' });
 
-    if (!userId) {
-      orderStatus.textContent = "กรุณาเลือกผู้ใช้";
-      orderStatus.style.color = "red";
-      return;
-    }
+            if (profileError) {
+                throw new Error(profileError.message);
+            }
 
-    // ดึงข้อมูลผู้ใช้
-    const { data: userData, error: userError } = await supabase.from("profile").select("*").eq("userId", userId).single();
-    if (userError || !userData) {
-      orderStatus.textContent = "ไม่พบผู้ใช้";
-      orderStatus.style.color = "red";
-      return;
-    }
+            // Step 2: Insert data into the 'order' table
+            const { error: orderError } = await supabase
+                .from('order')
+                .insert({
+                    userid: data.userid,
+                    prefix: data.prefix,
+                    name: data.name,
+                    lastname: data.lastname,
+                    group: data.group,
+                    price: data.price,
+                    date: data.date
+                });
 
-    const { prefix, name, lastname, group } = userData;
+            if (orderError) {
+                throw new Error(orderError.message);
+            }
 
-    const { error } = await supabase.from("Order").insert([{ userId, prefix, name, lastname, "group": group, price }]);
-    if (error) {
-      orderStatus.textContent = "เกิดข้อผิดพลาด: " + error.message;
-      orderStatus.style.color = "red";
-    } else {
-      orderStatus.textContent = "บันทึก Order สำเร็จ!";
-      orderStatus.style.color = "green";
-      orderForm.reset();
-    }
-  });
+            messageEl.textContent = 'บันทึกข้อมูลเรียบร้อยแล้ว!';
+            messageEl.className = 'success';
+            orderForm.reset();
+
+        } catch (error) {
+            messageEl.textContent = `เกิดข้อผิดพลาด: ${error.message}`;
+            messageEl.className = 'error';
+            console.error('Error:', error);
+        }
+    });
 </script>
 
 </body>
