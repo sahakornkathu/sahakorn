@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ระบบบันทึกออเดอร์</title>
+  <script src="https://unpkg.com/@supabase/supabase-js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+  <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6">
+    <h2 class="text-2xl font-bold text-center mb-6">📋 ระบบบันทึกออเดอร์</h2>
+
+    <!-- ฟอร์ม -->
+    <form id="orderForm" class="space-y-4">
+      <!-- Dropdown เลือกลูกค้า -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700">เลือกลูกค้า</label>
+        <select id="customer" required 
+          class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
+        </select>
+      </div>
+
+      <!-- กรอกราคา -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700">ราคา</label>
+        <input type="number" id="price" required 
+          class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
+      </div>
+
+      <button type="submit" 
+        class="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition">
+        บันทึกออเดอร์
+      </button>
+    </form>
+
+    <p id="status" class="text-center text-sm mt-4 text-gray-600"></p>
+
+    <!-- ตารางข้อมูล -->
+    <h3 class="text-lg font-semibold mt-8 mb-3">📊 รายการออเดอร์ล่าสุด</h3>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm border-collapse">
+        <thead>
+          <tr class="bg-gray-200">
+            <th class="border p-2">ลูกค้า</th>
+            <th class="border p-2">กลุ่ม</th>
+            <th class="border p-2">ราคา</th>
+            <th class="border p-2">เวลา</th>
+          </tr>
+        </thead>
+        <tbody id="orderTable"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    // 🔑 ตั้งค่า Supabase ของคุณ
+    const SUPABASE_URL = "https://YOUR_PROJECT.supabase.co";
+    const SUPABASE_KEY = "YOUR_PUBLIC_ANON_KEY"; // ใช้ anon key เท่านั้น
+    const { createClient } = supabase;
+    const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // โหลดรายชื่อลูกค้า
+    async function loadCustomers() {
+      const { data, error } = await db.from("customers").select("*").order("name");
+      if (error) {
+        console.error(error);
+        return;
+      }
+
+      const select = document.getElementById("customer");
+      select.innerHTML = "";
+      data.forEach(c => {
+        const option = document.createElement("option");
+        option.value = JSON.stringify(c); // เก็บทั้ง userId, name, group
+        option.textContent = `${c.name} (${c.group})`;
+        select.appendChild(option);
+      });
+    }
+
+    // โหลดรายการออเดอร์
+    async function loadOrders() {
+      const { data, error } = await db
+        .from("orders")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(10);
+
+      if (error) {
+        console.error(error);
+        return;
+      }
+
+      const table = document.getElementById("orderTable");
+      table.innerHTML = "";
+      data.forEach(o => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td class="border p-2">${o.name}</td>
+          <td class="border p-2">${o.group}</td>
+          <td class="border p-2">${o.price}</td>
+          <td class="border p-2">${new Date(o.created_at).toLocaleString()}</td>
+        `;
+        table.appendChild(tr);
+      });
+    }
+
+    // จัดการฟอร์ม
+    document.getElementById("orderForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const customer = JSON.parse(document.getElementById("customer").value);
+      const price = document.getElementById("price").value;
+
+      document.getElementById("status").innerText = "⏳ กำลังบันทึก...";
+
+      const { error } = await db
+        .from("orders")
+        .insert([{
+          userId: customer.userId,
+          name: customer.name,
+          group: customer.group,
+          price: price
+        }]);
+
+      if (error) {
+        console.error(error);
+        document.getElementById("status").innerText = "❌ บันทึกไม่สำเร็จ: " + error.message;
+      } else {
+        document.getElementById("status").innerText = "✅ บันทึกออเดอร์สำเร็จ!";
+        document.getElementById("orderForm").reset();
+        loadOrders(); // รีเฟรชตาราง
+      }
+    });
+
+    // โหลดข้อมูลตอนเปิดเว็บ
+    loadCustomers();
+    loadOrders();
+  </script>
+</body>
+</html>
