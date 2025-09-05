@@ -39,6 +39,16 @@ let scanTimeout = null;
 const SCAN_DELAY = 200;
 let currentType = "TOP100MEN";
 
+// ฟังก์ชันแปลงเวลาเป็น HH:MM:SS
+function formatDuration(ms) {
+  let totalSeconds = Math.floor(ms / 1000);
+  const hours = Math.floor(totalSeconds / 3600);
+  totalSeconds %= 3600;
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${hours.toString().padStart(2,'0')}:${minutes.toString().padStart(2,'0')}:${seconds.toString().padStart(2,'0')}`;
+}
+
 // Tab เลือกประเภท
 document.querySelectorAll(".tab").forEach(tab => {
   tab.addEventListener("click", () => {
@@ -114,14 +124,17 @@ async function loadDashboard() {
   runnerList.innerHTML = "";
   finalList.forEach(r => {
     let lapsHtml = r.record.sort((a,b)=>a.lap-b.lap).map(rec=>{
-      let start = rec.start_time ? new Date(rec.start_time).toLocaleTimeString() : "-";
-      let finish = rec.finish_time ? new Date(rec.finish_time).toLocaleTimeString() : "-";
       let dur = "-";
-      if (rec.start_time && rec.finish_time) dur = ((new Date(rec.finish_time)-new Date(rec.start_time))/1000).toFixed(1)+"s";
+      if (rec.start_time && rec.finish_time) {
+        const diff = new Date(rec.finish_time) - new Date(rec.start_time);
+        dur = formatDuration(diff); // แสดง HH:MM:SS
+      }
       return `Lap ${rec.lap}: ${dur}`;
     }).join(", ");
+
     let rankText = r.rank ? `🏆 ${r.rank}` : "-";
-    let totalTimeText = r.totalTime ? (r.totalTime/1000).toFixed(1)+"s" : "-";
+    let totalTimeText = r.totalTime ? formatDuration(r.totalTime) : "-";
+
     runnerList.innerHTML += `<div class="border-b py-1 flex justify-between">
       <div>${r.name} (${r.type})<br>${lapsHtml}</div>
       <div class="text-right">รอบ ${r.completedLaps}/5<br>เวลารวม: ${totalTimeText}<br>อันดับ: ${rankText}</div>
