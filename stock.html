@@ -1,10 +1,24 @@
-<input type="datetime-local" id="startTime" class="border rounded px-2 py-1 mb-2" />
-<button id="setStart" class="bg-green-500 text-white px-3 py-1 rounded mb-4">ตั้งเวลาเริ่ม</button>
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<title>🏃 ระบบแข่งขัน 5 รอบ</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+</head>
+<body class="bg-gray-100 p-6">
+<h1 class="text-2xl font-bold mb-4 text-center">🏃 ระบบแข่งขัน 5 รอบ</h1>
 
-<input id="tagInput" type="text" placeholder="สแกน Tag ID" class="w-full border rounded-lg px-3 py-2 focus:outline-none" autofocus>
-<p id="status" class="text-sm text-gray-600 mt-2"></p>
+<div class="max-w-3xl mx-auto bg-white p-4 rounded-lg shadow mb-6">
+  <input id="tagInput" type="text" placeholder="สแกน Tag ID"
+    class="w-full border rounded px-3 py-2 focus:outline-none" autofocus>
+  <p id="status" class="text-sm text-gray-600 mt-2"></p>
+</div>
 
-<div id="runner-list"></div>
+<div class="max-w-3xl mx-auto bg-white p-4 rounded-lg shadow">
+  <h2 class="text-lg font-semibold mb-4">📊 Dashboard - Ranking</h2>
+  <div id="runner-list" class="space-y-2"></div>
+</div>
 
 <script>
 const SUPABASE_URL = "https://qokvocorqzmytchzylvk.supabase.co";
@@ -15,45 +29,10 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const tagInput = document.getElementById("tagInput");
 const statusEl = document.getElementById("status");
 const runnerList = document.getElementById("runner-list");
-const startTimeInput = document.getElementById("startTime");
-const setStartBtn = document.getElementById("setStart");
 
 let scanTimeout = null;
-const SCAN_DELAY = 200; // ms
+const SCAN_DELAY = 200;
 
-// ตั้งเวลาเริ่ม
-let globalStartTime = null;
-setStartBtn.addEventListener("click", () => {
-  globalStartTime = startTimeInput.value ? new Date(startTimeInput.value) : new Date();
-  alert("ตั้งเวลาเริ่มแล้ว: " + globalStartTime.toLocaleString());
-});
-
-// โหลด Dashboard
-async function loadRunners() {
-  const { data, error } = await supabase.from("runner")
-    .select(`id, name, type, record(lap, start_time, finish_time)`);
-
-  if (error) return console.error(error);
-
-  runnerList.innerHTML = "";
-  data.forEach(r => {
-    let html = `<div class="mb-2 border-b pb-1"><strong>${r.name} (${r.type || '-'})</strong><br>`;
-    r.record.sort((a,b)=>a.lap-b.lap).forEach(rec => {
-      const start = rec.start_time ? new Date(rec.start_time).toLocaleTimeString() : "-";
-      const finish = rec.finish_time ? new Date(rec.finish_time).toLocaleTimeString() : "-";
-      let duration = "-";
-      if (rec.start_time && rec.finish_time) {
-        const diff = new Date(rec.finish_time) - new Date(rec.start_time);
-        duration = (diff/1000).toFixed(1) + "s";
-      }
-      html += `Lap ${rec.lap}: Start ${start}, Finish ${finish}, Duration ${duration}<br>`;
-    });
-    html += "</div>";
-    runnerList.innerHTML += html;
-  });
-}
-
-// Scan อัตโนมัติ
 tagInput.addEventListener("input", () => {
   if (scanTimeout) clearTimeout(scanTimeout);
 
@@ -72,15 +51,65 @@ tagInput.addEventListener("input", () => {
       });
       const result = await resp.json();
       if (result.error) statusEl.textContent = "❌ " + result.error;
+      else if (result.message) statusEl.textContent = "🏁 " + result.message;
       else statusEl.textContent = `✅ ${result.runner} บันทึกสำเร็จ รอบที่ ${result.lap}`;
 
       tagInput.value = "";
-      loadRunners();
+      loadDashboard();
     } catch (err) {
       statusEl.textContent = "❌ Error: " + err.message;
     }
   }, SCAN_DELAY);
 });
 
-loadRunners();
+// โหลด Dashboard และคำนวณอันดับ
+async function loadDashboard() {
+  const { data: runners, error } = await supabase.from("runner")
+    .select(`id, name, type, record(lap, start_time, finish_time)`);
+
+  if (error) return console.error(error);
+
+  // คำนวณเวลารวมและจำนวนรอบ
+  const ranking = runners.map(r => {
+    let totalTime = 0;
+    let completedLaps = 0;
+    r.record.forEach(rec => {
+      if (rec.finish_time && rec.start_time) {
+        totalTime += new Date(rec.finish_time) - new Date(rec.start_time);
+        completedLaps++;
+      }
+    });
+    return { ...r, totalTime, completedLaps };
+  });
+
+  // จัดอันดับเฉพาะผู้ที่ครบ 5 รอบ
+  const finished = ranking.filter(r => r.completedLaps >= 5)
+    .sort((a,b) => a.totalTime - b.totalTime)
+    .map((r,i) => ({ ...r, rank: i+1 }));
+
+  // รันคนที่ยังไม่ครบ 5 รอบ
+  const unfinished = ranking.filter(r => r.completedLaps < 5)
+    .sort((a,b) => b.completedLaps - a.completedLaps); // คนที่ครบมากกว่าขึ้นก่อน
+
+  const finalList = [...finished, ...unfinished];
+
+  runnerList.innerHTML = "";
+  finalList.forEach(r => {
+    let lapsHtml = r.record.sort((a,b)=>a.lap-b.lap).map(rec=>{
+      let start = rec.start_time ? new Date(rec.start_time).toLocaleTimeString() : "-";
+      let finish = rec.finish_time ? new Date(rec.finish_time).toLocaleTimeString() : "-";
+      let dur = "-";
+      if (rec.start_time && rec.finish_time) dur = ((new Date(rec.finish_time)-new Date(rec.start_time))/1000).toFixed(1)+"s";
+      return `Lap ${rec.lap}: ${dur}`;
+    }).join(", ");
+    let rankText = r.rank ? `🏆 ${r.rank}` : "-";
+    let totalTimeText = r.totalTime ? (r.totalTime/1000).toFixed(1)+"s" : "-";
+    runnerList.innerHTML += `<div class="border-b py-1 flex justify-between">
+      <div>${r.name} (${r.type || '-'})<br>${lapsHtml}</div>
+      <div class="text-right">รอบ ${r.completedLaps}/5<br>เวลารวม: ${totalTimeText}<br>อันดับ: ${rankText}</div>
+    </div>`;
+  });
+}
+
+loadDashboard();
 </script>
