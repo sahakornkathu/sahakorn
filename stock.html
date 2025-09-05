@@ -38,9 +38,9 @@ const runnerList = document.getElementById("runner-list");
 let scanTimeout = null;
 const SCAN_DELAY = 200;
 let currentType = "TOP100MEN";
-const maxLaps = 4; // รอบสูงสุด
+const maxLaps = 4;
 
-// ฟังก์ชันแปลงเวลาเป็น HH:MM:SS
+// แปลงเวลาเป็น HH:MM:SS
 function formatDuration(ms) {
   let totalSeconds = Math.floor(ms / 1000);
   const hours = Math.floor(totalSeconds / 3600);
@@ -50,7 +50,7 @@ function formatDuration(ms) {
   return `${hours.toString().padStart(2,'0')}:${minutes.toString().padStart(2,'0')}:${seconds.toString().padStart(2,'0')}`;
 }
 
-// Tab เลือกประเภท
+// เลือกประเภท
 document.querySelectorAll(".tab").forEach(tab => {
   tab.addEventListener("click", () => {
     currentType = tab.dataset.type;
@@ -98,7 +98,6 @@ async function loadDashboard() {
 
   if (error) return console.error(error);
 
-  // คำนวณเวลารวมและจำนวนรอบ
   const ranking = runners.map(r => {
     let totalTime = 0;
     let completedLaps = 0;
@@ -111,12 +110,11 @@ async function loadDashboard() {
     return { ...r, totalTime, completedLaps };
   });
 
-  // จัดอันดับผู้ที่ครบ maxLaps รอบ
+  // จัดอันดับผู้ที่ครบ maxLaps
   const finished = ranking.filter(r => r.completedLaps >= maxLaps)
     .sort((a,b) => a.totalTime - b.totalTime)
     .map((r,i) => ({ ...r, rank: i+1 }));
 
-  // คนที่ยังไม่ครบ maxLaps รอบ
   const unfinished = ranking.filter(r => r.completedLaps < maxLaps)
     .sort((a,b) => b.completedLaps - a.completedLaps);
 
@@ -127,8 +125,7 @@ async function loadDashboard() {
     let lapsHtml = r.record.sort((a,b)=>a.lap-b.lap).map(rec=>{
       let dur = "-";
       if (rec.start_time && rec.finish_time) {
-        const diff = new Date(rec.finish_time) - new Date(rec.start_time);
-        dur = formatDuration(diff); // แสดง HH:MM:SS
+        dur = formatDuration(new Date(rec.finish_time) - new Date(rec.start_time));
       }
       return `Lap ${rec.lap}: ${dur}`;
     }).join(", ");
