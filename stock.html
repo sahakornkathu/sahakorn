@@ -29,10 +29,12 @@
   </div>
 
   <script>
-    // ตั้งค่า Supabase
-    const SUPABASE_URL = "https://qokvocorqzmytchzylvk.supabase.co";   // แก้เป็นของคุณ
-    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFva3ZvY29ycXpteXRjaHp5bHZrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcwNDQ4MDQsImV4cCI6MjA3MjYyMDgwNH0.IvBeOvmIBvcfCMKRSR3Of914cQeah8zCD5QgJCCg8Zk";              // แก้เป็นของคุณ
+    // 🔹 ตั้งค่า Supabase
+    const SUPABASE_URL = "https://qokvocorqzmytchzylvk.supabase.co";   // 👉 เปลี่ยนเป็น URL ของคุณ
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFva3ZvY29ycXpteXRjaHp5bHZrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcwNDQ4MDQsImV4cCI6MjA3MjYyMDgwNH0.IvBeOvmIBvcfCMKRSR3Of914cQeah8zCD5QgJCCg8Zk";           // 👉 เปลี่ยนเป็น Public Anon Key
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    const FUNCTION_URL = "https://<PROJECT>.functions.supabase.co/rfid-reader"; // 👉 เปลี่ยนเป็นของคุณ
 
     const runnerList = document.getElementById("runner-list");
     const statusEl = document.getElementById("status");
@@ -83,22 +85,25 @@
       const tagId = document.getElementById("tagInput").value.trim();
       if (!tagId) return;
 
-      // เรียก Edge Function (ต้องไปเขียนใน Supabase Functions)
-      const resp = await fetch("https://YOUR_PROJECT.supabase.co/functions/v1/rfid-reader", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${SUPABASE_KEY}`
-        },
-        body: JSON.stringify({ tag_id: tagId })
-      });
+      try {
+        const resp = await fetch(FUNCTION_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${SUPABASE_KEY}`
+          },
+          body: JSON.stringify({ tag_id: tagId })
+        });
 
-      const result = await resp.json();
-      if (result.error) {
-        statusEl.textContent = "❌ " + result.error;
-      } else {
-        statusEl.textContent = `✅ ${result.runner} บันทึกสำเร็จ รอบที่ ${result.lap}`;
-        document.getElementById("tagInput").value = "";
+        const result = await resp.json();
+        if (result.error) {
+          statusEl.textContent = "❌ " + result.error;
+        } else {
+          statusEl.textContent = `✅ ${result.runner} บันทึกสำเร็จ รอบที่ ${result.lap}`;
+          document.getElementById("tagInput").value = "";
+        }
+      } catch (err) {
+        statusEl.textContent = "❌ Error: " + err.message;
       }
     });
 
