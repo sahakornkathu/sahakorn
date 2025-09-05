@@ -70,8 +70,7 @@ tagInput.addEventListener("input", () => {
       const resp = await fetch(FUNCTION_URL, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${SUPABASE_KEY}`
+          "Content-Type": "application/json"
         },
         body: JSON.stringify({ tag_id: tagId })
       });
@@ -110,7 +109,6 @@ async function loadDashboard() {
     return { ...r, totalTime, completedLaps };
   });
 
-  // จัดอันดับผู้ที่ครบ maxLaps
   const finished = ranking.filter(r => r.completedLaps >= maxLaps)
     .sort((a,b) => a.totalTime - b.totalTime)
     .map((r,i) => ({ ...r, rank: i+1 }));
