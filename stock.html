@@ -25,9 +25,9 @@
 </div>
 
 <script>
-const SUPABASE_URL = "https://qokvocorqzmytchzylvk.supabase.co"; // แก้เป็นของคุณ
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFva3ZvY29ycXpteXRjaHp5bHZrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcwNDQ4MDQsImV4cCI6MjA3MjYyMDgwNH0.IvBeOvmIBvcfCMKRSR3Of914cQeah8zCD5QgJCCg8Zk";         // แก้เป็นของคุณ
-const FUNCTION_URL = "https://qokvocorqzmytchzylvk.functions.supabase.co/rfid-reader"; // แก้เป็นของคุณ
+const SUPABASE_URL = "https://qokvocorqzmytchzylvk.supabase.co"; // เปลี่ยนเป็นของคุณ
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFva3ZvY29ycXpteXRjaHp5bHZrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcwNDQ4MDQsImV4cCI6MjA3MjYyMDgwNH0.IvBeOvmIBvcfCMKRSR3Of914cQeah8zCD5QgJCCg8Zk";         // เปลี่ยนเป็นของคุณ
+const FUNCTION_URL = "https://qokvocorqzmytchzylvk.functions.supabase.co/rfid-reader"; // เปลี่ยนเป็นของคุณ
 
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const runnerList = document.getElementById("runner-list");
@@ -53,9 +53,14 @@ async function loadRunners() {
   });
 }
 
-// Handle scan Tag ID
-tagInput.addEventListener("keyup", async e => {
-  if (e.key === "Enter") {
+// Scan Tag ID อัตโนมัติ
+let scanTimeout = null;
+const SCAN_DELAY = 200; // ms หลังหยุดพิมพ์แล้วบันทึก
+
+tagInput.addEventListener("input", () => {
+  if (scanTimeout) clearTimeout(scanTimeout);
+
+  scanTimeout = setTimeout(async () => {
     const tagId = tagInput.value.trim();
     if (!tagId) return;
 
@@ -68,20 +73,21 @@ tagInput.addEventListener("keyup", async e => {
         },
         body: JSON.stringify({ tag_id: tagId })
       });
+
       const result = await resp.json();
 
       if (result.error) {
         statusEl.textContent = "❌ " + result.error;
       } else {
         statusEl.textContent = `✅ ${result.runner} บันทึกสำเร็จ รอบที่ ${result.lap}`;
-        tagInput.value = "";   // เคลียร์ช่อง input
+        tagInput.value = ""; // เคลียร์ textbox
       }
 
-      loadRunners(); // refresh Dashboard
+      loadRunners(); // รีเฟรช Dashboard
     } catch (err) {
       statusEl.textContent = "❌ Error: " + err.message;
     }
-  }
+  }, SCAN_DELAY);
 });
 
 // โหลด Dashboard ครั้งแรก
