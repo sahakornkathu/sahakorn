@@ -2,12 +2,12 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<title>🏃 ระบบแข่งขัน 5 รอบ แยกประเภท</title>
+<title>🏃 ระบบแข่งขัน 4 รอบ แยกประเภท</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 </head>
 <body class="bg-gray-100 p-6">
-<h1 class="text-2xl font-bold mb-4 text-center">🏃 ระบบแข่งขัน 5 รอบ แยกประเภท</h1>
+<h1 class="text-2xl font-bold mb-4 text-center">🏃 ระบบแข่งขัน 4 รอบ แยกประเภท</h1>
 
 <div class="max-w-3xl mx-auto bg-white p-4 rounded-lg shadow mb-4">
   <input id="tagInput" type="text" placeholder="สแกน Tag ID"
@@ -38,6 +38,7 @@ const runnerList = document.getElementById("runner-list");
 let scanTimeout = null;
 const SCAN_DELAY = 200;
 let currentType = "TOP100MEN";
+const maxLaps = 4; // รอบสูงสุด
 
 // ฟังก์ชันแปลงเวลาเป็น HH:MM:SS
 function formatDuration(ms) {
@@ -110,13 +111,13 @@ async function loadDashboard() {
     return { ...r, totalTime, completedLaps };
   });
 
-  // จัดอันดับผู้ที่ครบ 5 รอบ
-  const finished = ranking.filter(r => r.completedLaps >= 5)
+  // จัดอันดับผู้ที่ครบ maxLaps รอบ
+  const finished = ranking.filter(r => r.completedLaps >= maxLaps)
     .sort((a,b) => a.totalTime - b.totalTime)
     .map((r,i) => ({ ...r, rank: i+1 }));
 
-  // คนที่ยังไม่ครบ 5 รอบ
-  const unfinished = ranking.filter(r => r.completedLaps < 5)
+  // คนที่ยังไม่ครบ maxLaps รอบ
+  const unfinished = ranking.filter(r => r.completedLaps < maxLaps)
     .sort((a,b) => b.completedLaps - a.completedLaps);
 
   const finalList = [...finished, ...unfinished];
@@ -137,7 +138,7 @@ async function loadDashboard() {
 
     runnerList.innerHTML += `<div class="border-b py-1 flex justify-between">
       <div>${r.name} (${r.type})<br>${lapsHtml}</div>
-      <div class="text-right">รอบ ${r.completedLaps}/5<br>เวลารวม: ${totalTimeText}<br>อันดับ: ${rankText}</div>
+      <div class="text-right">รอบ ${r.completedLaps}/${maxLaps}<br>เวลารวม: ${totalTimeText}<br>อันดับ: ${rankText}</div>
     </div>`;
   });
 }
