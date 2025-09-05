@@ -1,62 +1,59 @@
-<!DOCTYPE html>
-<html lang="th">
-<head>
-<meta charset="UTF-8">
-<title>🏃 ระบบนับรอบการวิ่ง</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-</head>
-<body class="bg-gray-100">
-<div class="max-w-3xl mx-auto p-6">
-  <h1 class="text-2xl font-bold mb-4 text-center">🏃 ระบบนับรอบการวิ่ง</h1>
+<input type="datetime-local" id="startTime" class="border rounded px-2 py-1 mb-2" />
+<button id="setStart" class="bg-green-500 text-white px-3 py-1 rounded mb-4">ตั้งเวลาเริ่ม</button>
 
-  <!-- ฟอร์ม scan Tag ID -->
-  <div class="bg-white p-4 rounded-lg shadow mb-6">
-    <input id="tagInput" type="text" placeholder="สแกน Tag ID"
-      class="w-full border rounded-lg px-3 py-2 focus:outline-none" autofocus>
-    <p id="status" class="text-sm text-gray-600 mt-2"></p>
-  </div>
+<input id="tagInput" type="text" placeholder="สแกน Tag ID" class="w-full border rounded-lg px-3 py-2 focus:outline-none" autofocus>
+<p id="status" class="text-sm text-gray-600 mt-2"></p>
 
-  <!-- Dashboard -->
-  <div class="bg-white p-4 rounded-lg shadow">
-    <h2 class="text-lg font-semibold mb-4">📊 Dashboard</h2>
-    <div id="runner-list" class="space-y-2"></div>
-  </div>
-</div>
+<div id="runner-list"></div>
 
 <script>
-const SUPABASE_URL = "https://qokvocorqzmytchzylvk.supabase.co"; // เปลี่ยนเป็นของคุณ
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFva3ZvY29ycXpteXRjaHp5bHZrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcwNDQ4MDQsImV4cCI6MjA3MjYyMDgwNH0.IvBeOvmIBvcfCMKRSR3Of914cQeah8zCD5QgJCCg8Zk";         // เปลี่ยนเป็นของคุณ
-const FUNCTION_URL = "https://qokvocorqzmytchzylvk.functions.supabase.co/rfid-reader"; // เปลี่ยนเป็นของคุณ
+const SUPABASE_URL = "https://qokvocorqzmytchzylvk.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFva3ZvY29ycXpteXRjaHp5bHZrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcwNDQ4MDQsImV4cCI6MjA3MjYyMDgwNH0.IvBeOvmIBvcfCMKRSR3Of914cQeah8zCD5QgJCCg8Zk";
+const FUNCTION_URL = "https://qokvocorqzmytchzylvk.functions.supabase.co/rfid-reader";
 
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-const runnerList = document.getElementById("runner-list");
-const statusEl = document.getElementById("status");
 const tagInput = document.getElementById("tagInput");
+const statusEl = document.getElementById("status");
+const runnerList = document.getElementById("runner-list");
+const startTimeInput = document.getElementById("startTime");
+const setStartBtn = document.getElementById("setStart");
+
+let scanTimeout = null;
+const SCAN_DELAY = 200; // ms
+
+// ตั้งเวลาเริ่ม
+let globalStartTime = null;
+setStartBtn.addEventListener("click", () => {
+  globalStartTime = startTimeInput.value ? new Date(startTimeInput.value) : new Date();
+  alert("ตั้งเวลาเริ่มแล้ว: " + globalStartTime.toLocaleString());
+});
 
 // โหลด Dashboard
 async function loadRunners() {
   const { data, error } = await supabase.from("runner")
-    .select(`id, name, type, record (lap)`);
+    .select(`id, name, type, record(lap, start_time, finish_time)`);
 
   if (error) return console.error(error);
 
   runnerList.innerHTML = "";
   data.forEach(r => {
-    const laps = r.record.length > 0 ? Math.max(...r.record.map(x=>x.lap)) : 0;
-    runnerList.innerHTML += `
-      <div class="flex justify-between items-center border-b pb-2">
-        <span class="font-medium">${r.name} (${r.type || '-'})</span>
-        <span class="text-blue-600 font-bold">${laps} รอบ</span>
-      </div>
-    `;
+    let html = `<div class="mb-2 border-b pb-1"><strong>${r.name} (${r.type || '-'})</strong><br>`;
+    r.record.sort((a,b)=>a.lap-b.lap).forEach(rec => {
+      const start = rec.start_time ? new Date(rec.start_time).toLocaleTimeString() : "-";
+      const finish = rec.finish_time ? new Date(rec.finish_time).toLocaleTimeString() : "-";
+      let duration = "-";
+      if (rec.start_time && rec.finish_time) {
+        const diff = new Date(rec.finish_time) - new Date(rec.start_time);
+        duration = (diff/1000).toFixed(1) + "s";
+      }
+      html += `Lap ${rec.lap}: Start ${start}, Finish ${finish}, Duration ${duration}<br>`;
+    });
+    html += "</div>";
+    runnerList.innerHTML += html;
   });
 }
 
-// Scan Tag ID อัตโนมัติ
-let scanTimeout = null;
-const SCAN_DELAY = 200; // ms หลังหยุดพิมพ์แล้วบันทึก
-
+// Scan อัตโนมัติ
 tagInput.addEventListener("input", () => {
   if (scanTimeout) clearTimeout(scanTimeout);
 
@@ -73,25 +70,17 @@ tagInput.addEventListener("input", () => {
         },
         body: JSON.stringify({ tag_id: tagId })
       });
-
       const result = await resp.json();
+      if (result.error) statusEl.textContent = "❌ " + result.error;
+      else statusEl.textContent = `✅ ${result.runner} บันทึกสำเร็จ รอบที่ ${result.lap}`;
 
-      if (result.error) {
-        statusEl.textContent = "❌ " + result.error;
-      } else {
-        statusEl.textContent = `✅ ${result.runner} บันทึกสำเร็จ รอบที่ ${result.lap}`;
-        tagInput.value = ""; // เคลียร์ textbox
-      }
-
-      loadRunners(); // รีเฟรช Dashboard
+      tagInput.value = "";
+      loadRunners();
     } catch (err) {
       statusEl.textContent = "❌ Error: " + err.message;
     }
   }, SCAN_DELAY);
 });
 
-// โหลด Dashboard ครั้งแรก
 loadRunners();
 </script>
-</body>
-</html>
