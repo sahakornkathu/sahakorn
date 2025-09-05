@@ -26,7 +26,7 @@
 </div>
 
 <script>
-const FUNCTION_URL = "https://qokvocorqzmytchzylvk.functions.supabase.co/rfid-reader"; // เปลี่ยนเป็น URL จริงของคุณ
+const FUNCTION_URL = "https://qokvocorqzmytchzylvk.functions.supabase.co/rfid-reader"; // เปลี่ยนเป็น URL จริง
 const SUPABASE_URL = "https://qokvocorqzmytchzylvk.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFva3ZvY29ycXpteXRjaHp5bHZrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcwNDQ4MDQsImV4cCI6MjA3MjYyMDgwNH0.IvBeOvmIBvcfCMKRSR3Of914cQeah8zCD5QgJCCg8Zk";
 
@@ -40,6 +40,7 @@ const SCAN_DELAY = 200;
 let currentType = "TOP100MEN";
 const maxLaps = 4;
 
+// แปลงเวลาเป็น HH:MM:SS
 function formatDuration(ms) {
   let totalSeconds = Math.floor(ms / 1000);
   const hours = Math.floor(totalSeconds / 3600);
@@ -49,6 +50,7 @@ function formatDuration(ms) {
   return `${hours.toString().padStart(2,'0')}:${minutes.toString().padStart(2,'0')}:${seconds.toString().padStart(2,'0')}`;
 }
 
+// เลือกประเภท
 document.querySelectorAll(".tab").forEach(tab => {
   tab.addEventListener("click", () => {
     currentType = tab.dataset.type;
@@ -56,6 +58,7 @@ document.querySelectorAll(".tab").forEach(tab => {
   });
 });
 
+// Scan อัตโนมัติ
 tagInput.addEventListener("input", () => {
   if (scanTimeout) clearTimeout(scanTimeout);
 
@@ -84,6 +87,7 @@ tagInput.addEventListener("input", () => {
   }, SCAN_DELAY);
 });
 
+// โหลด Dashboard และคำนวณอันดับ
 async function loadDashboard() {
   const { data: runners, error } = await supabase.from("runner")
     .select(`id, name, type, record(lap, start_time, finish_time)`)
@@ -132,6 +136,7 @@ async function loadDashboard() {
   });
 }
 
+// โหลด Dashboard ครั้งแรก
 loadDashboard();
 </script>
 </body>
