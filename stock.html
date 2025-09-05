@@ -42,7 +42,7 @@
     // โหลดข้อมูลนักวิ่งพร้อมจำนวนรอบ
     async function loadRunners() {
       const { data, error } = await supabase
-        .from("Runner")
+        .from("runner")
         .select(`
           id,
           name,
