@@ -27,7 +27,7 @@
 
 <script>
 const SUPABASE_URL = "https://qokvocorqzmytchzylvk.supabase.co"; // เปลี่ยนเป็นของคุณ
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFva3ZvY29ycXpteXRjaHp5bHZrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcwNDQ4MDQsImV4cCI6MjA3MjYyMDgwNH0.IvBeOvmIBvcfCMKRSR3Of914cQeah8zCD5QgJCCg8Zk";          // เปลี่ยนเป็นของคุณ
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFva3ZvY29ycXpteXRjaHp5bHZrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcwNDQ4MDQsImV4cCI6MjA3MjYyMDgwNH0.IvBeOvmIBvcfCMKRSR3Of914cQeah8zCD5QgJCCg8Zk";           // เปลี่ยนเป็นของคุณ
 const FUNCTION_URL = "https://qokvocorqzmytchzylvk.functions.supabase.co/rfid-reader"; // เปลี่ยนเป็นของคุณ
 
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -38,8 +38,9 @@ const runnerList = document.getElementById("runner-list");
 let scanTimeout = null;
 const SCAN_DELAY = 200;
 let currentType = "TOP100MEN";
+const maxLaps = 4;
 
-// ฟังก์ชันแปลงเวลาเป็น HH:MM:SS
+// แปลงเวลาเป็น HH:MM:SS
 function formatDuration(ms) {
   let totalSeconds = Math.floor(ms / 1000);
   const hours = Math.floor(totalSeconds / 3600);
@@ -110,13 +111,13 @@ async function loadDashboard() {
     return { ...r, totalTime, completedLaps };
   });
 
-  // จัดอันดับผู้ที่ครบ 5 รอบ
-  const finished = ranking.filter(r => r.completedLaps >= 10)
+  // จัดอันดับผู้ที่ครบ maxLaps
+  const finished = ranking.filter(r => r.completedLaps >= maxLaps)
     .sort((a,b) => a.totalTime - b.totalTime)
     .map((r,i) => ({ ...r, rank: i+1 }));
 
-  // คนที่ยังไม่ครบ 5 รอบ
-  const unfinished = ranking.filter(r => r.completedLaps < 4)
+  // คนที่ยังไม่ครบ maxLaps
+  const unfinished = ranking.filter(r => r.completedLaps < maxLaps)
     .sort((a,b) => b.completedLaps - a.completedLaps);
 
   const finalList = [...finished, ...unfinished];
@@ -137,7 +138,7 @@ async function loadDashboard() {
 
     runnerList.innerHTML += `<div class="border-b py-1 flex justify-between">
       <div>${r.name} (${r.type})<br>${lapsHtml}</div>
-      <div class="text-right">รอบ ${r.completedLaps}/5<br>เวลารวม: ${totalTimeText}<br>อันดับ: ${rankText}</div>
+      <div class="text-right">รอบ ${r.completedLaps}/${maxLaps}<br>เวลารวม: ${totalTimeText}<br>อันดับ: ${rankText}</div>
     </div>`;
   });
 }
