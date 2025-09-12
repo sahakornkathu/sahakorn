@@ -1,89 +1,120 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8">
-  <title>Race Dashboard</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Supabase SDK -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<meta charset="UTF-8">
+<title>📊 Dashboard การแข่งขัน</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 </head>
-<body class="bg-gray-100">
+<body class="bg-gray-100 p-6">
+<h1 class="text-2xl font-bold mb-4 text-center">📊 Dashboard การแข่งขัน</h1>
 
-  <div class="container mx-auto px-4 py-6">
-    <h1 class="text-3xl font-bold text-center mb-6">🏁 Dashboard - ผลการแข่งขัน</h1>
-    
-    <div id="ranking" class="overflow-x-auto bg-white shadow rounded-lg p-4">
-      <table class="min-w-full text-center border border-gray-300">
-        <thead class="bg-gray-200">
-          <tr>
-            <th class="px-4 py-2 border">อันดับ</th>
-            <th class="px-4 py-2 border">ชื่อ</th>
-            <th class="px-4 py-2 border">ประเภท</th>
-            <th class="px-4 py-2 border">จำนวนรอบ</th>
-            <th class="px-4 py-2 border">เวลาล่าสุด</th>
-          </tr>
-        </thead>
-        <tbody id="rankingBody">
-          <tr><td colspan="5" class="p-4">กำลังโหลด...</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
+<div class="max-w-3xl mx-auto flex space-x-4 mb-4">
+  <button data-type="TOP100MEN" class="tab bg-blue-500 text-white px-3 py-1 rounded">MEN</button>
+  <button data-type="TOP100WOMEN" class="tab bg-pink-500 text-white px-3 py-1 rounded">WOMEN</button>
+</div>
 
-  <script>
-    // --- ใส่ข้อมูล Supabase ของคุณ ---
-    const SUPABASE_URL = "https://qokvocorqzmytchzylvk.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFva3ZvY29ycXpteXRjaHp5bHZrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcwNDQ4MDQsImV4cCI6MjA3MjYyMDgwNH0.IvBeOvmIBvcfCMKRSR3Of914cQeah8zCD5QgJCCg8Zk";
+<div class="max-w-4xl mx-auto bg-white p-4 rounded-lg shadow">
+  <div id="runner-list" class="space-y-2"></div>
+</div>
 
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+<script>
+const SUPABASE_URL = "https://qokvocorqzmytchzylvk.supabase.co";  // <-- เปลี่ยนเป็นของคุณ
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFva3ZvY29ycXpteXRjaHp5bHZrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcwNDQ4MDQsImV4cCI6MjA3MjYyMDgwNH0.IvBeOvmIBvcfCMKRSR3Of914cQeah8zCD5QgJCCg8Zk";                     // <-- เปลี่ยนเป็นของคุณ
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    async function loadRanking() {
-      try {
-        const { data, error } = await supabase
-          .from('record')
-          .select('*');
+let currentType = "TOP100MEN";
 
-        if (error) throw error;
+// ฟังก์ชันแปลงเวลาเป็น HH:MM:SS
+function formatDuration(ms) {
+  let totalSeconds = Math.floor(ms / 1000);
+  const hours = Math.floor(totalSeconds / 3600);
+  totalSeconds %= 3600;
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${hours.toString().padStart(2,'0')}:${minutes.toString().padStart(2,'0')}:${seconds.toString().padStart(2,'0')}`;
+}
 
-        // รวมจำนวนรอบตาม userId
-        const grouped = {};
-        data.forEach(r => {
-          if (!grouped[r.userId]) {
-            grouped[r.userId] = {
-              name: r.name,
-              type: r.type,
-              count: 0,
-              lastTime: ''
-            };
-          }
-          grouped[r.userId].count += Number(r.count);
-          grouped[r.userId].lastTime = r.time;
-        });
+// เปลี่ยนประเภทเมื่อกดปุ่ม
+document.querySelectorAll(".tab").forEach(tab => {
+  tab.addEventListener("click", () => {
+    currentType = tab.dataset.type;
+    loadDashboard();
+  });
+});
 
-        // แปลงเป็น array + เรียงตาม count
-        const ranking = Object.values(grouped).sort((a, b) => b.count - a.count);
+async function loadDashboard() {
+  // ดึงนักวิ่งตามประเภท
+  const { data: runners, error: err1 } = await supabase
+    .from("runner")
+    .select("id, name, type")
+    .eq("type", currentType);
 
-        const tbody = document.getElementById('rankingBody');
-        tbody.innerHTML = ranking.map((r, i) => `
-          <tr class="border hover:bg-gray-50">
-            <td class="border px-4 py-2">${i + 1}</td>
-            <td class="border px-4 py-2">${r.name}</td>
-            <td class="border px-4 py-2">${r.type}</td>
-            <td class="border px-4 py-2 font-bold">${r.count}</td>
-            <td class="border px-4 py-2">${new Date(r.lastTime).toLocaleString()}</td>
-          </tr>
-        `).join('');
+  if (err1) return console.error(err1);
 
-      } catch (err) {
-        console.error(err);
-        document.getElementById('rankingBody').innerHTML = `<tr><td colspan="5" class="p-4 text-red-500">โหลดข้อมูลไม่สำเร็จ</td></tr>`;
+  // ดึงบันทึกรอบทั้งหมด
+  const { data: records, error: err2 } = await supabase
+    .from("record")
+    .select("runner_id, lap, start_time, finish_time");
+
+  if (err2) return console.error(err2);
+
+  // รวมข้อมูล
+  const list = runners.map(r => {
+    const recs = records.filter(x => x.runner_id === r.id);
+    let totalTime = 0;
+    let completedLaps = 0;
+    recs.forEach(rec => {
+      if (rec.start_time && rec.finish_time) {
+        totalTime += new Date(rec.finish_time) - new Date(rec.start_time);
+        completedLaps++;
       }
-    }
+    });
+    return { ...r, recs, totalTime, completedLaps };
+  });
 
-    // โหลดใหม่ทุก 5 วินาที
-    loadRanking();
-    setInterval(loadRanking, 5000);
-  </script>
+  // จัดอันดับ: ผู้ที่ครบ 4 รอบก่อน
+  const finished = list
+    .filter(r => r.completedLaps >= 4)
+    .sort((a,b) => a.totalTime - b.totalTime)
+    .map((r,i)=>({...r, rank: i+1}));
 
+  const unfinished = list
+    .filter(r => r.completedLaps < 4)
+    .sort((a,b)=>b.completedLaps - a.completedLaps);
+
+  const finalList = [...finished, ...unfinished];
+
+  const runnerList = document.getElementById("runner-list");
+  runnerList.innerHTML = "";
+
+  finalList.forEach(r => {
+    let lapsHtml = r.recs.sort((a,b)=>a.lap-b.lap).map(rec=>{
+      let dur = "-";
+      if (rec.start_time && rec.finish_time) {
+        dur = formatDuration(new Date(rec.finish_time)-new Date(rec.start_time));
+      }
+      return `Lap ${rec.lap}: ${dur}`;
+    }).join(", ");
+
+    let rankText = r.rank ? `🏆 ${r.rank}` : "-";
+    let totalTimeText = r.totalTime ? formatDuration(r.totalTime) : "-";
+
+    runnerList.innerHTML += `<div class="border-b py-2 flex justify-between">
+      <div>
+        <div class="font-semibold">${r.name} (${r.type})</div>
+        <div class="text-sm text-gray-600">${lapsHtml}</div>
+      </div>
+      <div class="text-right">
+        รอบ ${r.completedLaps}/4<br>
+        เวลารวม: ${totalTimeText}<br>
+        อันดับ: ${rankText}
+      </div>
+    </div>`;
+  });
+}
+
+loadDashboard();
+</script>
 </body>
 </html>
