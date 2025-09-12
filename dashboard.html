@@ -15,17 +15,17 @@
 </div>
 
 <div class="max-w-4xl mx-auto bg-white p-4 rounded-lg shadow">
+  <p class="text-sm text-gray-500 text-right mb-2" id="last-updated"></p>
   <div id="runner-list" class="space-y-2"></div>
 </div>
 
 <script>
-const SUPABASE_URL = "https://qokvocorqzmytchzylvk.supabase.co";  // <-- เปลี่ยนเป็นของคุณ
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFva3ZvY29ycXpteXRjaHp5bHZrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcwNDQ4MDQsImV4cCI6MjA3MjYyMDgwNH0.IvBeOvmIBvcfCMKRSR3Of914cQeah8zCD5QgJCCg8Zk";                     // <-- เปลี่ยนเป็นของคุณ
+const SUPABASE_URL = "https://YOUR-PROJECT.supabase.co";  // <-- เปลี่ยนเป็นของคุณ
+const SUPABASE_KEY = "YOUR-ANON-KEY";                     // <-- เปลี่ยนเป็นของคุณ
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let currentType = "TOP100MEN";
 
-// ฟังก์ชันแปลงเวลาเป็น HH:MM:SS
 function formatDuration(ms) {
   let totalSeconds = Math.floor(ms / 1000);
   const hours = Math.floor(totalSeconds / 3600);
@@ -35,7 +35,6 @@ function formatDuration(ms) {
   return `${hours.toString().padStart(2,'0')}:${minutes.toString().padStart(2,'0')}:${seconds.toString().padStart(2,'0')}`;
 }
 
-// เปลี่ยนประเภทเมื่อกดปุ่ม
 document.querySelectorAll(".tab").forEach(tab => {
   tab.addEventListener("click", () => {
     currentType = tab.dataset.type;
@@ -44,7 +43,6 @@ document.querySelectorAll(".tab").forEach(tab => {
 });
 
 async function loadDashboard() {
-  // ดึงนักวิ่งตามประเภท
   const { data: runners, error: err1 } = await supabase
     .from("runner")
     .select("id, name, type")
@@ -52,14 +50,12 @@ async function loadDashboard() {
 
   if (err1) return console.error(err1);
 
-  // ดึงบันทึกรอบทั้งหมด
   const { data: records, error: err2 } = await supabase
     .from("record")
     .select("runner_id, lap, start_time, finish_time");
 
   if (err2) return console.error(err2);
 
-  // รวมข้อมูล
   const list = runners.map(r => {
     const recs = records.filter(x => x.runner_id === r.id);
     let totalTime = 0;
@@ -73,7 +69,6 @@ async function loadDashboard() {
     return { ...r, recs, totalTime, completedLaps };
   });
 
-  // จัดอันดับ: ผู้ที่ครบ 4 รอบก่อน
   const finished = list
     .filter(r => r.completedLaps >= 4)
     .sort((a,b) => a.totalTime - b.totalTime)
@@ -112,9 +107,15 @@ async function loadDashboard() {
       </div>
     </div>`;
   });
+
+  document.getElementById("last-updated").textContent =
+    "อัปเดตล่าสุด: " + new Date().toLocaleTimeString();
 }
 
 loadDashboard();
+
+// รีเฟรชอัตโนมัติทุก 10 วินาที
+setInterval(loadDashboard, 10000);
 </script>
 </body>
 </html>
