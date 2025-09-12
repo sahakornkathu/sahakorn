@@ -40,7 +40,7 @@
     async function loadRanking() {
       try {
         const { data, error } = await supabase
-          .from('Record')
+          .from('record')
           .select('*');
 
         if (error) throw error;
