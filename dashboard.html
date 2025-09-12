@@ -1,194 +1,149 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8">
-  <title>Race Dashboard</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- ฟอนต์สวยงาม -->
-  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600&display=swap" rel="stylesheet">
-  <style>
-    body {
-      font-family: 'Prompt', sans-serif;
-      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-      color: #f1f1f1;
-      margin: 0;
-      padding: 0;
-    }
-    header {
-      text-align: center;
-      padding: 30px 20px;
-      background: rgba(0,0,0,0.3);
-      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-    }
-    header h1 {
-      margin: 0;
-      font-size: 2.5rem;
-      font-weight: 600;
-      color: #00e6ff;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-    }
-    .container {
-      max-width: 1100px;
-      margin: 40px auto;
-      background: rgba(255,255,255,0.05);
-      border-radius: 20px;
-      padding: 30px;
-      box-shadow: 0 8px 25px rgba(0,0,0,0.4);
-    }
-    .type-section {
-      margin-bottom: 60px;
-    }
-    .type-section h2 {
-      border-bottom: 2px solid #00e6ff;
-      padding-bottom: 10px;
-      margin-bottom: 25px;
-      font-size: 1.8rem;
-      color: #00e6ff;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-bottom: 30px;
-    }
-    th, td {
-      padding: 14px 18px;
-      text-align: center;
-    }
-    th {
-      background: rgba(0,0,0,0.5);
-      color: #00e6ff;
-      font-weight: 600;
-      font-size: 1.1rem;
-    }
-    tr {
-      transition: all 0.3s;
-    }
-    tr:nth-child(even) {
-      background: rgba(255,255,255,0.05);
-    }
-    tr:hover {
-      background: rgba(0,230,255,0.1);
-      transform: scale(1.01);
-    }
-    .rank {
-      font-weight: 600;
-      color: #ffd700;
-      font-size: 1.2rem;
-    }
-    .loading {
-      text-align: center;
-      font-size: 1.2rem;
-      padding: 40px;
-      color: #bbb;
-    }
-  </style>
+<meta charset="UTF-8">
+<title>Race Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  body { font-family:'Prompt',sans-serif; background:linear-gradient(135deg,#0f2027,#203a43,#2c5364); color:#f1f1f1; margin:0; padding:0; }
+  header { text-align:center; padding:30px 20px; background:rgba(0,0,0,0.3); box-shadow:0 4px 15px rgba(0,0,0,0.3); }
+  header h1 { margin:0; font-size:2.5rem; font-weight:600; color:#00e6ff; letter-spacing:2px; text-transform:uppercase; }
+  .container { max-width:1100px; margin:40px auto; background:rgba(255,255,255,0.05); border-radius:20px; padding:30px; box-shadow:0 8px 25px rgba(0,0,0,0.4); }
+  .type-section { margin-bottom:60px; }
+  .type-section h2 { border-bottom:2px solid #00e6ff; padding-bottom:10px; margin-bottom:25px; font-size:1.8rem; color:#00e6ff; }
+  table { width:100%; border-collapse:collapse; margin-bottom:30px; }
+  th, td { padding:14px 18px; text-align:center; }
+  th { background:rgba(0,0,0,0.5); color:#00e6ff; font-weight:600; font-size:1.1rem; }
+  tr { transition:all 0.3s; }
+  tr:nth-child(even) { background:rgba(255,255,255,0.05); }
+  tr:hover { background: rgba(0,230,255,0.1); transform:scale(1.01); cursor:pointer; }
+  .rank { font-weight:600; color:#ffd700; font-size:1.2rem; }
+  .loading { text-align:center; font-size:1.2rem; padding:40px; color:#bbb; }
+
+  /* Modal */
+  .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); justify-content:center; align-items:center; }
+  .modal-content { background:#1c1c1c; padding:20px; border-radius:10px; max-width:500px; width:90%; color:#fff; }
+  .modal-content h3 { margin-top:0; color:#00e6ff; }
+  .modal-content table { width:100%; }
+  .modal-content th, .modal-content td { padding:8px; font-size:0.9rem; }
+  .close-btn { float:right; cursor:pointer; color:#ff5050; font-weight:bold; font-size:1.2rem; }
+</style>
 </head>
 <body>
-  <header>
-    <h1>🏁 Race Dashboard 🏁</h1>
-  </header>
+<header><h1>🏁 Race Dashboard 🏁</h1></header>
+<div class="container">
+  <div id="dashboard"></div>
+  <div class="loading" id="loading">กำลังโหลดข้อมูล...</div>
+</div>
 
-  <div class="container">
-    <div id="dashboard"></div>
-    <div class="loading" id="loading">กำลังโหลดข้อมูล...</div>
+<!-- Modal -->
+<div id="modal" class="modal">
+  <div class="modal-content">
+    <span class="close-btn" id="closeModal">&times;</span>
+    <h3 id="modalName"></h3>
+    <table>
+      <thead>
+        <tr><th>Lap</th><th>เวลา</th></tr>
+      </thead>
+      <tbody id="modalBody"></tbody>
+    </table>
   </div>
+</div>
 
-  <script type="module">
-    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+<script type="module">
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+const SUPABASE_URL = "https://qokvocorqzmytchzylvk.supabase.co"; 
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFva3ZvY29ycXpteXRjaHp5bHZrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcwNDQ4MDQsImV4cCI6MjA3MjYyMDgwNH0.IvBeOvmIBvcfCMKRSR3Of914cQeah8zCD5QgJCCg8Zk"; 
 
-    const SUPABASE_URL = "https://qokvocorqzmytchzylvk.supabase.co";  // ✅ ใส่ของคุณ
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFva3ZvY29ycXpteXRjaHp5bHZrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcwNDQ4MDQsImV4cCI6MjA3MjYyMDgwNH0.IvBeOvmIBvcfCMKRSR3Of914cQeah8zCD5QgJCCg8Zk";                // ✅ ใส่ของคุณ
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const modal = document.getElementById("modal");
+const modalName = document.getElementById("modalName");
+const modalBody = document.getElementById("modalBody");
+document.getElementById("closeModal").onclick = ()=> modal.style.display="none";
 
-    async function fetchData() {
-      const { data: runners, error: runnerErr } = await supabase
-        .from('runner')
-        .select('id, name, type');
+async function fetchData() {
+  const { data: runners } = await supabase.from('runner').select('id, name, type');
+  const { data: records } = await supabase.from('record').select('runner_id, lap, start_time, finish_time');
 
-      const { data: records, error: recordErr } = await supabase
-        .from('record')
-        .select('runner_id, lap, start_time, finish_time');
+  document.getElementById('loading').style.display='none';
+  renderDashboard(runners, records);
+}
 
-      if (runnerErr || recordErr) {
-        console.error(runnerErr || recordErr);
-        document.getElementById('loading').textContent = "โหลดข้อมูลไม่สำเร็จ";
-        return;
-      }
+function msToTime(ms) {
+  const totalSeconds = Math.floor(ms/1000);
+  const hours = Math.floor(totalSeconds/3600);
+  const minutes = Math.floor((totalSeconds%3600)/60);
+  const seconds = totalSeconds%60;
+  return `${hours} ชม. ${minutes} นาที ${seconds} วินาที`;
+}
 
-      renderDashboard(runners, records);
+function buildTable(title, data, records) {
+  if(data.length===0) return `<div class="type-section"><h2>${title}</h2><p>ไม่มีข้อมูล</p></div>`;
+  return `
+  <div class="type-section">
+    <h2>${title}</h2>
+    <table>
+      <thead>
+        <tr><th>อันดับ</th><th>ชื่อ</th><th>รอบทั้งหมด</th><th>เวลารวม</th></tr>
+      </thead>
+      <tbody>
+      ${data.map((r,i)=> {
+        const totalTime = r.totalTime ? msToTime(r.totalTime) : "-";
+        const totalLap = r.totalLap;
+        const myRecords = records.filter(rec=>rec.runner_id===r.id);
+        return `<tr data-runner='${JSON.stringify(myRecords)}' data-name='${r.name}'>
+          <td class="rank">${i+1}</td>
+          <td class="runner-name">${r.name}</td>
+          <td>${totalLap}</td>
+          <td>${totalTime}</td>
+        </tr>`;
+      }).join('')}
+      </tbody>
+    </table>
+  </div>`;
+}
+
+function renderDashboard(runners, records){
+  const stats = runners.map(r=>{
+    const myRecords = records.filter(rec=>rec.runner_id===r.id);
+    const totalLap = myRecords.length;
+    const totalTime = myRecords.reduce((sum,rec)=>{
+      if(!rec.start_time||!rec.finish_time) return sum;
+      return sum + (new Date(rec.finish_time)-new Date(rec.start_time));
+    },0);
+    return {...r, totalLap, totalTime};
+  });
+  const men = stats.filter(r=>r.type==="TOP100MEN").sort((a,b)=>b.totalLap-a.totalLap||a.totalTime-b.totalTime);
+  const women = stats.filter(r=>r.type==="TOP100WOMEN").sort((a,b)=>b.totalLap-a.totalLap||a.totalTime-b.totalTime);
+
+  document.getElementById('dashboard').innerHTML = `
+    ${buildTable('TOP100MEN', men, records)}
+    ${buildTable('TOP100WOMEN', women, records)}
+  `;
+
+  // Event listener คลิกชื่อ
+  document.querySelectorAll("tr td.runner-name").forEach(td=>{
+    td.onclick = (e)=>{
+      const tr = td.parentElement;
+      const recs = JSON.parse(tr.getAttribute('data-runner'));
+      const name = tr.getAttribute('data-name');
+      modalName.textContent = name;
+      modalBody.innerHTML = recs.map(r=>{
+        let dur="-";
+        if(r.start_time && r.finish_time){
+          dur=msToTime(new Date(r.finish_time)-new Date(r.start_time));
+        }
+        return `<tr><td>${r.lap}</td><td>${dur}</td></tr>`;
+      }).join('');
+      modal.style.display="flex";
     }
+  });
+}
 
-    function renderDashboard(runners, records) {
-      document.getElementById('loading').style.display = 'none';
-
-      // รวมเวลาทั้งหมด และจำนวนรอบ
-      const stats = runners.map(r => {
-        const myRecords = records.filter(rec => rec.runner_id === r.id);
-        const totalLap = myRecords.length;
-        const totalTime = myRecords.reduce((sum, rec) => {
-          if (!rec.start_time || !rec.finish_time) return sum;
-          return sum + (new Date(rec.finish_time) - new Date(rec.start_time));
-        }, 0);
-        return { ...r, totalLap, totalTime };
-      });
-
-      // แยกตามประเภท
-      const men = stats.filter(r => r.type === "TOP100MEN")
-        .sort((a,b) => b.totalLap - a.totalLap || a.totalTime - b.totalTime);
-      const women = stats.filter(r => r.type === "TOP100WOMEN")
-        .sort((a,b) => b.totalLap - a.totalLap || a.totalTime - b.totalTime);
-
-      const container = document.getElementById('dashboard');
-      container.innerHTML = `
-        ${buildTable('TOP100MEN', men)}
-        ${buildTable('TOP100WOMEN', women)}
-      `;
-    }
-
-    function msToTime(ms) {
-      const totalSeconds = Math.floor(ms / 1000);
-      const hours = Math.floor(totalSeconds / 3600);
-      const minutes = Math.floor((totalSeconds % 3600) / 60);
-      const seconds = totalSeconds % 60;
-      return `${hours} ชม. ${minutes} นาที ${seconds} วินาที`;
-    }
-
-    function buildTable(title, data) {
-      if (data.length === 0) return `<div class="type-section"><h2>${title}</h2><p>ไม่มีข้อมูล</p></div>`;
-      return `
-        <div class="type-section">
-          <h2>${title}</h2>
-          <table>
-            <thead>
-              <tr>
-                <th>อันดับ</th>
-                <th>ชื่อ</th>
-                <th>รอบทั้งหมด</th>
-                <th>เวลารวม</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${data.map((r, i) => `
-                <tr>
-                  <td class="rank">${i+1}</td>
-                  <td>${r.name}</td>
-                  <td>${r.totalLap}</td>
-                  <td>${r.totalTime ? msToTime(r.totalTime) : '-'}</td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-        </div>
-      `;
-    }
-
-    // โหลดครั้งแรก
-    fetchData();
-
-    // โหลดใหม่ทุก 5 วินาที
-    setInterval(fetchData, 5000);
-  </script>
+fetchData();
+setInterval(fetchData,5000);
+</script>
 </body>
 </html>
