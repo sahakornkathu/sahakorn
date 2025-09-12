@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <title>Race Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Supabase SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-gray-100">
+
+  <div class="container mx-auto px-4 py-6">
+    <h1 class="text-3xl font-bold text-center mb-6">🏁 Dashboard - ผลการแข่งขัน</h1>
+    
+    <div id="ranking" class="overflow-x-auto bg-white shadow rounded-lg p-4">
+      <table class="min-w-full text-center border border-gray-300">
+        <thead class="bg-gray-200">
+          <tr>
+            <th class="px-4 py-2 border">อันดับ</th>
+            <th class="px-4 py-2 border">ชื่อ</th>
+            <th class="px-4 py-2 border">ประเภท</th>
+            <th class="px-4 py-2 border">จำนวนรอบ</th>
+            <th class="px-4 py-2 border">เวลาล่าสุด</th>
+          </tr>
+        </thead>
+        <tbody id="rankingBody">
+          <tr><td colspan="5" class="p-4">กำลังโหลด...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    // --- ใส่ข้อมูล Supabase ของคุณ ---
+    const SUPABASE_URL = "https://fxbcdfjsimnecrpsosov.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ4YmNkZmpzaW1uZWNycHNvc292Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwODg4NjAsImV4cCI6MjA3MTY2NDg2MH0.3hWqTZfuj_lmJ3uKdx_1cas8nQEdRJ8e08l0EWJcN7w";
+
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    async function loadRanking() {
+      try {
+        const { data, error } = await supabase
+          .from('Record')
+          .select('*');
+
+        if (error) throw error;
+
+        // รวมจำนวนรอบตาม userId
+        const grouped = {};
+        data.forEach(r => {
+          if (!grouped[r.userId]) {
+            grouped[r.userId] = {
+              name: r.name,
+              type: r.type,
+              count: 0,
+              lastTime: ''
+            };
+          }
+          grouped[r.userId].count += Number(r.count);
+          grouped[r.userId].lastTime = r.time;
+        });
+
+        // แปลงเป็น array + เรียงตาม count
+        const ranking = Object.values(grouped).sort((a, b) => b.count - a.count);
+
+        const tbody = document.getElementById('rankingBody');
+        tbody.innerHTML = ranking.map((r, i) => `
+          <tr class="border hover:bg-gray-50">
+            <td class="border px-4 py-2">${i + 1}</td>
+            <td class="border px-4 py-2">${r.name}</td>
+            <td class="border px-4 py-2">${r.type}</td>
+            <td class="border px-4 py-2 font-bold">${r.count}</td>
+            <td class="border px-4 py-2">${new Date(r.lastTime).toLocaleString()}</td>
+          </tr>
+        `).join('');
+
+      } catch (err) {
+        console.error(err);
+        document.getElementById('rankingBody').innerHTML = `<tr><td colspan="5" class="p-4 text-red-500">โหลดข้อมูลไม่สำเร็จ</td></tr>`;
+      }
+    }
+
+    // โหลดใหม่ทุก 5 วินาที
+    loadRanking();
+    setInterval(loadRanking, 5000);
+  </script>
+
+</body>
+</html>
