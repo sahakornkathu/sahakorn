@@ -49,9 +49,10 @@ header h1 {
   width:100%;
   overflow-x:auto;
 }
-table {
+.table-wrapper table {
   width:100%;
   border-collapse:collapse;
+  table-layout: fixed; /* บังคับ cell เท่าๆ กัน */
   margin-bottom:20px;
 }
 th, td {
@@ -63,14 +64,13 @@ th {
   color:#00e6ff;
   font-weight:600;
 }
-tr:nth-child(even) {
-  background: rgba(255,255,255,0.05);
+td.runner-name {
+  white-space: nowrap; /* บังคับชื่ออยู่บรรทัดเดียว */
+  text-overflow: ellipsis; /* ถ้ายาวเกิน cell แสดง ... */
+  overflow: hidden;
 }
-tr:hover {
-  background: rgba(0,230,255,0.1);
-  transform:scale(1.01);
-  cursor:pointer;
-}
+tr:nth-child(even) { background: rgba(255,255,255,0.05); }
+tr:hover { background: rgba(0,230,255,0.1); transform:scale(1.01); cursor:pointer; }
 .rank { font-weight:600; color:#ffd700; font-size:1rem; }
 .loading { text-align:center; font-size:1rem; padding:20px; color:#bbb; }
 
@@ -190,6 +190,7 @@ function renderDashboard(runners, records){
     ${buildTable('TOP100WOMEN', women, records)}
   `;
 
+  // คลิกชื่อดูเวลาแต่ละรอบ
   document.querySelectorAll("tr td.runner-name").forEach(td=>{
     td.onclick = ()=>{
       const tr = td.parentElement;
