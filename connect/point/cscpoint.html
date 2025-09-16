@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>สะสมแต้ม (Loyalty Program)</title>
+     <meta property="og:title" content="สะสมแต้ม (Loyalty Program)">
+    <meta property="og:type" content="website">
+    <meta property="og:description" content="สะสมแต้มแลกของรางวัล">
+    <meta property="og:url" content="https://page.line.me/botstickerlth">
+    <meta property="og:site_name" content="iton5">
+    <meta property="og:image" content="https://lh3.googleusercontent.com/d/1Ck_OCfEW4dEp3A1k9yfQplYmW7qmwzFF">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'peach': '#f0a868', 'cream': '#ffe8c2', 'mint': '#e4ffe1',
+                        'ivory': '#f4fdd9', 'earthy-green': '#6a8d73',
+                    }
+                }
+            }
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap');
+        body { font-family: 'Kanit', sans-serif; }
+        .loader { width: 50px; height: 50px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .swal2-popup { background: #f4fdd9 !important; border-radius: 1rem !important; color: #6a8d73 !important; border: 2px solid #e4ffe1;}
+        .swal2-title, .swal2-html-container { color: #6a8d73 !important; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-mint to-ivory min-h-screen">
+
+    <div id="loading-overlay" class="fixed inset-0 bg-ivory flex flex-col items-center justify-center z-50">
+        <img src="https://developers.line.biz/media/line-mini-app/LINE_spinner_light.svg" alt="Loading..." class="loader mb-4" style="filter: invert(0.4);">
+        <p id="loading-text" class="text-earthy-green text-lg">กำลังเตรียมข้อมูล...</p>
+    </div>
+    <div id="phone-modal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-40 hidden">
+        <div class="bg-ivory rounded-2xl p-8 shadow-xl max-w-sm w-full text-center">
+            <h2 class="text-2xl font-bold text-earthy-green mb-2">ลงทะเบียน</h2>
+            <p class="text-earthy-green/80 mb-6">กรุณากรอกเบอร์โทรศัพท์เพื่อเริ่มสะสมแต้มกับเรา</p>
+            <input type="tel" id="phone-input" maxlength="10" class="text-lg text-center w-full bg-white border-2 border-earthy-green/20 rounded-lg p-3 mb-4 focus:ring-peach focus:border-peach" placeholder="0812345678">
+            <button id="register-btn" class="w-full bg-peach hover:bg-opacity-90 text-white font-bold py-3 px-4 rounded-lg transition-all duration-200 shadow-lg">ยืนยันเบอร์โทร</button>
+        </div>
+    </div>
+
+    <main id="main-content" class="p-4 md:p-6 max-w-4xl mx-auto opacity-0 transition-opacity duration-500">
+        <header class="bg-cream/80 rounded-2xl shadow-lg p-5 flex items-center space-x-4 mb-6">
+            <img id="user-picture" src="https://via.placeholder.com/80" class="w-16 h-16 md:w-20 md:h-20 rounded-full border-4 border-white">
+            <div>
+                <p class="text-sm text-earthy-green/80">สวัสดีคุณ</p>
+                <h1 id="user-name" class="text-xl md:text-2xl font-bold text-earthy-green">...</h1>
+            </div>
+        </header>
+        <div class="bg-white rounded-2xl shadow-lg p-6 text-center mb-8">
+            <p class="text-earthy-green/80 text-lg">คะแนนสะสมของคุณ</p>
+            <p id="user-points" class="text-6xl font-bold text-peach my-2">0</p>
+        </div>
+
+        <div class="mb-10">
+            <h2 class="text-2xl font-bold text-earthy-green mb-4">แลกของรางวัล</h2>
+            <div id="rewards-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"></div>
+        </div>
+        
+        <div id="history-section">
+            <h2 class="text-2xl font-bold text-earthy-green mb-4">ประวัติการแลกล่าสุด</h2>
+            <div id="history-list" class="space-y-3">
+                <p id="no-history" class="text-center text-earthy-green/70">ยังไม่มีประวัติการแลกของรางวัล</p>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        
+        const LIFF_ID = "1661506692-lJOGeY0B";
+        const SUPABASE_URL = "https://ttottijljxoinptmhgtu.supabase.co";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y";
+        const TELEGRAM_BOT_TOKEN = "8415683192:AAFiUvipbBUTrU8jjjz3edbXcUvy3juh1ew"; 
+        const TELEGRAM_CHAT_ID = "7652385294";   
+
+        const { createClient } = supabase;
+        const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+        
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const phoneModal = document.getElementById('phone-modal');
+        const phoneInput = document.getElementById('phone-input');
+        const registerBtn = document.getElementById('register-btn');
+        const mainContent = document.getElementById('main-content');
+        const userPicture = document.getElementById('user-picture');
+        const userName = document.getElementById('user-name');
+        const userPoints = document.getElementById('user-points');
+        const rewardsGrid = document.getElementById('rewards-grid');
+        const historyList = document.getElementById('history-list'); 
+        const noHistory = document.getElementById('no-history'); 
+
+        let lineProfile = null;
+        let userProfile = null;
+     
+        const formatNumberWithCommas = (number) => Number(number || 0).toLocaleString('en-US');
+
+        async function main() {
+            try {
+                await liff.init({ liffId: LIFF_ID, withLoginOnExternalBrowser: true });
+                if (!liff.isLoggedIn()) { liff.login({ redirectUri: window.location.href }); return; }
+                lineProfile = await liff.getProfile();
+                await checkUserRegistration();
+            } catch (error) {
+                console.error('LIFF/App Initialization failed', error);
+                loadingOverlay.innerHTML = `<p class="text-red-500">เกิดข้อผิดพลาด: ${error.message}</p>`;
+            }
+        }
+
+        async function checkUserRegistration() {
+            const { data, error } = await db.from('user_profiles').select('*').eq('userId', lineProfile.userId).single();
+            if (error && error.code !== 'PGRST116') throw error;
+            if (!data || !data.phone) {
+                loadingOverlay.classList.add('hidden');
+                phoneModal.classList.remove('hidden');
+            } else {
+                userProfile = data;
+                await loadApp();
+            }
+        }
+
+        
+        
+        // async function handleRegistration() {
+        //     const phone = phoneInput.value.trim();
+        //     if (phone.length < 10) { Swal.fire('ข้อมูลไม่ถูกต้อง', 'กรุณากรอกเบอร์โทรให้ครบ 10 หลัก', 'warning'); return; }
+        //     registerBtn.disabled = true;
+        //     registerBtn.innerHTML = 'กำลังบันทึก...';
+        //     try {
+        //         const { data, error } = await db.from('user_profiles').upsert({
+        //             userId: lineProfile.userId, displayName: lineProfile.displayName,
+        //             pictureUrl: lineProfile.pictureUrl, phone: phone, updated_at: new Date()
+        //         }).select().single();
+        //         if (error) throw error;
+        //         userProfile = data;
+        //         phoneModal.classList.add('hidden');
+        //         loadingOverlay.classList.remove('hidden');
+        //         await loadApp();
+        //     } catch(error) {
+        //         console.error("Registration error:", error);
+        //         Swal.fire('เกิดข้อผิดพลาด', 'ไม่สามารถบันทึกข้อมูลได้', 'error');
+        //         registerBtn.disabled = false;
+        //         registerBtn.innerHTML = 'ยืนยันเบอร์โทร';
+        //     }
+        // }
+
+        async function handleRegistration() {
+    const phone = phoneInput.value.trim();
+    if (phone.length < 10) {
+        Swal.fire('ข้อมูลไม่ถูกต้อง', 'กรุณากรอกเบอร์โทรให้ครบ 10 หลัก', 'warning');
+        return;
+    }
+
+    registerBtn.disabled = true;
+    registerBtn.innerHTML = 'กำลังบันทึก...';
+
+    try {
+        // 🔍 เช็กก่อนว่าเบอร์นี้มีอยู่แล้วหรือไม่ (และไม่ใช่ของ user ปัจจุบัน)
+        const { data: existing, error: checkError } = await db
+            .from('user_profiles')
+            .select('userId')
+            .eq('phone', phone)
+            .neq('userId', lineProfile.userId);
+
+        if (checkError) throw checkError;
+
+        if (existing && existing.length > 0) {
+            Swal.fire('เบอร์นี้ถูกใช้แล้ว', 'กรุณาใช้เบอร์อื่น', 'error');
+            registerBtn.disabled = false;
+            registerBtn.innerHTML = 'ยืนยันเบอร์โทร';
+            return;
+        }
+
+        // ✅ ถ้าไม่ซ้ำ จึงบันทึกหรืออัปเดตข้อมูลของ user ปัจจุบัน
+        const { data, error } = await db.from('user_profiles').upsert({
+            userId: lineProfile.userId,
+            displayName: lineProfile.displayName,
+            pictureUrl: lineProfile.pictureUrl,
+            phone: phone,
+            updated_at: new Date()
+        }).select().single();
+
+        if (error) throw error;
+
+        userProfile = data;
+        phoneModal.classList.add('hidden');
+        loadingOverlay.classList.remove('hidden');
+        await loadApp();
+
+    } catch (error) {
+        console.error("Registration error:", error);
+        Swal.fire('เกิดข้อผิดพลาด', 'ไม่สามารถบันทึกข้อมูลได้', 'error');
+        registerBtn.disabled = false;
+        registerBtn.innerHTML = 'ยืนยันเบอร์โทร';
+    }
+}
+
+        async function loadApp() {
+            userPicture.src = userProfile.pictureUrl || 'https://img.icons8.com/?size=80&id=492ILERveW8G&format=png';
+            userName.textContent = userProfile.displayName;
+            userPoints.textContent = formatNumberWithCommas(userProfile.point);
+            await loadRewards();
+            await loadHistory(); 
+            setupRealtimeListener();
+            loadingOverlay.classList.add('hidden');
+            mainContent.classList.remove('opacity-0');
+        }
+
+        async function loadHistory() {
+            const { data, error } = await db.from('redemption_history')
+                .select('*')
+                .eq('user_id', userProfile.userId)
+                .order('created_at', { ascending: false });
+
+            if (error) { console.error('Error loading history:', error); return; }
+
+            historyList.innerHTML = ''; 
+            if (data.length === 0) {
+                historyList.appendChild(noHistory);
+                return;
+            }
+
+            data.forEach(item => {
+                const date = new Date(item.created_at).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+                const statusInfo = {
+                    pending: { text: 'รอตรวจสอบ', color: 'text-blue-500' },
+                    completed: { text: 'สำเร็จ', color: 'text-green-500' },
+                    rejected: { text: 'ถูกปฏิเสธ', color: 'text-red-500' }
+                };
+                const currentStatus = statusInfo[item.status] || { text: 'ไม่ทราบสถานะ', color: 'text-gray-500' };
+
+                const historyItem = document.createElement('div');
+                historyItem.className = 'bg-white/80 p-3 rounded-lg flex justify-between items-center';
+                historyItem.innerHTML = `
+                    <div>
+                        <p class="font-semibold text-earthy-green">${item.reward_name}</p>
+                        <p class="text-xs text-earthy-green/70">${date}</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="font-bold text-peach">- ${formatNumberWithCommas(item.points_spent)} แต้ม</p>
+                        <p class="text-sm font-semibold ${currentStatus.color}">${currentStatus.text}</p>
+                    </div>
+                `;
+                historyList.appendChild(historyItem);
+            });
+        }
+
+         async function loadRewards() {
+            const { data: rewards, error } = await db.from('rewards').select('*').order('points_required', { ascending: true });
+            if (error) {
+                console.error("Error loading rewards:", error);
+                return;
+            }
+
+            rewardsGrid.innerHTML = ''; 
+            rewards.forEach(reward => {
+                const canRedeem = userProfile.point >= reward.points_required;
+                const card = document.createElement('div');
+                card.className = `bg-white rounded-xl shadow-md overflow-hidden transition-transform duration-200 hover:scale-105 ${!canRedeem ? 'opacity-50' : ''}`;
+                card.innerHTML = `
+                    <img class="w-full h-24 object-cover" src="${reward.image_url}" alt="${reward.name}">
+                    <div class="p-3">
+                        <h3 class="font-bold text-earthy-green text-sm truncate">${reward.name}</h3>
+                        <p class="text-peach font-semibold">${formatNumberWithCommas(reward.points_required)} แต้ม</p>
+                        <button class="w-full mt-2 text-sm rounded-lg py-1.5 font-semibold text-white transition-colors ${canRedeem ? 'bg-peach hover:bg-opacity-80' : 'bg-gray-400 cursor-not-allowed'}" 
+                                onclick='handleRedeem(${JSON.stringify(reward)})' ${!canRedeem ? 'disabled' : ''}>
+                            แลกรางวัล
+                        </button>
+                    </div>
+                `;
+                rewardsGrid.appendChild(card);
+            });
+        }
+
+        function handleRedeem(reward) {
+            Swal.fire({
+                title: 'ยืนยันการแลกรางวัล?',
+                text: `ใช้ ${formatNumberWithCommas(reward.points_required)} แต้ม เพื่อแลก "${reward.name}" ใช่หรือไม่?`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#f0a868',
+                cancelButtonColor: '#6a8d73',
+                confirmButtonText: 'ยืนยัน',
+                cancelButtonText: 'ยกเลิก'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    processRedemptionRequest(reward); 
+                }
+            });
+        }
+
+        
+        async function processRedemptionRequest(reward) {
+            try {
+               
+                const { data: history, error: historyError } = await db.from('redemption_history').insert({
+                    user_id: userProfile.userId,
+                    reward_id: reward.id,
+                    reward_name: reward.name,
+                    points_spent: reward.points_required,
+                    status: 'pending'
+                }).select().single();
+
+                if (historyError) throw historyError;
+
+               
+                await sendTelegramNotification(reward, history);
+
+                
+                await sendFlexMessage(reward, history);
+
+                Swal.fire('ส่งคำขอสำเร็จ!', 'เราได้ส่งสรุปรายการให้คุณในแชท และแจ้งแอดมินแล้ว', 'success');
+                loadHistory();
+
+            } catch (error) {
+                console.error("Redemption process error:", error);
+                Swal.fire('เกิดข้อผิดพลาด', `ไม่สามารถส่งคำขอได้: ${error.message}`, 'error');
+            }
+        }
+        
+        async function sendTelegramNotification(reward, history) {
+            const message = `🔔 **แลกรางวัล ID: ${history.id}** 🔔\n--------------------------------------\n👤 **ลูกค้า:** ${userProfile.displayName}\n📱 **เบอร์โทร:** ${userProfile.phone}\n🎁 **ของรางวัล:** ${reward.name}\n✨ **ใช้แต้ม:** ${formatNumberWithCommas(reward.points_required)}\n--------------------------------------\nกรุณาตรวจสอบและ *หักแต้ม* ในระบบแอดมิน และ *อัปเดตสถานะ* รายการแลกรางวัล ID: ${history.id} เป็น "completed"`;
+            const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: message.trim(), parse_mode: 'Markdown' })
+            });
+            if (!response.ok) throw new Error('Failed to send Telegram message');
+        }
+
+        
+        async function sendFlexMessage(reward, history) {
+            if (!liff.isInClient()) {
+                console.log("Not in LINE client, skipping Flex Message.");
+                return;
+            }
+            const flexMessage = {
+                type: 'flex',
+                altText: 'ใบเสร็จการแลกของรางวัล',
+                contents: {
+                    type: 'bubble',
+                    hero: { type: 'image', url: reward.image_url, size: 'full', aspectRatio: '20:13', aspectMode: 'cover' },
+                    body: {
+                        type: 'box', layout: 'vertical', spacing: 'md',
+                        contents: [
+                            { type: 'text', text: 'แลกของรางวัลสำเร็จ', weight: 'bold', size: 'xl', color: '#6a8d73' },
+                            {
+                                type: 'box', layout: 'vertical', margin: 'lg', spacing: 'sm',
+                                contents: [
+                                    { type: 'box', layout: 'baseline', spacing: 'sm', contents: [ { type: 'text', text: 'รายการ', color: '#aaaaaa', size: 'sm', flex: 2 }, { type: 'text', text: reward.name, wrap: true, color: '#666666', size: 'sm', flex: 5 } ] },
+                                    { type: 'box', layout: 'baseline', spacing: 'sm', contents: [ { type: 'text', text: 'ใช้แต้ม', color: '#aaaaaa', size: 'sm', flex: 2 }, { type: 'text', text: `${formatNumberWithCommas(reward.points_required)} คะแนน`, wrap: true, color: '#f0a868', weight: 'bold', size: 'sm', flex: 5 } ] },
+                                    { type: 'box', layout: 'baseline', spacing: 'sm', contents: [ { type: 'text', text: 'สถานะ', color: '#aaaaaa', size: 'sm', flex: 2 }, { type: 'text', text: 'รอการตรวจสอบ', wrap: true, color: '#2563eb', weight: 'bold', size: 'sm', flex: 5 } ] }
+                                ]
+                            }
+                        ]
+                    },
+                    footer: {
+                        type: 'box', layout: 'vertical', spacing: 'sm', flex: 0,
+                        contents: [ { type: 'separator' }, { type: 'text', text: 'ขอบคุณที่ใช้บริการค่ะ', size: 'xs', color: '#aaaaaa', align: 'center', margin: 'md' } ]
+                    }
+                }
+            };
+            try {
+                const result = await liff.sendMessages([flexMessage]);
+                console.log("Flex message sent:", result);
+            } catch (error) {
+                console.error("Error sending Flex Message:", error);
+                throw new Error('ไม่สามารถส่งใบเสร็จใน LINE ได้');
+            }
+        }
+        
+        function setupRealtimeListener() {
+            db.channel('public:user_profiles')
+              .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'user_profiles', filter: `userId=eq.${userProfile.userId}` }, (payload) => {
+                  userProfile = payload.new;
+                  userPoints.textContent = formatNumberWithCommas(userProfile.point);
+                  loadRewards();
+                  loadHistory(); 
+                  Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'ข้อมูลของคุณอัปเดตแล้ว!', showConfirmButton: false, timer: 3000 });
+              }).subscribe();
+            
+            
+            db.channel('public:redemption_history')
+              .on('postgres_changes', { event: '*', schema: 'public', table: 'redemption_history', filter: `user_id=eq.${userProfile.userId}` }, (payload) => {
+                  console.log("History change received!", payload);
+                  loadHistory(); 
+              }).subscribe();
+        }
+
+        
+        document.addEventListener('DOMContentLoaded', main);
+        phoneInput.addEventListener('input', () => { phoneInput.value = phoneInput.value.replace(/[^0-9]/g, '').slice(0, 10); });
+        registerBtn.addEventListener('click', handleRegistration);
+        const message = "ไม่อนุญาตให้คลิกขวาครับ";
+
+        document.addEventListener("contextmenu", function (e) {
+          Swal.fire('Oh!', message, 'error');
+
+          e.preventDefault();
+        });
+
+        document.addEventListener("mousedown", function (e) {
+          if (e.button === 2 || e.button === 1) {
+            Swal.fire('Oh!', message, 'error');
+
+            e.preventDefault();
+          }
+        });
+    </script>
+</body>
+</html>
+
