@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ลงทะเบียน-เปิด web app</title>
+    <meta property="og:title" content="ลงทะเบียน-เปิด web app">
+    <meta property="og:type" content="website">
+    <meta property="og:description" content="ระบบตรวจสอบลงทะเบียนเพื่อเปิดเว็บไซต์">
+    <meta property="og:url" content="https://page.line.me/botstickerlth">
+    <meta property="og:site_name" content="iton5">
+    <meta property="og:image" content="https://lh3.googleusercontent.com/d/1Ck_OCfEW4dEp3A1k9yfQplYmW7qmwzFF">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&family=Prompt:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    
+    <style>
+       
+        body {
+            font-family: 'Prompt', sans-serif;
+            -webkit-tap-highlight-color: transparent; /* Remove tap highlight on mobile */
+        }
+        
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #1a202c, #2d3748);
+        }
+
+       
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes button-press {
+            0% { transform: scale(1); }
+            50% { transform: scale(0.95); }
+            100% { transform: scale(1); }
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+        
+        .animate-button-press {
+            animation: button-press 0.2s ease-out;
+        }
+
+        /* Custom styles for SweetAlert2 */
+        .swal2-popup {
+            background-color: #2d3748 !important;
+            border-radius: 1rem !important;
+        }
+        .swal2-title {
+            color: #ffffff !important;
+        }
+        .swal2-html-container {
+            color: #a0aec0 !important;
+        }
+        .swal2-confirm {
+            background: linear-gradient(to right, #38b2ac, #319795) !important;
+            border-radius: 0.75rem !important;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+        }
+        .swal2-cancel, .swal2-deny {
+            border-radius: 0.75rem !important;
+        }
+    </style>
+</head>
+<body class="gradient-bg text-white overflow-hidden min-h-screen flex items-center justify-center">
+
+   
+    <div id="loading-overlay" class="fixed inset-0 bg-gray-900 bg-opacity-80 flex flex-col items-center justify-center z-50 transition-opacity duration-300">
+        <img src="https://developers.line.biz/media/line-mini-app/LINE_spinner_light.svg" alt="Loading..." class="w-16 h-16 mb-4">
+        <p id="loading-text" class="text-lg text-gray-300">กำลังเตรียมข้อมูล...</p>
+    </div>
+
+    
+    <main id="app-container" class="w-full max-w-md mx-auto p-6 opacity-0 transition-opacity duration-500">
+       
+        <div id="welcome-step" class="hidden text-center">
+            <div class="w-32 h-32 mx-auto mb-6 flex items-center justify-center">
+                <svg class="w-full h-full" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <style>
+                        .path-draw {
+                            stroke-dasharray: 1000;
+                            stroke-dashoffset: 1000;
+                            animation: dash 1.5s ease-in-out forwards;
+                        }
+                        @keyframes dash { to { stroke-dashoffset: 0; } }
+                    </style>
+                    <circle class="path-draw" cx="50" cy="50" r="45" stroke="#38B2AC" stroke-width="4" fill="none" />
+                    <path class="path-draw" d="M30 50 l15 15 l30 -30" stroke="#FFFFFF" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round" style="animation-delay: 0.5s;" />
+                </svg>
+            </div>
+            <h1 class="text-4xl font-bold tracking-tight mb-2 animate-fade-in" style="animation-delay: 0.8s;">ยินดีต้อนรับ!</h1>
+            <p class="text-gray-400 text-lg mb-8 animate-fade-in" style="animation-delay: 1s;">ลงทะเบียนเพื่อรับข่าวสาร<br>และสิทธิพิเศษสำหรับคุณ</p>
+            <button id="start-btn" class="w-full py-4 px-6 bg-teal-600 font-semibold rounded-2xl shadow-lg transition-all duration-300 ease-in-out hover:bg-teal-500 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-teal-500 focus:ring-opacity-50 animate-fade-in" style="animation-delay: 1.2s;">
+                เริ่มต้นใช้งาน
+            </button>
+        </div>
+
+        <!-- Step 1 -->
+        <div id="interest-step" class="hidden animate-fade-in">
+            <div class="text-left mb-8">
+                <h1 class="text-4xl font-bold tracking-tight">เลือกสิ่งที่<br>คุณสนใจ</h1>
+                <p class="text-gray-400 mt-2">เลือกอย่างน้อย 1 รายการเพื่อดำเนินการต่อ</p>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4" id="interest-grid">
+                <!-- รายการที่สนใจ-->
+            </div>
+            
+            <button id="next-btn" class="w-full mt-8 py-4 px-6 bg-teal-600 font-semibold rounded-2xl shadow-lg transition-all duration-300 ease-in-out disabled:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-teal-500 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-teal-500 focus:ring-opacity-50">
+                ดำเนินการต่อ
+            </button>
+        </div>
+
+        <!-- Step 2 -->
+        <div id="info-step" class="hidden animate-fade-in">
+            <button id="back-btn" class="mb-6 text-gray-300 hover:text-white transition-colors duration-200 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                </svg>
+                ย้อนกลับ
+            </button>
+            <div class="text-left mb-8">
+                <h1 class="text-4xl font-bold tracking-tight">ข้อมูลส่วนตัว</h1>
+                <p class="text-gray-400 mt-2">กรุณากรอกข้อมูลของคุณให้ครบถ้วน</p>
+            </div>
+            
+            <div class="space-y-4">
+                 <input id="firstName-input" type="text" placeholder="ชื่อจริง" class="w-full p-4 bg-gray-700 border-2 border-gray-600 rounded-2xl text-white placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-teal-500 focus:ring-opacity-50 focus:border-teal-500 transition-all duration-300 text-lg">
+                 <input id="lastName-input" type="text" placeholder="นามสกุล" class="w-full p-4 bg-gray-700 border-2 border-gray-600 rounded-2xl text-white placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-teal-500 focus:ring-opacity-50 focus:border-teal-500 transition-all duration-300 text-lg">
+                 <input id="email-input" type="email" inputmode="email" placeholder="อีเมล" class="w-full p-4 bg-gray-700 border-2 border-gray-600 rounded-2xl text-white placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-teal-500 focus:ring-opacity-50 focus:border-teal-500 transition-all duration-300 text-lg">
+                 <input id="phone-input" type="tel" inputmode="tel" placeholder="เบอร์โทรศัพท์ (10 หลัก)" maxlength="10" class="w-full p-4 bg-gray-700 border-2 border-gray-600 rounded-2xl text-white placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-teal-500 focus:ring-opacity-50 focus:border-teal-500 transition-all duration-300 text-lg">
+            </div>
+            
+            <button id="submit-btn" class="w-full mt-8 py-4 px-6 bg-teal-600 font-semibold rounded-2xl shadow-lg transition-all duration-300 ease-in-out hover:bg-teal-500 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-teal-500 focus:ring-opacity-50">
+                ลงทะเบียน
+            </button>
+        </div>
+        
+       
+        <div id="success-step" class="hidden text-center animate-fade-in">
+             <div class="w-24 h-24 mx-auto bg-green-500/20 rounded-full flex items-center justify-center mb-6">
+                <svg class="w-16 h-16 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+             </div>
+             <h1 class="text-3xl font-bold">ลงทะเบียนสำเร็จ!</h1>
+             <p class="text-gray-400 mt-2">ขอบคุณที่ให้ความสนใจ<br>เราจะแจ้งข้อมูลข่าวสารให้คุณทราบ</p>
+             <button id="close-btn" class="w-full mt-8 py-4 px-6 bg-gray-600 font-semibold rounded-2xl shadow-lg transition-all duration-300 ease-in-out hover:bg-gray-500 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-gray-500 focus:ring-opacity-50">
+                ปิดหน้าต่างนี้
+             </button>
+        </div>
+
+    </main>
+
+    <script type="module">
+       
+        const LIFF_ID = "1661506692-yp13pe7B";
+        const SUPABASE_URL = "https://ttottijljxoinptmhgtu.supabase.co";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y";
+        const botbasicId = "@394rvsvz";
+       
+        const REDIRECT_URL = "https://www.google.com"; // <--เปลี่ยนเป็น URL เว็บไซต์ที่ต้องการ
+       
+
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const loadingText = document.getElementById('loading-text');
+        const appContainer = document.getElementById('app-container');
+        const welcomeStep = document.getElementById('welcome-step');
+        const interestStep = document.getElementById('interest-step');
+        const infoStep = document.getElementById('info-step');
+        const successStep = document.getElementById('success-step');
+        const startBtn = document.getElementById('start-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const submitBtn = document.getElementById('submit-btn');
+        const backBtn = document.getElementById('back-btn');
+        const closeBtn = document.getElementById('close-btn');
+        const firstNameInput = document.getElementById('firstName-input');
+        const lastNameInput = document.getElementById('lastName-input');
+        const emailInput = document.getElementById('email-input');
+        const phoneInput = document.getElementById('phone-input');
+        const interestGrid = document.getElementById('interest-grid');
+
+        let userProfile = null;
+        let selectedInterests = [];
+        let supabase = null;
+
+        // --- ข้อมูลความสนใจ ---
+        const interests = [
+            { id: 'sports', name: 'กีฬา', icon: `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>` },
+            { id: 'entertainment', name: 'บันเทิง', icon: `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>` },
+            { id: 'food', name: 'อาหาร', icon: `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>` },
+            { id: 'coffee', name: 'กาแฟ', icon: `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>` },
+            { id: 'transport', name: 'เดินทาง', icon: `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10l2 2h8a1 1 0 001-1z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h2m5-6h-5m2 0V8a1 1 0 00-1-1h-2a1 1 0 00-1 1v2m0 0h-2" /></svg>` },
+            { id: 'health', name: 'สุขภาพ', icon: `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>` },
+            { id: 'movies', name: 'ภาพยนตร์', icon: `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" /></svg>` },
+            { id: 'travel', name: 'ท่องเที่ยว', icon: `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>` },
+        ];
+
+         const showLoading = (message) => {
+            loadingText.textContent = message;
+            loadingOverlay.classList.remove('opacity-0');
+            loadingOverlay.classList.add('opacity-100');
+            loadingOverlay.style.pointerEvents = 'auto';
+        };
+
+        const hideLoading = () => {
+            loadingOverlay.classList.remove('opacity-100');
+            loadingOverlay.classList.add('opacity-0');
+            loadingOverlay.style.pointerEvents = 'none';
+        };
+        
+        const redirectToExternalSite = () => {
+            showLoading('คุณได้ลงทะเบียนแล้ว โปรดรอสักครู่...');
+            if(liff.isInClient()){
+                liff.openWindow({ url: REDIRECT_URL, external: true });
+                setTimeout(() => {
+                        liff.closeWindow();
+                    }, 1500);
+            } else {
+                window.location.href = REDIRECT_URL;
+            }
+        };
+
+        const switchView = (viewToShow) => {
+            [welcomeStep, interestStep, infoStep, successStep].forEach(view => {
+                view.classList.add('hidden');
+            });
+            viewToShow.classList.remove('hidden');
+        };
+
+        const initializeInterests = () => {
+            interestGrid.innerHTML = '';
+            interests.forEach(interest => {
+                const button = document.createElement('button');
+                button.className = "interest-btn flex items-center justify-start p-4 bg-gray-700 rounded-2xl border-2 border-transparent transition-all duration-300 transform hover:scale-105";
+                button.dataset.interest = interest.name;
+                button.innerHTML = `
+                    <div class="mr-3">${interest.icon}</div>
+                    <span class="font-semibold">${interest.name}</span>
+                `;
+                interestGrid.appendChild(button);
+            });
+        };
+        
+        const updateNextButtonState = () => {
+            nextBtn.disabled = selectedInterests.length === 0;
+        };
+        
+        const createFlexMessage = (profile, regData) => {
+            const interestItems = regData.interests.map(item => ({
+                "type": "box",
+                "layout": "baseline", "spacing": "sm", "contents": [
+                    { "type": "icon", "url": "https://scdn.line-apps.com/n/channel_devcenter/img/fx/review_gold_star_28.png", "size": "sm" },
+                    { "type": "text", "text": item, "color": "#A0AEC0", "size": "sm", "flex": 5 }
+                ]
+            }));
+
+            return {
+                "type": "flex",
+                "altText": "ลงทะเบียนสำเร็จ!",
+                "contents": {
+                    "type": "bubble",
+                    "hero": {
+                        "type": "image", "url": profile.pictureUrl || 'https://placehold.co/600x400/2D3748/FFFFFF?text=Welcome',
+                        "size": "full", "aspectRatio": "1:1", "aspectMode": "fit"
+                    },
+                    "body": {
+                        "type": "box", "layout": "vertical", "backgroundColor": "#2D3748",
+                        "contents": [
+                            { "type": "text", "text": "ลงทะเบียนสำเร็จ", "weight": "bold", "size": "xl", "color": "#FFFFFF" },
+                            { "type": "text", "text": `ยินดีต้อนรับคุณ ${regData.firstName} ${regData.lastName}`, "margin": "md", "color": "#CBD5E0", "wrap": true },
+                            { "type": "separator", "margin": "lg", "color": "#4A5568" },
+                            {
+                                "type": "box", "layout": "vertical", "margin": "lg", "spacing": "sm",
+                                "contents": [
+                                    { "type": "box", "layout": "baseline", "spacing": "sm", "contents": [
+                                        { "type": "text", "text": "อีเมล", "color": "#A0AEC0", "size": "sm", "flex": 2 },
+                                        { "type": "text", "text": regData.email, "wrap": true, "color": "#FFFFFF", "size": "sm", "flex": 5 }
+                                    ]},
+                                    { "type": "box", "layout": "baseline", "spacing": "sm", "contents": [
+                                        { "type": "text", "text": "โทร", "color": "#A0AEC0", "size": "sm", "flex": 2 },
+                                        { "type": "text", "text": regData.phone, "wrap": true, "color": "#FFFFFF", "size": "sm", "flex": 5 }
+                                    ]}
+                                ]
+                            },
+                             { "type": "separator", "margin": "lg", "color": "#4A5568" },
+                            { "type": "text", "text": "สิ่งที่คุณสนใจ", "margin": "lg", "color": "#CBD5E0" },
+                            {
+                                "type": "box", "layout": "vertical", "margin": "md", "spacing": "sm",
+                                "contents": interestItems
+                            }
+                        ]
+                    }
+                }
+            };
+        };
+
+        
+        startBtn.addEventListener('click', () => {
+            startBtn.classList.add('animate-button-press');
+            setTimeout(() => startBtn.classList.remove('animate-button-press'), 200);
+            switchView(interestStep);
+        });
+
+        interestGrid.addEventListener('click', (e) => {
+            const button = e.target.closest('.interest-btn');
+            if (!button) return;
+            button.classList.add('animate-button-press');
+            setTimeout(() => button.classList.remove('animate-button-press'), 200);
+            const interestName = button.dataset.interest;
+            if (selectedInterests.includes(interestName)) {
+                selectedInterests = selectedInterests.filter(i => i !== interestName);
+                button.classList.remove('bg-teal-500', 'border-teal-400', 'text-white');
+                button.classList.add('bg-gray-700', 'border-transparent');
+            } else {
+                selectedInterests.push(interestName);
+                button.classList.add('bg-teal-500', 'border-teal-400', 'text-white');
+                button.classList.remove('bg-gray-700', 'border-transparent');
+            }
+            updateNextButtonState();
+        });
+
+        nextBtn.addEventListener('click', () => {
+            nextBtn.classList.add('animate-button-press');
+            setTimeout(() => nextBtn.classList.remove('animate-button-press'), 200);
+            switchView(infoStep);
+        });
+        
+        backBtn.addEventListener('click', () => {
+            backBtn.classList.add('animate-button-press');
+            setTimeout(() => backBtn.classList.remove('animate-button-press'), 200);
+            switchView(interestStep);
+        });
+
+        submitBtn.addEventListener('click', async () => {
+            submitBtn.classList.add('animate-button-press');
+            setTimeout(() => submitBtn.classList.remove('animate-button-press'), 200);
+
+            const firstName = firstNameInput.value.trim();
+            const lastName = lastNameInput.value.trim();
+            const email = emailInput.value.trim();
+            const phone = phoneInput.value.trim();
+
+            if (!firstName || !lastName || !email || !phone) {
+                Swal.fire({ icon: 'error', title: 'ข้อมูลไม่ครบถ้วน', text: 'กรุณากรอกข้อมูลทุกช่อง' });
+                return;
+            }
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                Swal.fire({ icon: 'error', title: 'อีเมลไม่ถูกต้อง', text: 'กรุณาตรวจสอบรูปแบบอีเมลของคุณ' });
+                return;
+            }
+            if (phone.length !== 10 || !/^[0-9]+$/.test(phone)) {
+                Swal.fire({ icon: 'error', title: 'เบอร์โทรไม่ถูกต้อง', text: 'กรุณากรอกเบอร์โทรศัพท์ 10 หลัก' });
+                return;
+            }
+
+            showLoading('กำลังบันทึกข้อมูล...');
+
+            try {
+                const { error: upsertError } = await supabase
+                    .from('user_profiles')
+                    .upsert({ 
+                        "userId": userProfile.userId, 
+                        "displayName": userProfile.displayName,
+                        "pictureUrl": userProfile.pictureUrl,
+                        "statusMessage": userProfile.statusMessage,
+                        first_name: firstName,
+                        last_name: lastName,
+                        email: email,
+                        phone: phone,
+                        interests: selectedInterests,
+                        status: 'registered',
+                        updated_at: new Date().toISOString()
+                    }, { onConflict: '"userId"' });
+
+                if (upsertError) throw upsertError;
+
+                if (liff.isInClient()) {
+                    showLoading('กำลังส่งข้อความยืนยัน...');
+                    const registrationData = { firstName, lastName, email, phone, interests: selectedInterests };
+                    const flexMessage = createFlexMessage(userProfile, registrationData);
+                    
+                    await liff.sendMessages([flexMessage]);
+                    
+                    setTimeout(() => {
+                        liff.openWindow({ url: REDIRECT_URL, external: true });
+                    }, 500);
+                    
+                    setTimeout(() => {
+                        liff.closeWindow();
+                    }, 1500);
+
+                } else {
+                    hideLoading();
+                    window.location.href = REDIRECT_URL;
+                }
+
+            } catch (error) {
+                hideLoading();
+                console.error('Supabase/LIFF Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด',
+                    text: 'ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่อีกครั้ง',
+                });
+            }
+        });
+
+        closeBtn.addEventListener('click', () => {
+            if (liff.isInClient()) {
+                liff.closeWindow();
+            }
+        });
+
+
+        
+        async function main() {
+            try {
+                showLoading('กำลังเชื่อมต่อกับ LINE...');
+                await liff.init({ liffId: LIFF_ID, withLoginOnExternalBrowser: true  });
+
+                if (!liff.isLoggedIn()) {
+                    showLoading('กรุณาเข้าสู่ระบบ...');
+                    liff.login({ redirectUri: window.location.href });
+                    return;
+                }
+                   liff.getFriendship().then((data) => {
+                        if (!data.friendFlag) {
+                            Swal.fire('เดี๋ยวก่อน!', 'คุณยังไม่ได้เป็นเพื่อนกับเรา', 'error').then(() => {
+                                window.location = 'https://line.me/R/ti/p/'+ botbasicId
+                            })
+                        }
+                    });
+                showLoading('กำลังดึงข้อมูลโปรไฟล์...');
+                userProfile = await liff.getProfile();
+                
+                const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+                supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+                showLoading('กำลังตรวจสอบสถานะ...');
+                const { data, error } = await supabase
+                    .from('user_profiles')
+                    .select('"userId", phone')
+                    .eq('"userId"', userProfile.userId)
+                    .single();
+
+                if (error && error.code !== 'PGRST116') {
+                   console.error("Error checking user:", error);
+                   throw error;
+                }
+                
+                if (data && data.phone) {
+                    redirectToExternalSite();
+                } else {
+                    initializeInterests();
+                    updateNextButtonState();
+                    hideLoading();
+                    switchView(welcomeStep);
+                    appContainer.classList.remove('opacity-0');
+                }
+                
+            } catch (error) {
+                hideLoading();
+                console.error('Initialization Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาดในการเริ่มต้น',
+                    text: 'ไม่สามารถโหลดแอปได้ กรุณาลองอีกครั้ง: ' + error.message,
+                    allowOutsideClick: false,
+                    confirmButtonText: 'ปิด'
+                }).then(() => {
+                    if(liff.isInClient()) liff.closeWindow();
+                });
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', main);
+    </script>
+</body>
+</html>
+
