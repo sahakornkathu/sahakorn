@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบจัดการแต้ม (Admin)</title>
+    <meta property="og:title" content="Admin web app">
+    <meta property="og:type" content="website">
+    <meta property="og:description" content="ระบบจัดการแต้ม (Admin)">
+    <meta property="og:url" content="https://page.line.me/botstickerlth">
+    <meta property="og:site_name" content="iton5">
+    <meta property="og:image" content="https://lh3.googleusercontent.com/d/1Ck_OCfEW4dEp3A1k9yfQplYmW7qmwzFF">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'peach': '#f0a868',
+                        'cream': '#ffe8c2',
+                        'mint': '#e4ffe1',
+                        'ivory': '#f4fdd9',
+                        'earthy-green': '#6a8d73',
+                    }
+                }
+            }
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap');
+        body { font-family: 'Kanit', sans-serif; }
+        .loader { width: 50px; height: 50px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes click-effect { 0% { transform: scale(1); } 50% { transform: scale(0.97); } 100% { transform: scale(1); } }
+        .animate-click { animation: click-effect 0.2s ease-in-out; }
+        .swal2-popup { background: #f4fdd9 !important; border-radius: 1rem !important; color: #6a8d73 !important; border: 2px solid #e4ffe1;}
+        .swal2-title, .swal2-html-container { color: #6a8d73 !important; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-mint to-ivory min-h-screen flex flex-col lg:flex-row items-start justify-center p-4 gap-6">
+
+    <div id="loading-overlay" class="fixed inset-0 bg-black bg-opacity-50 flex flex-col items-center justify-center z-50 hidden">
+        <img src="https://developers.line.biz/media/line-mini-app/LINE_spinner_light.svg" alt="Loading..." class="loader mb-4">
+        <p id="loading-text" class="text-white text-lg">กำลังโหลด...</p>
+    </div>
+
+    <main class="w-full max-w-lg bg-cream/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 text-earthy-green transition-all duration-500 border border-white/50">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold tracking-wide">Point Management</h1>
+            <p class="text-earthy-green/80 font-light">Admin Control</p>
+        </header>
+
+        <div class="mb-6">
+            <label for="promotion-select" class="block mb-2 text-sm font-medium">1. เลือกโปรโมชัน (สำหรับให้แต้ม)</label>
+            <select id="promotion-select" class="bg-ivory/60 border-2 border-earthy-green/20 text-earthy-green text-base rounded-lg focus:ring-peach focus:border-peach block w-full p-3">
+                <option selected disabled value="">กำลังโหลดโปรโมชัน...</option>
+            </select>
+            <img id="promo-image" src="" alt="Promotion Image" class="mt-4 rounded-lg shadow-md hidden w-full h-auto max-h-48 object-cover">
+        </div>
+        <div class="mb-6">
+            <label for="phone-search" class="block mb-2 text-sm font-medium">2. ค้นหาลูกค้าด้วยเบอร์โทร</label>
+            <div class="flex">
+                <input type="tel" id="phone-search" maxlength="10" class="text-base rounded-none rounded-l-lg bg-ivory/60 border-2 border-earthy-green/20 text-earthy-green focus:ring-peach focus:border-peach block w-full p-3" placeholder="0812345678">
+                <button id="search-btn" class="bg-earthy-green hover:bg-opacity-90 text-white font-bold py-3 px-5 rounded-r-lg transition-all animate-click">ค้นหา</button>
+            </div>
+        </div>
+        <div id="user-info-card" class="bg-ivory/50 p-4 rounded-lg hidden items-center mb-6 border-2 border-earthy-green/10 flex-col md:flex-row text-center md:text-left">
+            <img id="user-image" src="" alt="Profile" class="w-24 h-24 rounded-full border-4 border-white shadow-lg mb-4 md:mb-0 md:mr-6">
+            <div class="flex-grow">
+                <h2 id="user-name" class="text-2xl font-semibold"></h2>
+                <p class="text-base text-earthy-green/80">คะแนนปัจจุบัน</p>
+                <strong id="current-points" class="text-5xl font-bold text-peach">0</strong>
+            </div>
+        </div>
+        <div id="point-management" class="hidden">
+             <label for="points-input" class="block mb-2 text-sm font-medium">3. ระบุจำนวนแต้ม</label>
+            <input type="number" id="points-input" min="1" class="text-base bg-ivory/60 border-2 border-earthy-green/20 text-earthy-green rounded-lg focus:ring-peach focus:border-peach block w-full p-3 mb-4">
+            <div class="grid grid-cols-2 gap-4">
+                <button id="give-points-btn" class="w-full bg-earthy-green hover:bg-opacity-90 text-white font-bold py-3 px-4 rounded-lg transition-all animate-click">ให้แต้ม</button>
+                <button id="edit-points-btn" class="w-full bg-peach hover:bg-opacity-90 text-white font-bold py-3 px-4 rounded-lg transition-all animate-click">หักแต้ม</button>
+            </div>
+        </div>
+    </main>
+
+    <aside class="w-full max-w-lg bg-ivory/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 text-earthy-green border border-white/50 mt-6 lg:mt-0">
+        <header class="text-center mb-6">
+            <h2 class="text-3xl font-bold tracking-wide">รายการรออนุมัติ</h2>
+            <p id="pending-count" class="text-earthy-green/80 font-light">0 รายการ</p>
+        </header>
+        <div id="pending-list" class="space-y-4 max-h-[30rem] overflow-y-auto pr-2">
+            <p id="no-pending-items" class="text-center text-earthy-green/70 py-8">ไม่มีรายการที่รอการอนุมัติ</p>
+        </div>
+    </aside>
+
+    <script>
+      
+        const SUPABASE_URL = "https://ttottijljxoinptmhgtu.supabase.co";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y";
+        const { createClient } = supabase;
+        const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const loadingText = document.getElementById('loading-text');
+        const promotionSelect = document.getElementById('promotion-select');
+        const promoImage = document.getElementById('promo-image'); 
+        const phoneSearchInput = document.getElementById('phone-search');
+        const searchBtn = document.getElementById('search-btn');
+        const userInfoCard = document.getElementById('user-info-card');
+        const userImage = document.getElementById('user-image');
+        const userName = document.getElementById('user-name');
+        const currentPoints = document.getElementById('current-points');
+        const pointManagement = document.getElementById('point-management');
+        const pointsInput = document.getElementById('points-input');
+        const givePointsBtn = document.getElementById('give-points-btn');
+        const editPointsBtn = document.getElementById('edit-points-btn');
+        const pendingList = document.getElementById('pending-list');
+        const noPendingItems = document.getElementById('no-pending-items');
+        const pendingCount = document.getElementById('pending-count');
+        
+       
+        let currentUser = null;
+        const formatNumberWithCommas = (number) => Number(number || 0).toLocaleString('en-US');
+        const showLoader = (message) => { loadingText.textContent = message; loadingOverlay.classList.remove('hidden'); };
+        const hideLoader = () => { loadingOverlay.classList.add('hidden'); };
+
+       
+        async function loadPendingRedemptions() {
+            const { data, error } = await db.from('redemption_history')
+                .select(`id, reward_name, points_spent, created_at, user_profiles ( displayName, phone )`)
+                .eq('status', 'pending')
+                .order('created_at', { ascending: true });
+
+            if (error) {
+                console.error("Error fetching pending redemptions:", error);
+                pendingList.innerHTML = '<p class="text-red-500">เกิดข้อผิดพลาดในการโหลดข้อมูล</p>';
+                return;
+            }
+
+            pendingCount.textContent = `${data.length} รายการ`;
+            pendingList.innerHTML = ''; 
+
+            if (data.length === 0) {
+                pendingList.appendChild(noPendingItems);
+            } else {
+                data.forEach(item => {
+                    const date = new Date(item.created_at).toLocaleString('th-TH');
+                    const card = document.createElement('div');
+                    card.id = `pending-item-${item.id}`;
+                    card.className = 'bg-white/80 p-4 rounded-lg shadow-sm border border-earthy-green/10';
+                    card.innerHTML = `
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="font-bold text-earthy-green">${item.user_profiles.displayName || '-'}</p>
+                                <p class="text-sm text-earthy-green/80">${item.user_profiles.phone}</p>
+                            </div>
+                            <p class="font-bold text-lg text-peach">-${formatNumberWithCommas(item.points_spent)}</p>
+                        </div>
+                        <p class="mt-2 text-sm text-earthy-green">แลก: <span class="font-semibold">${item.reward_name}</span></p>
+                        <p class="text-xs text-earthy-green/60 mt-1">เวลา: ${date}</p>
+                        
+                        <div class="grid grid-cols-2 gap-2 mt-3">
+                            <button onclick="handleRejectRedemption(${item.id})" class="w-full bg-gray-400 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg transition-all text-sm">
+                                ปฏิเสธ
+                            </button>
+                            <button onclick="handleConfirmRedemption(${item.id})" class="w-full bg-earthy-green hover:bg-opacity-90 text-white font-bold py-2 px-4 rounded-lg transition-all text-sm">
+                                ยืนยัน
+                            </button>
+                        </div>
+                    `;
+                    pendingList.appendChild(card);
+                });
+            }
+        }
+
+        async function handleConfirmRedemption(historyId) {
+            Swal.fire({
+                title: 'ยืนยันการทำรายการ?',
+                text: "ระบบจะหักแต้มของลูกค้า และอัปเดตสถานะเป็น 'สำเร็จ'",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#6a8d73',
+                cancelButtonColor: '#aaa',
+                confirmButtonText: 'ยืนยัน',
+                cancelButtonText: 'ยกเลิก'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    showLoader('กำลังดำเนินการ...');
+                    const { data, error } = await db.rpc('approve_redemption', { redemption_id: historyId });
+                    hideLoader();
+                    if (error || (data && data.startsWith('Error'))) {
+                        Swal.fire('เกิดข้อผิดพลาด!', error?.message || data, 'error');
+                    } else {
+                        Swal.fire('สำเร็จ!', 'ทำรายการเรียบร้อยแล้ว', 'success');
+                        removePendingItemFromUI(historyId);
+                    }
+                }
+            });
+        }
+
+        async function handleRejectRedemption(historyId) {
+            Swal.fire({
+                title: 'ปฏิเสธรายการนี้?',
+                text: "สถานะของรายการจะถูกเปลี่ยนเป็น 'rejected'",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#aaa',
+                confirmButtonText: 'ใช่, ปฏิเสธ',
+                cancelButtonText: 'ยกเลิก'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    showLoader('กำลังปฏิเสธรายการ...');
+                    const { data, error } = await db.rpc('reject_redemption', { redemption_id: historyId });
+                    hideLoader();
+                    if (error || (data && data.startsWith('Error'))) {
+                        Swal.fire('เกิดข้อผิดพลาด!', error?.message || data, 'error');
+                    } else {
+                        Swal.fire('สำเร็จ!', 'ปฏิเสธรายการเรียบร้อยแล้ว', 'success');
+                        removePendingItemFromUI(historyId);
+                    }
+                }
+            });
+        }
+        
+        function removePendingItemFromUI(historyId) {
+            const cardToRemove = document.getElementById(`pending-item-${historyId}`);
+            if (cardToRemove) {
+                cardToRemove.style.transition = 'opacity 0.5s, transform 0.5s, margin 0.5s, padding 0.5s, height 0.5s';
+                cardToRemove.style.opacity = '0';
+                cardToRemove.style.transform = 'scale(0.9)';
+                cardToRemove.style.marginTop = '0';
+                cardToRemove.style.marginBottom = '0';
+                cardToRemove.style.paddingTop = '0';
+                cardToRemove.style.paddingBottom = '0';
+                cardToRemove.style.height = '0px';
+
+                setTimeout(() => {
+                    cardToRemove.remove();
+                    const currentCount = pendingList.children.length;
+                    pendingCount.textContent = `${currentCount} รายการ`;
+                    if (currentCount === 0) {
+                        pendingList.appendChild(noPendingItems);
+                    }
+                }, 500);
+            }
+        }
+        
+        async function loadPromotions() {
+            const { data, error } = await db.from('promotion').select('id, name, points_value, promo_image_url');
+            if (error) { 
+                console.error('Error fetching promotions:', error); 
+                promotionSelect.innerHTML = '<option>โหลดโปรโมชันไม่สำเร็จ</option>';
+                return; 
+            }
+            promotionSelect.innerHTML = '<option selected disabled value="">-- เลือกโปรโมชัน --</option>';
+            data.forEach(promo => {
+                const option = document.createElement('option');
+                option.value = promo.id;
+                option.textContent = promo.name;
+                option.dataset.points = promo.points_value; 
+                option.dataset.image = promo.promo_image_url; 
+                promotionSelect.appendChild(option);
+            });
+        }
+        
+        async function handleSearch() {
+            const phone = phoneSearchInput.value.trim();
+            if (phone.length < 10) { Swal.fire('ข้อมูลไม่ถูกต้อง', 'กรุณากรอกเบอร์โทร 10 หลัก', 'warning'); return; }
+            showLoader('กำลังค้นหา...');
+            resetUI();
+            try {
+                const { data, error } = await db.from('user_profiles').select('*').eq('phone', phone).single();
+                if (error || !data) throw new Error('ไม่พบผู้ใช้งานนี้ในระบบ');
+                currentUser = data;
+                displayUserInfo(data);
+            } catch (error) {
+                Swal.fire('ไม่พบข้อมูล', error.message, 'error');
+            } finally {
+                hideLoader();
+            }
+        }
+
+        function displayUserInfo(user) {
+            userImage.src = user.pictureUrl || 'https://img.icons8.com/?size=80&id=492ILERveW8G&format=png';
+            userName.textContent = user.displayName || '-';
+            currentPoints.textContent = formatNumberWithCommas(user.point);
+            userInfoCard.classList.remove('hidden');
+            userInfoCard.classList.add('flex');
+            pointManagement.classList.remove('hidden');
+        }
+
+        async function updatePoints(operation) {
+            if (!currentUser) return;
+            const pointsStr = pointsInput.value;
+            if (!pointsStr || parseInt(pointsStr) <= 0) { Swal.fire('ข้อมูลไม่ถูกต้อง', 'กรุณาใส่จำนวนแต้ม', 'warning'); return; }
+            
+            const pointsToChange = Number(pointsInput.value);
+            const currentTotal = Number(currentUser.point);
+            let newTotal;
+
+            if (operation === 'add') {
+                newTotal = currentTotal + pointsToChange;
+            } else {
+                if (currentTotal < pointsToChange) { Swal.fire('คะแนนไม่พอ', 'ไม่สามารถหักแต้มได้', 'error'); return; }
+                newTotal = currentTotal - pointsToChange;
+            }
+
+            showLoader('กำลังอัปเดตแต้ม...');
+            const { data, error } = await db.from('user_profiles').update({ point: newTotal }).eq('userId', currentUser.userId).select().single();
+            hideLoader();
+
+            if (error) {
+                Swal.fire('เกิดข้อผิดพลาด', 'ไม่สามารถอัปเดตแต้มได้', 'error');
+            } else {
+                currentUser = data;
+                currentPoints.textContent = formatNumberWithCommas(newTotal);
+                pointsInput.value = '';
+                Swal.fire('สำเร็จ!', `อัปเดตคะแนนเป็น ${formatNumberWithCommas(newTotal)} แต้มแล้ว`, 'success');
+            }
+        }
+
+        function resetUI() {
+            currentUser = null;
+            userInfoCard.classList.add('hidden');
+            pointManagement.classList.add('hidden');
+            pointsInput.value = '';
+            phoneSearchInput.value = '';
+        }
+        
+      
+        function setupRealtimeListener() {
+            db.channel('public:redemption_history')
+              .on('postgres_changes', 
+                  { event: '*', schema: 'public', table: 'redemption_history' }, 
+                  (payload) => {
+                      console.log('History table changed, reloading pending list.', payload);
+                      loadPendingRedemptions();
+                  }
+              )
+              .subscribe();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadPromotions();
+            loadPendingRedemptions();
+            setupRealtimeListener();
+        });
+
+        
+        searchBtn.addEventListener('click', handleSearch);
+        phoneSearchInput.addEventListener('keyup', (e) => { if (e.key === 'Enter') handleSearch(); });
+        givePointsBtn.addEventListener('click', () => updatePoints('add'));
+        editPointsBtn.addEventListener('click', () => updatePoints('subtract'));
+        
+        
+        promotionSelect.addEventListener('change', (e) => {
+            const selectedOption = e.target.options[e.target.selectedIndex];
+            const points = selectedOption.dataset.points;
+            const imageUrl = selectedOption.dataset.image;
+
+            if (points) {
+                pointsInput.value = points;
+            }
+
+            if (imageUrl) {
+                promoImage.src = imageUrl;
+                promoImage.classList.remove('hidden');
+            } else {
+                promoImage.classList.add('hidden');
+            }
+        });
+
+  const message = "ไม่อนุญาตให้คลิกขวาครับ";
+
+  document.addEventListener("contextmenu", function (e) {
+    Swal.fire('Oh!', message, 'error');
+   
+    e.preventDefault();
+  });
+
+  document.addEventListener("mousedown", function (e) {
+    if (e.button === 2 || e.button === 1) {
+      Swal.fire('Oh!', message, 'error');
+    
+      e.preventDefault();
+    }
+  });
+    </script>
+</body>
+</html>
+
