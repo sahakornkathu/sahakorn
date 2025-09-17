@@ -5,6 +5,89 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>My Profile</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', sans-serif;
+    }
+    body {
+      background: linear-gradient(135deg, #0f0f0f, #1a1a1a);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    /* --- Profile Card --- */
+    .profile-card {
+      background: #111;
+      border: 2px solid #d4af37; /* gold */
+      border-radius: 20px;
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+      color: #fff;
+      padding: 30px 20px;
+      box-shadow: 0 0 30px rgba(212, 175, 55, 0.3);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .profile-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 0 50px rgba(212, 175, 55, 0.6);
+    }
+    .profile-pic {
+      width: 120px;
+      height: 120px;
+      object-fit: cover;
+      border-radius: 50%;
+      border: 3px solid #d4af37;
+      margin-bottom: 20px;
+    }
+    .profile-name {
+      font-size: 1.8rem;
+      font-weight: bold;
+      margin-bottom: 5px;
+      color: #d4af37;
+    }
+    .profile-role {
+      font-size: 1rem;
+      background: #d4af37;
+      color: #111;
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 15px;
+      margin-bottom: 15px;
+    }
+    .profile-info {
+      text-align: left;
+      margin-top: 15px;
+    }
+    .profile-info p {
+      margin: 6px 0;
+      font-size: 0.95rem;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      padding-bottom: 6px;
+    }
+    .no-user {
+      color: #aaa;
+      font-size: 1.2rem;
+      text-align: center;
+    }
+
+    @media (max-width: 480px) {
+      .profile-card {
+        padding: 25px 15px;
+      }
+      .profile-name {
+        font-size: 1.5rem;
+      }
+    }
+    
+  </style>
 </head>
 <body class="bg-gray-100 min-h-screen p-6">
   <h1 class="text-3xl font-bold text-center mb-8">My Profile</h1>
