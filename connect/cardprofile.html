@@ -3,41 +3,42 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>User Profiles</title>
-  <!-- Tailwind CSS CDN -->
+  <title>My Profile</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 min-h-screen p-6">
 
-  <h1 class="text-3xl font-bold text-center mb-8">User Profiles</h1>
-  <div id="profiles" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6"></div>
+  <h1 class="text-3xl font-bold text-center mb-8">My Profile</h1>
+  <div id="profile" class="max-w-sm mx-auto"></div>
 
-  <!-- Supabase JS -->
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <script>
     const SUPABASE_URL = 'https://ttottijljxoinptmhgtu.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y';
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    const profilesContainer = document.getElementById('profiles');
+    // <-- กำหนด userId ของผู้ใช้ปัจจุบันตรงนี้ -->
+    const CURRENT_USER_ID = 'USER_ID_ที่ได้จากระบบล็อกอิน';
 
-    async function loadProfiles() {
+    const profileContainer = document.getElementById('profile');
+
+    async function loadMyProfile() {
       const { data, error } = await supabase
         .from('user_profiles')
-        .select('*');
+        .select('*')
+        .eq('userId', CURRENT_USER_ID)  // <-- ดึงเฉพาะ user นี้
+        .single(); // คาดว่าจะได้แค่ 1 แถว
 
       if (error) {
         console.error(error);
-        profilesContainer.innerHTML = `<p class="text-red-500">เกิดข้อผิดพลาดในการโหลดข้อมูล</p>`;
+        profileContainer.innerHTML = `<p class="text-red-500">ไม่พบข้อมูลผู้ใช้</p>`;
         return;
       }
 
-      profilesContainer.innerHTML = '';
-      data.forEach(user => {
-        const card = document.createElement('div');
-        card.className = 'bg-white rounded-2xl shadow p-6 text-center';
+      const user = data;
 
-        card.innerHTML = `
+      profileContainer.innerHTML = `
+        <div class="bg-white rounded-2xl shadow p-6 text-center">
           <img src="${user.pictureUrl || 'https://via.placeholder.com/100'}" 
                alt="Profile" 
                class="w-24 h-24 rounded-full mx-auto mb-4 object-cover">
@@ -46,12 +47,11 @@
           <p class="text-sm text-gray-700 mb-2">Status: ${user.status || '-'}</p>
           <p class="text-sm text-gray-700 mb-2">Point: ${user.point || 0}</p>
           <p class="text-sm text-gray-700">Role: ${user.role || '-'}</p>
-        `;
-        profilesContainer.appendChild(card);
-      });
+        </div>
+      `;
     }
 
-    loadProfiles();
+    loadMyProfile();
   </script>
 </body>
 </html>
