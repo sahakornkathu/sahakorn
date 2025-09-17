@@ -1,124 +1,191 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>My Profile</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Profile</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+  body {
+    background: linear-gradient(135deg, #f0f4f8, #e0e7ff);
+    font-family: 'Poppins', sans-serif;
+  }
 
-<style>
-body {background: linear-gradient(135deg,#f0f4f8,#e0e7ff); font-family:'Poppins',sans-serif;}
-#profile{transition:all .3s;}
-.bg-white{background:linear-gradient(145deg,#fff,#f3f4f6);border:2px solid #e5e7eb;box-shadow:0 10px 25px rgba(0,0,0,.1);padding:2rem;border-radius:2rem;transition:transform .3s,box-shadow .3s;position:relative;}
-.bg-white:hover{transform:translateY(-7px);box-shadow:0 20px 40px rgba(0,0,0,.2);}
-img.rounded-full{border:4px solid #6366f1;box-shadow:0 4px 15px rgba(0,0,0,.1);transition:transform .3s;}
-img.rounded-full:hover{transform:scale(1.1);}
-h2.text-xl{color:#4f46e5;font-weight:700;margin-bottom:.5rem;}
-p.text-gray-500{color:#6b7280;font-weight:500;margin-bottom:.5rem;}
-p.text-sm{color:#374151;margin-bottom:.5rem;font-weight:500;}
-.badge{display:inline-block;padding:.25rem .75rem;border-radius:9999px;font-size:.75rem;font-weight:600;color:#fff;background:linear-gradient(135deg,#facc15,#f59e0b);margin:.25rem .25rem .25rem 0;box-shadow:0 2px 6px rgba(0,0,0,.2);transition:transform .3s;}
-.badge:hover{transform:scale(1.1);}
-.modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);display:flex;justify-content:center;align-items:center;opacity:0;pointer-events:none;transition:opacity .3s;}
-.modal.show{opacity:1;pointer-events:auto;}
-.modal-content{background:white;padding:2rem;border-radius:1.5rem;max-width:400px;width:90%;}
-.modal-header{font-size:1.25rem;font-weight:700;margin-bottom:1rem;text-align:center;}
-.modal-footer{text-align:right;margin-top:1rem;}
-@media(max-width:480px){.bg-white{padding:1.5rem;border-radius:1.5rem;}h2.text-xl{font-size:1.25rem;}img.rounded-full{width:96px;height:96px;}.badge{font-size:.7rem;padding:.2rem .6rem;}}
+  #profile {
+    transition: all 0.3s ease-in-out;
+  }
+
+  .bg-white {
+    background: linear-gradient(145deg, #ffffff, #f3f4f6);
+    border: 2px solid #e5e7eb;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    padding: 2rem;
+    border-radius: 2rem;
+    transition: transform 0.3s, box-shadow 0.3s;
+    position: relative;
+  }
+
+  .bg-white:hover {
+    transform: translateY(-7px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  }
+
+  img.rounded-full {
+    border: 4px solid #6366f1;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s;
+  }
+
+  img.rounded-full:hover {
+    transform: scale(1.1);
+  }
+
+  h2.text-xl {
+    color: #4f46e5;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+  }
+
+  p.text-gray-500 {
+    color: #6b7280;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+  }
+
+  p.text-sm {
+    color: #374151;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+  }
+
+  /* Badge สำหรับ Point และ Role */
+  .badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #fff;
+    background: linear-gradient(135deg, #facc15, #f59e0b);
+    margin: 0.25rem 0.25rem 0.25rem 0;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    transition: transform 0.3s;
+  }
+
+  .badge:hover {
+    transform: scale(1.1);
+  }
+
+  /* Responsive */
+  @media (max-width: 480px) {
+    .bg-white {
+      padding: 1.5rem;
+      border-radius: 1.5rem;
+    }
+
+    h2.text-xl {
+      font-size: 1.25rem;
+    }
+
+    img.rounded-full {
+      width: 96px;
+      height: 96px;
+    }
+
+    .badge {
+      font-size: 0.7rem;
+      padding: 0.2rem 0.6rem;
+    }
+  }
 </style>
+
 </head>
 <body class="bg-gray-100 min-h-screen p-6">
+  <h1 class="text-3xl font-bold text-center mb-8">My Profile</h1>
+  <div id="profile" class="max-w-sm mx-auto text-center text-gray-600">กำลังโหลด...</div>
 
-<h1 class="text-3xl font-bold text-center mb-8">My Profile</h1>
-<div id="profile" class="max-w-sm mx-auto text-center text-gray-600">กำลังโหลด...</div>
+  <!-- LINE LIFF SDK -->
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <!-- Supabase JS -->
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 
-<!-- Modal Edit Profile -->
-<div id="editModal" class="modal">
-  <div class="modal-content">
-    <div class="modal-header">Edit Profile</div>
-    <div class="modal-body space-y-2">
-      <input id="firstName" type="text" placeholder="First Name" class="w-full border rounded px-3 py-2" />
-      <input id="lastName" type="text" placeholder="Last Name" class="w-full border rounded px-3 py-2" />
-      <input id="email" type="email" placeholder="Email" class="w-full border rounded px-3 py-2" />
-      <input id="phone" type="text" placeholder="Phone" class="w-full border rounded px-3 py-2" />
-    </div>
-    <div class="modal-footer space-x-2">
-      <button id="closeModal" class="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400">Cancel</button>
-      <button id="saveModal" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Save</button>
-    </div>
-  </div>
+  <script>
+    const LIFF_ID = '1661506692-K4XeBbvd';
+    const SUPABASE_URL = 'https://ttottijljxoinptmhgtu.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y';
+
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const profileContainer = document.getElementById('profile');
+
+    async function init() {
+      try {
+        // 1) เริ่มต้น LIFF
+        await liff.init({ liffId: LIFF_ID });
+
+        // 2) เช็คว่าเปิดผ่าน LINE App หรือไม่
+        if (!liff.isInClient()) {
+          profileContainer.innerHTML = `
+            <div class="p-4 text-center">
+              <p class="mb-4 text-red-500">กรุณาเปิดลิงก์นี้ผ่าน LINE App เท่านั้น</p>
+              <a href="line://app/${LIFF_ID}" 
+                 class="inline-block bg-green-500 text-white px-4 py-2 rounded-lg shadow">
+                 เปิดใน LINE
+              </a>
+            </div>
+          `;
+          return;
+        }
+
+        // 3) ถ้ายังไม่ login ให้ login พร้อม redirect กลับหน้านี้
+        if (!liff.isLoggedIn()) {
+          liff.login({ redirectUri: window.location.href });
+          return;
+        }
+
+        // 4) ดึง userId ของผู้ใช้ปัจจุบันจาก LINE
+        const profile = await liff.getProfile();
+        const userId = profile.userId;
+        console.log('LINE userId:', userId);
+
+        // 5) Query Supabase หาข้อมูลในตาราง user_profiles
+        const { data, error } = await supabase
+          .from('user_profiles')
+          .select('*')
+          .eq('userId', userId)
+          .maybeSingle();
+
+        if (error || !data) {
+          console.error(error);
+          profileContainer.innerHTML = `<p class="text-red-500">ไม่พบข้อมูลผู้ใช้ในระบบ</p>`;
+          return;
+        }
+
+        const user = data;
+
+        // 6) แสดงผล Card Profile
+        profileContainer.innerHTML = `
+          <div class="bg-white rounded-2xl shadow p-6 text-center">
+            <img src="${user.pictureUrl || 'https://via.placeholder.com/100'}" 
+                 alt="Profile" 
+                 class="w-24 h-24 rounded-full mx-auto mb-4 object-cover">
+            <h2 class="text-xl font-semibold">${user.displayName || user.first_name || 'No Name'}</h2>
+            <p class="text-gray-500 mb-2">${user.email || ''}</p>
+            <p class="text-sm text-gray-700 mb-2">ชื่อ: ${user.first_name || '-'}</p>
+            <p class="text-sm text-gray-700 mb-2">นามสกุล: ${user.last_name || '-'}</p>
+            <p class="text-sm text-gray-700 mb-2">Point: <span class="badge">${user.point || 0}</span></p>
+            <p class="text-sm text-gray-700">Role: <span class="badge">${user.role || '-'}</span></p>
+
+          </div>
+        `;
+      } catch (err) {
+        console.error(err);
+        profileContainer.innerHTML = `<p class="text-red-500">เกิดข้อผิดพลาดในการโหลดข้อมูล</p>`;
+      }
+    }
+
+    init();
+  </script>
+  
 </div>
-
-<script>
-const LIFF_ID='1661506692-K4XeBbvd';
-const SUPABASE_URL='https://ttottijljxoinptmhgtu.supabase.co';
-const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y';
-
-const supabase=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
-const profileContainer=document.getElementById('profile');
-let userId=null,user=null;
-
-async function init(){
-  try{
-    await liff.init({liffId:LIFF_ID});
-    if(!liff.isInClient()){profileContainer.innerHTML=`<p class="text-red-500">กรุณาเปิดเว็บผ่าน LINE App เท่านั้น</p>`; return;}
-    if(!liff.isLoggedIn()){liff.login({redirectUri:window.location.href}); return;}
-    const profile=await liff.getProfile();
-    userId=profile.userId;
-    await loadUserProfile();
-    supabase.channel('user-profile')
-      .on('postgres_changes',{event:'*',schema:'public',table:'user_profiles',filter:`userId=eq.${userId}`},payload=>{
-        user=payload.new;
-        renderProfile();
-      })
-      .subscribe();
-  }catch(err){console.error(err); profileContainer.innerHTML=`<p class="text-red-500">เกิดข้อผิดพลาดในการโหลดข้อมูล</p>`;}
-}
-
-async function loadUserProfile(){
-  const {data,error}=await supabase.from('user_profiles').select('*').eq('userId',userId).maybeSingle();
-  if(error||!data){profileContainer.innerHTML=`<p class="text-red-500">ไม่พบข้อมูลผู้ใช้</p>`; return;}
-  user=data;
-  renderProfile();
-}
-
-function renderProfile(){
-  profileContainer.innerHTML=`
-  <div class="bg-white rounded-2xl shadow p-6 text-center">
-    <img src="${user.pictureUrl||'https://via.placeholder.com/100'}" alt="Profile" class="w-24 h-24 rounded-full mx-auto mb-4 object-cover">
-    <h2 class="text-xl font-semibold">${user.displayName||user.first_name||'No Name'}</h2>
-    <p class="text-gray-500 mb-2">${user.email||''}</p>
-    <p class="text-sm text-gray-700 mb-2">ชื่อ: ${user.first_name||'-'}</p>
-    <p class="text-sm text-gray-700 mb-2">นามสกุล: ${user.last_name||'-'}</p>
-    <p class="text-sm text-gray-700 mb-2">Phone: ${user.phone||'-'}</p>
-    <p class="text-sm text-gray-700 mb-2">Point: <span class="badge">${user.point||0}</span></p>
-    <p class="text-sm text-gray-700">Role: <span class="badge">${user.role||'-'}</span></p>
-    <button id="edit-btn" class="mt-4 bg-yellow-500 text-white px-4 py-2 rounded-lg shadow hover:bg-yellow-600">Edit Profile</button>
-  </div>`;
-
-  document.getElementById('edit-btn').addEventListener('click',()=>{
-    document.getElementById('firstName').value=user.first_name||'';
-    document.getElementById('lastName').value=user.last_name||'';
-    document.getElementById('email').value=user.email||'';
-    document.getElementById('phone').value=user.phone||'';
-    document.getElementById('editModal').classList.add('show');
-  });
-}
-
-document.getElementById('closeModal').addEventListener('click',()=>{document.getElementById('editModal').classList.remove('show');});
-
-document.getElementById('saveModal').addEventListener('click',async()=>{
-  const first_name=document.getElementById('firstName').value;
-  const last_name=document.getElementById('lastName').value;
-  const email=document.getElementById('email').value;
-  const phone=document.getElementById('phone').value;
-  const {error}=await supabase.from('user_profiles').update({first_name,last_name,email,phone}).eq('userId',userId);
-  if(error){alert('เกิดข้อผิดพลาดในการแก้ไขข้อมูล'); console.error(error);}
-  else{alert('แก้ไขข้อมูลสำเร็จ ✅'); document.getElementById('editModal').classList.remove('show'); loadUserProfile();}
-});
-
-init();
-</script>
 </body>
 </html>
