@@ -7,51 +7,70 @@
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 min-h-screen p-6">
-
   <h1 class="text-3xl font-bold text-center mb-8">My Profile</h1>
-  <div id="profile" class="max-w-sm mx-auto"></div>
+  <div id="profile" class="max-w-sm mx-auto text-center text-gray-600">กำลังโหลด...</div>
 
+  <!-- LINE LIFF SDK -->
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <!-- Supabase JS -->
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <script>
+    const LIFF_ID = '1661506692-K4XeBbvd';
     const SUPABASE_URL = 'https://ttottijljxoinptmhgtu.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y';
+
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-    // <-- กำหนด userId ของผู้ใช้ปัจจุบันตรงนี้ -->
-    const CURRENT_USER_ID = 'USER_ID_ที่ได้จากระบบล็อกอิน';
-
     const profileContainer = document.getElementById('profile');
 
-    async function loadMyProfile() {
-      const { data, error } = await supabase
-        .from('user_profiles')
-        .select('*')
-        .eq('userId', CURRENT_USER_ID)  // <-- ดึงเฉพาะ user นี้
-        .single(); // คาดว่าจะได้แค่ 1 แถว
+    async function init() {
+      try {
+        // 1) เริ่มต้น LIFF
+        await liff.init({ liffId: LIFF_ID });
+        if (!liff.isLoggedIn()) {
+          liff.login();
+          return;
+        }
 
-      if (error) {
-        console.error(error);
-        profileContainer.innerHTML = `<p class="text-red-500">ไม่พบข้อมูลผู้ใช้</p>`;
-        return;
+        // 2) ดึง userId ของผู้ใช้ปัจจุบัน
+        const profile = await liff.getProfile();
+        const userId = profile.userId;
+        console.log('LINE userId:', userId);
+
+        // 3) Query Supabase
+        const { data, error } = await supabase
+          .from('user_profiles')
+          .select('*')
+          .eq('userId', userId)
+          .maybeSingle();
+
+        if (error || !data) {
+          console.error(error);
+          profileContainer.innerHTML = `<p class="text-red-500">ไม่พบข้อมูลผู้ใช้ในระบบ</p>`;
+          return;
+        }
+
+        const user = data;
+
+        // 4) แสดงผล Card Profile
+        profileContainer.innerHTML = `
+          <div class="bg-white rounded-2xl shadow p-6 text-center">
+            <img src="${user.pictureUrl || 'https://via.placeholder.com/100'}" 
+                 alt="Profile" 
+                 class="w-24 h-24 rounded-full mx-auto mb-4 object-cover">
+            <h2 class="text-xl font-semibold">${user.displayName || user.first_name || 'No Name'}</h2>
+            <p class="text-gray-500 mb-2">${user.email || ''}</p>
+            <p class="text-sm text-gray-700 mb-2">Status: ${user.status || '-'}</p>
+            <p class="text-sm text-gray-700 mb-2">Point: ${user.point || 0}</p>
+            <p class="text-sm text-gray-700">Role: ${user.role || '-'}</p>
+          </div>
+        `;
+      } catch (err) {
+        console.error(err);
+        profileContainer.innerHTML = `<p class="text-red-500">เกิดข้อผิดพลาดในการโหลดข้อมูล</p>`;
       }
-
-      const user = data;
-
-      profileContainer.innerHTML = `
-        <div class="bg-white rounded-2xl shadow p-6 text-center">
-          <img src="${user.pictureUrl || 'https://via.placeholder.com/100'}" 
-               alt="Profile" 
-               class="w-24 h-24 rounded-full mx-auto mb-4 object-cover">
-          <h2 class="text-xl font-semibold">${user.displayName || user.first_name || 'No Name'}</h2>
-          <p class="text-gray-500 mb-2">${user.email || ''}</p>
-          <p class="text-sm text-gray-700 mb-2">Status: ${user.status || '-'}</p>
-          <p class="text-sm text-gray-700 mb-2">Point: ${user.point || 0}</p>
-          <p class="text-sm text-gray-700">Role: ${user.role || '-'}</p>
-        </div>
-      `;
     }
 
-    loadMyProfile();
+    init();
   </script>
 </body>
 </html>
