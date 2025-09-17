@@ -1,12 +1,11 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>My Profile</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-<style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Profile</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
   body {
     background: linear-gradient(135deg, #f0f4f8, #e0e7ff);
     font-family: 'Poppins', sans-serif;
@@ -101,93 +100,88 @@
 </style>
 
 </head>
-<body>
+<body class="bg-gray-100 min-h-screen p-6">
+  <h1 class="text-3xl font-bold text-center mb-8">My Profile</h1>
+  <div id="profile" class="max-w-sm mx-auto text-center text-gray-600">กำลังโหลด...</div>
 
-<div id="profile-container">
-  <p class="alert">กำลังโหลด...</p>
-</div>
+  <!-- LINE LIFF SDK -->
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <!-- Supabase JS -->
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 
-<script>
-const LIFF_ID = "1661506692-K4XeBbvd";
-const SUPABASE_URL = "https://ttottijljxoinptmhgtu.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y";
+  <script>
+    const LIFF_ID = '1661506692-K4XeBbvd';
+    const SUPABASE_URL = 'https://ttottijljxoinptmhgtu.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y';
 
-const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-const profileContainer = document.getElementById("profile-container");
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const profileContainer = document.getElementById('profile');
 
-async function init() {
-  try {
-    await liff.init({ liffId: LIFF_ID });
+    async function init() {
+      try {
+        // 1) เริ่มต้น LIFF
+        await liff.init({ liffId: LIFF_ID });
 
-    // ตรวจสอบว่าเปิดใน LINE App
-    if (!liff.isInClient()) {
-      profileContainer.innerHTML = `
-        <p class="alert">กรุณาเปิดลิงก์นี้ผ่าน LINE App เท่านั้น</p>
-        <a href="line://app/${LIFF_ID}" class="button">เปิดใน LINE</a>
-      `;
-      return;
+        // 2) เช็คว่าเปิดผ่าน LINE App หรือไม่
+        if (!liff.isInClient()) {
+          profileContainer.innerHTML = `
+            <div class="p-4 text-center">
+              <p class="mb-4 text-red-500">กรุณาเปิดลิงก์นี้ผ่าน LINE App เท่านั้น</p>
+              <a href="line://app/${LIFF_ID}" 
+                 class="inline-block bg-green-500 text-white px-4 py-2 rounded-lg shadow">
+                 เปิดใน LINE
+              </a>
+            </div>
+          `;
+          return;
+        }
+
+        // 3) ถ้ายังไม่ login ให้ login พร้อม redirect กลับหน้านี้
+        if (!liff.isLoggedIn()) {
+          liff.login({ redirectUri: window.location.href });
+          return;
+        }
+
+        // 4) ดึง userId ของผู้ใช้ปัจจุบันจาก LINE
+        const profile = await liff.getProfile();
+        const userId = profile.userId;
+        console.log('LINE userId:', userId);
+
+        // 5) Query Supabase หาข้อมูลในตาราง user_profiles
+        const { data, error } = await supabase
+          .from('user_profiles')
+          .select('*')
+          .eq('userId', userId)
+          .maybeSingle();
+
+        if (error || !data) {
+          console.error(error);
+          profileContainer.innerHTML = `<p class="text-red-500">ไม่พบข้อมูลผู้ใช้ในระบบ</p>`;
+          return;
+        }
+
+        const user = data;
+
+        // 6) แสดงผล Card Profile
+        profileContainer.innerHTML = `
+          <div class="bg-white rounded-2xl shadow p-6 text-center">
+            <img src="${user.pictureUrl || 'https://via.placeholder.com/100'}" 
+                 alt="Profile" 
+                 class="w-24 h-24 rounded-full mx-auto mb-4 object-cover">
+            <h2 class="text-xl font-semibold">${user.displayName || user.first_name || 'No Name'}</h2>
+            <p class="text-gray-500 mb-2">${user.email || ''}</p>
+            <p class="text-sm text-gray-700 mb-2">Status: ${user.status || '-'}</p>
+            <p class="text-sm text-gray-700 mb-2">Point: ${user.point || 0}</p>
+            <p class="text-sm text-gray-700">Role: ${user.role || '-'}</p>
+          </div>
+        `;
+      } catch (err) {
+        console.error(err);
+        profileContainer.innerHTML = `<p class="text-red-500">เกิดข้อผิดพลาดในการโหลดข้อมูล</p>`;
+      }
     }
 
-    // ถ้ายังไม่ login
-    if (!liff.isLoggedIn()) {
-      liff.login({ redirectUri: window.location.href });
-      return;
-    }
-
-    // ดึง LINE Profile
-    const profile = await liff.getProfile();
-    const userId = profile.userId;
-    const displayName = profile.displayName;
-    const pictureUrl = profile.pictureUrl;
-
-    // login anonymous ใน Supabase
-    const { error: authError } = await supabase.auth.signInAnonymously();
-    if (authError) console.error(authError);
-
-    // เช็คในตาราง user_profiles
-    const { data: existing } = await supabase
-      .from("user_profiles")
-      .select("*")
-      .eq("userId", userId)
-      .maybeSingle();
-
-    if (!existing) {
-      await supabase.from("user_profiles").insert({ userId, displayName, pictureUrl });
-    }
-
-    // แสดงโปรไฟล์
-    const { data, error } = await supabase
-      .from("user_profiles")
-      .select("*")
-      .eq("userId", userId)
-      .single();
-
-    if (error || !data) {
-      profileContainer.innerHTML = `<p class="alert">ไม่พบข้อมูลผู้ใช้</p>`;
-      return;
-    }
-
-    profileContainer.innerHTML = `
-      <div class="profile-card">
-        <div class="profile-header"></div>
-        <img src="${data.pictureUrl || 'https://via.placeholder.com/120'}" class="profile-pic" />
-        <div class="profile-name">${data.displayName || '-'}</div>
-        <div class="profile-info">Email: ${data.email || '-'}</div>
-        <div class="profile-info">Phone: ${data.phone || '-'}</div>
-        <div class="profile-info">Status: ${data.status || '-'}</div>
-        <div class="profile-info">Point: ${data.point || 0}</div>
-        <div class="profile-info">Role: ${data.role || 'สมาชิก'}</div>
-      </div>
-    `;
-
-  } catch(err) {
-    console.error(err);
-    profileContainer.innerHTML = `<p class="alert">เกิดข้อผิดพลาดในการโหลดข้อมูล</p>`;
-  }
-}
-
-init();
-</script>
-
+    init();
+  </script>
 </body>
 </html>
