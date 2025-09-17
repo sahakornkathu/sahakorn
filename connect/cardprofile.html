@@ -3,12 +3,109 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Profile Minimal</title>
-<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<title>My Profile</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<style>
+  body {
+    background: linear-gradient(135deg, #f0f4f8, #e0e7ff);
+    font-family: 'Poppins', sans-serif;
+  }
+
+  #profile {
+    transition: all 0.3s ease-in-out;
+  }
+
+  .bg-white {
+    background: linear-gradient(145deg, #ffffff, #f3f4f6);
+    border: 2px solid #e5e7eb;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    padding: 2rem;
+    border-radius: 2rem;
+    transition: transform 0.3s, box-shadow 0.3s;
+    position: relative;
+  }
+
+  .bg-white:hover {
+    transform: translateY(-7px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  }
+
+  img.rounded-full {
+    border: 4px solid #6366f1;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s;
+  }
+
+  img.rounded-full:hover {
+    transform: scale(1.1);
+  }
+
+  h2.text-xl {
+    color: #4f46e5;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+  }
+
+  p.text-gray-500 {
+    color: #6b7280;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+  }
+
+  p.text-sm {
+    color: #374151;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+  }
+
+  /* Badge สำหรับ Point และ Role */
+  .badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #fff;
+    background: linear-gradient(135deg, #facc15, #f59e0b);
+    margin: 0.25rem 0.25rem 0.25rem 0;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    transition: transform 0.3s;
+  }
+
+  .badge:hover {
+    transform: scale(1.1);
+  }
+
+  /* Responsive */
+  @media (max-width: 480px) {
+    .bg-white {
+      padding: 1.5rem;
+      border-radius: 1.5rem;
+    }
+
+    h2.text-xl {
+      font-size: 1.25rem;
+    }
+
+    img.rounded-full {
+      width: 96px;
+      height: 96px;
+    }
+
+    .badge {
+      font-size: 0.7rem;
+      padding: 0.2rem 0.6rem;
+    }
+  }
+</style>
+
 </head>
 <body>
-<div id="profile">กำลังโหลด...</div>
+
+<div id="profile-container">
+  <p class="alert">กำลังโหลด...</p>
+</div>
 
 <script>
 const LIFF_ID = "1661506692-K4XeBbvd";
@@ -16,66 +113,81 @@ const SUPABASE_URL = "https://ttottijljxoinptmhgtu.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y";
 
 const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-const profileContainer = document.getElementById("profile");
+const profileContainer = document.getElementById("profile-container");
 
 async function init() {
   try {
     await liff.init({ liffId: LIFF_ID });
 
+    // ตรวจสอบว่าเปิดใน LINE App
     if (!liff.isInClient()) {
-      profileContainer.innerHTML = "กรุณาเปิดใน LINE App เท่านั้น";
+      profileContainer.innerHTML = `
+        <p class="alert">กรุณาเปิดลิงก์นี้ผ่าน LINE App เท่านั้น</p>
+        <a href="line://app/${LIFF_ID}" class="button">เปิดใน LINE</a>
+      `;
       return;
     }
 
+    // ถ้ายังไม่ login
     if (!liff.isLoggedIn()) {
       liff.login({ redirectUri: window.location.href });
       return;
     }
 
+    // ดึง LINE Profile
     const profile = await liff.getProfile();
     const userId = profile.userId;
+    const displayName = profile.displayName;
+    const pictureUrl = profile.pictureUrl;
 
-    // Anonymous login Supabase
-    await supabase.auth.signInAnonymously();
+    // login anonymous ใน Supabase
+    const { error: authError } = await supabase.auth.signInAnonymously();
+    if (authError) console.error(authError);
 
-    // โหลด profile ครั้งแรก
-    const { data } = await supabase
+    // เช็คในตาราง user_profiles
+    const { data: existing } = await supabase
       .from("user_profiles")
       .select("*")
       .eq("userId", userId)
       .maybeSingle();
 
-    if (!data) {
-      profileContainer.innerHTML = "ไม่พบข้อมูลผู้ใช้";
+    if (!existing) {
+      await supabase.from("user_profiles").insert({ userId, displayName, pictureUrl });
+    }
+
+    // แสดงโปรไฟล์
+    const { data, error } = await supabase
+      .from("user_profiles")
+      .select("*")
+      .eq("userId", userId)
+      .single();
+
+    if (error || !data) {
+      profileContainer.innerHTML = `<p class="alert">ไม่พบข้อมูลผู้ใช้</p>`;
       return;
     }
 
     profileContainer.innerHTML = `
-      <p>${data.displayName || 'No Name'}</p>
-      <p>Point: ${data.point || 0}</p>
-      <p>Role: ${data.role || '-'}</p>
+      <div class="profile-card">
+        <div class="profile-header"></div>
+        <img src="${data.pictureUrl || 'https://via.placeholder.com/120'}" class="profile-pic" />
+        <div class="profile-name">${data.displayName || '-'}</div>
+        <div class="profile-info">Email: ${data.email || '-'}</div>
+        <div class="profile-info">Phone: ${data.phone || '-'}</div>
+        <div class="profile-info">Status: ${data.status || '-'}</div>
+        <div class="profile-info">Point: ${data.point || 0}</div>
+        <div class="profile-info">Role: ${data.role || 'สมาชิก'}</div>
+      </div>
     `;
-
-    // Realtime subscription
-    supabase
-      .channel('user-profile')
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'user_profiles', filter: `userId=eq.${userId}` }, payload => {
-        console.log("Realtime:", payload);
-        profileContainer.innerHTML = `
-          <p>${payload.new.displayName || 'No Name'}</p>
-          <p>Point: ${payload.new.point || 0}</p>
-          <p>Role: ${payload.new.role || '-'}</p>
-        `;
-      })
-      .subscribe();
 
   } catch(err) {
     console.error(err);
-    profileContainer.innerHTML = "เกิดข้อผิดพลาด";
+    profileContainer.innerHTML = `<p class="alert">เกิดข้อผิดพลาดในการโหลดข้อมูล</p>`;
   }
 }
 
 init();
 </script>
+
 </body>
 </html>
