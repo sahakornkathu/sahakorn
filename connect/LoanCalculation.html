@@ -3,14 +3,14 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>เครื่องคำนวณดอกเบี้ยรายวัน/รายเดือน (หลายปี)</title>
+  <title>เครื่องคำนวณดอกเบี้ย รายวัน/รายเดือน/รายปี (ลดต้นลดดอก)</title>
   <style>
-    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;max-width:1000px;margin:24px auto;color:#111}
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;max-width:1100px;margin:24px auto;color:#111}
     h1{font-size:20px;margin-bottom:6px}
     .card{padding:16px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.06);background:#fff;margin-bottom:12px}
     label{display:block;margin:6px 0 4px;font-weight:600}
     input,select{padding:8px;border:1px solid #ddd;border-radius:6px;width:100%;box-sizing:border-box}
-    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
     .controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
     button{padding:8px 12px;border-radius:8px;border:0;background:#1366d6;color:#fff;cursor:pointer}
     table{width:100%;border-collapse:collapse;margin-top:12px}
@@ -22,18 +22,22 @@
   </style>
 </head>
 <body>
-  <h1>เครื่องคำนวณดอกเบี้ย — รายวัน/รายเดือน (หลายปี)</h1>
+  <h1>📊 เครื่องคำนวณดอกเบี้ย — รายวัน/รายเดือน/รายปี (ลดต้นลดดอก)</h1>
   <div class="card">
-    <div class="small muted">กรอกข้อมูลแล้วกด "คำนวณ" เพื่อดูดอกเบี้ยรายวันและรายเดือนตลอดหลายปี</div>
+    <div class="small muted">กรอกข้อมูลเพื่อดูตารางผ่อนแบบลดต้นลดดอก (ดอกเบี้ยคิดจากยอดเงินต้นคงเหลือ) — หากดอกเบี้ยเป็นทศนิยมจะ <strong>ปัดขึ้นเป็นบาท</strong> เสมอ โดยใช้จำนวนวันจริงตั้งแต่วันที่จ่ายล่าสุดถึงวันที่จ่ายปัจจุบัน</div>
 
     <div class="row" style="margin-top:12px">
       <div>
         <label>เงินต้น (บาท)</label>
-        <input id="principal" type="number" min="0" step="0.01" value="100000" />
+        <input id="principal" type="number" min="0" step="1" value="100000" />
       </div>
       <div>
         <label>อัตราดอกเบี้ยต่อปี (%)</label>
         <input id="annualRate" type="number" min="0" step="0.0001" value="7.75" />
+      </div>
+      <div>
+        <label>จำนวนปี</label>
+        <input id="numYears" type="number" min="1" step="1" value="1" />
       </div>
     </div>
 
@@ -46,59 +50,64 @@
         </select>
       </div>
       <div>
-        <label>จำนวนปี</label>
-        <input id="numYears" type="number" min="1" step="1" value="1" />
-      </div>
-      <div>
         <label>เริ่มวันที่</label>
         <input id="startDate" type="date" />
+      </div>
+      <div>
+        <label>จำนวนงวดผ่อนต่อเดือน</label>
+        <select id="payPerMonth">
+          <option value="1">1 งวด/เดือน</option>
+          <option value="2">2 งวด/เดือน</option>
+        </select>
       </div>
     </div>
 
     <div class="controls">
       <button id="calcBtn">คำนวณ</button>
-      <button id="csvBtn" disabled>ดาวน์โหลด CSV (รายวัน)</button>
-      <div class="muted small">ผลลัพธ์จะเป็นตารางแสดงดอกเบี้ยรายวัน และสรุปรายเดือน</div>
+      <div class="muted small">ผลลัพธ์จะแสดงตารางรายงวด แบบลดต้นลดดอก พร้อมจำนวนวันที่คิดดอกเบี้ย</div>
     </div>
   </div>
 
   <div id="result" class="card" style="display:none">
-    <div class="small muted">สรุป</div>
-    <div style="display:flex;gap:12px;margin-top:8px;flex-wrap:wrap">
-      <div class="card" style="padding:10px;min-width:180px">
-        <div class="muted small">ดอกเบี้ยต่อวัน (คงที่)</div>
-        <div id="dailyRateText" style="font-weight:700;margin-top:6px;">-</div>
-      </div>
-      <div class="card" style="padding:10px;min-width:180px">
-        <div class="muted small">ดอกเบี้ยรวม (หลังครบทุกปี)</div>
-        <div id="yearInterestText" style="font-weight:700;margin-top:6px;">-</div>
-      </div>
-    </div>
-
-    <h3 style="margin-top:16px">📅 ตารางดอกเบี้ยรายวัน</h3>
-    <div style="margin-top:8px;overflow:auto;max-height:300px">
-      <table id="tableDaily">
+    <h3>📆 ตารางผ่อนชำระ (ลดต้นลดดอก)</h3>
+    <div style="margin-top:8px;overflow:auto;max-height:500px">
+      <table id="tablePayment">
         <thead>
           <tr>
-            <th>ลำดับ</th>
+            <th>งวด</th>
             <th>วันที่</th>
-            <th>ดอกเบี้ยต่อวัน (บาท)</th>
-            <th>ยอดสะสม (บาท)</th>
+            <th>จำนวนวันคิดดอกเบี้ย</th>
+            <th>เงินต้นที่จ่าย (บาท)</th>
+            <th>ดอกเบี้ยที่จ่าย (บาท)</th>
+            <th>ยอดชำระรวม (บาท)</th>
+            <th>เงินต้นคงเหลือ (บาท)</th>
           </tr>
         </thead>
         <tbody></tbody>
       </table>
     </div>
 
-    <h3 style="margin-top:16px">📆 ตารางสรุปดอกเบี้ยรายเดือน</h3>
-    <div style="margin-top:8px;overflow:auto;max-height:300px">
+    <h3 style="margin-top:20px">📅 สรุปดอกเบี้ยรายเดือน</h3>
+    <div style="margin-top:8px;overflow:auto;max-height:400px">
       <table id="tableMonthly">
         <thead>
           <tr>
             <th>เดือน</th>
             <th>ปี</th>
-            <th>ดอกเบี้ยรวมต่อเดือน (บาท)</th>
-            <th>ยอดสะสม (บาท)</th>
+            <th>ดอกเบี้ยรวม (บาท)</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <h3 style="margin-top:20px">📆 สรุปดอกเบี้ยรายปี</h3>
+    <div style="margin-top:8px;overflow:auto;max-height:400px">
+      <table id="tableYearly">
+        <thead>
+          <tr>
+            <th>ปี</th>
+            <th>ดอกเบี้ยรวม (บาท)</th>
           </tr>
         </thead>
         <tbody></tbody>
@@ -111,102 +120,114 @@
       return Number(n).toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2});
     }
 
+    function ceilToBaht(x){
+      return Math.ceil(x);
+    }
+
     (function setDefaultStart(){
-      const today = new Date();
-      const year = today.getFullYear();
-      const dt = new Date(year,0,1);
-      const iso = dt.toISOString().slice(0,10);
-      document.getElementById('startDate').value = iso;
+      const today=new Date();
+      const year=today.getFullYear();
+      const dt=new Date(year,0,1);
+      const iso=dt.toISOString().slice(0,10);
+      document.getElementById('startDate').value=iso;
     })();
 
-    document.getElementById('calcBtn').addEventListener('click', ()=>{
-      const p = parseFloat(document.getElementById('principal').value)||0;
-      const annual = parseFloat(document.getElementById('annualRate').value)||0;
-      const daysPerYear = parseInt(document.getElementById('daysPerYear').value,10)||365;
-      const numYears = parseInt(document.getElementById('numYears').value,10)||1;
-      const startDateVal = document.getElementById('startDate').value;
+    document.getElementById('calcBtn').addEventListener('click',()=>{
+      const principal=parseFloat(document.getElementById('principal').value)||0;
+      const annual=parseFloat(document.getElementById('annualRate').value)||0;
+      const years=parseInt(document.getElementById('numYears').value,10)||1;
+      const daysPerYear=parseInt(document.getElementById('daysPerYear').value,10)||365;
+      const startDateVal=document.getElementById('startDate').value;
+      const payPerMonth=parseInt(document.getElementById('payPerMonth').value,10)||1;
 
-      const dailyRate = (annual/100)/daysPerYear;
-      const dailyInterest = p*dailyRate;
-      const totalInterest = p*(annual/100)*numYears;
+      const totalMonths=years*12;
+      const totalPayments=totalMonths*payPerMonth;
+      let principalPerPayment=Math.ceil(principal/totalPayments);
+      const dailyRate=(annual/100)/daysPerYear;
 
-      // ตารางรายวัน
-      const tbodyDaily=document.querySelector('#tableDaily tbody');
-      tbodyDaily.innerHTML='';
+      let current=startDateVal?new Date(startDateVal+'T00:00:00'):new Date();
+      if(isNaN(current)){current=new Date();}
 
-      // ตารางรายเดือน
+      const tbody=document.querySelector('#tablePayment tbody');
+      tbody.innerHTML='';
+
       const tbodyMonthly=document.querySelector('#tableMonthly tbody');
       tbodyMonthly.innerHTML='';
 
-      let current=startDateVal?new Date(startDateVal+'T00:00:00'):new Date();
-      if(isNaN(current)){const y=new Date().getFullYear();current=new Date(y,0,1);}
+      const tbodyYearly=document.querySelector('#tableYearly tbody');
+      tbodyYearly.innerHTML='';
 
-      let cumulative=0;
-      let monthlyCumulative=0;
-      let currentMonth=current.getMonth();
-      let currentYear=current.getFullYear();
+      let balance=principal;
+      let paymentNo=0;
+      let monthlySummary={};
+      let yearlySummary={};
 
-      const rows=[];
-      const totalDays=daysPerYear*numYears;
+      let lastPaymentDate=new Date(current); // เก็บวันที่จ่ายล่าสุด
+      lastPaymentDate.setMonth(lastPaymentDate.getMonth()); // งวดแรกเริ่มคิดเดือนถัดไป
+      current.setMonth(current.getMonth()+1);
 
-      for(let i=1;i<=totalDays;i++){
-        cumulative+=dailyInterest;
-        monthlyCumulative+=dailyInterest;
+      for(let m=0;m<totalMonths;m++){
+        for(let k=0;k<payPerMonth;k++){
+          paymentNo++;
 
-        // แถวรายวัน
-        const row=document.createElement('tr');
-        const dateStr=current.toLocaleDateString('th-TH');
-        row.innerHTML=`
-          <td style="text-align:center">${i}</td>
-          <td>${dateStr}</td>
-          <td>${formatMoney(dailyInterest)}</td>
-          <td>${formatMoney(cumulative)}</td>
-        `;
-        tbodyDaily.appendChild(row);
-        rows.push({day:i,date:current.toISOString().slice(0,10),daily:dailyInterest,cumulative:cumulative});
+          // จำนวนวันจากงวดก่อนถึงงวดปัจจุบัน
+          const days=Math.ceil((current - lastPaymentDate)/(1000*60*60*24));
 
-        // เช็คสิ้นเดือน
-        const nextDay=new Date(current);
-        nextDay.setDate(current.getDate()+1);
-        if(nextDay.getMonth()!==currentMonth || nextDay.getFullYear()!==currentYear){
-          const rowM=document.createElement('tr');
-          rowM.innerHTML=`
-            <td style="text-align:center">${currentMonth+1}</td>
-            <td style="text-align:center">${currentYear}</td>
-            <td>${formatMoney(monthlyCumulative)}</td>
-            <td>${formatMoney(cumulative)}</td>
+          const interestRaw=balance*dailyRate*days;
+          const interest=ceilToBaht(interestRaw);
+          let principalPay=principalPerPayment;
+          if(paymentNo===totalPayments){principalPay=balance;}
+
+          const totalPay=principalPay+interest;
+          balance-=principalPay;
+          if(balance<0) balance=0;
+
+          const row=document.createElement('tr');
+          row.innerHTML=`
+            <td style="text-align:center">${paymentNo}</td>
+            <td>${current.toLocaleDateString('th-TH')}</td>
+            <td style="text-align:center">${days}</td>
+            <td>${formatMoney(principalPay)}</td>
+            <td>${formatMoney(interest)}</td>
+            <td>${formatMoney(totalPay)}</td>
+            <td>${formatMoney(balance)}</td>
           `;
-          tbodyMonthly.appendChild(rowM);
-          monthlyCumulative=0;
-          currentMonth=nextDay.getMonth();
-          currentYear=nextDay.getFullYear();
-        }
+          tbody.appendChild(row);
 
-        current.setDate(current.getDate()+1);
+          const month=current.getMonth()+1;
+          const year=current.getFullYear();
+          const key=year+'-'+month;
+          if(!monthlySummary[key]) monthlySummary[key]=0;
+          monthlySummary[key]+=interest;
+          if(!yearlySummary[year]) yearlySummary[year]=0;
+          yearlySummary[year]+=interest;
+
+          lastPaymentDate=new Date(current); // อัปเดตวันที่จ่ายล่าสุด
+          current.setMonth(current.getMonth()+1/payPerMonth);
+        }
       }
 
-      document.getElementById('dailyRateText').textContent=formatMoney(dailyInterest)+' บาท (อัตรารายวัน = '+(dailyRate*100).toFixed(6)+'%)';
-      document.getElementById('yearInterestText').textContent=formatMoney(totalInterest)+' บาท';
+      for(const key in monthlySummary){
+        const [y,m]=key.split('-');
+        const row=document.createElement('tr');
+        row.innerHTML=`
+          <td style="text-align:center">${m}</td>
+          <td style="text-align:center">${y}</td>
+          <td>${formatMoney(monthlySummary[key])}</td>
+        `;
+        tbodyMonthly.appendChild(row);
+      }
+
+      for(const y in yearlySummary){
+        const row=document.createElement('tr');
+        row.innerHTML=`
+          <td style="text-align:center">${y}</td>
+          <td>${formatMoney(yearlySummary[y])}</td>
+        `;
+        tbodyYearly.appendChild(row);
+      }
 
       document.getElementById('result').style.display='block';
-      window._dailyInterestCSV=rows;
-      document.getElementById('csvBtn').disabled=false;
-    });
-
-    document.getElementById('csvBtn').addEventListener('click',()=>{
-      const rows=window._dailyInterestCSV;
-      if(!rows||!rows.length)return;
-      const header=['day','date','daily_interest','cumulative_interest'];
-      const lines=[header.join(',')];
-      for(const r of rows){
-        lines.push([r.day,r.date,r.daily.toFixed(2),r.cumulative.toFixed(2)].join(','));
-      }
-      const blob=new Blob([lines.join('\n')],{type:'text/csv;charset=utf-8;'});
-      const url=URL.createObjectURL(blob);
-      const a=document.createElement('a');
-      a.href=url;a.download='daily_interest.csv';
-      document.body.appendChild(a);a.click();a.remove();
-      URL.revokeObjectURL(url);
     });
   </script>
 </body>
