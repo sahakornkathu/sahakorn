@@ -310,6 +310,7 @@
       document.getElementById('result').style.display='block';
     });
 
+    // ปุ่มดาวน์โหลด
     document.getElementById('downloadBtn').addEventListener('click', () => {
   const table = document.getElementById('tablePayment');
   let csv = [];
@@ -318,21 +319,24 @@
     const cols = row.querySelectorAll('th, td');
     const rowData = [];
     cols.forEach(col => {
-      // เอาเครื่องหมายคอมม่าออกเพื่อไม่ให้ CSV เสียรูป
       rowData.push('"' + col.innerText.replace(/,/g, '') + '"');
     });
     csv.push(rowData.join(','));
   });
 
-  const csvContent = "data:text/csv;charset=utf-8," + csv.join("\n");
-  const encodedUri = encodeURI(csvContent);
+  // เพิ่ม BOM เพื่อให้ Excel อ่านภาษาไทยได้
+  const csvContent = "\uFEFF" + csv.join("\n");
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
   const link = document.createElement("a");
-  link.setAttribute("href", encodedUri);
+  const url = URL.createObjectURL(blob);
+  link.setAttribute("href", url);
   link.setAttribute("download", "payment_schedule.csv");
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
+  URL.revokeObjectURL(url);
 });
+
 
   </script>
 </body>
