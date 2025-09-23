@@ -131,7 +131,6 @@
         <label>จำนวนวันต่อปี</label>
         <select id="daysPerYear">
           <option value="365">365 วัน/ปี (ปกติ)</option>
-          
         </select>
       </div>
       <div>
@@ -142,7 +141,6 @@
         <label>จำนวนงวดผ่อนต่อเดือน</label>
         <select id="payPerMonth">
           <option value="1">1 งวด/เดือน</option>
-          
         </select>
       </div>
     </div>
@@ -201,125 +199,114 @@
   </div>
 
   <script>
-function formatMoney(n){
-  return Number(n).toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2});
-}
-
-function ceilToBaht(x){
-  return Math.ceil(x);
-}
-
-(function setDefaultStart(){
-  const today=new Date();
-  const iso=today.toISOString().slice(0,10);
-  document.getElementById('startDate').value=iso;
-})();
-
-document.getElementById('calcBtn').addEventListener('click',()=>{
-  const principal=parseFloat(document.getElementById('principal').value)||0;
-  const annual=parseFloat(document.getElementById('annualRate').value)||0;
-  const years=parseInt(document.getElementById('numYears').value,10)||1;
-  const daysPerYear=parseInt(document.getElementById('daysPerYear').value,10)||365;
-  const startDateVal=document.getElementById('startDate').value;
-  const payPerMonth=parseInt(document.getElementById('payPerMonth').value,10)||1;
-
-  const totalMonths=years*12;
-  const totalPayments=totalMonths*payPerMonth;
-  let principalPerPayment=Math.ceil(principal/totalPayments);
-  const dailyRate=(annual/100)/daysPerYear;
-
-  let current=startDateVal?new Date(startDateVal+'T00:00:00'):new Date();
-  if(isNaN(current)){current=new Date();}
-
-  const tbody=document.querySelector('#tablePayment tbody');
-  tbody.innerHTML='';
-
-  const tbodyMonthly=document.querySelector('#tableMonthly tbody');
-  tbodyMonthly.innerHTML='';
-
-  const tbodyYearly=document.querySelector('#tableYearly tbody');
-  tbodyYearly.innerHTML='';
-
-  let balance=principal;
-  let paymentNo=0;
-  let monthlySummary={};
-  let yearlySummary={};
-
-  let lastPaymentDate=new Date(current);
-
-  for(let m=0;m<totalMonths;m++){
-    for(let k=0;k<payPerMonth;k++){
-      paymentNo++;
-
-      // คำนวณจำนวนวันระหว่างงวด
-      const days=Math.ceil((current - lastPaymentDate)/(1000*60*60*24));
-
-      const interestRaw=balance*dailyRate*days;
-      const interest=ceilToBaht(interestRaw);
-      let principalPay=principalPerPayment;
-      if(paymentNo===totalPayments){principalPay=ceilToBaht(balance);}
-
-      const totalPay=principalPay+interest;
-      balance-=principalPay;
-      if(balance<0) balance=0;
-
-      // เพิ่มแถวตารางงวด
-      const row=document.createElement('tr');
-      row.innerHTML=`
-        <td style="text-align:center">${paymentNo}</td>
-        <td>${current.toLocaleDateString('th-TH')}</td>
-        <td style="text-align:center">${days}</td>
-        <td>${formatMoney(principalPay)}</td>
-        <td>${formatMoney(interest)}</td>
-        <td>${formatMoney(totalPay)}</td>
-        <td>${formatMoney(balance)}</td>
-      `;
-      tbody.appendChild(row);
-
-      // สรุปดอกเบี้ยรายเดือน
-      const month=current.getMonth()+1;
-      const year=current.getFullYear();
-      const monthKey=`${year}-${String(month).padStart(2,'0')}`;
-      if(!monthlySummary[monthKey]) monthlySummary[monthKey]=0;
-      monthlySummary[monthKey]+=interest;
-
-      // สรุปดอกเบี้ยรายปี
-      if(!yearlySummary[year]) yearlySummary[year]=0;
-      yearlySummary[year]+=interest;
-
-      lastPaymentDate=new Date(current);
-
-      // คำนวณงวดถัดไปอย่างแม่นยำ
-      const nextMonthIndex = current.getMonth() + 1/payPerMonth;
-      current = new Date(current.getFullYear(), nextMonthIndex, current.getDate());
+    function formatMoney(n){
+      return Number(n).toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2});
     }
-  }
 
-  // แสดงตารางรายเดือน
-  Object.keys(monthlySummary).sort().forEach(key=>{
-    const [y,m]=key.split('-');
-    const row=document.createElement('tr');
-    row.innerHTML=`
-      <td style="text-align:center">${m}</td>
-      <td style="text-align:center">${y}</td>
-      <td>${formatMoney(monthlySummary[key])}</td>
-    `;
-    tbodyMonthly.appendChild(row);
-  });
+    function ceilToBaht(x){
+      return Math.ceil(x);
+    }
 
-  // แสดงตารางรายปี
-  Object.keys(yearlySummary).sort().forEach(y=>{
-    const row=document.createElement('tr');
-    row.innerHTML=`
-      <td style="text-align:center">${y}</td>
-      <td>${formatMoney(yearlySummary[y])}</td>
-    `;
-    tbodyYearly.appendChild(row);
-  });
+    (function setDefaultStart(){
+      const today=new Date();
+      const iso=today.toISOString().slice(0,10);
+      document.getElementById('startDate').value=iso;
+    })();
 
-  document.getElementById('result').style.display='block';
-});
-</script>
+    document.getElementById('calcBtn').addEventListener('click',()=>{
+      const principal=parseFloat(document.getElementById('principal').value)||0;
+      const annual=parseFloat(document.getElementById('annualRate').value)||0;
+      const years=parseInt(document.getElementById('numYears').value,10)||1;
+      const daysPerYear=parseInt(document.getElementById('daysPerYear').value,10)||365;
+      const startDateVal=document.getElementById('startDate').value;
+      const payPerMonth=parseInt(document.getElementById('payPerMonth').value,10)||1;
 
+      const totalMonths=years*12;
+      const totalPayments=totalMonths*payPerMonth;
+      let principalPerPayment=Math.ceil(principal/totalPayments);
+      const dailyRate=(annual/100)/daysPerYear;
+
+      let start = startDateVal ? new Date(startDateVal + 'T00:00:00') : new Date();
+      if(isNaN(start)) start = new Date();
+
+      // งวดแรกเริ่มคิดเดือนถัดไป
+      let lastPaymentDate = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+      let current = new Date(start.getFullYear(), start.getMonth() + 1, start.getDate());
+
+      const tbody=document.querySelector('#tablePayment tbody');
+      tbody.innerHTML='';
+
+      const tbodyMonthly=document.querySelector('#tableMonthly tbody');
+      tbodyMonthly.innerHTML='';
+
+      const tbodyYearly=document.querySelector('#tableYearly tbody');
+      tbodyYearly.innerHTML='';
+
+      let balance=principal;
+      let paymentNo=0;
+      let monthlySummary={};
+      let yearlySummary={};
+
+      for(let m=0;m<totalMonths;m++){
+        for(let k=0;k<payPerMonth;k++){
+          paymentNo++;
+
+          const days=Math.ceil((current - lastPaymentDate)/(1000*60*60*24));
+          const interest=ceilToBaht(balance*dailyRate*days);
+          let principalPay=principalPerPayment;
+          if(paymentNo===totalPayments){principalPay=ceilToBaht(balance);}
+          const totalPay=principalPay+interest;
+          balance-=principalPay;
+          if(balance<0) balance=0;
+
+          const row=document.createElement('tr');
+          row.innerHTML=`
+            <td style="text-align:center">${paymentNo}</td>
+            <td>${current.toLocaleDateString('th-TH')}</td>
+            <td style="text-align:center">${days}</td>
+            <td>${formatMoney(principalPay)}</td>
+            <td>${formatMoney(interest)}</td>
+            <td>${formatMoney(totalPay)}</td>
+            <td>${formatMoney(balance)}</td>
+          `;
+          tbody.appendChild(row);
+
+          const month=current.getMonth()+1;
+          const year=current.getFullYear();
+          const monthKey=`${year}-${String(month).padStart(2,'0')}`;
+          if(!monthlySummary[monthKey]) monthlySummary[monthKey]=0;
+          monthlySummary[monthKey]+=interest;
+          if(!yearlySummary[year]) yearlySummary[year]=0;
+          yearlySummary[year]+=interest;
+
+          lastPaymentDate=new Date(current);
+          const nextMonthIndex = current.getMonth() + 1/payPerMonth;
+          current = new Date(current.getFullYear(), nextMonthIndex, current.getDate());
+        }
+      }
+
+      Object.keys(monthlySummary).sort().forEach(key=>{
+        const [y,m]=key.split('-');
+        const row=document.createElement('tr');
+        row.innerHTML=`
+          <td style="text-align:center">${m}</td>
+          <td style="text-align:center">${y}</td>
+          <td>${formatMoney(monthlySummary[key])}</td>
+        `;
+        tbodyMonthly.appendChild(row);
+      });
+
+      Object.keys(yearlySummary).sort().forEach(y=>{
+        const row=document.createElement('tr');
+        row.innerHTML=`
+          <td style="text-align:center">${y}</td>
+          <td>${formatMoney(yearlySummary[y])}</td>
+        `;
+        tbodyYearly.appendChild(row);
+      });
+
+      document.getElementById('result').style.display='block';
+    });
+  </script>
 </body>
 </html>
