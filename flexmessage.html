@@ -72,6 +72,13 @@
       </h1>
       <p class="text-lg text-gray-300">จัดการและแชร์ Message</p>
     </header>
+    
+<div class="mb-8 flex justify-center gap-4 fade-in" style="animation-delay: 0.2s;">
+  <!-- 🔹 ปุ่ม Logout -->
+  <button id="logout-btn" class="btn-danger font-bold py-3 px-8 rounded-lg text-lg">
+    🔒 ออกจากระบบ
+  </button>
+</div>
 
     <div class="mb-4 w-full max-w-lg mx-auto fade-in" style="animation-delay: 0.1s;">
         <input type="text" id="search-input" class="swal-form-input" placeholder="🔍 ค้นหาด้วยชื่อเรื่อง...">
@@ -501,6 +508,36 @@
            
         }
     });
+
+
+    // 🔹 Event Logout LINE
+const logoutBtn = document.getElementById('logout-btn');
+if (logoutBtn) {
+  logoutBtn.addEventListener('click', () => {
+    Swal.fire({
+      title: 'ออกจากระบบ?',
+      text: 'คุณต้องการออกจากระบบ LINE หรือไม่',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'ออกจากระบบ',
+      cancelButtonText: 'ยกเลิก',
+      confirmButtonColor: '#c43434',
+    }).then((result) => {
+      if (result.isConfirmed) {
+        liff.logout();
+        Swal.fire({
+          icon: 'success',
+          title: 'ออกจากระบบสำเร็จ',
+          showConfirmButton: false,
+          timer: 1500
+        });
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
+      }
+    });
+  });
+}
 
   </script>
   
