@@ -77,14 +77,22 @@
         <input type="text" id="search-input" class="swal-form-input" placeholder="🔍 ค้นหาด้วยชื่อเรื่อง...">
     </div>
 
-    <div class="mb-8 flex justify-center gap-4 fade-in" style="animation-delay: 0.2s;">
+    <!-- <div class="mb-8 flex justify-center gap-4 fade-in" style="animation-delay: 0.2s;">
       <button id="add-new-flex-btn" class="btn-primary font-bold py-3 px-8 rounded-lg text-lg">
         + เพิ่ม Message ใหม่
-      </button>
-      <button id="logoutButton" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-8 rounded-lg shadow-md tex-lg transition-all duration-300 ease-in-out focus:outline-none focus:ring-4 focus:ring-red-300">
-    🔒 Logout LINE </button>
-    </div>
-    
+  </button>
+    </div> -->
+    <div class="mb-8 flex justify-center gap-4 fade-in" style="animation-delay: 0.2s;">
+  <button id="add-new-flex-btn" class="btn-primary font-bold py-3 px-8 rounded-lg text-lg">
+    + เพิ่ม Message ใหม่
+  </button>
+
+  <!-- 🔹 ปุ่ม Logout -->
+  <button id="logout-btn" class="btn-danger font-bold py-3 px-8 rounded-lg text-lg">
+    🔒 ออกจากระบบ
+  </button>
+</div>
+
    
     
     <main id="flex-list" class="space-y-4">
@@ -504,6 +512,37 @@
            
         }
     });
+
+    // 🔹 Event Logout LINE
+const logoutBtn = document.getElementById('logout-btn');
+if (logoutBtn) {
+  logoutBtn.addEventListener('click', () => {
+    Swal.fire({
+      title: 'ออกจากระบบ?',
+      text: 'คุณต้องการออกจากระบบ LINE หรือไม่',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'ออกจากระบบ',
+      cancelButtonText: 'ยกเลิก',
+      confirmButtonColor: '#c43434',
+    }).then((result) => {
+      if (result.isConfirmed) {
+        liff.logout();
+        Swal.fire({
+          icon: 'success',
+          title: 'ออกจากระบบสำเร็จ',
+          showConfirmButton: false,
+          timer: 1500
+        });
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
+      }
+    });
+  });
+}
+
   </script>
+  
 </body>
 </html>
