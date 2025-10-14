@@ -148,4 +148,17 @@ form.addEventListener('submit', async e=>{
         body: JSON.stringify(formData)
       });
       const result = await res.json();
-      if
+      if(result.error) { alert(result.error); return; }
+    }
+    form.reset();
+    loadMembers();
+  } catch(err){
+    alert(err);
+  }
+});
+
+loadMembers();
+</script>
+
+</body>
+</html>
