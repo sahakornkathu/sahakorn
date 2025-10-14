@@ -2,114 +2,139 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ระบบสมาชิก</title>
-<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  input, select { display:block; margin:5px 0; padding:5px; width:300px; }
+  table { border-collapse: collapse; margin-top:20px; width:100%; }
+  th, td { border:1px solid #333; padding:5px; text-align:center; }
+  button { margin:2px; }
+</style>
 </head>
-<body class="bg-gray-100 p-6">
-<div class="max-w-7xl mx-auto bg-white p-6 rounded shadow">
-  <h1 class="text-2xl font-bold mb-4">ระบบสมาชิก</h1>
+<body>
 
-  <!-- ฟอร์มสมาชิก -->
-  <form id="memberForm" class="grid grid-cols-2 gap-4 mb-6">
-    <input type="hidden" id="member_id" name="member_id">
+<h2>ฟอร์มบันทึกสมาชิก</h2>
+<form id="memberForm">
+  <input placeholder="เลขสมาชิก" name="member_id" required>
+  <input type="date" name="join_date" required>
+  <input placeholder="คำนำหน้า" name="title" required>
+  <input placeholder="ชื่อ" name="first_name" required>
+  <input placeholder="นามสกุล" name="last_name" required>
+  <input placeholder="เลขบัตรประชาชน" name="id_card" required>
+  <input type="date" name="birthday" required>
+  <input placeholder="กลุ่มที่" name="group" required>
+  <input placeholder="บ้านเลขที่" name="house_no" required>
+  <input placeholder="หมู่" name="moo">
+  <input placeholder="ถนน" name="street" required>
+  <input placeholder="หมู่บ้าน" name="village">
+  <input placeholder="ตำบล" name="subdistrict" required>
+  <input placeholder="อำเภอ" name="district" required>
+  <input placeholder="จังหวัด" name="province" required>
+  <input placeholder="เลขไปรษณีย์" name="postal_code" required>
+  <input placeholder="เบอร์โทรศัพท์" name="phone">
+  <input placeholder="เบอร์โทรศัพท์สำรอง" name="phone_alt">
+  <select name="member_status" required>
+    <option value="">--สถานะสมาชิก--</option>
+    <option value="สมาชิก">สมาชิก</option>
+    <option value="ลาออก">ลาออก</option>
+    <option value="เสียชีวิต">เสียชีวิต</option>
+  </select>
+  <select name="marital_status" required>
+    <option value="">--สถานะสมรส--</option>
+    <option value="โสด">โสด</option>
+    <option value="หม้าย">หม้าย</option>
+    <option value="หย่า">หย่า</option>
+  </select>
+  <input placeholder="ชื่อคู่สมรส" name="spouse_name">
+  <label>สมาชิก กยท <input type="checkbox" name="kyot_member"></label>
+  <input placeholder="เลขสมาชิก กยท" name="kyot_member_id">
+  <input placeholder="ชื่อบิดา" name="father_name">
+  <input placeholder="ชื่อมารดา" name="mother_name">
+  <button type="submit">บันทึก</button>
+</form>
 
-    <input type="text" name="member_number" placeholder="เลขสมาชิก" required class="border p-2 rounded">
-    <input type="text" name="group_name" placeholder="กลุ่มที่" class="border p-2 rounded">
-    <input type="date" name="join_date" placeholder="วันที่เป็นสมาชิก" class="border p-2 rounded">
-    <input type="text" name="title" placeholder="คำนำหน้า" class="border p-2 rounded">
-    <input type="text" name="first_name" placeholder="ชื่อ" required class="border p-2 rounded">
-    <input type="text" name="last_name" placeholder="นามสกุล" required class="border p-2 rounded">
-    <input type="text" name="nickname" placeholder="ชื่อเล่น" class="border p-2 rounded">
-    <input type="date" name="birthday" placeholder="วันเกิด" class="border p-2 rounded">
-    <input type="text" name="age" placeholder="อายุ" class="border p-2 rounded">
-    <input type="text" name="ethnicity" placeholder="เชื้อชาติ" class="border p-2 rounded">
-    <input type="text" name="nationality" placeholder="สัญชาติ" class="border p-2 rounded">
-    <input type="text" name="citizen_id" placeholder="เลขบัตรประชาชน" class="border p-2 rounded">
-    <input type="text" name="marital_status" placeholder="สถานภาพ" class="border p-2 rounded">
-    <input type="text" name="spouse_name" placeholder="ชื่อคู่สมรส" class="border p-2 rounded">
-    <input type="text" name="house_number" placeholder="เลขที่บ้าน" class="border p-2 rounded">
-    <input type="text" name="village_number" placeholder="หมู่ที่" class="border p-2 rounded">
-    <input type="text" name="village_name" placeholder="หมู่บ้าน" class="border p-2 rounded">
-    <input type="text" name="soi" placeholder="ซอย" class="border p-2 rounded">
-    <input type="text" name="street" placeholder="ถนน" class="border p-2 rounded">
-    <input type="text" name="sub_district" placeholder="ตำบล" class="border p-2 rounded">
-    <input type="text" name="district" placeholder="อำเภอ" class="border p-2 rounded">
-    <input type="text" name="province" placeholder="จังหวัด" class="border p-2 rounded">
-    <input type="text" name="postal_code" placeholder="รหัสไปรษณีย์" class="border p-2 rounded">
-    <input type="text" name="phone" placeholder="โทรศัพท์" class="border p-2 rounded">
-    <input type="text" name="phone_backup" placeholder="โทรศัพท์สำรอง" class="border p-2 rounded">
-    <input type="text" name="home_phone" placeholder="โทรศัพท์บ้าน" class="border p-2 rounded">
-    <input type="text" name="gender" placeholder="เพศ" class="border p-2 rounded">
-    <input type="text" name="status" placeholder="สถานะสมาชิก" class="border p-2 rounded">
-    <label class="flex items-center gap-2"><input type="checkbox" name="member_kt"> สมาชิก กยท</label>
-    <input type="text" name="farmer_reg_number" placeholder="เลขทะเบียนเกษตรกร" class="border p-2 rounded">
-    <input type="text" name="profile_image" placeholder="รูปสมาชิก" class="border p-2 rounded">
-    <input type="text" name="signature_image" placeholder="ลายเซ็น" class="border p-2 rounded">
-    <input type="text" name="location" placeholder="พิกัด" class="border p-2 rounded">
-    <input type="text" name="qr_code" placeholder="QR code" class="border p-2 rounded">
-    <input type="text" name="uid" placeholder="UID" class="border p-2 rounded">
-    <label class="flex items-center gap-2"><input type="checkbox" name="check_buy"> CheckBuy</label>
-
-    <button type="submit" class="bg-blue-500 text-white p-2 rounded col-span-2">บันทึกสมาชิก</button>
-  </form>
-
-  <!-- ตารางสมาชิก -->
-  <table class="w-full table-auto border-collapse border border-gray-300">
-    <thead>
-      <tr class="bg-gray-200">
-        <th class="border p-2">เลขสมาชิก</th>
-        <th class="border p-2">ชื่อ-นามสกุล</th>
-        <th class="border p-2">กลุ่ม</th>
-        <th class="border p-2">โทรศัพท์</th>
-        <th class="border p-2">สถานะ</th>
-        <th class="border p-2">Actions</th>
-      </tr>
-    </thead>
-    <tbody id="memberTable"></tbody>
-  </table>
-</div>
+<h2>รายการสมาชิก</h2>
+<table id="memberTable">
+  <thead>
+    <tr>
+      <th>เลขสมาชิก</th><th>ชื่อ</th><th>นามสกุล</th><th>สถานะ</th><th>แก้ไข</th><th>ลบ</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
 
 <script>
-const API_URL = "https://ttottijljxoinptmhgtu.supabase.co/functions/v1/members";
+const API_URL = 'https://ttottijljxoinptmhgtu.functions.supabase.co/members';
 
-document.getElementById("memberForm").addEventListener("submit", async (e) => {
+const form = document.getElementById('memberForm');
+const tableBody = document.querySelector('#memberTable tbody');
+let editId = null;
+
+// โหลดข้อมูลสมาชิก
+async function loadMembers() {
+  const res = await fetch(API_URL);
+  const data = await res.json();
+  tableBody.innerHTML = '';
+  data.forEach(m => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${m.member_id}</td>
+      <td>${m.first_name}</td>
+      <td>${m.last_name}</td>
+      <td>${m.member_status}</td>
+      <td><button onclick="editMember('${m.member_id}')">แก้ไข</button></td>
+      <td><button onclick="deleteMember('${m.member_id}')">ลบ</button></td>
+    `;
+    tableBody.appendChild(tr);
+  });
+}
+
+// แก้ไขสมาชิก
+async function editMember(id) {
+  const res = await fetch(`${API_URL}?member_id=${id}`);
+  const data = await res.json();
+  editId = id;
+  Object.keys(data[0]).forEach(key => {
+    if(form[key]) {
+      if(form[key].type === 'checkbox') form[key].checked = data[0][key];
+      else form[key].value = data[0][key];
+    }
+  });
+}
+
+// ลบสมาชิก
+async function deleteMember(id) {
+  if(!confirm('ต้องการลบสมาชิกนี้?')) return;
+  await fetch(`${API_URL}?member_id=${id}`, { method:'DELETE' });
+  loadMembers();
+}
+
+// บันทึกสมาชิก
+form.addEventListener('submit', async e=>{
   e.preventDefault();
-  const member_id = document.getElementById("member_id").value;
-  const formData = new FormData(e.target);
-  const data = Object.fromEntries(formData.entries());
+  const formData = {};
+  new FormData(form).forEach((v,k)=> formData[k] = v);
+  formData.kyot_member = form.kyot_member.checked;
 
-  // แปลง checkbox เป็น boolean
-  ["member_kt","check_buy"].forEach(f => { data[f] = formData.get(f) === "on"; });
-
-  // validate
-  const requiredFields = ["member_number","first_name","last_name"];
-  for (const field of requiredFields) {
-    if (!data[field]) { alert(`กรุณากรอก ${field}`); return; }
-  }
-
-  let res;
-  if(member_id){
-    res = await fetch(`${API_URL}/${member_id}`, {
-      method:"PUT",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify(data)
+  if(editId){
+    await fetch(`${API_URL}?member_id=${editId}`, {
+      method:'PUT',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(formData)
     });
+    editId = null;
   } else {
-    res = await fetch(API_URL, {
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify(data)
+    await fetch(API_URL, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(formData)
     });
   }
-
-  const result = await res.json();
-  if(!res.ok) alert(JSON.stringify(result));
-
-  e.target.reset();
-  fetchMembers();
+  form.reset();
+  loadMembers();
 });
 
+loadMembers();
 </script>
+
 </body>
 </html>
