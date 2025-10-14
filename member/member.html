@@ -20,26 +20,38 @@
   }
 
   form {
-    background: #fff;
-    padding: 25px;
-    border-radius: 16px;
-    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-    max-width: 800px;
+    max-width: 900px;
     margin-bottom: 40px;
   }
 
-  form input, form select {
-    display: inline-block;
-    margin: 8px 10px;
-    padding: 10px 12px;
-    width: 240px;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    transition: all 0.2s;
-    background-color: #f9fafb;
+  .section {
+    background: #fff;
+    padding: 20px 25px;
+    border-radius: 16px;
+    box-shadow: 0 3px 12px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+  }
+  .section h3 {
+    margin-top: 0;
+    color: #4a90e2;
+    border-bottom: 2px solid #4a90e2;
+    padding-bottom: 6px;
   }
 
-  form input:focus, form select:focus {
+  .form-group {
+    display: flex;
+    flex-wrap: wrap;
+  }
+  .form-group input, .form-group select {
+    margin: 8px 10px;
+    padding: 10px 12px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    width: 240px;
+    background-color: #f9fafb;
+    transition: all 0.2s;
+  }
+  .form-group input:focus, .form-group select:focus {
     outline: none;
     border-color: #4a90e2;
     background-color: #fff;
@@ -59,9 +71,6 @@
   button:hover {
     background-color: #357abd;
   }
-  button:active {
-    background-color: #2f5f8f;
-  }
 
   #filterDiv {
     background: #fff;
@@ -70,7 +79,6 @@
     box-shadow: 0 2px 8px rgba(0,0,0,0.08);
     margin-bottom: 25px;
   }
-
   #filterDiv input, #filterDiv select {
     padding: 8px 12px;
     border: 1px solid #ccc;
@@ -87,13 +95,11 @@
     overflow: hidden;
     box-shadow: 0 2px 8px rgba(0,0,0,0.08);
   }
-
   th, td {
     border-bottom: 1px solid #e2e8f0;
     text-align: center;
     padding: 12px;
   }
-
   th {
     background-color: #4a90e2;
     color: white;
@@ -105,19 +111,10 @@
     right: 10px;
     font-size: 12px;
   }
+  tr:nth-child(even) { background-color: #f9fafb; }
+  tr:hover { background-color: #e6f0ff; }
 
-  tr:nth-child(even) {
-    background-color: #f9fafb;
-  }
-
-  tr:hover {
-    background-color: #e6f0ff;
-  }
-
-  .pagination {
-    text-align: center;
-    margin-top: 20px;
-  }
+  .pagination { text-align:center; margin-top:20px; }
   .pagination button {
     background-color: #4a90e2;
     color: white;
@@ -127,71 +124,71 @@
     margin: 5px;
     cursor: pointer;
   }
-  .pagination button:hover {
-    background-color: #357abd;
-  }
+  .pagination button:hover { background-color: #357abd; }
+  #pageInfo, #resultCount { font-weight: 500; color:#2d3748; }
 
-  #pageInfo {
-    font-weight: 500;
-  }
+  label { display:inline-block; margin:8px 10px; color:#555; }
+  input[type="checkbox"] { width:auto; transform:scale(1.2); margin-right:6px; }
 
-  #resultCount {
-    font-weight: bold;
-    color: #2d3748;
-  }
-
-  /* Checkbox style */
-  label {
-    display: inline-block;
-    margin: 8px 10px;
-    color: #555;
-  }
-  input[type="checkbox"] {
-    width: auto;
-    transform: scale(1.2);
-    margin-right: 6px;
-  }
 </style>
 </head>
 <body>
 
 <h2>ฟอร์มบันทึกสมาชิก</h2>
 <form id="memberForm">
-  <input placeholder="เลขสมาชิก" name="member_id" required>
-  <input type="date" name="join_date" required>
-  <input placeholder="คำนำหน้า" name="title" required>
-  <input placeholder="ชื่อ" name="first_name" required>
-  <input placeholder="นามสกุล" name="last_name" required>
-  <input placeholder="เลขบัตรประชาชน" name="id_card" required>
-  <input type="date" name="birthday" required>
-  <input placeholder="กลุ่มที่" name="group" required>
-  <input placeholder="บ้านเลขที่" name="house_no" required>
-  <input placeholder="หมู่" name="moo">
-  <input placeholder="ถนน" name="street" required>
-  <input placeholder="หมู่บ้าน" name="village">
-  <input placeholder="ตำบล" name="subdistrict" required>
-  <input placeholder="อำเภอ" name="district" required>
-  <input placeholder="จังหวัด" name="province" required>
-  <input placeholder="เลขไปรษณีย์" name="postal_code" required>
-  <input placeholder="เบอร์โทรศัพท์" name="phone">
-  <input placeholder="เบอร์โทรศัพท์สำรอง" name="phone_alt">
-  <select name="member_status" required>
-    <option value="">--สถานะสมาชิก--</option>
-    <option value="สมาชิก">สมาชิก</option>
-    <option value="ลาออก">ลาออก</option>
-    <option value="เสียชีวิต">เสียชีวิต</option>
-  </select>
-  <select name="marital_status" required>
-    <option value="">--สถานะสมรส--</option>
-    <option value="โสด">โสด</option>
-    <option value="หม้าย">หม้าย</option>
-    <option value="หย่า">หย่า</option>
-  </select>
-  <input placeholder="ชื่อคู่สมรส" name="spouse_name">
-  <label><input type="checkbox" name="kyot_member"> สมาชิก กยท</label>
-  <input placeholder="เลขสมาชิก กยท" name="kyot_member_id">
-  <input placeholder="ชื่อบิดา" name="father_name">
-  <input placeholder="ชื่อมารดา" name="mother_name">
+  <div class="section">
+    <h3>ข้อมูลส่วนตัว</h3>
+    <div class="form-group">
+      <input placeholder="เลขสมาชิก" name="member_id" required>
+      <input type="date" name="join_date" required>
+      <input placeholder="คำนำหน้า" name="title" required>
+      <input placeholder="ชื่อ" name="first_name" required>
+      <input placeholder="นามสกุล" name="last_name" required>
+      <input placeholder="เลขบัตรประชาชน" name="id_card" required>
+      <input type="date" name="birthday" required>
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>ที่อยู่</h3>
+    <div class="form-group">
+      <input placeholder="กลุ่มที่" name="group" required>
+      <input placeholder="บ้านเลขที่" name="house_no" required>
+      <input placeholder="หมู่" name="moo">
+      <input placeholder="ถนน" name="street" required>
+      <input placeholder="หมู่บ้าน" name="village">
+      <input placeholder="ตำบล" name="subdistrict" required>
+      <input placeholder="อำเภอ" name="district" required>
+      <input placeholder="จังหวัด" name="province" required>
+      <input placeholder="เลขไปรษณีย์" name="postal_code" required>
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>สถานะ / ข้อมูลเพิ่มเติม</h3>
+    <div class="form-group">
+      <input placeholder="เบอร์โทรศัพท์" name="phone">
+      <input placeholder="เบอร์โทรศัพท์สำรอง" name="phone_alt">
+      <select name="member_status" required>
+        <option value="">--สถานะสมาชิก--</option>
+        <option value="สมาชิก">สมาชิก</option>
+        <option value="ลาออก">ลาออก</option>
+        <option value="เสียชีวิต">เสียชีวิต</option>
+      </select>
+      <select name="marital_status" required>
+        <option value="">--สถานะสมรส--</option>
+        <option value="โสด">โสด</option>
+        <option value="หม้าย">หม้าย</option>
+        <option value="หย่า">หย่า</option>
+      </select>
+      <input placeholder="ชื่อคู่สมรส" name="spouse_name">
+      <label><input type="checkbox" name="kyot_member"> สมาชิก กยท</label>
+      <input placeholder="เลขสมาชิก กยท" name="kyot_member_id">
+      <input placeholder="ชื่อบิดา" name="father_name">
+      <input placeholder="ชื่อมารดา" name="mother_name">
+    </div>
+  </div>
+
   <button type="submit">💾 บันทึก</button>
 </form>
 
@@ -234,7 +231,7 @@
 </div>
 
 <script>
-/* ✅ SCRIPT เหมือนเดิมทุกตัวแปร */
+/* SCRIPT เดิมทั้งหมด ไม่เปลี่ยนตัวแปร */
 const API_URL = 'https://ttottijljxoinptmhgtu.supabase.co/functions/v1/members';
 const form = document.getElementById('memberForm');
 const tableBody = document.querySelector('#memberTable tbody');
@@ -246,7 +243,6 @@ let sortAsc = true;
 let currentPage = 1;
 const rowsPerPage = 10;
 
-// โหลดข้อมูลสมาชิก
 async function loadMembers() {
   try {
     const res = await fetch(API_URL);
@@ -255,18 +251,14 @@ async function loadMembers() {
     if (!Array.isArray(result.data)) { alert("ข้อมูลสมาชิกไม่ถูกต้อง"); return; }
     allMembers = result.data;
     filterMembers();
-  } catch (err) {
-    alert("เกิดข้อผิดพลาด: " + err);
-  }
+  } catch (err) { alert("เกิดข้อผิดพลาด: " + err); }
 }
 
-// แสดงตาราง
 function renderTable(members) {
   tableBody.innerHTML = '';
   const start = (currentPage - 1) * rowsPerPage;
   const end = start + rowsPerPage;
   const paginated = members.slice(start, end);
-
   paginated.forEach(m => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
@@ -281,20 +273,17 @@ function renderTable(members) {
     `;
     tableBody.appendChild(tr);
   });
-
   const totalPages = Math.ceil(members.length / rowsPerPage);
   document.getElementById('pageInfo').textContent = `หน้า ${currentPage} จาก ${totalPages}`;
   document.getElementById('resultCount').textContent = `พบ ${members.length} รายการ`;
 }
 
-// ฟิลเตอร์ + เรียง + แบ่งหน้า
 function filterMembers() {
   const idFilter = document.getElementById('searchMemberId').value.toLowerCase();
   const nameFilter = document.getElementById('searchName').value.toLowerCase();
   const groupFilter = document.getElementById('searchGroup').value.toLowerCase();
   const provinceFilter = document.getElementById('searchProvince').value.toLowerCase();
   const statusFilter = document.getElementById('searchStatus').value;
-
   let filtered = allMembers.filter(m => {
     return (!idFilter || m.member_id.toLowerCase().includes(idFilter)) &&
            (!nameFilter || m.first_name.toLowerCase().includes(nameFilter) || m.last_name.toLowerCase().includes(nameFilter)) &&
@@ -302,89 +291,69 @@ function filterMembers() {
            (!provinceFilter || (m.province && m.province.toLowerCase().includes(provinceFilter))) &&
            (!statusFilter || m.member_status === statusFilter);
   });
-
   if (sortColumn) {
-    filtered.sort((a, b) => {
-      let valA = a[sortColumn] || '';
-      let valB = b[sortColumn] || '';
-      valA = valA.toString().toLowerCase();
-      valB = valB.toString().toLowerCase();
-      if (valA < valB) return sortAsc ? -1 : 1;
-      if (valA > valB) return sortAsc ? 1 : -1;
-      return 0;
+    filtered.sort((a,b) => {
+      let valA = (a[sortColumn]||'').toString().toLowerCase();
+      let valB = (b[sortColumn]||'').toString().toLowerCase();
+      return valA<valB ? (sortAsc?-1:1) : valA>valB ? (sortAsc?1:-1) : 0;
     });
   }
   renderTable(filtered);
 }
 
-// Pagination
 document.getElementById('prevPage').addEventListener('click', () => {
-  if (currentPage > 1) { currentPage--; filterMembers(); }
+  if (currentPage>1){currentPage--; filterMembers();}
 });
 document.getElementById('nextPage').addEventListener('click', () => {
   const totalPages = Math.ceil(allMembers.length / rowsPerPage);
-  if (currentPage < totalPages) { currentPage++; filterMembers(); }
+  if(currentPage<totalPages){currentPage++; filterMembers();}
 });
-
 ['searchMemberId','searchName','searchGroup','searchProvince','searchStatus']
-.forEach(id => document.getElementById(id).addEventListener('input', () => {
-  currentPage = 1; filterMembers();
-}));
+.forEach(id => document.getElementById(id).addEventListener('input',()=>{currentPage=1; filterMembers();}));
 
-function sortTable(column) {
-  if (sortColumn === column) sortAsc = !sortAsc;
-  else { sortColumn = column; sortAsc = true; }
-  document.querySelectorAll('.sort-icon').forEach(el => el.textContent = '');
-  const icon = document.querySelector(`th[data-column="${column}"] .sort-icon`);
-  icon.textContent = sortAsc ? '▲' : '▼';
+function sortTable(column){
+  if(sortColumn===column) sortAsc=!sortAsc;
+  else{sortColumn=column; sortAsc=true;}
+  document.querySelectorAll('.sort-icon').forEach(el=>el.textContent='');
+  const icon=document.querySelector(`th[data-column="${column}"] .sort-icon`);
+  icon.textContent=sortAsc?'▲':'▼';
   filterMembers();
 }
-document.querySelectorAll('#memberTable th[data-column]').forEach(th => {
-  th.addEventListener('click', () => sortTable(th.dataset.column));
-});
+document.querySelectorAll('#memberTable th[data-column]').forEach(th=>th.addEventListener('click',()=>sortTable(th.dataset.column)));
 
-async function editMember(id) {
-  const res = await fetch(`${API_URL}?member_id=${id}`);
-  const result = await res.json();
-  if (result.error) return alert(result.error);
-  editId = id;
-  Object.keys(result.data[0]).forEach(key => {
-    if (form[key]) {
-      if (form[key].type === 'checkbox') form[key].checked = result.data[0][key];
-      else form[key].value = result.data[0][key];
+async function editMember(id){
+  const res=await fetch(`${API_URL}?member_id=${id}`);
+  const result=await res.json();
+  if(result.error) return alert(result.error);
+  editId=id;
+  Object.keys(result.data[0]).forEach(key=>{
+    if(form[key]){
+      if(form[key].type==='checkbox') form[key].checked=result.data[0][key];
+      else form[key].value=result.data[0][key];
     }
   });
 }
-
-async function deleteMember(id) {
-  if (!confirm('ต้องการลบสมาชิกนี้?')) return;
-  const res = await fetch(`${API_URL}?member_id=${id}`, { method: 'DELETE' });
-  const result = await res.json();
-  if (result.error) return alert(result.error);
+async function deleteMember(id){
+  if(!confirm('ต้องการลบสมาชิกนี้?')) return;
+  const res=await fetch(`${API_URL}?member_id=${id}`,{method:'DELETE'});
+  const result=await res.json();
+  if(result.error) return alert(result.error);
   loadMembers();
 }
-
-form.addEventListener('submit', async e => {
+form.addEventListener('submit',async e=>{
   e.preventDefault();
-  const formData = {};
-  new FormData(form).forEach((v, k) => formData[k] = v);
-  formData.kyot_member = form.kyot_member.checked;
-
-  const method = editId ? 'PUT' : 'POST';
-  const url = editId ? `${API_URL}?member_id=${editId}` : API_URL;
-
-  const res = await fetch(url, {
-    method,
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify(formData)
-  });
-  const result = await res.json();
-  if (result.error) return alert(result.error);
-  editId = null;
+  const formData={};
+  new FormData(form).forEach((v,k)=>formData[k]=v);
+  formData.kyot_member=form.kyot_member.checked;
+  const method=editId?'PUT':'POST';
+  const url=editId?`${API_URL}?member_id=${editId}`:API_URL;
+  const res=await fetch(url,{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(formData)});
+  const result=await res.json();
+  if(result.error) return alert(result.error);
+  editId=null;
   form.reset();
   loadMembers();
 });
-
 loadMembers();
 </script>
 </body>
