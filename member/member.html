@@ -5,102 +5,29 @@
 <title>ระบบจัดการสมาชิก</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap');
-
-body {
-  font-family: "Prompt", sans-serif;
-  background: #f0f4f8;
-  margin: 20px;
-  color: #333;
-}
+body { font-family:"Prompt",sans-serif; background:#f0f4f8; margin:20px; color:#333; }
 h2 { text-align:center; color:#1e40af; margin-bottom:15px; }
 
-/* --- Form --- */
-form {
-  max-width:900px;
-  margin:auto;
-  background:#fff;
-  padding:20px 25px;
-  border-radius:12px;
-  box-shadow:0 5px 20px rgba(0,0,0,0.08);
-}
-form input, form select {
-  display:block;
-  width:48%;
-  margin:5px 1% 10px 1%;
-  padding:6px 10px;
-  border:1px solid #ccc;
-  border-radius:6px;
-  font-size:14px;
-  background:#f9fafb;
-  transition:all 0.2s;
-}
-form input:focus, form select:focus{
-  outline:none;
-  border-color:#4a90e2;
-  box-shadow:0 0 5px rgba(74,144,226,0.3);
-  background:#fff;
-}
-form label{ font-size:13px; margin-right:8px; display:inline-block; }
-form button {
-  padding:6px 12px;
-  margin-top:8px;
-  border:none;
-  border-radius:6px;
-  cursor:pointer;
-  font-size:14px;
-  background:#4a90e2;
-  color:#fff;
-  transition:0.3s;
-}
-form button:hover{ background:#357abd; }
+/* --- Form Step --- */
+form { max-width:950px; margin:auto; }
+.form-step { display:none; background:#fff; padding:20px 25px; border-radius:12px; box-shadow:0 5px 20px rgba(0,0,0,0.08); margin-bottom:20px; }
+.form-step.active { display:block; }
+input, select { display:block; width:48%; margin:5px 1% 10px 1%; padding:6px 10px; border:1px solid #ccc; border-radius:6px; font-size:14px; background:#f9fafb; }
+input:focus, select:focus { outline:none; border-color:#4a90e2; box-shadow:0 0 5px rgba(74,144,226,0.3); background:#fff; }
+label{ font-size:13px; margin-right:8px; display:inline-block; }
+.form-navigation { text-align:center; margin-top:15px; }
+.form-navigation button { padding:6px 12px; margin:3px; border:none; border-radius:6px; cursor:pointer; background:#4a90e2; color:#fff; }
+.form-navigation button:hover { background:#357abd; }
 
 /* --- Filter --- */
-#filterDiv {
-  background:#fff;
-  padding:12px 15px;
-  border-radius:10px;
-  max-width:950px;
-  margin:25px auto 15px;
-  box-shadow:0 4px 12px rgba(0,0,0,0.08);
-}
-#filterDiv input, #filterDiv select {
-  padding:5px 8px;
-  margin-right:6px;
-  border:1px solid #ccc;
-  border-radius:6px;
-  font-size:13px;
-  background:#f9fafb;
-}
+#filterDiv { background:#fff; padding:12px 15px; border-radius:10px; max-width:950px; margin:25px auto 15px; box-shadow:0 4px 12px rgba(0,0,0,0.08); }
+#filterDiv input, #filterDiv select { padding:5px 8px; margin-right:6px; border:1px solid #ccc; border-radius:6px; font-size:13px; background:#f9fafb; }
 
 /* --- Table --- */
-table {
-  border-collapse: collapse;
-  width:100%;
-  max-width:1000px;
-  margin:auto;
-  font-size:13px;
-  background:#fff;
-  border-radius:10px;
-  overflow:hidden;
-  box-shadow:0 4px 12px rgba(0,0,0,0.08);
-}
-th, td {
-  border:1px solid #e2e8f0;
-  padding:6px 8px;
-  text-align:center;
-}
-th {
-  background:#4a90e2;
-  color:#fff;
-  cursor:pointer;
-  position:relative;
-  font-weight:500;
-}
-th span.sort-icon {
-  position:absolute;
-  right:6px;
-  font-size:12px;
-}
+table { border-collapse: collapse; width:100%; max-width:1000px; margin:auto; font-size:13px; background:#fff; border-radius:10px; overflow:hidden; box-shadow:0 4px 12px rgba(0,0,0,0.08); }
+th, td { border:1px solid #e2e8f0; padding:6px 8px; text-align:center; }
+th { background:#4a90e2; color:#fff; cursor:pointer; position:relative; font-weight:500; }
+th span.sort-icon { position:absolute; right:6px; font-size:12px; }
 tr:nth-child(even){ background:#f9fafb; }
 tr:hover{ background:#edf2f7; }
 button.edit { background:#4a90e2; color:#fff; padding:3px 6px; border-radius:4px; font-size:12px; }
@@ -119,42 +46,61 @@ button.delete:hover { background:#c53030; }
 
 <h2>ฟอร์มบันทึกสมาชิก</h2>
 <form id="memberForm">
-  <input placeholder="เลขสมาชิก" name="member_id" required>
-  <input type="date" name="join_date" required>
-  <input placeholder="คำนำหน้า" name="title" required>
-  <input placeholder="ชื่อ" name="first_name" required>
-  <input placeholder="นามสกุล" name="last_name" required>
-  <input placeholder="เลขบัตรประชาชน" name="id_card" required>
-  <input type="date" name="birthday" required>
-  <input placeholder="กลุ่มที่" name="group" required>
-  <input placeholder="บ้านเลขที่" name="house_no" required>
-  <input placeholder="หมู่" name="moo">
-  <input placeholder="ถนน" name="street" required>
-  <input placeholder="หมู่บ้าน" name="village">
-  <input placeholder="ตำบล" name="subdistrict" required>
-  <input placeholder="อำเภอ" name="district" required>
-  <input placeholder="จังหวัด" name="province" required>
-  <input placeholder="เลขไปรษณีย์" name="postal_code" required>
-  <input placeholder="เบอร์โทรศัพท์" name="phone">
-  <input placeholder="เบอร์โทรศัพท์สำรอง" name="phone_alt">
-  <select name="member_status" required>
-    <option value="">--สถานะสมาชิก--</option>
-    <option value="สมาชิก">สมาชิก</option>
-    <option value="ลาออก">ลาออก</option>
-    <option value="เสียชีวิต">เสียชีวิต</option>
-  </select>
-  <select name="marital_status" required>
-    <option value="">--สถานะสมรส--</option>
-    <option value="โสด">โสด</option>
-    <option value="หม้าย">หม้าย</option>
-    <option value="หย่า">หย่า</option>
-  </select>
-  <input placeholder="ชื่อคู่สมรส" name="spouse_name">
-  <label><input type="checkbox" name="kyot_member"> สมาชิก กยท</label>
-  <input placeholder="เลขสมาชิก กยท" name="kyot_member_id">
-  <input placeholder="ชื่อบิดา" name="father_name">
-  <input placeholder="ชื่อมารดา" name="mother_name">
-  <button type="submit">💾 บันทึก</button>
+  <!-- Step 1 -->
+  <div class="form-step">
+    <h3>Step 1: ข้อมูลพื้นฐาน</h3>
+    <input placeholder="เลขสมาชิก" name="member_id" required>
+    <input type="date" name="join_date" required>
+    <input placeholder="คำนำหน้า" name="title" required>
+    <input placeholder="ชื่อ" name="first_name" required>
+    <input placeholder="นามสกุล" name="last_name" required>
+    <input placeholder="เลขบัตรประชาชน" name="id_card" required>
+    <input type="date" name="birthday" required>
+    <input placeholder="กลุ่มที่" name="group" required>
+  </div>
+
+  <!-- Step 2 -->
+  <div class="form-step">
+    <h3>Step 2: ที่อยู่ / เบอร์โทรศัพท์</h3>
+    <input placeholder="บ้านเลขที่" name="house_no" required>
+    <input placeholder="หมู่" name="moo">
+    <input placeholder="ถนน" name="street" required>
+    <input placeholder="หมู่บ้าน" name="village">
+    <input placeholder="ตำบล" name="subdistrict" required>
+    <input placeholder="อำเภอ" name="district" required>
+    <input placeholder="จังหวัด" name="province" required>
+    <input placeholder="เลขไปรษณีย์" name="postal_code" required>
+    <input placeholder="เบอร์โทรศัพท์" name="phone">
+    <input placeholder="เบอร์โทรศัพท์สำรอง" name="phone_alt">
+  </div>
+
+  <!-- Step 3 -->
+  <div class="form-step">
+    <h3>Step 3: ข้อมูลเพิ่มเติม / สถานะ</h3>
+    <select name="member_status" required>
+      <option value="">--สถานะสมาชิก--</option>
+      <option value="สมาชิก">สมาชิก</option>
+      <option value="ลาออก">ลาออก</option>
+      <option value="เสียชีวิต">เสียชีวิต</option>
+    </select>
+    <select name="marital_status" required>
+      <option value="">--สถานะสมรส--</option>
+      <option value="โสด">โสด</option>
+      <option value="หม้าย">หม้าย</option>
+      <option value="หย่า">หย่า</option>
+    </select>
+    <input placeholder="ชื่อคู่สมรส" name="spouse_name">
+    <label><input type="checkbox" name="kyot_member"> สมาชิก กยท</label>
+    <input placeholder="เลขสมาชิก กยท" name="kyot_member_id">
+    <input placeholder="ชื่อบิดา" name="father_name">
+    <input placeholder="ชื่อมารดา" name="mother_name">
+  </div>
+
+  <div class="form-navigation">
+    <button type="button" id="prevBtn">ก่อนหน้า</button>
+    <button type="button" id="nextBtn">ถัดไป</button>
+    <button type="submit" id="submitBtn" style="display:none;">💾 บันทึก</button>
+  </div>
 </form>
 
 <h2>ค้นหา / กรองสมาชิก</h2>
@@ -196,33 +142,66 @@ button.delete:hover { background:#c53030; }
 </div>
 
 <script>
-const API_URL = 'https://ttottijljxoinptmhgtu.supabase.co/functions/v1/members';
-const form = document.getElementById('memberForm');
-const tableBody = document.querySelector('#memberTable tbody');
+const API_URL='https://ttottijljxoinptmhgtu.supabase.co/functions/v1/members';
+const form=document.getElementById('memberForm');
+const tableBody=document.querySelector('#memberTable tbody');
+let editId=null;
+let allMembers=[];
+let sortColumn=null, sortAsc=true;
+let currentPage=1, rowsPerPage=10;
 
-let editId = null;
-let allMembers = [];
-let sortColumn = null;
-let sortAsc = true;
-let currentPage = 1;
-const rowsPerPage = 10;
+// --- Multi-Step Form ---
+const formSteps=document.querySelectorAll('.form-step');
+let formStepIndex=0;
+showStep(formStepIndex);
 
+document.getElementById('nextBtn').addEventListener('click',()=>{
+  if(!validateStep(formStepIndex)) return;
+  formStepIndex++;
+  showStep(formStepIndex);
+});
+document.getElementById('prevBtn').addEventListener('click',()=>{
+  formStepIndex--;
+  showStep(formStepIndex);
+});
+
+function showStep(n){
+  formSteps.forEach((step,i)=>step.classList.remove('active'));
+  formSteps[n].classList.add('active');
+  document.getElementById('prevBtn').style.display=n===0?'none':'inline-block';
+  document.getElementById('nextBtn').style.display=n===formSteps.length-1?'none':'inline-block';
+  document.getElementById('submitBtn').style.display=n===formSteps.length-1?'inline-block':'none';
+}
+
+function validateStep(n){
+  const inputs=formSteps[n].querySelectorAll('input,select');
+  for(let inp of inputs){
+    if(inp.hasAttribute('required') && !inp.value){
+      alert('กรุณากรอกข้อมูล: '+(inp.placeholder||inp.name));
+      inp.focus();
+      return false;
+    }
+  }
+  return true;
+}
+
+// --- Load Members ---
 async function loadMembers(){
   try{
-    const res = await fetch(API_URL);
-    const result = await res.json();
+    const res=await fetch(API_URL);
+    const result=await res.json();
     if(result.error){ alert(result.error); return; }
     if(!Array.isArray(result.data)){ alert("ข้อมูลสมาชิกไม่ถูกต้อง"); return; }
-    allMembers = result.data;
-    filterMembers();
+    allMembers=result.data; filterMembers();
   }catch(err){ alert("เกิดข้อผิดพลาด: "+err); }
 }
 
+// --- Render Table ---
 function renderTable(members){
   tableBody.innerHTML='';
-  const start = (currentPage-1)*rowsPerPage;
-  const end = start+rowsPerPage;
-  const paginated = members.slice(start,end);
+  const start=(currentPage-1)*rowsPerPage;
+  const end=start+rowsPerPage;
+  const paginated=members.slice(start,end);
   paginated.forEach(m=>{
     const tr=document.createElement('tr');
     tr.innerHTML=`
@@ -237,18 +216,19 @@ function renderTable(members){
     `;
     tableBody.appendChild(tr);
   });
-  const totalPages = Math.ceil(members.length/rowsPerPage);
+  const totalPages=Math.ceil(members.length/rowsPerPage);
   document.getElementById('pageInfo').textContent=`หน้า ${currentPage} จาก ${totalPages}`;
   document.getElementById('resultCount').textContent=`พบ ${members.length} รายการ`;
 }
 
+// --- Filter ---
 function filterMembers(){
-  const idFilter = document.getElementById('searchMemberId').value.toLowerCase();
-  const nameFilter = document.getElementById('searchName').value.toLowerCase();
-  const groupFilter = document.getElementById('searchGroup').value.toLowerCase();
-  const provinceFilter = document.getElementById('searchProvince').value.toLowerCase();
-  const statusFilter = document.getElementById('searchStatus').value;
-  let filtered = allMembers.filter(m=>{
+  const idFilter=document.getElementById('searchMemberId').value.toLowerCase();
+  const nameFilter=document.getElementById('searchName').value.toLowerCase();
+  const groupFilter=document.getElementById('searchGroup').value.toLowerCase();
+  const provinceFilter=document.getElementById('searchProvince').value.toLowerCase();
+  const statusFilter=document.getElementById('searchStatus').value;
+  let filtered=allMembers.filter(m=>{
     return (!idFilter||m.member_id.toLowerCase().includes(idFilter)) &&
            (!nameFilter||(m.first_name.toLowerCase().includes(nameFilter)||m.last_name.toLowerCase().includes(nameFilter))) &&
            (!groupFilter||(m.group&&m.group.toLowerCase().includes(groupFilter))) &&
@@ -257,7 +237,7 @@ function filterMembers(){
   });
   if(sortColumn){
     filtered.sort((a,b)=>{
-      let valA = a[sortColumn]||'', valB = b[sortColumn]||'';
+      let valA=a[sortColumn]||'', valB=b[sortColumn]||'';
       valA=valA.toString().toLowerCase(); valB=valB.toString().toLowerCase();
       if(valA<valB) return sortAsc?-1:1;
       if(valA>valB) return sortAsc?1:-1;
@@ -267,34 +247,22 @@ function filterMembers(){
   renderTable(filtered);
 }
 
-// Pagination
-document.getElementById('prevPage').addEventListener('click',()=>{
-  if(currentPage>1){ currentPage--; filterMembers(); }
-});
-document.getElementById('nextPage').addEventListener('click',()=>{
-  const totalPages = Math.ceil(allMembers.length/rowsPerPage);
-  if(currentPage<totalPages){ currentPage++; filterMembers(); }
-});
+// --- Pagination ---
+document.getElementById('prevPage').addEventListener('click',()=>{ if(currentPage>1){ currentPage--; filterMembers(); } });
+document.getElementById('nextPage').addEventListener('click',()=>{ const totalPages=Math.ceil(allMembers.length/rowsPerPage); if(currentPage<totalPages){ currentPage++; filterMembers(); } });
+['searchMemberId','searchName','searchGroup','searchProvince','searchStatus'].forEach(id=>document.getElementById(id).addEventListener('input',()=>{ currentPage=1; filterMembers(); }));
 
-// Filter events
-['searchMemberId','searchName','searchGroup','searchProvince','searchStatus'].forEach(id=>{
-  document.getElementById(id).addEventListener('input',()=>{ currentPage=1; filterMembers(); });
-});
-
-// Sorting
+// --- Sorting ---
 function sortTable(column){
-  if(sortColumn===column) sortAsc=!sortAsc;
-  else{ sortColumn=column; sortAsc=true; }
+  if(sortColumn===column) sortAsc=!sortAsc; else { sortColumn=column; sortAsc=true; }
   document.querySelectorAll('.sort-icon').forEach(el=>el.textContent='');
-  const icon = document.querySelector(`th[data-column="${column}"] .sort-icon`);
-  icon.textContent = sortAsc?'▲':'▼';
+  const icon=document.querySelector(`th[data-column="${column}"] .sort-icon`);
+  icon.textContent=sortAsc?'▲':'▼';
   filterMembers();
 }
-document.querySelectorAll('#memberTable th[data-column]').forEach(th=>{
-  th.addEventListener('click',()=>sortTable(th.dataset.column));
-});
+document.querySelectorAll('#memberTable th[data-column]').forEach(th=>{ th.addEventListener('click',()=>sortTable(th.dataset.column)); });
 
-// Edit / Delete
+// --- Edit / Delete ---
 async function editMember(id){
   const res=await fetch(`${API_URL}?member_id=${id}`);
   const result=await res.json();
@@ -306,8 +274,8 @@ async function editMember(id){
       else form[key].value=result.data[0][key];
     }
   });
+  formStepIndex=0; showStep(formStepIndex);
 }
-
 async function deleteMember(id){
   if(!confirm('ต้องการลบสมาชิกนี้?')) return;
   const res=await fetch(`${API_URL}?member_id=${id}`,{method:'DELETE'});
@@ -316,8 +284,8 @@ async function deleteMember(id){
   loadMembers();
 }
 
-// Submit
-form.addEventListener('submit',async e=>{
+// --- Submit ---
+form.addEventListener('submit', async e=>{
   e.preventDefault();
   const formDataObj={};
   new FormData(form).forEach((v,k)=>formDataObj[k]=v);
@@ -333,6 +301,7 @@ form.addEventListener('submit',async e=>{
   if(result.error) return alert(result.error);
   editId=null;
   form.reset();
+  formStepIndex=0; showStep(formStepIndex);
   loadMembers();
 });
 
