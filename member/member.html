@@ -73,56 +73,6 @@
 <script>
 const API_URL = "https://ttottijljxoinptmhgtu.supabase.co/functions/v1/members";
 
-// ดึงสมาชิกและแสดงตาราง
-async function fetchMembers() {
-  try {
-    const res = await fetch(API_URL);
-    const data = await res.json();
-    const tbody = document.getElementById("memberTable");
-    tbody.innerHTML = "";
-    data.forEach(m => {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td class="border p-2">${m.member_number}</td>
-        <td class="border p-2">${m.title || ""} ${m.first_name} ${m.last_name}</td>
-        <td class="border p-2">${m.group_name || ""}</td>
-        <td class="border p-2">${m.phone || ""}</td>
-        <td class="border p-2">${m.status || ""}</td>
-        <td class="border p-2">
-          <button onclick="editMember('${m.member_id}')" class="bg-yellow-400 text-white p-1 rounded">แก้ไข</button>
-          <button onclick="deleteMember('${m.member_id}')" class="bg-red-500 text-white p-1 rounded">ลบ</button>
-        </td>
-      `;
-      tbody.appendChild(tr);
-    });
-  } catch(err) {
-    console.error(err);
-    alert("Fetch Error: " + err.message);
-  }
-}
-
-// ลบสมาชิก
-async function deleteMember(id) {
-  if(confirm("ต้องการลบสมาชิกนี้หรือไม่?")) {
-    await fetch(`${API_URL}/${id}`, { method: "DELETE" });
-    fetchMembers();
-  }
-}
-
-// กดแก้ไข → populate form
-async function editMember(id) {
-  const res = await fetch(API_URL);
-  const members = await res.json();
-  const member = members.find(m => m.member_id === id);
-  for(const key in member) {
-    if(document.getElementById(key)) document.getElementById(key).value = member[key] || "";
-    else if(document.querySelector(`input[name="${key}"]`) && typeof member[key] === "boolean") {
-      document.querySelector(`input[name="${key}"]`).checked = member[key];
-    }
-  }
-}
-
-// Submit form
 document.getElementById("memberForm").addEventListener("submit", async (e) => {
   e.preventDefault();
   const member_id = document.getElementById("member_id").value;
@@ -130,47 +80,36 @@ document.getElementById("memberForm").addEventListener("submit", async (e) => {
   const data = Object.fromEntries(formData.entries());
 
   // แปลง checkbox เป็น boolean
-  ["member_kt", "check_buy"].forEach(f => {
-    data[f] = formData.get(f) === "on";
-  });
+  ["member_kt","check_buy"].forEach(f => { data[f] = formData.get(f) === "on"; });
 
-  // Validate ฟิลด์สำคัญ
+  // validate
   const requiredFields = ["member_number","first_name","last_name"];
-  for (let field of requiredFields) {
-    if (!data[field]) {
-      alert(`กรุณากรอก ${field}`);
-      return;
-    }
+  for (const field of requiredFields) {
+    if (!data[field]) { alert(`กรุณากรอก ${field}`); return; }
   }
 
-  try {
-    let res;
-    if(member_id) {
-      res = await fetch(`${API_URL}/${member_id}`, {
-        method: "PUT",
-        headers: {"Content-Type":"application/json"},
-        body: JSON.stringify(data)
-      });
-    } else {
-      res = await fetch(API_URL, {
-        method: "POST",
-        headers: {"Content-Type":"application/json"},
-        body: JSON.stringify(data)
-      });
-    }
-
-    const result = await res.json();
-    if(!res.ok) alert("เกิดข้อผิดพลาด: " + JSON.stringify(result));
-
-    e.target.reset();
-    fetchMembers();
-  } catch(err) {
-    alert("Fetch Error: " + err.message);
+  let res;
+  if(member_id){
+    res = await fetch(`${API_URL}/${member_id}`, {
+      method:"PUT",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify(data)
+    });
+  } else {
+    res = await fetch(API_URL, {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify(data)
+    });
   }
+
+  const result = await res.json();
+  if(!res.ok) alert(JSON.stringify(result));
+
+  e.target.reset();
+  fetchMembers();
 });
 
-// โหลดสมาชิกตอนเริ่มต้น
-fetchMembers();
 </script>
 </body>
 </html>
