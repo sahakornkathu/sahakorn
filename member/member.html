@@ -1,212 +1,276 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ระบบบันทึกสมาชิก</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    body {
-      background: linear-gradient(to right, #e0e7ff, #f5f3ff);
-      font-family: 'Prompt', sans-serif;
-    }
-    th {
-      cursor: pointer;
-    }
-  </style>
+<meta charset="UTF-8">
+<title>ระบบจัดการสมาชิก</title>
+<style>
+  body { font-family: "Prompt", sans-serif; margin: 20px; }
+  input, select { display:block; margin:5px 0; padding:6px; width:300px; }
+  button { margin:3px; padding:5px 10px; }
+  table { border-collapse: collapse; width:100%; margin-top:20px; }
+  th, td { border:1px solid #888; padding:8px; text-align:center; }
+  th { background:#f3f3f3; cursor:pointer; position:relative; }
+  th span.sort-icon { position:absolute; right:8px; font-size:12px; }
+  #filterDiv input, #filterDiv select { display:inline-block; width:180px; margin-right:5px; padding:5px; }
+  #resultCount { font-weight:bold; margin-left:10px; }
+  .pagination { text-align:center; margin-top:10px; }
+  .pagination button { padding:5px 10px; margin:3px; }
+</style>
 </head>
-<body class="p-6">
-  <div class="max-w-7xl mx-auto bg-white shadow-2xl rounded-2xl p-8">
-    <h1 class="text-3xl font-bold mb-6 text-center text-indigo-700">ระบบบันทึกข้อมูลสมาชิก</h1>
+<body>
 
-    <!-- ฟอร์มบันทึกสมาชิก -->
-    <form id="memberForm" class="grid grid-cols-2 gap-4 mb-8">
-      <input type="text" name="member_id" placeholder="เลขสมาชิก*" required class="p-2 border rounded-lg focus:ring-2 focus:ring-indigo-400" />
-      <input type="date" name="join_date" required class="p-2 border rounded-lg focus:ring-2 focus:ring-indigo-400" />
-      <select name="title" required class="p-2 border rounded-lg">
-        <option value="">คำนำหน้า*</option>
-        <option>นาย</option>
-        <option>นาง</option>
-        <option>นางสาว</option>
-      </select>
-      <input type="text" name="first_name" placeholder="ชื่อ*" required class="p-2 border rounded-lg focus:ring-2 focus:ring-indigo-400" />
-      <input type="text" name="last_name" placeholder="นามสกุล*" required class="p-2 border rounded-lg focus:ring-2 focus:ring-indigo-400" />
-      <input type="text" name="id_card" placeholder="เลขบัตรประชาชน*" required class="p-2 border rounded-lg focus:ring-2 focus:ring-indigo-400" />
-      <input type="date" name="birthday" required class="p-2 border rounded-lg focus:ring-2 focus:ring-indigo-400" />
-      <input type="text" name="group" placeholder="กลุ่มที่*" required class="p-2 border rounded-lg focus:ring-2 focus:ring-indigo-400" />
-      <input type="text" name="house_no" placeholder="บ้านเลขที่*" required class="p-2 border rounded-lg focus:ring-2 focus:ring-indigo-400" />
-      <input type="text" name="moo" placeholder="หมู่" class="p-2 border rounded-lg focus:ring-2 focus:ring-indigo-400" />
-      <input type="text" name="street" placeholder="ถนน*" required class="p-2 border rounded-lg focus:ring-2 focus:ring-indigo-400" />
-      <input type="text" name="village" placeholder="หมู่บ้าน" class="p-2 border rounded-lg focus:ring-2 focus:ring-indigo-400" />
-      <input type="text" name="subdistrict" placeholder="ตำบล*" required class="p-2 border rounded-lg focus:ring-2 focus:ring-indigo-400" />
-      <input type="text" name="district" placeholder="อำเภอ*" required class="p-2 border rounded-lg focus:ring-2 focus:ring-indigo-400" />
-      <input type="text" name="province" placeholder="จังหวัด*" required class="p-2 border rounded-lg focus:ring-2 focus:ring-indigo-400" />
-      <input type="text" name="zipcode" placeholder="รหัสไปรษณีย์*" required class="p-2 border rounded-lg focus:ring-2 focus:ring-indigo-400" />
-      <input type="text" name="phone" placeholder="เบอร์โทรศัพท์" class="p-2 border rounded-lg focus:ring-2 focus:ring-indigo-400" />
-      <input type="text" name="phone_alt" placeholder="เบอร์สำรอง" class="p-2 border rounded-lg focus:ring-2 focus:ring-indigo-400" />
-      <select name="member_status" required class="p-2 border rounded-lg">
-        <option value="">สถานะสมาชิก*</option>
-        <option>สมาชิก</option>
-        <option>ลาออก</option>
-        <option>เสียชีวิต</option>
-      </select>
-      <select name="marital_status" required class="p-2 border rounded-lg">
-        <option value="">สถานะสมรส*</option>
-        <option>โสด</option>
-        <option>หม้าย</option>
-        <option>หย่า</option>
-      </select>
-      <input type="text" name="spouse_name" placeholder="ชื่อคู่สมรส (ถ้ามี)" class="p-2 border rounded-lg focus:ring-2 focus:ring-indigo-400 col-span-2" />
-      <div class="col-span-2 flex items-center gap-3">
-        <label class="flex items-center gap-2">
-          <input type="checkbox" name="kyot_member" class="h-5 w-5 text-indigo-600" /> เป็นสมาชิก กยท.
-        </label>
-        <input type="text" name="kyot_member_id" placeholder="เลขสมาชิก กยท." class="p-2 border rounded-lg focus:ring-2 focus:ring-indigo-400" />
-      </div>
-      <input type="text" name="father_name" placeholder="ชื่อบิดา" class="p-2 border rounded-lg focus:ring-2 focus:ring-indigo-400" />
-      <input type="text" name="mother_name" placeholder="ชื่อมารดา" class="p-2 border rounded-lg focus:ring-2 focus:ring-indigo-400" />
+<h2>ฟอร์มบันทึกสมาชิก</h2>
+<form id="memberForm">
+  <input placeholder="เลขสมาชิก" name="member_id" required>
+  <input type="date" name="join_date" required>
+  <input placeholder="คำนำหน้า" name="title" required>
+  <input placeholder="ชื่อ" name="first_name" required>
+  <input placeholder="นามสกุล" name="last_name" required>
+  <input placeholder="เลขบัตรประชาชน" name="id_card" required>
+  <input type="date" name="birthday" required>
+  <input placeholder="กลุ่มที่" name="group" required>
+  <input placeholder="บ้านเลขที่" name="house_no" required>
+  <input placeholder="หมู่" name="moo">
+  <input placeholder="ถนน" name="street" required>
+  <input placeholder="หมู่บ้าน" name="village">
+  <input placeholder="ตำบล" name="subdistrict" required>
+  <input placeholder="อำเภอ" name="district" required>
+  <input placeholder="จังหวัด" name="province" required>
+  <input placeholder="เลขไปรษณีย์" name="postal_code" required>
+  <input placeholder="เบอร์โทรศัพท์" name="phone">
+  <input placeholder="เบอร์โทรศัพท์สำรอง" name="phone_alt">
+  <select name="member_status" required>
+    <option value="">--สถานะสมาชิก--</option>
+    <option value="สมาชิก">สมาชิก</option>
+    <option value="ลาออก">ลาออก</option>
+    <option value="เสียชีวิต">เสียชีวิต</option>
+  </select>
+  <select name="marital_status" required>
+    <option value="">--สถานะสมรส--</option>
+    <option value="โสด">โสด</option>
+    <option value="หม้าย">หม้าย</option>
+    <option value="หย่า">หย่า</option>
+  </select>
+  <input placeholder="ชื่อคู่สมรส" name="spouse_name">
+  <label><input type="checkbox" name="kyot_member"> สมาชิก กยท</label>
+  <input placeholder="เลขสมาชิก กยท" name="kyot_member_id">
+  <input placeholder="ชื่อบิดา" name="father_name">
+  <input placeholder="ชื่อมารดา" name="mother_name">
+  <button type="submit">💾 บันทึก</button>
+</form>
 
-      <button type="submit" class="col-span-2 bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-xl text-lg transition-all duration-300">
-        💾 บันทึกข้อมูล
-      </button>
-    </form>
+<h2>ค้นหา / กรองสมาชิก</h2>
+<div id="filterDiv">
+  <input id="searchMemberId" placeholder="เลขสมาชิก">
+  <input id="searchName" placeholder="ชื่อ / นามสกุล">
+  <input id="searchGroup" placeholder="กลุ่ม">
+  <input id="searchProvince" placeholder="จังหวัด">
+  <select id="searchStatus">
+    <option value="">--สถานะสมาชิก--</option>
+    <option value="สมาชิก">สมาชิก</option>
+    <option value="ลาออก">ลาออก</option>
+    <option value="เสียชีวิต">เสียชีวิต</option>
+  </select>
+  <span id="resultCount"></span>
+</div>
 
-    <!-- ช่องค้นหา -->
-    <div class="mb-4 grid grid-cols-5 gap-2">
-      <input id="searchMemberId" placeholder="เลขสมาชิก" class="border p-2 rounded-lg" />
-      <input id="searchName" placeholder="ชื่อ / นามสกุล" class="border p-2 rounded-lg" />
-      <input id="searchGroup" placeholder="กลุ่ม" class="border p-2 rounded-lg" />
-      <input id="searchProvince" placeholder="จังหวัด" class="border p-2 rounded-lg" />
-      <select id="searchStatus" class="border p-2 rounded-lg">
-        <option value="">--สถานะสมาชิก--</option>
-        <option>สมาชิก</option>
-        <option>ลาออก</option>
-        <option>เสียชีวิต</option>
-      </select>
-    </div>
+<h2>รายการสมาชิก</h2>
+<table id="memberTable">
+  <thead>
+    <tr>
+      <th data-column="member_id">เลขสมาชิก <span class="sort-icon"></span></th>
+      <th data-column="first_name">ชื่อ <span class="sort-icon"></span></th>
+      <th data-column="last_name">นามสกุล <span class="sort-icon"></span></th>
+      <th data-column="group">กลุ่ม <span class="sort-icon"></span></th>
+      <th data-column="province">จังหวัด <span class="sort-icon"></span></th>
+      <th data-column="member_status">สถานะ <span class="sort-icon"></span></th>
+      <th>แก้ไข</th>
+      <th>ลบ</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
 
-    <div id="resultCount" class="text-right text-gray-500 mb-2"></div>
+<div class="pagination">
+  <button id="prevPage">ก่อนหน้า</button>
+  <span id="pageInfo"></span>
+  <button id="nextPage">ถัดไป</button>
+</div>
 
-    <!-- ตารางแสดงข้อมูล -->
-    <div class="overflow-x-auto">
-      <table class="min-w-full border border-gray-300 rounded-xl text-sm text-center" id="memberTable">
-        <thead class="bg-indigo-600 text-white">
-          <tr>
-            <th data-column="member_id">เลขสมาชิก</th>
-            <th data-column="first_name">ชื่อ</th>
-            <th data-column="last_name">นามสกุล</th>
-            <th data-column="group">กลุ่ม</th>
-            <th data-column="province">จังหวัด</th>
-            <th data-column="member_status">สถานะ</th>
-            <th>แก้ไข</th>
-            <th>ลบ</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y" id="tableBody"></tbody>
-      </table>
-    </div>
-  </div>
+<script>
+const API_URL = 'https://ttottijljxoinptmhgtu.supabase.co/functions/v1/members';
+const form = document.getElementById('memberForm');
+const tableBody = document.querySelector('#memberTable tbody');
 
-  <script>
-    const API_URL = "https://ttottijljxoinptmhgtu.supabase.co/functions/v1/members";
-    const tableBody = document.getElementById('tableBody');
-    const form = document.getElementById('memberForm');
-    let allMembers = [];
-    let sortColumn = null, sortAsc = true;
+let editId = null;
+let allMembers = [];
+let sortColumn = null;
+let sortAsc = true;
 
-    async function loadMembers() {
-      try {
-        const res = await fetch(API_URL);
-        const result = await res.json();
-        if(result.error) { alert(result.error); return; }
-        allMembers = result.data || [];
-        renderTable(allMembers);
-      } catch(err) { alert(err); }
-    }
+// Pagination
+let currentPage = 1;
+const rowsPerPage = 10;
 
-    function renderTable(members) {
-      tableBody.innerHTML = '';
-      members.forEach(m => {
-        const tr = document.createElement('tr');
-        tr.className = "hover:bg-indigo-50";
-        tr.innerHTML = `
-          <td>${m.member_id || ''}</td>
-          <td>${m.first_name || ''}</td>
-          <td>${m.last_name || ''}</td>
-          <td>${m.group || ''}</td>
-          <td>${m.province || ''}</td>
-          <td>${m.member_status || ''}</td>
-          <td><button onclick="editMember('${m.member_id}')" class="text-blue-600 hover:underline">แก้ไข</button></td>
-          <td><button onclick="deleteMember('${m.member_id}')" class="text-red-600 hover:underline">ลบ</button></td>`;
-        tableBody.appendChild(tr);
-      });
-      document.getElementById('resultCount').textContent = `พบ ${members.length} รายการ`;
-    }
+// โหลดข้อมูลสมาชิก
+async function loadMembers() {
+  try {
+    const res = await fetch(API_URL);
+    const result = await res.json();
 
-    function filterMembers() {
-      const id = searchMemberId.value.toLowerCase();
-      const name = searchName.value.toLowerCase();
-      const group = searchGroup.value.toLowerCase();
-      const province = searchProvince.value.toLowerCase();
-      const status = searchStatus.value;
-      const filtered = allMembers.filter(m =>
-        (!id || m.member_id?.toLowerCase().includes(id)) &&
-        (!name || m.first_name?.toLowerCase().includes(name) || m.last_name?.toLowerCase().includes(name)) &&
-        (!group || m.group?.toLowerCase().includes(group)) &&
-        (!province || m.province?.toLowerCase().includes(province)) &&
-        (!status || m.member_status === status)
-      );
-      renderTable(filtered);
-    }
+    if (result.error) { alert(result.error); return; }
+    if (!Array.isArray(result.data)) { alert("ข้อมูลสมาชิกไม่ถูกต้อง"); return; }
 
-    function sortTable(column) {
-      if(sortColumn === column) sortAsc = !sortAsc;
-      else { sortColumn = column; sortAsc = true; }
+    allMembers = result.data;
+    filterMembers();
 
-      allMembers.sort((a,b)=>{
-        let A=(a[column]||"").toString().toLowerCase();
-        let B=(b[column]||"").toString().toLowerCase();
-        if(A<B) return sortAsc?-1:1;
-        if(A>B) return sortAsc?1:-1;
-        return 0;
-      });
-      filterMembers();
-    }
+  } catch (err) {
+    alert("เกิดข้อผิดพลาด: " + err);
+  }
+}
 
-    document.querySelectorAll('#memberTable th[data-column]').forEach(th=>{
-      th.addEventListener('click', ()=> sortTable(th.dataset.column));
+// แสดงตาราง
+function renderTable(members) {
+  tableBody.innerHTML = '';
+
+  const start = (currentPage - 1) * rowsPerPage;
+  const end = start + rowsPerPage;
+  const paginated = members.slice(start, end);
+
+  paginated.forEach(m => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${m.member_id}</td>
+      <td>${m.first_name}</td>
+      <td>${m.last_name}</td>
+      <td>${m.group}</td>
+      <td>${m.province}</td>
+      <td>${m.member_status}</td>
+      <td><button onclick="editMember('${m.member_id}')">แก้ไข</button></td>
+      <td><button onclick="deleteMember('${m.member_id}')">ลบ</button></td>
+    `;
+    tableBody.appendChild(tr);
+  });
+
+  const totalPages = Math.ceil(members.length / rowsPerPage);
+  document.getElementById('pageInfo').textContent = `หน้า ${currentPage} จาก ${totalPages}`;
+  document.getElementById('resultCount').textContent = `พบ ${members.length} รายการ`;
+}
+
+// กรองข้อมูล + เรียง + แบ่งหน้า
+function filterMembers() {
+  const idFilter = document.getElementById('searchMemberId').value.toLowerCase();
+  const nameFilter = document.getElementById('searchName').value.toLowerCase();
+  const groupFilter = document.getElementById('searchGroup').value.toLowerCase();
+  const provinceFilter = document.getElementById('searchProvince').value.toLowerCase();
+  const statusFilter = document.getElementById('searchStatus').value;
+
+  let filtered = allMembers.filter(m => {
+    return (!idFilter || m.member_id.toLowerCase().includes(idFilter)) &&
+           (!nameFilter || m.first_name.toLowerCase().includes(nameFilter) || m.last_name.toLowerCase().includes(nameFilter)) &&
+           (!groupFilter || (m.group && m.group.toLowerCase().includes(groupFilter))) &&
+           (!provinceFilter || (m.province && m.province.toLowerCase().includes(provinceFilter))) &&
+           (!statusFilter || m.member_status === statusFilter);
+  });
+
+  if (sortColumn) {
+    filtered.sort((a, b) => {
+      let valA = a[sortColumn] || '';
+      let valB = b[sortColumn] || '';
+      valA = valA.toString().toLowerCase();
+      valB = valB.toString().toLowerCase();
+      if (valA < valB) return sortAsc ? -1 : 1;
+      if (valA > valB) return sortAsc ? 1 : -1;
+      return 0;
     });
+  }
 
-    document.querySelectorAll('#searchMemberId,#searchName,#searchGroup,#searchProvince,#searchStatus')
-      .forEach(e=> e.addEventListener('input', filterMembers));
+  renderTable(filtered);
+}
 
-    form.addEventListener('submit', async e=>{
-      e.preventDefault();
-      const data = Object.fromEntries(new FormData(form).entries());
-      try {
-        const res = await fetch(API_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data) });
-        const result = await res.json();
-        if(result.error){ alert(result.error); return; }
-        form.reset(); loadMembers();
-      } catch(err){ alert(err); }
-    });
+// Pagination buttons
+document.getElementById('prevPage').addEventListener('click', () => {
+  if (currentPage > 1) {
+    currentPage--;
+    filterMembers();
+  }
+});
+document.getElementById('nextPage').addEventListener('click', () => {
+  const totalPages = Math.ceil(allMembers.length / rowsPerPage);
+  if (currentPage < totalPages) {
+    currentPage++;
+    filterMembers();
+  }
+});
 
-    async function deleteMember(id){
-      if(!confirm("ยืนยันการลบ?")) return;
-      await fetch(`${API_URL}?id=${id}`,{method:'DELETE'});
-      loadMembers();
+// Filter events
+['searchMemberId','searchName','searchGroup','searchProvince','searchStatus']
+.forEach(id => document.getElementById(id).addEventListener('input', () => {
+  currentPage = 1;
+  filterMembers();
+}));
+
+// Sorting
+function sortTable(column) {
+  if (sortColumn === column) sortAsc = !sortAsc;
+  else { sortColumn = column; sortAsc = true; }
+
+  document.querySelectorAll('.sort-icon').forEach(el => el.textContent = '');
+  const icon = document.querySelector(`th[data-column="${column}"] .sort-icon`);
+  icon.textContent = sortAsc ? '▲' : '▼';
+  filterMembers();
+}
+document.querySelectorAll('#memberTable th[data-column]').forEach(th => {
+  th.addEventListener('click', () => sortTable(th.dataset.column));
+});
+
+// แก้ไข
+async function editMember(id) {
+  const res = await fetch(`${API_URL}?member_id=${id}`);
+  const result = await res.json();
+  if (result.error) return alert(result.error);
+  editId = id;
+  Object.keys(result.data[0]).forEach(key => {
+    if (form[key]) {
+      if (form[key].type === 'checkbox') form[key].checked = result.data[0][key];
+      else form[key].value = result.data[0][key];
     }
+  });
+}
 
-    function editMember(id){
-      const m = allMembers.find(x=>x.member_id===id);
-      if(!m) return;
-      for(let key in m){
-        if(form[key]) form[key].value = m[key];
-      }
-      window.scrollTo({top:0, behavior:'smooth'});
-    }
+// ลบ
+async function deleteMember(id) {
+  if (!confirm('ต้องการลบสมาชิกนี้?')) return;
+  const res = await fetch(`${API_URL}?member_id=${id}`, { method: 'DELETE' });
+  const result = await res.json();
+  if (result.error) return alert(result.error);
+  loadMembers();
+}
 
-    loadMembers();
-  </script>
+// เพิ่ม / แก้ไข
+form.addEventListener('submit', async e => {
+  e.preventDefault();
+  const formData = {};
+  new FormData(form).forEach((v, k) => formData[k] = v);
+  formData.kyot_member = form.kyot_member.checked;
+
+  const method = editId ? 'PUT' : 'POST';
+  const url = editId ? `${API_URL}?member_id=${editId}` : API_URL;
+
+  const res = await fetch(url, {
+    method,
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify(formData)
+  });
+  const result = await res.json();
+  if (result.error) return alert(result.error);
+
+  editId = null;
+  form.reset();
+  loadMembers();
+});
+
+loadMembers();
+</script>
+
 </body>
 </html>
