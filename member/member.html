@@ -4,14 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ระบบจัดการสมาชิก</title>
-
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap');
-
 body { font-family:"Prompt",sans-serif; background:#f0f4f8; margin:20px; color:#333; }
 h2 { text-align:center; color:#1e40af; margin-bottom:15px; }
-
-/* --- Form Step --- */
 form { max-width:950px; margin:auto; }
 .form-step { display:none; background:#fff; padding:20px 25px; border-radius:12px; box-shadow:0 5px 20px rgba(0,0,0,0.08); margin-bottom:20px; }
 .form-step.active { display:block; }
@@ -19,17 +15,11 @@ input, select { display:block; width:48%; margin:5px 1% 10px 1%; padding:6px 10p
 input:focus, select:focus { outline:none; border-color:#4a90e2; box-shadow:0 0 5px rgba(74,144,226,0.3); background:#fff; }
 label{ font-size:13px; margin-right:8px; display:inline-block; }
 small{ font-size:12px; color:#555; }
-
-/* --- Navigation --- */
 .form-navigation { text-align:center; margin-top:15px; }
 .form-navigation button { padding:6px 12px; margin:3px; border:none; border-radius:6px; cursor:pointer; background:#4a90e2; color:#fff; }
 .form-navigation button:hover { background:#357abd; }
-
-/* --- Filter --- */
 #filterDiv { background:#fff; padding:12px 15px; border-radius:10px; max-width:950px; margin:25px auto 15px; box-shadow:0 4px 12px rgba(0,0,0,0.08); display:flex; flex-wrap:wrap; gap:6px; }
 #filterDiv input, #filterDiv select { padding:5px 8px; border:1px solid #ccc; border-radius:6px; font-size:13px; background:#f9fafb; flex:1 1 150px; }
-
-/* --- Table --- */
 table { border-collapse: collapse; width:100%; max-width:1000px; margin:auto; font-size:13px; background:#fff; border-radius:10px; overflow:hidden; box-shadow:0 4px 12px rgba(0,0,0,0.08); }
 th, td { border:1px solid #e2e8f0; padding:6px 8px; text-align:center; }
 th { background:#4a90e2; color:#fff; cursor:pointer; position:relative; font-weight:500; }
@@ -40,20 +30,14 @@ button.edit { background:#4a90e2; color:#fff; padding:3px 6px; border-radius:4px
 button.edit:hover { background:#357abd; }
 button.delete { background:#f56565; color:#fff; padding:3px 6px; border-radius:4px; font-size:12px; }
 button.delete:hover { background:#c53030; }
-
-/* --- Pagination --- */
 .pagination { text-align:center; margin:12px auto; display:flex; flex-wrap:wrap; justify-content:center; gap:6px; }
 .pagination button { padding:5px 10px; margin:3px; border:none; border-radius:5px; background:#4a90e2; color:#fff; cursor:pointer; font-size:13px; }
 .pagination button:hover{ background:#357abd; }
 #pageInfo, #resultCount{ font-weight:500; color:#2d3748; font-size:13px; }
-
-/* --- Progress Bar --- */
 .progress-container { display:flex; justify-content:space-between; align-items:center; max-width:950px; margin:0 auto 20px auto; position:relative; counter-reset: step; }
 .progress-container::before { content:""; position:absolute; top:50%; left:0; width:100%; height:3px; background-color:#e2e8f0; transform:translateY(-50%); z-index:0; }
 .progress-step { position:relative; z-index:1; background:#f9fafb; color:#4a5568; border:2px solid #cbd5e0; border-radius:50px; padding:8px 15px; font-size:13px; font-weight:500; flex:1; text-align:center; margin:0 4px; transition:all 0.3s; white-space:nowrap; }
 .progress-step.active { background:#4a90e2; color:#fff; border-color:#4a90e2; box-shadow:0 0 8px rgba(74,144,226,0.5); }
-
-/* --- Responsive --- */
 @media (max-width:768px){
   body{ margin:10px; font-size:14px; }
   form{ width:100%; padding:10px; }
@@ -75,7 +59,6 @@ button.delete:hover { background:#c53030; }
 
 <h2>ฟอร์มบันทึกสมาชิก</h2>
 
-<!-- Progress Bar -->
 <div class="progress-container">
   <div class="progress-step active" data-step="1">① ข้อมูลพื้นฐาน</div>
   <div class="progress-step" data-step="2">② ที่อยู่ / เบอร์โทร</div>
@@ -92,27 +75,19 @@ button.delete:hover { background:#c53030; }
     <input placeholder="คำนำหน้า" name="title" required>
     <input placeholder="ชื่อ" name="first_name" required>
     <input placeholder="นามสกุล" name="last_name" required>
-    <input placeholder="เลขบัตรประชาชน" name="id_card" required>
-     <small>📅 วันเกิด</small>
+    <input placeholder="เลขบัตรประชาชน (x-xxxx-xxxxx-xx-x)" 
+           name="id_card" required maxlength="17" 
+           pattern="\d-\d{4}-\d{5}-\d{2}-\d" 
+           title="เลขบัตรประชาชนต้องเป็นรูปแบบ x-xxxx-xxxxx-xx-x">
     <input type="date" name="birthday" required>
+    <small>📅 วันเกิด</small>
     <select name="gender" required>
       <option value="">--เลือกเพศ--</option>
       <option value="ชาย">ชาย</option>
       <option value="หญิง">หญิง</option>
+      <option value="อื่นๆ">อื่นๆ</option>
     </select>
-    <!-- <input placeholder="กลุ่มที่" name="group" required> -->
-     <select name="group" required>
-      <option value="">--เลือกกลุ่ม--</option>
-      <option value="1">กลุ่มที่ 1</option>
-      <option value="2">กลุ่มที่ 2</option>
-      <option value="3">กลุ่มที่ 3</option>
-      <option value="4">กลุ่มที่ 4</option>
-      <option value="5">กลุ่มที่ 5</option>
-      <option value="6">กลุ่มที่ 6</option>
-      <option value="7">กลุ่มที่ 7</option>
-      <option value="8">กลุ่มที่ 8</option>
-      <option value="9">กลุ่มที่ 9</option>
-    </select>
+    <input placeholder="กลุ่มที่" name="group" required>
   </div>
 
   <!-- Step 2 -->
@@ -207,11 +182,11 @@ let allMembers=[];
 let sortColumn=null, sortAsc=true;
 let currentPage=1, rowsPerPage=10;
 
-// --- Multi-Step Form ---
+// Multi-step form
 const formSteps=document.querySelectorAll('.form-step');
+const progressSteps=document.querySelectorAll('.progress-step');
 let formStepIndex=0;
 showStep(formStepIndex);
-
 document.getElementById('nextBtn').addEventListener('click',()=>{
   if(!validateStep(formStepIndex)) return;
   formStepIndex++;
@@ -221,20 +196,14 @@ document.getElementById('prevBtn').addEventListener('click',()=>{
   formStepIndex--;
   showStep(formStepIndex);
 });
-
 function showStep(n){
   formSteps.forEach((step,i)=>step.classList.remove('active'));
   formSteps[n].classList.add('active');
+  progressSteps.forEach((p,i)=>p.classList.toggle('active',i<=n));
   document.getElementById('prevBtn').style.display=n===0?'none':'inline-block';
   document.getElementById('nextBtn').style.display=n===formSteps.length-1?'none':'inline-block';
   document.getElementById('submitBtn').style.display=n===formSteps.length-1?'inline-block':'none';
-
-  // update progress bar
-  document.querySelectorAll('.progress-step').forEach((el,i)=>{
-    el.classList.toggle('active', i <= n);
-  });
 }
-
 function validateStep(n){
   const inputs=formSteps[n].querySelectorAll('input,select');
   for(let inp of inputs){
@@ -246,6 +215,20 @@ function validateStep(n){
   }
   return true;
 }
+
+// --- Format ID Card ---
+const idCardInput = document.querySelector('input[name="id_card"]');
+idCardInput.addEventListener('input', e => {
+  let value = e.target.value.replace(/\D/g,''); // ลบทุกอย่างที่ไม่ใช่ตัวเลข
+  if(value.length > 13) value = value.slice(0,13); 
+  let formatted = '';
+  if(value.length>0) formatted += value[0];
+  if(value.length>1) formatted += '-' + value.slice(1,5);
+  if(value.length>5) formatted += '-' + value.slice(5,10);
+  if(value.length>10) formatted += '-' + value.slice(10,12);
+  if(value.length>12) formatted += '-' + value.slice(12,13);
+  e.target.value = formatted;
+});
 
 // --- Load Members ---
 async function loadMembers(){
