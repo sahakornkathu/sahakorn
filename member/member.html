@@ -2,137 +2,172 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<title>ลงทะเบียนสมาชิก</title>
+<title>ระบบสมาชิก</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap');
-  body {
-    font-family: "Prompt", sans-serif;
-    background: linear-gradient(135deg, #eef2f3, #e2e8f0);
-    margin: 0;
-    padding: 40px;
-    color: #333;
-  }
+@import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap');
+body {
+  font-family: "Prompt", sans-serif;
+  background: linear-gradient(135deg, #eef2f3, #e2e8f0);
+  margin: 0;
+  padding: 30px;
+  color: #333;
+}
+h2 { text-align:center; margin-bottom:25px; color:#2d3748; }
 
-  h2 {
-    text-align: center;
-    color: #2d3748;
-    margin-bottom: 30px;
-  }
+/* --- Progress Bar --- */
+.progress-container {
+  display: flex;
+  justify-content: space-between;
+  margin: 20px auto 40px;
+  max-width: 700px;
+  position: relative;
+}
+.progress-container::before {
+  content:'';
+  position:absolute;
+  top:50%;
+  left:15%;
+  right:15%;
+  height:4px;
+  background-color:#d1d5db;
+  z-index:0;
+}
+.progress {
+  position:absolute;
+  top:50%;
+  left:15%;
+  height:4px;
+  background-color:#4a90e2;
+  z-index:1;
+  transition:0.3s;
+}
+.circle {
+  width:40px;
+  height:40px;
+  background:#d1d5db;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:white;
+  z-index:2;
+  position:relative;
+  font-weight:500;
+}
+.circle.active { background:#4a90e2; }
 
-  /* Progress Bar */
-  .progress-container {
-    display: flex;
-    justify-content: space-between;
-    margin: 20px auto 40px;
-    max-width: 700px;
-    position: relative;
-  }
-  .progress-container::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 15%;
-    right: 15%;
-    height: 4px;
-    background-color: #d1d5db;
-    z-index: 0;
-  }
-  .progress {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 15%;
-    height: 4px;
-    background-color: #4a90e2;
-    z-index: 1;
-    transition: 0.3s;
-  }
-  .circle {
-    width: 40px;
-    height: 40px;
-    background: #d1d5db;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    z-index: 2;
-    position: relative;
-    font-weight: 500;
-  }
-  .circle.active {
-    background: #4a90e2;
-  }
+/* --- Form --- */
+form {
+  max-width:800px;
+  margin:auto;
+  background:#fff;
+  border-radius:16px;
+  padding:30px;
+  box-shadow:0 5px 20px rgba(0,0,0,0.1);
+}
+.form-step { display:none; }
+.form-step.active { display:block; animation: fadeIn 0.4s ease-in-out; }
+@keyframes fadeIn { from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
 
-  form {
-    max-width: 800px;
-    margin: auto;
-    background: #fff;
-    border-radius: 16px;
-    padding: 30px;
-    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-  }
+.form-group {
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:space-between;
+}
+.form-group input, .form-group select {
+  margin:8px 0;
+  padding:10px 12px;
+  width:48%;
+  border:1px solid #ccc;
+  border-radius:8px;
+  background-color:#f9fafb;
+  transition:all 0.2s;
+}
+.form-group input:focus, .form-group select:focus {
+  outline:none;
+  border-color:#4a90e2;
+  box-shadow:0 0 5px rgba(74,144,226,0.3);
+  background-color:#fff;
+}
 
-  .form-step {
-    display: none;
-  }
-  .form-step.active {
-    display: block;
-    animation: fadeIn 0.4s ease-in-out;
-  }
+.buttons {
+  display:flex;
+  justify-content:space-between;
+  margin-top:25px;
+}
+.btn {
+  background-color:#4a90e2;
+  color:white;
+  border:none;
+  border-radius:8px;
+  padding:10px 16px;
+  cursor:pointer;
+  font-weight:500;
+  transition:0.3s;
+}
+.btn:hover { background-color:#357abd; }
+.btn.back {
+  background-color:#cbd5e0;
+  color:#2d3748;
+}
+.btn.back:hover { background-color:#a0aec0; }
 
-  @keyframes fadeIn {
-    from {opacity: 0; transform: translateY(10px);}
-    to {opacity: 1; transform: translateY(0);}
-  }
+/* --- Filter & Table --- */
+#filterDiv {
+  background:#fff;
+  padding:20px;
+  border-radius:12px;
+  box-shadow:0 2px 8px rgba(0,0,0,0.08);
+  margin:40px auto 20px;
+  max-width:1000px;
+}
+#filterDiv input, #filterDiv select {
+  padding:8px 12px;
+  border:1px solid #ccc;
+  border-radius:8px;
+  margin-right:8px;
+  background-color:#f9fafb;
+}
 
-  .form-group {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-  }
-  .form-group input, .form-group select {
-    margin: 8px 0;
-    padding: 10px 12px;
-    width: 48%;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    background-color: #f9fafb;
-    transition: all 0.2s;
-  }
-  .form-group input:focus, .form-group select:focus {
-    outline: none;
-    border-color: #4a90e2;
-    box-shadow: 0 0 5px rgba(74,144,226,0.3);
-    background-color: #fff;
-  }
+table {
+  width:100%;
+  border-collapse:collapse;
+  background:#fff;
+  border-radius:12px;
+  overflow:hidden;
+  box-shadow:0 2px 8px rgba(0,0,0,0.08);
+  margin:auto;
+}
+th, td {
+  border-bottom:1px solid #e2e8f0;
+  text-align:center;
+  padding:12px;
+}
+th {
+  background-color:#4a90e2;
+  color:white;
+  position:relative;
+  cursor:pointer;
+}
+th span.sort-icon { position:absolute; right:10px; font-size:12px; }
+tr:nth-child(even){ background-color:#f9fafb; }
+tr:hover{ background-color:#e6f0ff; }
 
-  .buttons {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 25px;
-  }
-  .btn {
-    background-color: #4a90e2;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    padding: 10px 16px;
-    cursor: pointer;
-    font-weight: 500;
-    transition: 0.3s;
-  }
-  .btn:hover {
-    background-color: #357abd;
-  }
+.pagination { text-align:center; margin-top:20px; }
+.pagination button {
+  background-color:#4a90e2;
+  color:white;
+  border:none;
+  border-radius:6px;
+  padding:8px 14px;
+  margin:5px;
+  cursor:pointer;
+}
+.pagination button:hover{ background-color:#357abd; }
+#pageInfo, #resultCount{ font-weight:500; color:#2d3748; }
 
-  .btn.back {
-    background-color: #cbd5e0;
-    color: #2d3748;
-  }
-  .btn.back:hover {
-    background-color: #a0aec0;
-  }
+label{ display:inline-block; margin:8px 10px; color:#555; }
+input[type="checkbox"]{ width:auto; transform:scale(1.2); margin-right:6px; }
 
 </style>
 </head>
@@ -148,7 +183,7 @@
 </div>
 
 <form id="memberForm">
-  <!-- ขั้นตอน 1 -->
+  <!-- STEP 1 -->
   <div class="form-step active">
     <h3>ข้อมูลส่วนตัว</h3>
     <div class="form-group">
@@ -166,7 +201,7 @@
     </div>
   </div>
 
-  <!-- ขั้นตอน 2 -->
+  <!-- STEP 2 -->
   <div class="form-step">
     <h3>ที่อยู่</h3>
     <div class="form-group">
@@ -186,7 +221,7 @@
     </div>
   </div>
 
-  <!-- ขั้นตอน 3 -->
+  <!-- STEP 3 -->
   <div class="form-step">
     <h3>ข้อมูลเพิ่มเติม / สถานะสมาชิก</h3>
     <div class="form-group">
@@ -217,52 +252,196 @@
   </div>
 </form>
 
+<!-- FILTER / TABLE -->
+<h2>รายการสมาชิก</h2>
+<div id="filterDiv">
+  <input id="searchMemberId" placeholder="เลขสมาชิก">
+  <input id="searchName" placeholder="ชื่อ / นามสกุล">
+  <input id="searchGroup" placeholder="กลุ่ม">
+  <input id="searchProvince" placeholder="จังหวัด">
+  <select id="searchStatus">
+    <option value="">--สถานะสมาชิก--</option>
+    <option value="สมาชิก">สมาชิก</option>
+    <option value="ลาออก">ลาออก</option>
+    <option value="เสียชีวิต">เสียชีวิต</option>
+  </select>
+  <span id="resultCount"></span>
+</div>
+
+<table id="memberTable">
+  <thead>
+    <tr>
+      <th data-column="member_id">เลขสมาชิก <span class="sort-icon"></span></th>
+      <th data-column="first_name">ชื่อ <span class="sort-icon"></span></th>
+      <th data-column="last_name">นามสกุล <span class="sort-icon"></span></th>
+      <th data-column="group">กลุ่ม <span class="sort-icon"></span></th>
+      <th data-column="province">จังหวัด <span class="sort-icon"></span></th>
+      <th data-column="member_status">สถานะ <span class="sort-icon"></span></th>
+      <th>แก้ไข</th>
+      <th>ลบ</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+<div class="pagination">
+  <button id="prevPage">ก่อนหน้า</button>
+  <span id="pageInfo"></span>
+  <button id="nextPage">ถัดไป</button>
+</div>
+
 <script>
+// --- Multi-Step Form ---
 const nextBtns = document.querySelectorAll('.next');
 const backBtns = document.querySelectorAll('.back');
 const formSteps = document.querySelectorAll('.form-step');
 const circles = document.querySelectorAll('.circle');
 const progress = document.getElementById('progress');
 let formStepIndex = 0;
-
 function updateFormSteps() {
-  formSteps.forEach((step, idx) => step.classList.toggle('active', idx === formStepIndex));
-  circles.forEach((circle, idx) => circle.classList.toggle('active', idx <= formStepIndex));
-  progress.style.width = ((formStepIndex) / (circles.length - 1)) * 70 + '%';
+  formSteps.forEach((step, idx)=>step.classList.toggle('active', idx===formStepIndex));
+  circles.forEach((c, idx)=>c.classList.toggle('active', idx<=formStepIndex));
+  progress.style.width = ((formStepIndex)/(circles.length-1))*70 + '%';
 }
+nextBtns.forEach(btn=>btn.addEventListener('click', ()=>{ formStepIndex=Math.min(formStepIndex+1,formSteps.length-1); updateFormSteps(); }));
+backBtns.forEach(btn=>btn.addEventListener('click', ()=>{ formStepIndex=Math.max(formStepIndex-1,0); updateFormSteps(); }));
 
-nextBtns.forEach(btn => btn.addEventListener('click', () => {
-  formStepIndex = Math.min(formStepIndex + 1, formSteps.length - 1);
-  updateFormSteps();
-}));
-
-backBtns.forEach(btn => btn.addEventListener('click', () => {
-  formStepIndex = Math.max(formStepIndex - 1, 0);
-  updateFormSteps();
-}));
-
-// SUBMIT
+// --- Supabase API ---
 const API_URL = 'https://ttottijljxoinptmhgtu.supabase.co/functions/v1/members';
 const form = document.getElementById('memberForm');
-form.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const formData = {};
-  new FormData(form).forEach((v,k) => formData[k] = v);
-  formData.kyot_member = form.kyot_member.checked;
-  const res = await fetch(API_URL, {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify(formData)
+const tableBody = document.querySelector('#memberTable tbody');
+let editId=null, allMembers=[], sortColumn=null, sortAsc=true, currentPage=1, rowsPerPage=10;
+
+// LOAD MEMBERS
+async function loadMembers(){
+  try{
+    const res = await fetch(API_URL);
+    const result = await res.json();
+    if(result.error){ alert(result.error); return; }
+    if(!Array.isArray(result.data)){ alert("ข้อมูลสมาชิกไม่ถูกต้อง"); return; }
+    allMembers=result.data;
+    filterMembers();
+  } catch(err){ alert("เกิดข้อผิดพลาด: "+err); }
+}
+
+// RENDER TABLE
+function renderTable(members){
+  tableBody.innerHTML='';
+  const start=(currentPage-1)*rowsPerPage;
+  const end=start+rowsPerPage;
+  const paginated=members.slice(start,end);
+  paginated.forEach(m=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td>${m.member_id}</td>
+      <td>${m.first_name}</td>
+      <td>${m.last_name}</td>
+      <td>${m.group}</td>
+      <td>${m.province}</td>
+      <td>${m.member_status}</td>
+      <td><button onclick="editMember('${m.member_id}')">แก้ไข</button></td>
+      <td><button onclick="deleteMember('${m.member_id}')">ลบ</button></td>
+    `;
+    tableBody.appendChild(tr);
   });
-  const result = await res.json();
-  if (result.error) alert(result.error);
-  else {
-    alert("บันทึกสำเร็จ ✅");
-    form.reset();
-    formStepIndex = 0;
-    updateFormSteps();
+  const totalPages=Math.ceil(members.length/rowsPerPage);
+  document.getElementById('pageInfo').textContent=`หน้า ${currentPage} จาก ${totalPages}`;
+  document.getElementById('resultCount').textContent=`พบ ${members.length} รายการ`;
+}
+
+// FILTER + SORT
+function filterMembers(){
+  const idFilter=document.getElementById('searchMemberId').value.toLowerCase();
+  const nameFilter=document.getElementById('searchName').value.toLowerCase();
+  const groupFilter=document.getElementById('searchGroup').value.toLowerCase();
+  const provinceFilter=document.getElementById('searchProvince').value.toLowerCase();
+  const statusFilter=document.getElementById('searchStatus').value;
+  let filtered = allMembers.filter(m=>{
+    return (!idFilter || m.member_id.toLowerCase().includes(idFilter)) &&
+           (!nameFilter || m.first_name.toLowerCase().includes(nameFilter) || m.last_name.toLowerCase().includes(nameFilter)) &&
+           (!groupFilter || (m.group && m.group.toLowerCase().includes(groupFilter))) &&
+           (!provinceFilter || (m.province && m.province.toLowerCase().includes(provinceFilter))) &&
+           (!statusFilter || m.member_status===statusFilter);
+  });
+  if(sortColumn){
+    filtered.sort((a,b)=>{
+      let valA=a[sortColumn]||'', valB=b[sortColumn]||'';
+      valA=valA.toString().toLowerCase();
+      valB=valB.toString().toLowerCase();
+      if(valA<valB) return sortAsc?-1:1;
+      if(valA>valB) return sortAsc?1:-1;
+      return 0;
+    });
   }
+  renderTable(filtered);
+}
+
+// Pagination
+document.getElementById('prevPage').addEventListener('click', ()=>{
+  if(currentPage>1){ currentPage--; filterMembers(); }
 });
+document.getElementById('nextPage').addEventListener('click', ()=>{
+  const totalPages=Math.ceil(allMembers.length/rowsPerPage);
+  if(currentPage<totalPages){ currentPage++; filterMembers(); }
+});
+['searchMemberId','searchName','searchGroup','searchProvince','searchStatus'].forEach(id=>document.getElementById(id).addEventListener('input',()=>{ currentPage=1; filterMembers(); }));
+
+// Sorting
+function sortTable(column){
+  if(sortColumn===column) sortAsc=!sortAsc;
+  else{ sortColumn=column; sortAsc=true; }
+  document.querySelectorAll('.sort-icon').forEach(el=>el.textContent='');
+  const icon=document.querySelector(`th[data-column="${column}"] .sort-icon`);
+  icon.textContent=sortAsc?'▲':'▼';
+  filterMembers();
+}
+document.querySelectorAll('#memberTable th[data-column]').forEach(th=>th.addEventListener('click',()=>sortTable(th.dataset.column)));
+
+// EDIT
+async function editMember(id){
+  const res=await fetch(`${API_URL}?member_id=${id}`);
+  const result=await res.json();
+  if(result.error) return alert(result.error);
+  editId=id;
+  Object.keys(result.data[0]).forEach(key=>{
+    if(form[key]){
+      if(form[key].type==='checkbox') form[key].checked=result.data[0][key];
+      else form[key].value=result.data[0][key];
+    }
+  });
+  formStepIndex=0; updateFormSteps();
+}
+
+// DELETE
+async function deleteMember(id){
+  if(!confirm('ต้องการลบสมาชิกนี้?')) return;
+  const res=await fetch(`${API_URL}?member_id=${id}`,{method:'DELETE'});
+  const result=await res.json();
+  if(result.error) return alert(result.error);
+  loadMembers();
+}
+
+// SUBMIT
+form.addEventListener('submit', async e=>{
+  e.preventDefault();
+  const formData={};
+  new FormData(form).forEach((v,k)=>formData[k]=v);
+  formData.kyot_member=form.kyot_member.checked;
+  const method=editId?'PUT':'POST';
+  const url=editId?`${API_URL}?member_id=${editId}`:API_URL;
+  const res=await fetch(url,{
+    method,
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(formData)
+  });
+  const result=await res.json();
+  if(result.error) return alert(result.error);
+  editId=null;
+  form.reset();
+  formStepIndex=0; updateFormSteps();
+  loadMembers();
+});
+
+loadMembers();
 </script>
 
 </body>
