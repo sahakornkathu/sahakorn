@@ -63,74 +63,94 @@
 </table>
 
 <script>
-const API_URL = 'https://ttottijljxoinptmhgtu.functions.supabase.co/members';
+const API_URL = 'hhttps://ttottijljxoinptmhgtu.supabase.co/members';
 
 const form = document.getElementById('memberForm');
 const tableBody = document.querySelector('#memberTable tbody');
 let editId = null;
 
-// โหลดข้อมูลสมาชิก
 async function loadMembers() {
-  const res = await fetch(API_URL);
-  const data = await res.json();
-  tableBody.innerHTML = '';
-  data.forEach(m => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${m.member_id}</td>
-      <td>${m.first_name}</td>
-      <td>${m.last_name}</td>
-      <td>${m.member_status}</td>
-      <td><button onclick="editMember('${m.member_id}')">แก้ไข</button></td>
-      <td><button onclick="deleteMember('${m.member_id}')">ลบ</button></td>
-    `;
-    tableBody.appendChild(tr);
-  });
+  try {
+    const res = await fetch(API_URL);
+    const data = await res.json();
+    if(data.error) { alert(data.error); return; }
+    tableBody.innerHTML = '';
+    data.forEach(m => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${m.member_id}</td>
+        <td>${m.first_name}</td>
+        <td>${m.last_name}</td>
+        <td>${m.member_status}</td>
+        <td><button onclick="editMember('${m.member_id}')">แก้ไข</button></td>
+        <td><button onclick="deleteMember('${m.member_id}')">ลบ</button></td>
+      `;
+      tableBody.appendChild(tr);
+    });
+  } catch(err) {
+    alert("ไม่สามารถโหลดสมาชิก: " + err);
+  }
 }
 
-// แก้ไขสมาชิก
 async function editMember(id) {
-  const res = await fetch(`${API_URL}?member_id=${id}`);
-  const data = await res.json();
-  editId = id;
-  Object.keys(data[0]).forEach(key => {
-    if(form[key]) {
-      if(form[key].type === 'checkbox') form[key].checked = data[0][key];
-      else form[key].value = data[0][key];
-    }
-  });
+  try {
+    const res = await fetch(`${API_URL}?member_id=${id}`);
+    const data = await res.json();
+    if(data.error) { alert(data.error); return; }
+    editId = id;
+    Object.keys(data[0]).forEach(key => {
+      if(form[key]) {
+        if(form[key].type === 'checkbox') form[key].checked = data[0][key];
+        else form[key].value = data[0][key];
+      }
+    });
+  } catch(err){
+    alert(err);
+  }
 }
 
-// ลบสมาชิก
-async function deleteMember(id) {
+async function deleteMember(id){
   if(!confirm('ต้องการลบสมาชิกนี้?')) return;
-  await fetch(`${API_URL}?member_id=${id}`, { method:'DELETE' });
-  loadMembers();
+  try{
+    const res = await fetch(`${API_URL}?member_id=${id}`, { method:'DELETE' });
+    const data = await res.json();
+    if(data.error) { alert(data.error); return; }
+    loadMembers();
+  } catch(err){
+    alert(err);
+  }
 }
 
-// บันทึกสมาชิก
 form.addEventListener('submit', async e=>{
   e.preventDefault();
   const formData = {};
-  new FormData(form).forEach((v,k)=> formData[k] = v);
+  new FormData(form).forEach((v,k)=> formData[k]=v);
   formData.kyot_member = form.kyot_member.checked;
 
-  if(editId){
-    await fetch(`${API_URL}?member_id=${editId}`, {
-      method:'PUT',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify(formData)
-    });
-    editId = null;
-  } else {
-    await fetch(API_URL, {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify(formData)
-    });
+  try{
+    if(editId){
+      const res = await fetch(`${API_URL}?member_id=${editId}`, {
+        method:'PUT',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify(formData)
+      });
+      const data = await res.json();
+      if(data.error) { alert(data.error); return; }
+      editId = null;
+    } else {
+      const res = await fetch(API_URL, {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify(formData)
+      });
+      const data = await res.json();
+      if(data.error) { alert(data.error); return; }
+    }
+    form.reset();
+    loadMembers();
+  } catch(err){
+    alert(err);
   }
-  form.reset();
-  loadMembers();
 });
 
 loadMembers();
