@@ -72,10 +72,13 @@ let editId = null;
 async function loadMembers() {
   try {
     const res = await fetch(API_URL);
-    const data = await res.json();
-    if(data.error) { alert(data.error); return; }
+    const result = await res.json();
+
+    if(result.error) { alert(result.error); return; }
+    if(!Array.isArray(result.data)) { alert("ข้อมูลสมาชิกไม่ถูกต้อง"); return; }
+
     tableBody.innerHTML = '';
-    data.forEach(m => {
+    result.data.forEach(m => {
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td>${m.member_id}</td>
@@ -87,21 +90,22 @@ async function loadMembers() {
       `;
       tableBody.appendChild(tr);
     });
+
   } catch(err) {
-    alert("ไม่สามารถโหลดสมาชิก: " + err);
+    alert("เกิดข้อผิดพลาด: " + err);
   }
 }
 
 async function editMember(id) {
   try {
     const res = await fetch(`${API_URL}?member_id=${id}`);
-    const data = await res.json();
-    if(data.error) { alert(data.error); return; }
+    const result = await res.json();
+    if(result.error) { alert(result.error); return; }
     editId = id;
-    Object.keys(data[0]).forEach(key => {
+    Object.keys(result.data[0]).forEach(key => {
       if(form[key]) {
-        if(form[key].type === 'checkbox') form[key].checked = data[0][key];
-        else form[key].value = data[0][key];
+        if(form[key].type === 'checkbox') form[key].checked = result.data[0][key];
+        else form[key].value = result.data[0][key];
       }
     });
   } catch(err){
@@ -113,8 +117,8 @@ async function deleteMember(id){
   if(!confirm('ต้องการลบสมาชิกนี้?')) return;
   try{
     const res = await fetch(`${API_URL}?member_id=${id}`, { method:'DELETE' });
-    const data = await res.json();
-    if(data.error) { alert(data.error); return; }
+    const result = await res.json();
+    if(result.error) { alert(result.error); return; }
     loadMembers();
   } catch(err){
     alert(err);
@@ -134,8 +138,8 @@ form.addEventListener('submit', async e=>{
         headers:{'Content-Type':'application/json'},
         body: JSON.stringify(formData)
       });
-      const data = await res.json();
-      if(data.error) { alert(data.error); return; }
+      const result = await res.json();
+      if(result.error) { alert(result.error); return; }
       editId = null;
     } else {
       const res = await fetch(API_URL, {
@@ -143,18 +147,5 @@ form.addEventListener('submit', async e=>{
         headers:{'Content-Type':'application/json'},
         body: JSON.stringify(formData)
       });
-      const data = await res.json();
-      if(data.error) { alert(data.error); return; }
-    }
-    form.reset();
-    loadMembers();
-  } catch(err){
-    alert(err);
-  }
-});
-
-loadMembers();
-</script>
-
-</body>
-</html>
+      const result = await res.json();
+      if
