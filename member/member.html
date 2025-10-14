@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <title>ระบบจัดการสมาชิก</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Prompt&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@400;600&display=swap');
   body {
     font-family: "Prompt", sans-serif;
     background: #f4f6f9;
@@ -18,6 +18,7 @@
     margin-top: 30px;
   }
 
+  /* === Form Container === */
   .form-container {
     background: #fff;
     max-width: 800px;
@@ -115,10 +116,37 @@
   .btn-prev { background: #6c757d; color: white; }
   .btn-submit { background: #28a745; color: white; }
 
+  /* === Search Filter === */
+  #filterDiv {
+    background: white;
+    max-width: 1000px;
+    margin: 20px auto;
+    padding: 15px;
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    text-align: center;
+  }
+
+  #filterDiv input, #filterDiv select {
+    display: inline-block;
+    margin: 5px;
+    padding: 6px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    width: 180px;
+  }
+
+  #resultCount {
+    font-weight: bold;
+    margin-left: 10px;
+    color: #007bff;
+  }
+
+  /* === Table === */
   table {
     border-collapse: collapse;
     width: 95%;
-    margin: 30px auto;
+    margin: 20px auto;
     background: white;
     border-radius: 10px;
     overflow: hidden;
@@ -158,6 +186,7 @@
   .pagination button:hover {
     background: #0056b3;
   }
+
 </style>
 </head>
 <body>
@@ -236,7 +265,23 @@
   </form>
 </div>
 
-<!-- ตารางสมาชิก -->
+<!-- Filter -->
+<h2>🔍 ค้นหาสมาชิก</h2>
+<div id="filterDiv">
+  <input id="searchMemberId" placeholder="เลขสมาชิก">
+  <input id="searchName" placeholder="ชื่อ / นามสกุล">
+  <input id="searchGroup" placeholder="กลุ่ม">
+  <input id="searchProvince" placeholder="จังหวัด">
+  <select id="searchStatus">
+    <option value="">--สถานะสมาชิก--</option>
+    <option value="สมาชิก">สมาชิก</option>
+    <option value="ลาออก">ลาออก</option>
+    <option value="เสียชีวิต">เสียชีวิต</option>
+  </select>
+  <span id="resultCount"></span>
+</div>
+
+<!-- Table -->
 <h2>📋 รายงานสมาชิก</h2>
 <table id="memberTable">
   <thead>
@@ -253,6 +298,7 @@
   </thead>
   <tbody></tbody>
 </table>
+
 <div class="pagination">
   <button id="prevPage">ก่อนหน้า</button>
   <span id="pageInfo"></span>
@@ -265,7 +311,7 @@ const form = document.getElementById('memberForm');
 const tableBody = document.querySelector('#memberTable tbody');
 let editId = null, allMembers = [], currentPage = 1, rowsPerPage = 10;
 
-// STEP FORM
+// Step Form Control
 const formSteps = document.querySelectorAll('.form-step');
 const nextBtns = document.querySelectorAll('.btn-next');
 const prevBtns = document.querySelectorAll('.btn-prev');
@@ -295,21 +341,37 @@ prevBtns.forEach(btn => btn.addEventListener('click', () => {
   }
 }));
 
-// LOAD DATA
+// Load Data
 async function loadMembers(){
   const res = await fetch(API_URL);
   const data = await res.json();
   allMembers = data.data || [];
-  renderTable();
+  filterMembers();
 }
 
-function renderTable(){
-  tableBody.innerHTML = '';
-  const start = (currentPage - 1) * rowsPerPage;
-  const pageData = allMembers.slice(start, start + rowsPerPage);
-  pageData.forEach(m=>{
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
+function filterMembers() {
+  const idF = searchMemberId.value.toLowerCase();
+  const nameF = searchName.value.toLowerCase();
+  const groupF = searchGroup.value.toLowerCase();
+  const provF = searchProvince.value.toLowerCase();
+  const statusF = searchStatus.value;
+  const filtered = allMembers.filter(m =>
+    (!idF || m.member_id.toLowerCase().includes(idF)) &&
+    (!nameF || m.first_name.toLowerCase().includes(nameF) || m.last_name.toLowerCase().includes(nameF)) &&
+    (!groupF || (m.group && m.group.toLowerCase().includes(groupF))) &&
+    (!provF || (m.province && m.province.toLowerCase().includes(provF))) &&
+    (!statusF || m.member_status === statusF)
+  );
+  renderTable(filtered);
+}
+
+function renderTable(list){
+  tableBody.innerHTML='';
+  const start=(currentPage-1)*rowsPerPage;
+  const page=list.slice(start,start+rowsPerPage);
+  page.forEach(m=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
       <td>${m.member_id}</td>
       <td>${m.first_name}</td>
       <td>${m.last_name}</td>
@@ -320,14 +382,18 @@ function renderTable(){
       <td><button onclick="deleteMember('${m.member_id}')">🗑️</button></td>`;
     tableBody.appendChild(tr);
   });
-  const totalPages = Math.ceil(allMembers.length / rowsPerPage);
-  document.getElementById('pageInfo').textContent = `หน้า ${currentPage} จาก ${totalPages}`;
+  const totalPages=Math.ceil(list.length/rowsPerPage);
+  pageInfo.textContent=`หน้า ${currentPage} จาก ${totalPages}`;
+  resultCount.textContent=`พบ ${list.length} รายการ`;
 }
 
-document.getElementById('prevPage').onclick = ()=>{ if(currentPage>1){ currentPage--; renderTable(); }};
-document.getElementById('nextPage').onclick = ()=>{ const total=Math.ceil(allMembers.length/rowsPerPage); if(currentPage<total){ currentPage++; renderTable(); }};
+['searchMemberId','searchName','searchGroup','searchProvince','searchStatus']
+.forEach(id=>document.getElementById(id).addEventListener('input',()=>{currentPage=1;filterMembers();}));
 
-form.addEventListener('submit', async e=>{
+document.getElementById('prevPage').onclick=()=>{if(currentPage>1){currentPage--;filterMembers();}};
+document.getElementById('nextPage').onclick=()=>{const total=Math.ceil(allMembers.length/rowsPerPage);if(currentPage<total){currentPage++;filterMembers();}};
+
+form.addEventListener('submit',async e=>{
   e.preventDefault();
   const formData={};
   new FormData(form).forEach((v,k)=>formData[k]=v);
@@ -336,7 +402,7 @@ form.addEventListener('submit', async e=>{
   const url=editId?`${API_URL}?member_id=${editId}`:API_URL;
   const res=await fetch(url,{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(formData)});
   const result=await res.json();
-  if(result.error) alert(result.error); else {alert('บันทึกเรียบร้อย!'); form.reset(); formStepIndex=0; progress.style.width='0%'; formSteps.forEach(s=>s.classList.remove('active')); formSteps[0].classList.add('active'); loadMembers();}
+  if(result.error) alert(result.error); else {alert('✅ บันทึกเรียบร้อย!'); form.reset(); formStepIndex=0; progress.style.width='0%'; formSteps.forEach(s=>s.classList.remove('active')); formSteps[0].classList.add('active'); loadMembers();}
 });
 
 loadMembers();
