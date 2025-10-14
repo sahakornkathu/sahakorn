@@ -14,10 +14,10 @@
   <form id="memberForm" class="grid grid-cols-2 gap-4 mb-6">
     <input type="hidden" id="member_id" name="member_id">
 
-    <input type="text" id="member_number" name="member_number" placeholder="เลขสมาชิก" class="border p-2 rounded">
+    <input type="text" id="member_number" name="member_number" placeholder="เลขสมาชิก" class="border p-2 rounded" required>
     <input type="text" id="title" name="title" placeholder="คำนำหน้า" class="border p-2 rounded">
-    <input type="text" id="first_name" name="first_name" placeholder="ชื่อ" class="border p-2 rounded">
-    <input type="text" id="last_name" name="last_name" placeholder="นามสกุล" class="border p-2 rounded">
+    <input type="text" id="first_name" name="first_name" placeholder="ชื่อ" class="border p-2 rounded" required>
+    <input type="text" id="last_name" name="last_name" placeholder="นามสกุล" class="border p-2 rounded" required>
     <input type="text" id="group_name" name="group_name" placeholder="กลุ่ม" class="border p-2 rounded">
     <input type="text" id="house_number" name="house_number" placeholder="บ้านเลขที่" class="border p-2 rounded">
     <input type="text" id="village_number" name="village_number" placeholder="หมู่" class="border p-2 rounded">
@@ -31,7 +31,6 @@
     <input type="text" id="phone_backup" name="phone_backup" placeholder="เบอร์สำรอง" class="border p-2 rounded">
     <input type="text" id="gender" name="gender" placeholder="เพศ" class="border p-2 rounded">
     <input type="text" id="status" name="status" placeholder="สถานะสมาชิก" class="border p-2 rounded">
-    <input type="text" id="user_id" name="user_id" placeholder="LINE UserId" class="border p-2 rounded" required>
 
     <button type="submit" class="bg-blue-500 text-white p-2 rounded col-span-2">บันทึกสมาชิก</button>
   </form>
@@ -101,26 +100,14 @@ async function editMember(id) {
   }
 }
 
-// Auto-generate member_number
-function generateMemberNumber(data) {
-  if(!data.member_number) {
-    const num = Math.floor(Math.random()*100000).toString().padStart(5,"0");
-    data.member_number = num;
-  }
-  return data;
-}
-
 // Submit form
 document.getElementById("memberForm").addEventListener("submit", async (e) => {
   e.preventDefault();
   const member_id = document.getElementById("member_id").value;
-  let data = Object.fromEntries(new FormData(e.target).entries());
-
-  // Auto-generate member_number ถ้าว่าง
-  data = generateMemberNumber(data);
+  const data = Object.fromEntries(new FormData(e.target).entries());
 
   // Validate ฟิลด์สำคัญ
-  const requiredFields = ["member_number","first_name","last_name","user_id"];
+  const requiredFields = ["member_number","first_name","last_name"];
   for (let field of requiredFields) {
     if (!data[field]) {
       alert(`กรุณากรอก ${field}`);
