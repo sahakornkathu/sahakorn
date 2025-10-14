@@ -6,7 +6,7 @@
 <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 p-6">
-<div class="max-w-4xl mx-auto bg-white p-6 rounded shadow">
+<div class="max-w-5xl mx-auto bg-white p-6 rounded shadow">
   <h1 class="text-2xl font-bold mb-4">ระบบสมาชิก</h1>
 
   <form id="memberForm" class="grid grid-cols-2 gap-4 mb-6">
@@ -42,8 +42,9 @@
 const API_URL = "https://ttottijljxoinptmhgtu.supabase.co/functions/v1/members";
 let editId = null;
 
+// ดึงข้อมูลสมาชิก
 async function fetchMembers() {
-  const res = await fetch(API_URL);
+  const res = await fetch(API_URL, { method: "GET" });
   const data = await res.json();
   const list = document.getElementById("membersList");
   list.innerHTML = data.map(m => `
@@ -59,6 +60,7 @@ async function fetchMembers() {
   `).join('');
 }
 
+// ส่งข้อมูลเพิ่ม / แก้ไข
 document.getElementById("memberForm").addEventListener("submit", async (e) => {
   e.preventDefault();
   const formData = new FormData(e.target);
@@ -71,16 +73,19 @@ document.getElementById("memberForm").addEventListener("submit", async (e) => {
     headers: {"Content-Type": "application/json"},
     body: JSON.stringify(body)
   });
+
   e.target.reset();
   editId = null;
   fetchMembers();
 });
 
+// แก้ไขข้อมูล
 async function editMember(id) {
-  const res = await fetch(API_URL);
+  const res = await fetch(API_URL, { method: "GET" });
   const members = await res.json();
   const member = members.find(m => m.id === id);
   if(!member) return;
+
   const form = document.getElementById("memberForm");
   for (const key in member) {
     if(form[key]) form[key].value = member[key] ?? "";
@@ -88,6 +93,7 @@ async function editMember(id) {
   editId = id;
 }
 
+// ลบสมาชิก
 async function deleteMember(id) {
   if(!confirm("ต้องการลบสมาชิกนี้หรือไม่?")) return;
   await fetch(API_URL, {
@@ -98,6 +104,7 @@ async function deleteMember(id) {
   fetchMembers();
 }
 
+// เริ่มต้น
 fetchMembers();
 </script>
 </body>
