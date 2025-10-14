@@ -13,6 +13,8 @@
   th span.sort-icon { position:absolute; right:8px; font-size:12px; }
   #filterDiv input, #filterDiv select { display:inline-block; width:180px; margin-right:5px; padding:5px; }
   #resultCount { font-weight:bold; margin-left:10px; }
+  .pagination { text-align:center; margin-top:10px; }
+  .pagination button { padding:5px 10px; margin:3px; }
 </style>
 </head>
 <body>
@@ -89,6 +91,12 @@
   <tbody></tbody>
 </table>
 
+<div class="pagination">
+  <button id="prevPage">ก่อนหน้า</button>
+  <span id="pageInfo"></span>
+  <button id="nextPage">ถัดไป</button>
+</div>
+
 <script>
 const API_URL = 'https://ttottijljxoinptmhgtu.supabase.co/functions/v1/members';
 const form = document.getElementById('memberForm');
@@ -98,6 +106,10 @@ let editId = null;
 let allMembers = [];
 let sortColumn = null;
 let sortAsc = true;
+
+// Pagination
+let currentPage = 1;
+const rowsPerPage = 10;
 
 // โหลดข้อมูลสมาชิก
 async function loadMembers() {
@@ -109,7 +121,7 @@ async function loadMembers() {
     if (!Array.isArray(result.data)) { alert("ข้อมูลสมาชิกไม่ถูกต้อง"); return; }
 
     allMembers = result.data;
-    renderTable(allMembers);
+    filterMembers();
 
   } catch (err) {
     alert("เกิดข้อผิดพลาด: " + err);
@@ -119,7 +131,12 @@ async function loadMembers() {
 // แสดงตาราง
 function renderTable(members) {
   tableBody.innerHTML = '';
-  members.forEach(m => {
+
+  const start = (currentPage - 1) * rowsPerPage;
+  const end = start + rowsPerPage;
+  const paginated = members.slice(start, end);
+
+  paginated.forEach(m => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>${m.member_id}</td>
@@ -133,10 +150,13 @@ function renderTable(members) {
     `;
     tableBody.appendChild(tr);
   });
+
+  const totalPages = Math.ceil(members.length / rowsPerPage);
+  document.getElementById('pageInfo').textContent = `หน้า ${currentPage} จาก ${totalPages}`;
   document.getElementById('resultCount').textContent = `พบ ${members.length} รายการ`;
 }
 
-// กรองข้อมูล
+// กรองข้อมูล + เรียง + แบ่งหน้า
 function filterMembers() {
   const idFilter = document.getElementById('searchMemberId').value.toLowerCase();
   const nameFilter = document.getElementById('searchName').value.toLowerCase();
@@ -152,7 +172,6 @@ function filterMembers() {
            (!statusFilter || m.member_status === statusFilter);
   });
 
-  // เรียงข้อมูลถ้ามีคอลัมน์ sort
   if (sortColumn) {
     filtered.sort((a, b) => {
       let valA = a[sortColumn] || '';
@@ -168,9 +187,27 @@ function filterMembers() {
   renderTable(filtered);
 }
 
-// Event filter
+// Pagination buttons
+document.getElementById('prevPage').addEventListener('click', () => {
+  if (currentPage > 1) {
+    currentPage--;
+    filterMembers();
+  }
+});
+document.getElementById('nextPage').addEventListener('click', () => {
+  const totalPages = Math.ceil(allMembers.length / rowsPerPage);
+  if (currentPage < totalPages) {
+    currentPage++;
+    filterMembers();
+  }
+});
+
+// Filter events
 ['searchMemberId','searchName','searchGroup','searchProvince','searchStatus']
-.forEach(id => document.getElementById(id).addEventListener('input', filterMembers));
+.forEach(id => document.getElementById(id).addEventListener('input', () => {
+  currentPage = 1;
+  filterMembers();
+}));
 
 // Sorting
 function sortTable(column) {
@@ -182,36 +219,31 @@ function sortTable(column) {
   icon.textContent = sortAsc ? '▲' : '▼';
   filterMembers();
 }
-
 document.querySelectorAll('#memberTable th[data-column]').forEach(th => {
   th.addEventListener('click', () => sortTable(th.dataset.column));
 });
 
 // แก้ไข
 async function editMember(id) {
-  try {
-    const res = await fetch(`${API_URL}?member_id=${id}`);
-    const result = await res.json();
-    if (result.error) { alert(result.error); return; }
-    editId = id;
-    Object.keys(result.data[0]).forEach(key => {
-      if (form[key]) {
-        if (form[key].type === 'checkbox') form[key].checked = result.data[0][key];
-        else form[key].value = result.data[0][key];
-      }
-    });
-  } catch (err) { alert(err); }
+  const res = await fetch(`${API_URL}?member_id=${id}`);
+  const result = await res.json();
+  if (result.error) return alert(result.error);
+  editId = id;
+  Object.keys(result.data[0]).forEach(key => {
+    if (form[key]) {
+      if (form[key].type === 'checkbox') form[key].checked = result.data[0][key];
+      else form[key].value = result.data[0][key];
+    }
+  });
 }
 
 // ลบ
 async function deleteMember(id) {
   if (!confirm('ต้องการลบสมาชิกนี้?')) return;
-  try {
-    const res = await fetch(`${API_URL}?member_id=${id}`, { method: 'DELETE' });
-    const result = await res.json();
-    if (result.error) { alert(result.error); return; }
-    loadMembers();
-  } catch (err) { alert(err); }
+  const res = await fetch(`${API_URL}?member_id=${id}`, { method: 'DELETE' });
+  const result = await res.json();
+  if (result.error) return alert(result.error);
+  loadMembers();
 }
 
 // เพิ่ม / แก้ไข
@@ -221,23 +253,20 @@ form.addEventListener('submit', async e => {
   new FormData(form).forEach((v, k) => formData[k] = v);
   formData.kyot_member = form.kyot_member.checked;
 
-  try {
-    const method = editId ? 'PUT' : 'POST';
-    const url = editId ? `${API_URL}?member_id=${editId}` : API_URL;
+  const method = editId ? 'PUT' : 'POST';
+  const url = editId ? `${API_URL}?member_id=${editId}` : API_URL;
 
-    const res = await fetch(url, {
-      method,
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify(formData)
-    });
+  const res = await fetch(url, {
+    method,
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify(formData)
+  });
+  const result = await res.json();
+  if (result.error) return alert(result.error);
 
-    const result = await res.json();
-    if (result.error) { alert(result.error); return; }
-
-    editId = null;
-    form.reset();
-    loadMembers();
-  } catch (err) { alert(err); }
+  editId = null;
+  form.reset();
+  loadMembers();
 });
 
 loadMembers();
