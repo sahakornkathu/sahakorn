@@ -95,6 +95,12 @@ button.delete:hover { background:#c53030; }
     <input placeholder="เลขบัตรประชาชน" name="id_card" required>
     <input type="date" name="birthday" required>
     <small>📅 วันเกิด</small>
+    <select name="gender" required>
+    <option value="">--เลือกเพศ--</option>
+    <option value="ชาย">ชาย</option>
+    <option value="หญิง">หญิง</option>
+    <option value="อื่นๆ">อื่นๆ</option>
+  </select>
     <input placeholder="กลุ่มที่" name="group" required>
   </div>
 
@@ -164,9 +170,11 @@ button.delete:hover { background:#c53030; }
       <th data-column="member_id">เลขสมาชิก <span class="sort-icon"></span></th>
       <th data-column="first_name">ชื่อ <span class="sort-icon"></span></th>
       <th data-column="last_name">นามสกุล <span class="sort-icon"></span></th>
+      <th data-column="gender">เพศ <span class="sort-icon"></span></th>
       <th data-column="group">กลุ่ม <span class="sort-icon"></span></th>
       <th data-column="province">จังหวัด <span class="sort-icon"></span></th>
       <th data-column="member_status">สถานะ <span class="sort-icon"></span></th>
+    
       <th>แก้ไข</th>
       <th>ลบ</th>
     </tr>
