@@ -151,7 +151,17 @@ th {
 }
 th span.sort-icon { position:absolute; right:10px; font-size:12px; }
 tr:nth-child(even){ background-color:#f9fafb; }
-tr:hover{ background-color:#e6f0ff; }
+tr:hover{ background-color:#dbeafe; }
+table tbody tr td button {
+  background-color:#4a90e2;
+  color:white;
+  border:none;
+  border-radius:6px;
+  padding:6px 10px;
+  cursor:pointer;
+  transition:0.2s;
+}
+table tbody tr td button:hover { background-color:#357abd; }
 
 .pagination { text-align:center; margin-top:20px; }
 .pagination button {
@@ -169,6 +179,24 @@ tr:hover{ background-color:#e6f0ff; }
 label{ display:inline-block; margin:8px 10px; color:#555; }
 input[type="checkbox"]{ width:auto; transform:scale(1.2); margin-right:6px; }
 
+/* --- Responsive Table --- */
+@media screen and (max-width: 900px) {
+  table, thead, tbody, th, td, tr { display: block; }
+  thead tr { display: none; }
+  tbody tr { margin-bottom: 15px; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.08); background:#fff; padding:10px; }
+  tbody td {
+    border:none;
+    display:flex;
+    justify-content: space-between;
+    padding:6px 12px;
+  }
+  tbody td::before {
+    content: attr(data-label);
+    font-weight:600;
+    color:#555;
+  }
+  .pagination { font-size:14px; }
+}
 </style>
 </head>
 <body>
@@ -332,14 +360,14 @@ function renderTable(members){
   paginated.forEach(m=>{
     const tr=document.createElement('tr');
     tr.innerHTML=`
-      <td>${m.member_id}</td>
-      <td>${m.first_name}</td>
-      <td>${m.last_name}</td>
-      <td>${m.group}</td>
-      <td>${m.province}</td>
-      <td>${m.member_status}</td>
-      <td><button onclick="editMember('${m.member_id}')">แก้ไข</button></td>
-      <td><button onclick="deleteMember('${m.member_id}')">ลบ</button></td>
+      <td data-label="เลขสมาชิก">${m.member_id}</td>
+      <td data-label="ชื่อ">${m.first_name}</td>
+      <td data-label="นามสกุล">${m.last_name}</td>
+      <td data-label="กลุ่ม">${m.group}</td>
+      <td data-label="จังหวัด">${m.province}</td>
+      <td data-label="สถานะ">${m.member_status}</td>
+      <td data-label="แก้ไข"><button onclick="editMember('${m.member_id}')">แก้ไข</button></td>
+      <td data-label="ลบ"><button onclick="deleteMember('${m.member_id}')">ลบ</button></td>
     `;
     tableBody.appendChild(tr);
   });
