@@ -12,25 +12,27 @@
 
   <!-- ฟอร์มเพิ่ม/แก้ไขสมาชิก -->
   <form id="memberForm" class="grid grid-cols-2 gap-4 mb-6">
-    <input type="hidden" id="member_id">
-    <input type="text" id="member_number" placeholder="เลขสมาชิก" class="border p-2 rounded">
-    <input type="text" id="title" placeholder="คำนำหน้า" class="border p-2 rounded">
-    <input type="text" id="first_name" placeholder="ชื่อ" class="border p-2 rounded">
-    <input type="text" id="last_name" placeholder="นามสกุล" class="border p-2 rounded">
-    <input type="text" id="group_name" placeholder="กลุ่ม" class="border p-2 rounded">
-    <input type="text" id="house_number" placeholder="บ้านเลขที่" class="border p-2 rounded">
-    <input type="text" id="village_number" placeholder="หมู่" class="border p-2 rounded">
-    <input type="text" id="street" placeholder="ถนน" class="border p-2 rounded">
-    <input type="text" id="village_name" placeholder="หมู่บ้าน" class="border p-2 rounded">
-    <input type="text" id="sub_district" placeholder="ตำบล" class="border p-2 rounded">
-    <input type="text" id="district" placeholder="อำเภอ" class="border p-2 rounded">
-    <input type="text" id="province" placeholder="จังหวัด" class="border p-2 rounded">
-    <input type="text" id="postal_code" placeholder="รหัสไปรษณีย์" class="border p-2 rounded">
-    <input type="text" id="phone" placeholder="เบอร์โทรศัพท์" class="border p-2 rounded">
-    <input type="text" id="phone_backup" placeholder="เบอร์สำรอง" class="border p-2 rounded">
-    <input type="text" id="gender" placeholder="เพศ" class="border p-2 rounded">
-    <input type="text" id="status" placeholder="สถานะสมาชิก" class="border p-2 rounded">
-    <input type="text" id="user_id" placeholder="LINE UserId" class="border p-2 rounded">
+    <input type="hidden" id="member_id" name="member_id">
+
+    <input type="text" id="member_number" name="member_number" placeholder="เลขสมาชิก" class="border p-2 rounded">
+    <input type="text" id="title" name="title" placeholder="คำนำหน้า" class="border p-2 rounded">
+    <input type="text" id="first_name" name="first_name" placeholder="ชื่อ" class="border p-2 rounded">
+    <input type="text" id="last_name" name="last_name" placeholder="นามสกุล" class="border p-2 rounded">
+    <input type="text" id="group_name" name="group_name" placeholder="กลุ่ม" class="border p-2 rounded">
+    <input type="text" id="house_number" name="house_number" placeholder="บ้านเลขที่" class="border p-2 rounded">
+    <input type="text" id="village_number" name="village_number" placeholder="หมู่" class="border p-2 rounded">
+    <input type="text" id="street" name="street" placeholder="ถนน" class="border p-2 rounded">
+    <input type="text" id="village_name" name="village_name" placeholder="หมู่บ้าน" class="border p-2 rounded">
+    <input type="text" id="sub_district" name="sub_district" placeholder="ตำบล" class="border p-2 rounded">
+    <input type="text" id="district" name="district" placeholder="อำเภอ" class="border p-2 rounded">
+    <input type="text" id="province" name="province" placeholder="จังหวัด" class="border p-2 rounded">
+    <input type="text" id="postal_code" name="postal_code" placeholder="รหัสไปรษณีย์" class="border p-2 rounded">
+    <input type="text" id="phone" name="phone" placeholder="เบอร์โทรศัพท์" class="border p-2 rounded">
+    <input type="text" id="phone_backup" name="phone_backup" placeholder="เบอร์สำรอง" class="border p-2 rounded">
+    <input type="text" id="gender" name="gender" placeholder="เพศ" class="border p-2 rounded">
+    <input type="text" id="status" name="status" placeholder="สถานะสมาชิก" class="border p-2 rounded">
+    <input type="text" id="user_id" name="user_id" placeholder="LINE UserId" class="border p-2 rounded" required>
+
     <button type="submit" class="bg-blue-500 text-white p-2 rounded col-span-2">บันทึกสมาชิก</button>
   </form>
 
@@ -53,6 +55,7 @@
 <script>
 const API_URL = "https://ttottijljxoinptmhgtu.supabase.co/functions/v1/members";
 
+// Fetch และแสดงสมาชิก
 async function fetchMembers() {
   try {
     const res = await fetch(API_URL);
@@ -63,10 +66,10 @@ async function fetchMembers() {
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td class="border p-2">${m.member_number}</td>
-        <td class="border p-2">${m.title} ${m.first_name} ${m.last_name}</td>
-        <td class="border p-2">${m.group_name}</td>
-        <td class="border p-2">${m.phone}</td>
-        <td class="border p-2">${m.status}</td>
+        <td class="border p-2">${m.title || ""} ${m.first_name} ${m.last_name}</td>
+        <td class="border p-2">${m.group_name || ""}</td>
+        <td class="border p-2">${m.phone || ""}</td>
+        <td class="border p-2">${m.status || ""}</td>
         <td class="border p-2">
           <button onclick="editMember('${m.member_id}')" class="bg-yellow-400 text-white p-1 rounded">แก้ไข</button>
           <button onclick="deleteMember('${m.member_id}')" class="bg-red-500 text-white p-1 rounded">ลบ</button>
@@ -75,10 +78,12 @@ async function fetchMembers() {
       tbody.appendChild(tr);
     });
   } catch(err) {
+    console.error(err);
     alert("Fetch Error: " + err.message);
   }
 }
 
+// ลบสมาชิก
 async function deleteMember(id) {
   if(confirm("ต้องการลบสมาชิกนี้หรือไม่?")) {
     await fetch(`${API_URL}/${id}`, { method: "DELETE" });
@@ -86,20 +91,35 @@ async function deleteMember(id) {
   }
 }
 
+// กดแก้ไข → populate form
 async function editMember(id) {
   const res = await fetch(API_URL);
   const members = await res.json();
   const member = members.find(m => m.member_id === id);
   for(const key in member) {
-    if(document.getElementById(key)) document.getElementById(key).value = member[key];
+    if(document.getElementById(key)) document.getElementById(key).value = member[key] || "";
   }
 }
 
+// Auto-generate member_number
+function generateMemberNumber(data) {
+  if(!data.member_number) {
+    const num = Math.floor(Math.random()*100000).toString().padStart(5,"0");
+    data.member_number = num;
+  }
+  return data;
+}
+
+// Submit form
 document.getElementById("memberForm").addEventListener("submit", async (e) => {
   e.preventDefault();
   const member_id = document.getElementById("member_id").value;
-  const data = Object.fromEntries(new FormData(e.target).entries());
+  let data = Object.fromEntries(new FormData(e.target).entries());
 
+  // Auto-generate member_number ถ้าว่าง
+  data = generateMemberNumber(data);
+
+  // Validate ฟิลด์สำคัญ
   const requiredFields = ["member_number","first_name","last_name","user_id"];
   for (let field of requiredFields) {
     if (!data[field]) {
@@ -137,6 +157,7 @@ document.getElementById("memberForm").addEventListener("submit", async (e) => {
   }
 });
 
+// โหลดสมาชิกตอนเริ่มต้น
 fetchMembers();
 </script>
 </body>
