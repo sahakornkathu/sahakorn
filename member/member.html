@@ -147,6 +147,12 @@ button.delete:hover { background:#c53030; }
     <option value="ลาออก">ลาออก</option>
     <option value="เสียชีวิต">เสียชีวิต</option>
   </select>
+  <select id="searchGender">
+    <option value="">--เพศ--</option>
+    <option value="ชาย">ชาย</option>
+    <option value="หญิง">หญิง</option>
+    <option value="อื่นๆ">อื่นๆ</option>
+  </select>
   <span id="resultCount"></span>
 </div>
 
@@ -174,6 +180,7 @@ button.delete:hover { background:#c53030; }
 </div>
 
 <script>
+// --- JS ทั้งหมดเดิม ---
 const API_URL='https://ttottijljxoinptmhgtu.supabase.co/functions/v1/members';
 const form=document.getElementById('memberForm');
 const tableBody=document.querySelector('#memberTable tbody');
@@ -182,20 +189,13 @@ let allMembers=[];
 let sortColumn=null, sortAsc=true;
 let currentPage=1, rowsPerPage=10;
 
-// Multi-step form
+// Multi-step
 const formSteps=document.querySelectorAll('.form-step');
 const progressSteps=document.querySelectorAll('.progress-step');
 let formStepIndex=0;
 showStep(formStepIndex);
-document.getElementById('nextBtn').addEventListener('click',()=>{
-  if(!validateStep(formStepIndex)) return;
-  formStepIndex++;
-  showStep(formStepIndex);
-});
-document.getElementById('prevBtn').addEventListener('click',()=>{
-  formStepIndex--;
-  showStep(formStepIndex);
-});
+document.getElementById('nextBtn').addEventListener('click',()=>{ if(!validateStep(formStepIndex)) return; formStepIndex++; showStep(formStepIndex); });
+document.getElementById('prevBtn').addEventListener('click',()=>{ formStepIndex--; showStep(formStepIndex); });
 function showStep(n){
   formSteps.forEach((step,i)=>step.classList.remove('active'));
   formSteps[n].classList.add('active');
@@ -207,11 +207,7 @@ function showStep(n){
 function validateStep(n){
   const inputs=formSteps[n].querySelectorAll('input,select');
   for(let inp of inputs){
-    if(inp.hasAttribute('required') && !inp.value){
-      alert('กรุณากรอกข้อมูล: '+(inp.placeholder||inp.name));
-      inp.focus();
-      return false;
-    }
+    if(inp.hasAttribute('required') && !inp.value){ alert('กรุณากรอกข้อมูล: '+(inp.placeholder||inp.name)); inp.focus(); return false; }
   }
   return true;
 }
@@ -219,7 +215,7 @@ function validateStep(n){
 // --- Format ID Card ---
 const idCardInput = document.querySelector('input[name="id_card"]');
 idCardInput.addEventListener('input', e => {
-  let value = e.target.value.replace(/\D/g,''); // ลบทุกอย่างที่ไม่ใช่ตัวเลข
+  let value = e.target.value.replace(/\D/g,'');
   if(value.length > 13) value = value.slice(0,13); 
   let formatted = '';
   if(value.length>0) formatted += value[0];
@@ -273,13 +269,17 @@ function filterMembers(){
   const groupFilter=document.getElementById('searchGroup').value.toLowerCase();
   const provinceFilter=document.getElementById('searchProvince').value.toLowerCase();
   const statusFilter=document.getElementById('searchStatus').value;
+  const genderFilter=document.getElementById('searchGender').value;
+  
   let filtered=allMembers.filter(m=>{
     return (!idFilter||m.member_id.toLowerCase().includes(idFilter)) &&
            (!nameFilter||(m.first_name.toLowerCase().includes(nameFilter)||m.last_name.toLowerCase().includes(nameFilter))) &&
            (!groupFilter||(m.group&&m.group.toLowerCase().includes(groupFilter))) &&
            (!provinceFilter||(m.province&&m.province.toLowerCase().includes(provinceFilter))) &&
-           (!statusFilter||m.member_status===statusFilter);
+           (!statusFilter||m.member_status===statusFilter) &&
+           (!genderFilter||m.gender===genderFilter);
   });
+  
   if(sortColumn){
     filtered.sort((a,b)=>{
       let valA=a[sortColumn]||'', valB=b[sortColumn]||'';
@@ -295,7 +295,8 @@ function filterMembers(){
 // --- Pagination ---
 document.getElementById('prevPage').addEventListener('click',()=>{ if(currentPage>1){ currentPage--; filterMembers(); } });
 document.getElementById('nextPage').addEventListener('click',()=>{ const totalPages=Math.ceil(allMembers.length/rowsPerPage); if(currentPage<totalPages){ currentPage++; filterMembers(); } });
-['searchMemberId','searchName','searchGroup','searchProvince','searchStatus'].forEach(id=>document.getElementById(id).addEventListener('input',()=>{ currentPage=1; filterMembers(); }));
+['searchMemberId','searchName','searchGroup','searchProvince','searchStatus','searchGender']
+.forEach(id=>document.getElementById(id).addEventListener('input',()=>{ currentPage=1; filterMembers(); }));
 
 // --- Sorting ---
 function sortTable(column){
