@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>ระบบสมาชิก</title>
-<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="dist/output.css">
 </head>
 <body class="bg-gray-100 p-6">
 <div class="max-w-5xl mx-auto bg-white p-6 rounded shadow">
@@ -42,7 +42,6 @@
 const API_URL = "https://ttottijljxoinptmhgtu.supabase.co/functions/v1/members";
 let editId = null;
 
-// ดึงข้อมูลสมาชิก
 async function fetchMembers() {
   const res = await fetch(API_URL, { method: "GET" });
   const data = await res.json();
@@ -60,7 +59,6 @@ async function fetchMembers() {
   `).join('');
 }
 
-// ส่งข้อมูลเพิ่ม / แก้ไข
 document.getElementById("memberForm").addEventListener("submit", async (e) => {
   e.preventDefault();
   const formData = new FormData(e.target);
@@ -79,7 +77,6 @@ document.getElementById("memberForm").addEventListener("submit", async (e) => {
   fetchMembers();
 });
 
-// แก้ไขข้อมูล
 async function editMember(id) {
   const res = await fetch(API_URL, { method: "GET" });
   const members = await res.json();
@@ -93,7 +90,6 @@ async function editMember(id) {
   editId = id;
 }
 
-// ลบสมาชิก
 async function deleteMember(id) {
   if(!confirm("ต้องการลบสมาชิกนี้หรือไม่?")) return;
   await fetch(API_URL, {
@@ -104,7 +100,6 @@ async function deleteMember(id) {
   fetchMembers();
 }
 
-// เริ่มต้น
 fetchMembers();
 </script>
 </body>
