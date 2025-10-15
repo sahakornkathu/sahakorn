@@ -4,7 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>บันทึกข้อมูลสมาชิกลาออก/เสียชีวิต</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.7.0/dist/supabase.min.js"></script>
+<!-- ✅ โหลด Supabase JS Client -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.7.0/dist/umd/supabase.min.js"></script>
 <style>
 body { font-family:"Prompt",sans-serif; background:#f0f4f8; margin:20px; color:#333; }
 h2 { text-align:center; color:#1e40af; margin-bottom:15px; }
@@ -31,22 +32,26 @@ button:hover { background:#357abd; }
 </form>
 
 <script>
-// สร้าง client ของ Supabase
+// ✅ กำหนดค่าเชื่อมต่อ Supabase
 const SUPABASE_URL = 'https://ttottijljxoinptmhgtu.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'; // ใส่ key ของคุณ
-const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'; // ใส่คีย์ของคุณ
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const memberSelect = document.getElementById('memberSelect');
 const exitForm = document.getElementById('exitForm');
 
-// โหลดสมาชิกลาออก/เสียชีวิต
+// ✅ โหลดรายชื่อสมาชิกลาออก/เสียชีวิต
 async function loadExitMembers() {
   const { data, error } = await supabase
     .from('members')
     .select('member_id,first_name,last_name,group,member_status')
-    .in('member_status', ['ลาออก','เสียชีวิต']);
+    .in('member_status', ['ลาออก', 'เสียชีวิต']);
 
-  if(error){ alert('โหลดสมาชิกผิดพลาด: '+error.message); return; }
+  if (error) {
+    alert('โหลดข้อมูลผิดพลาด: ' + error.message);
+    console.error(error);
+    return;
+  }
 
   memberSelect.innerHTML = '<option value="">--เลือกสมาชิก--</option>';
   data.forEach(m => {
@@ -57,30 +62,38 @@ async function loadExitMembers() {
   });
 }
 
-// บันทึกข้อมูล Step4
-exitForm.addEventListener('submit', async e=>{
+// ✅ เมื่อกดบันทึก Step4
+exitForm.addEventListener('submit', async e => {
   e.preventDefault();
+
   const member_id = memberSelect.value;
-  if(!member_id){ alert('กรุณาเลือกสมาชิก'); return; }
+  if (!member_id) {
+    alert('กรุณาเลือกสมาชิก');
+    return;
+  }
 
   const payload = {
     member_id,
     meeting_date: document.getElementById('meeting_date').value || null,
-    share_amount: document.getElementById('share_amount').value? Number(document.getElementById('share_amount').value):null,
+    share_amount: document.getElementById('share_amount').value ? Number(document.getElementById('share_amount').value) : null,
     receive_date: document.getElementById('receive_date').value || null
   };
 
-  // อัปเดต table member_exit
-  const { data, error } = await supabase
+  // ✅ บันทึกลง table member_exit
+  const { error } = await supabase
     .from('member_exit')
     .upsert([payload], { onConflict: ['member_id'] });
 
-  if(error){ alert('เกิดข้อผิดพลาด: '+error.message); return; }
-
-  alert('บันทึกข้อมูลเรียบร้อยแล้ว');
-  exitForm.reset();
+  if (error) {
+    alert('บันทึกไม่สำเร็จ: ' + error.message);
+    console.error(error);
+  } else {
+    alert('✅ บันทึกข้อมูลเรียบร้อยแล้ว');
+    exitForm.reset();
+  }
 });
 
+// เริ่มโหลดข้อมูลเมื่อเปิดหน้า
 loadExitMembers();
 </script>
 </body>
