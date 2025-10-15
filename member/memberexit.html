@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>บันทึกสมาชิกลาออก/เสียชีวิต</title>
 
-<!-- Supabase SDK v2 -->
+<!-- Supabase SDK -->
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 
 <style>
@@ -69,9 +69,8 @@ button.delete:hover { background:#c53030; }
   // --- Supabase ---
   const SUPABASE_URL = 'https://ttottijljxoinptmhgtu.supabase.co';
   const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y';
-  const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  let supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
   window.supabase = supabaseClient;
-  console.log('🚀 Supabase client ready');
 
   const memberSelect = document.getElementById('memberSelect');
   const exitForm = document.getElementById('exitForm');
@@ -89,8 +88,8 @@ button.delete:hover { background:#c53030; }
     try {
       const { data, error } = await supabase.from('members')
         .select('member_id,first_name,last_name,"group",member_status')
-        .in('member_status', ['ลาออก','เสียชีวิต']);
-      if(error) throw error;
+        .or('member_status.eq.ลาออก,member_status.eq.เสียชีวิต'); // แก้ตรงนี้
+      if (error) throw error;
 
       memberData = data || [];
       memberSelect.innerHTML = '<option value="">--เลือกสมาชิก--</option>';
@@ -205,6 +204,7 @@ button.delete:hover { background:#c53030; }
   // --- Init ---
   loadExitMembers();
   loadExitTable();
+
 </script>
 </body>
 </html>
