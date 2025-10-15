@@ -41,6 +41,15 @@ const SUPABASE_URL = 'https://ttottijljxoinptmhgtu.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'; // ⚠️ ใส่ anon key จริงของคุณ
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+async function testConnection() {
+  console.log('🚀 กำลังทดสอบการเชื่อมต่อ Supabase...');
+  const { data, error } = await supabase.from('members').select('*').limit(3);
+  console.log('data:', data);
+  console.log('error:', error);
+}
+testConnection();
+
+  
 const memberSelect = document.getElementById('memberSelect');
 const exitForm = document.getElementById('exitForm');
 const infoBox = document.getElementById('memberInfo');
