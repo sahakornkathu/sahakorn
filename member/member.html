@@ -70,8 +70,8 @@ button.delete:hover { background:#c53030; }
   <div class="form-step">
     <h3>Step 1: ข้อมูลพื้นฐาน</h3>
     <input placeholder="เลขสมาชิก" name="member_id" required>
+     <small>📅 วันที่เข้าร่วมสมาชิก</small>
     <input type="date" name="join_date" required>
-    <small>📅 วันที่เข้าร่วมสมาชิก</small>
     <input placeholder="คำนำหน้า" name="title" required>
     <input placeholder="ชื่อ" name="first_name" required>
     <input placeholder="นามสกุล" name="last_name" required>
@@ -79,8 +79,8 @@ button.delete:hover { background:#c53030; }
            name="id_card" required maxlength="17" 
            pattern="\d-\d{4}-\d{5}-\d{2}-\d" 
            title="เลขบัตรประชาชนต้องเป็นรูปแบบ x-xxxx-xxxxx-xx-x">
-    <input type="date" name="birthday" required>
     <small>📅 วันเกิด</small>
+    <input type="date" name="birthday" required>
     <select name="gender" required>
       <option value="">--เลือกเพศ--</option>
       <option value="ชาย">ชาย</option>
@@ -88,6 +88,18 @@ button.delete:hover { background:#c53030; }
       <option value="อื่นๆ">อื่นๆ</option>
     </select>
     <input placeholder="กลุ่มที่" name="group" required>
+    <select name="group" required>
+      <option value="">--เลือกกลุ่ม--</option>
+      <option value="1">กลุ่มที่ 1</option>
+      <option value="2">กลุ่มที่ 2</option>
+      <option value="3">กลุ่มที่ 3</option>
+      <option value="4">กลุ่มที่ 4</option>
+      <option value="5">กลุ่มที่ 5</option>
+      <option value="6">กลุ่มที่ 6</option>
+      <option value="7">กลุ่มที่ 7</option>
+      <option value="8">กลุ่มที่ 8</option>
+      <option value="9">กลุ่มที่ 9</option>
+    </select>
   </div>
 
   <!-- Step 2 -->
