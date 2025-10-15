@@ -2,28 +2,24 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ระบบจัดการสมาชิก</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap');
 body { font-family:"Prompt",sans-serif; background:#f0f4f8; margin:20px; color:#333; }
 h2 { text-align:center; color:#1e40af; margin-bottom:15px; }
-
-/* --- Form Step --- */
 form { max-width:950px; margin:auto; }
 .form-step { display:none; background:#fff; padding:20px 25px; border-radius:12px; box-shadow:0 5px 20px rgba(0,0,0,0.08); margin-bottom:20px; }
 .form-step.active { display:block; }
 input, select { display:block; width:48%; margin:5px 1% 10px 1%; padding:6px 10px; border:1px solid #ccc; border-radius:6px; font-size:14px; background:#f9fafb; }
 input:focus, select:focus { outline:none; border-color:#4a90e2; box-shadow:0 0 5px rgba(74,144,226,0.3); background:#fff; }
 label{ font-size:13px; margin-right:8px; display:inline-block; }
+small{ font-size:12px; color:#555; }
 .form-navigation { text-align:center; margin-top:15px; }
 .form-navigation button { padding:6px 12px; margin:3px; border:none; border-radius:6px; cursor:pointer; background:#4a90e2; color:#fff; }
 .form-navigation button:hover { background:#357abd; }
-
-/* --- Filter --- */
-#filterDiv { background:#fff; padding:12px 15px; border-radius:10px; max-width:950px; margin:25px auto 15px; box-shadow:0 4px 12px rgba(0,0,0,0.08); }
-#filterDiv input, #filterDiv select { padding:5px 8px; margin-right:6px; border:1px solid #ccc; border-radius:6px; font-size:13px; background:#f9fafb; }
-
-/* --- Table --- */
+#filterDiv { background:#fff; padding:12px 15px; border-radius:10px; max-width:950px; margin:25px auto 15px; box-shadow:0 4px 12px rgba(0,0,0,0.08); display:flex; flex-wrap:wrap; gap:6px; }
+#filterDiv input, #filterDiv select { padding:5px 8px; border:1px solid #ccc; border-radius:6px; font-size:13px; background:#f9fafb; flex:1 1 150px; }
 table { border-collapse: collapse; width:100%; max-width:1000px; margin:auto; font-size:13px; background:#fff; border-radius:10px; overflow:hidden; box-shadow:0 4px 12px rgba(0,0,0,0.08); }
 th, td { border:1px solid #e2e8f0; padding:6px 8px; text-align:center; }
 th { background:#4a90e2; color:#fff; cursor:pointer; position:relative; font-weight:500; }
@@ -34,42 +30,64 @@ button.edit { background:#4a90e2; color:#fff; padding:3px 6px; border-radius:4px
 button.edit:hover { background:#357abd; }
 button.delete { background:#f56565; color:#fff; padding:3px 6px; border-radius:4px; font-size:12px; }
 button.delete:hover { background:#c53030; }
-
-/* --- Pagination --- */
-.pagination { text-align:center; margin:12px auto; }
+.pagination { text-align:center; margin:12px auto; display:flex; flex-wrap:wrap; justify-content:center; gap:6px; }
 .pagination button { padding:5px 10px; margin:3px; border:none; border-radius:5px; background:#4a90e2; color:#fff; cursor:pointer; font-size:13px; }
 .pagination button:hover{ background:#357abd; }
 #pageInfo, #resultCount{ font-weight:500; color:#2d3748; font-size:13px; }
-
-/* --- Responsive --- */
-@media screen and (max-width:768px){
-  input, select { width:100%; margin:5px 0; }
-  table, #filterDiv { width:95%; font-size:12px; }
+.progress-container { display:flex; justify-content:space-between; align-items:center; max-width:950px; margin:0 auto 20px auto; position:relative; counter-reset: step; }
+.progress-container::before { content:""; position:absolute; top:50%; left:0; width:100%; height:3px; background-color:#e2e8f0; transform:translateY(-50%); z-index:0; }
+.progress-step { position:relative; z-index:1; background:#f9fafb; color:#4a5568; border:2px solid #cbd5e0; border-radius:50px; padding:8px 15px; font-size:13px; font-weight:500; flex:1; text-align:center; margin:0 4px; transition:all 0.3s; white-space:nowrap; }
+.progress-step.active { background:#4a90e2; color:#fff; border-color:#4a90e2; box-shadow:0 0 8px rgba(74,144,226,0.5); }
+@media (max-width:768px){
+  body{ margin:10px; font-size:14px; }
+  form{ width:100%; padding:10px; }
+  .form-step{ padding:10px; }
+  input, select{ width:100% !important; margin:6px 0 12px 0; font-size:15px; }
+  label{ margin-top:10px; font-size:14px; }
+  small{ font-size:12px; }
+  .form-navigation{ display:flex; flex-direction:column; gap:10px; }
+  .form-navigation button{ width:100%; padding:12px; font-size:15px; }
+  table{ display:block; width:100%; overflow-x:auto; font-size:13px; }
+  th, td{ white-space:nowrap; padding:8px 10px; }
+  .progress-container{ flex-direction:column; align-items:flex-start; gap:8px; }
+  .progress-container::before{ display:none; }
+  .progress-step{ width:100%; text-align:left; padding:10px 15px; border-radius:10px; font-size:14px; }
 }
 </style>
 </head>
 <body>
 
 <h2>ฟอร์มบันทึกสมาชิก</h2>
-<form id="memberForm">
 
+<div class="progress-container">
+  <div class="progress-step active" data-step="1">① ข้อมูลพื้นฐาน</div>
+  <div class="progress-step" data-step="2">② ที่อยู่ / เบอร์โทร</div>
+  <div class="progress-step" data-step="3">③ ข้อมูลเพิ่มเติม</div>
+</div>
+
+<form id="memberForm">
   <!-- Step 1 -->
   <div class="form-step">
     <h3>Step 1: ข้อมูลพื้นฐาน</h3>
     <input placeholder="เลขสมาชิก" name="member_id" required>
     <input type="date" name="join_date" required>
+    <small>📅 วันที่เข้าร่วมสมาชิก</small>
     <input placeholder="คำนำหน้า" name="title" required>
     <input placeholder="ชื่อ" name="first_name" required>
     <input placeholder="นามสกุล" name="last_name" required>
-    <input placeholder="เลขบัตรประชาชน x-xxxx-xxxxx-xx-x" name="id_card" pattern="\d{1}-\d{4}-\d{5}-\d{2}-\d{1}" title="กรอกเลขบัตรประชาชน 13 หลักตามรูปแบบ x-xxxx-xxxxx-xx-x" required>
+    <input placeholder="เลขบัตรประชาชน (x-xxxx-xxxxx-xx-x)" 
+           name="id_card" required maxlength="17" 
+           pattern="\d-\d{4}-\d{5}-\d{2}-\d" 
+           title="เลขบัตรประชาชนต้องเป็นรูปแบบ x-xxxx-xxxxx-xx-x">
     <input type="date" name="birthday" required>
-    <input placeholder="กลุ่มที่" name="group" required>
+    <small>📅 วันเกิด</small>
     <select name="gender" required>
-      <option value="">--เพศ--</option>
+      <option value="">--เลือกเพศ--</option>
       <option value="ชาย">ชาย</option>
       <option value="หญิง">หญิง</option>
       <option value="อื่นๆ">อื่นๆ</option>
     </select>
+    <input placeholder="กลุ่มที่" name="group" required>
   </div>
 
   <!-- Step 2 -->
@@ -110,17 +128,6 @@ button.delete:hover { background:#c53030; }
     <input placeholder="ชื่อมารดา" name="mother_name">
   </div>
 
-  <!-- Step 4: หุ้น / สวัสดิการ (แสดงเฉพาะลาออก/เสียชีวิต) -->
-  <div class="form-step">
-    <h3>Step 4: ข้อมูลหุ้น / สวัสดิการ</h3>
-    <input type="date" placeholder="วันที่เข้าประชุม" name="meeting_date">
-    <input placeholder="จำนวนเงินหุ้น" name="share_amount">
-    <input type="date" placeholder="วันที่รับเงิน" name="payment_date">
-    <input placeholder="ผู้รับสวัสดิการ (สมาชิก/บิดา/มารดา)" name="beneficiary">
-    <input type="date" placeholder="วันที่รับสวัสดิการ" name="benefit_date">
-    <input placeholder="จำนวนเงินสวัสดิการ" name="benefit_amount">
-  </div>
-
   <div class="form-navigation">
     <button type="button" id="prevBtn">ก่อนหน้า</button>
     <button type="button" id="nextBtn">ถัดไป</button>
@@ -159,7 +166,6 @@ button.delete:hover { background:#c53030; }
       <th data-column="group">กลุ่ม <span class="sort-icon"></span></th>
       <th data-column="province">จังหวัด <span class="sort-icon"></span></th>
       <th data-column="member_status">สถานะ <span class="sort-icon"></span></th>
-      <th data-column="gender">เพศ <span class="sort-icon"></span></th>
       <th>แก้ไข</th>
       <th>ลบ</th>
     </tr>
@@ -174,11 +180,8 @@ button.delete:hover { background:#c53030; }
 </div>
 
 <script>
-const SUPABASE_URL='https://ttottijljxoinptmhgtu.supabase.co';
-const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y';
-const API_URL=`${SUPABASE_URL}/rest/v1/members`;
-const EXIT_API_URL=`${SUPABASE_URL}/rest/v1/member_exit`;
-
+// --- JS ทั้งหมดเดิม ---
+const API_URL='https://ttottijljxoinptmhgtu.supabase.co/functions/v1/members';
 const form=document.getElementById('memberForm');
 const tableBody=document.querySelector('#memberTable tbody');
 let editId=null;
@@ -186,50 +189,51 @@ let allMembers=[];
 let sortColumn=null, sortAsc=true;
 let currentPage=1, rowsPerPage=10;
 
-// --- Multi-Step Form ---
+// Multi-step
 const formSteps=document.querySelectorAll('.form-step');
+const progressSteps=document.querySelectorAll('.progress-step');
 let formStepIndex=0;
 showStep(formStepIndex);
-
-document.getElementById('nextBtn').addEventListener('click',()=>{
-  if(!validateStep(formStepIndex)) return;
-  formStepIndex++;
-  showStep(formStepIndex);
-});
-document.getElementById('prevBtn').addEventListener('click',()=>{
-  formStepIndex--;
-  showStep(formStepIndex);
-});
-
+document.getElementById('nextBtn').addEventListener('click',()=>{ if(!validateStep(formStepIndex)) return; formStepIndex++; showStep(formStepIndex); });
+document.getElementById('prevBtn').addEventListener('click',()=>{ formStepIndex--; showStep(formStepIndex); });
 function showStep(n){
   formSteps.forEach((step,i)=>step.classList.remove('active'));
   formSteps[n].classList.add('active');
+  progressSteps.forEach((p,i)=>p.classList.toggle('active',i<=n));
   document.getElementById('prevBtn').style.display=n===0?'none':'inline-block';
   document.getElementById('nextBtn').style.display=n===formSteps.length-1?'none':'inline-block';
   document.getElementById('submitBtn').style.display=n===formSteps.length-1?'inline-block':'none';
 }
-
 function validateStep(n){
   const inputs=formSteps[n].querySelectorAll('input,select');
   for(let inp of inputs){
-    if(inp.hasAttribute('required') && !inp.value){
-      alert('กรุณากรอกข้อมูล: '+(inp.placeholder||inp.name));
-      inp.focus();
-      return false;
-    }
+    if(inp.hasAttribute('required') && !inp.value){ alert('กรุณากรอกข้อมูล: '+(inp.placeholder||inp.name)); inp.focus(); return false; }
   }
   return true;
 }
 
+// --- Format ID Card ---
+const idCardInput = document.querySelector('input[name="id_card"]');
+idCardInput.addEventListener('input', e => {
+  let value = e.target.value.replace(/\D/g,'');
+  if(value.length > 13) value = value.slice(0,13); 
+  let formatted = '';
+  if(value.length>0) formatted += value[0];
+  if(value.length>1) formatted += '-' + value.slice(1,5);
+  if(value.length>5) formatted += '-' + value.slice(5,10);
+  if(value.length>10) formatted += '-' + value.slice(10,12);
+  if(value.length>12) formatted += '-' + value.slice(12,13);
+  e.target.value = formatted;
+});
+
 // --- Load Members ---
 async function loadMembers(){
   try{
-    const res=await fetch(API_URL+'?select=*',{
-      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}
-    });
+    const res=await fetch(API_URL);
     const result=await res.json();
-    allMembers=result;
-    filterMembers();
+    if(result.error){ alert(result.error); return; }
+    if(!Array.isArray(result.data)){ alert("ข้อมูลสมาชิกไม่ถูกต้อง"); return; }
+    allMembers=result.data; filterMembers();
   }catch(err){ alert("เกิดข้อผิดพลาด: "+err); }
 }
 
@@ -248,7 +252,6 @@ function renderTable(members){
       <td>${m.group}</td>
       <td>${m.province}</td>
       <td>${m.member_status}</td>
-      <td>${m.gender||''}</td>
       <td><button class="edit" onclick="editMember('${m.member_id}')">แก้ไข</button></td>
       <td><button class="delete" onclick="deleteMember('${m.member_id}')">ลบ</button></td>
     `;
@@ -292,7 +295,8 @@ function filterMembers(){
 // --- Pagination ---
 document.getElementById('prevPage').addEventListener('click',()=>{ if(currentPage>1){ currentPage--; filterMembers(); } });
 document.getElementById('nextPage').addEventListener('click',()=>{ const totalPages=Math.ceil(allMembers.length/rowsPerPage); if(currentPage<totalPages){ currentPage++; filterMembers(); } });
-['searchMemberId','searchName','searchGroup','searchProvince','searchStatus','searchGender'].forEach(id=>document.getElementById(id).addEventListener('input',()=>{ currentPage=1; filterMembers(); }));
+['searchMemberId','searchName','searchGroup','searchProvince','searchStatus','searchGender']
+.forEach(id=>document.getElementById(id).addEventListener('input',()=>{ currentPage=1; filterMembers(); }));
 
 // --- Sorting ---
 function sortTable(column){
@@ -306,25 +310,23 @@ document.querySelectorAll('#memberTable th[data-column]').forEach(th=>{ th.addEv
 
 // --- Edit / Delete ---
 async function editMember(id){
-  const res=await fetch(`${API_URL}?member_id=eq.${id}`,{
-    headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}
-  });
+  const res=await fetch(`${API_URL}?member_id=${id}`);
   const result=await res.json();
+  if(result.error) return alert(result.error);
   editId=id;
-  Object.keys(result[0]).forEach(key=>{
+  Object.keys(result.data[0]).forEach(key=>{
     if(form[key]){
-      if(form[key].type==='checkbox') form[key].checked=result[0][key];
-      else form[key].value=result[0][key];
+      if(form[key].type==='checkbox') form[key].checked=result.data[0][key];
+      else form[key].value=result.data[0][key];
     }
   });
   formStepIndex=0; showStep(formStepIndex);
 }
 async function deleteMember(id){
   if(!confirm('ต้องการลบสมาชิกนี้?')) return;
-  await fetch(`${API_URL}?member_id=eq.${id}`,{
-    method:'DELETE',
-    headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}
-  });
+  const res=await fetch(`${API_URL}?member_id=${id}`,{method:'DELETE'});
+  const result=await res.json();
+  if(result.error) return alert(result.error);
   loadMembers();
 }
 
@@ -334,39 +336,15 @@ form.addEventListener('submit', async e=>{
   const formDataObj={};
   new FormData(form).forEach((v,k)=>formDataObj[k]=v);
   formDataObj.kyot_member=form.kyot_member.checked;
-
-  const method=editId?'PATCH':'POST';
-  const url=editId?`${API_URL}?member_id=eq.${editId}`:API_URL;
-
+  const method=editId?'PUT':'POST';
+  const url=editId?`${API_URL}?member_id=${editId}`:API_URL;
   const res=await fetch(url,{
     method,
-    headers:{'Content-Type':'application/json','apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY},
+    headers:{'Content-Type':'application/json'},
     body:JSON.stringify(formDataObj)
   });
   const result=await res.json();
   if(result.error) return alert(result.error);
-
-  // --- ถ้าลาออก / เสียชีวิต ---
-  if(formDataObj.member_status==='ลาออก' || formDataObj.member_status==='เสียชีวิต'){
-    const exitData = {
-      member_id: formDataObj.member_id,
-      first_name_exit: formDataObj.first_name,
-      last_name_exit: formDataObj.last_name,
-      group_exit: formDataObj.group,
-      meeting_date: form.meeting_date.value || null,
-      share_amount: form.share_amount.value ? parseFloat(form.share_amount.value) : null,
-      payment_date: form.payment_date.value || null,
-      beneficiary: form.beneficiary.value || null,
-      benefit_date: form.benefit_date.value || null,
-      benefit_amount: form.benefit_amount.value ? parseFloat(form.benefit_amount.value) : null
-    };
-    await fetch(EXIT_API_URL,{
-      method:'POST',
-      headers:{'Content-Type':'application/json','apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY},
-      body:JSON.stringify(exitData)
-    });
-  }
-
   editId=null;
   form.reset();
   formStepIndex=0; showStep(formStepIndex);
