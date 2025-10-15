@@ -1,176 +1,128 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>บันทึกสมาชิกลาออก/เสียชีวิต</title>
-<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-<style>
-body { font-family:"Prompt",sans-serif; background:#f0f4f8; margin:20px; color:#333; }
-h2 { text-align:center; color:#1e40af; margin-bottom:15px; }
-form { max-width:500px; margin:auto; background:#fff; padding:20px; border-radius:12px; box-shadow:0 5px 20px rgba(0,0,0,0.08); }
-input, select { display:block; width:100%; margin:10px 0; padding:8px 10px; border:1px solid #ccc; border-radius:6px; font-size:14px; background:#f9fafb; }
-button { padding:10px 15px; border:none; border-radius:6px; cursor:pointer; background:#4a90e2; color:#fff; font-size:14px; margin-top:10px; }
-button:hover { background:#357abd; }
-.info-box { background:#e0f2fe; padding:10px; border-radius:8px; margin-bottom:10px; display:none; }
-table { border-collapse: collapse; width:100%; max-width:800px; margin:20px auto; font-size:13px; background:#fff; border-radius:10px; overflow:hidden; box-shadow:0 4px 12px rgba(0,0,0,0.08); }
-th, td { border:1px solid #e2e8f0; padding:6px 8px; text-align:center; }
-th { background:#4a90e2; color:#fff; }
-tr:nth-child(even){ background:#f9fafb; }
-tr:hover{ background:#edf2f7; }
-button.delete { background:#f56565; color:#fff; padding:3px 6px; border-radius:4px; font-size:12px; }
-button.delete:hover { background:#c53030; }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>บันทึกข้อมูลสมาชิกลาออก / เสียชีวิต</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const supabaseUrl = "https://YOUR_PROJECT_ID.supabase.co";
+    const supabaseKey = "YOUR_SUPABASE_ANON_KEY";
+    const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+    async function loadMembers() {
+      const { data, error } = await supabase
+        .from('members')
+        .select('member_id, title, first_name, last_name, group, member_status')
+        .in('member_status', ['ลาออก', 'เสียชีวิต']);
+
+      if (error) {
+        console.error('Error loading members:', error);
+        alert('ไม่สามารถดึงข้อมูลสมาชิกได้');
+        return;
+      }
+
+      const tableBody = document.getElementById('memberTableBody');
+      tableBody.innerHTML = '';
+
+      data.forEach(member => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${member.member_id}</td>
+          <td>${member.title}${member.first_name} ${member.last_name}</td>
+          <td>${member.group}</td>
+          <td>${member.member_status}</td>
+          <td><input type="date" id="meeting_date_${member.member_id}" /></td>
+          <td><input type="number" id="share_amount_${member.member_id}" placeholder="จำนวนเงิน" /></td>
+          <td><input type="date" id="receive_date_${member.member_id}" /></td>
+          <td><button onclick="saveMemberExit('${member.member_id}')">บันทึก</button></td>
+        `;
+        tableBody.appendChild(row);
+      });
+    }
+
+    async function saveMemberExit(member_id) {
+      const meeting_date = document.getElementById(`meeting_date_${member_id}`).value;
+      const share_amount = document.getElementById(`share_amount_${member_id}`).value;
+      const receive_date = document.getElementById(`receive_date_${member_id}`).value;
+
+      if (!meeting_date || !share_amount || !receive_date) {
+        alert('กรุณากรอกข้อมูลให้ครบถ้วน');
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('member_exit')
+        .insert([{ member_id, meeting_date, share_amount, receive_date }]);
+
+      if (error) {
+        console.error('Error saving member_exit:', error);
+        alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
+      } else {
+        alert('บันทึกข้อมูลเรียบร้อยแล้ว');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadMembers);
+  </script>
+
+  <style>
+    body {
+      font-family: "Prompt", sans-serif;
+      margin: 40px;
+      background-color: #f9fafb;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 10px;
+      text-align: left;
+    }
+    th {
+      background-color: #4f46e5;
+      color: white;
+    }
+    input {
+      padding: 5px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    button {
+      background-color: #16a34a;
+      color: white;
+      border: none;
+      padding: 6px 10px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #15803d;
+    }
+  </style>
 </head>
 <body>
-
-<h2>บันทึกข้อมูลสมาชิกลาออก/เสียชีวิต</h2>
-
-<form id="exitForm">
-  <input type="text" id="member_id_input" placeholder="กรอกเลขสมาชิก" required>
-  <select id="member_status" required>
-    <option value="">--สถานะสมาชิก--</option>
-    <option value="ลาออก">ลาออก</option>
-    <option value="เสียชีวิต">เสียชีวิต</option>
-  </select>
-
-  <div class="info-box" id="memberInfo">
-    <p><strong>ชื่อ-นามสกุล:</strong> <span id="fullname"></span></p>
-    <p><strong>กลุ่ม:</strong> <span id="groupname"></span></p>
-  </div>
-
-  <input type="date" id="meeting_date" placeholder="วันที่เข้าประชุม">
-  <input type="number" step="0.01" id="share_amount" placeholder="จำนวนเงินหุ้น">
-  <input type="date" id="receive_date" placeholder="วันที่รับเงิน">
-
-  <button type="submit">💾 บันทึกข้อมูล</button>
-</form>
-
-<h2>รายการสมาชิกลาออก/เสียชีวิต</h2>
-<table id="exitTable">
-  <thead>
-    <tr>
-      <th>เลขสมาชิก</th>
-      <th>ชื่อ-นามสกุล</th>
-      <th>กลุ่ม</th>
-      <th>สถานะ</th>
-      <th>วันที่เข้าประชุม</th>
-      <th>จำนวนเงินหุ้น</th>
-      <th>วันที่รับเงิน</th>
-      <th>ลบ</th>
-    </tr>
-  </thead>
-  <tbody></tbody>
-</table>
-
-<script>
-  // --- สร้าง Supabase client ก่อน ---
-  const SUPABASE_URL = 'https://ttottijljxoinptmhgtu.supabase.co';
-  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'; // เปลี่ยนเป็นของคุณ
-  const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-  const memberIdInput = document.getElementById('member_id_input');
-  const memberStatusSelect = document.getElementById('member_status');
-  const exitForm = document.getElementById('exitForm');
-  const memberInfo = document.getElementById('memberInfo');
-  const fullnameEl = document.getElementById('fullname');
-  const groupnameEl = document.getElementById('groupname');
-  const exitTableBody = document.querySelector('#exitTable tbody');
-
-  // --- ดึงข้อมูลสมาชิกตาม member_id ---
-  async function fetchMember(member_id){
-    if(!member_id) return null;
-    const { data, error } = await supabaseClient.from('members')
-      .select('member_id,first_name,last_name,"group"')
-      .eq('member_id', member_id)
-      .single();
-    if(error) return null;
-    return data;
-  }
-
-  // --- แสดงข้อมูลสมาชิก ---
-  memberIdInput.addEventListener('blur', async ()=>{
-    const member_id = memberIdInput.value.trim();
-    if(!member_id){ memberInfo.style.display='none'; return; }
-    const member = await fetchMember(member_id);
-    if(!member){ 
-      alert('ไม่พบสมาชิกนี้'); 
-      memberInfo.style.display='none';
-      return;
-    }
-    fullnameEl.textContent = member.first_name + ' ' + member.last_name;
-    groupnameEl.textContent = member.group;
-    memberInfo.style.display='block';
-  });
-
-  // --- บันทึกข้อมูล ---
-  exitForm.addEventListener('submit', async e=>{
-    e.preventDefault();
-    const member_id = memberIdInput.value.trim();
-    const status = memberStatusSelect.value;
-    if(!member_id || !status) return alert('กรุณากรอกข้อมูลให้ครบ');
-
-    const member = await fetchMember(member_id);
-    if(!member) return alert('ไม่พบสมาชิกนี้');
-
-    const payload = {
-      member_id,
-      first_name: member.first_name,
-      last_name: member.last_name,
-      group: member.group,
-      member_status: status,
-      meeting_date: document.getElementById('meeting_date').value || null,
-      share_amount: document.getElementById('share_amount').value ? Number(document.getElementById('share_amount').value) : null,
-      receive_date: document.getElementById('receive_date').value || null
-    };
-
-    try{
-      const { error } = await supabaseClient.from('member_exit')
-        .upsert([payload], { onConflict: ['member_id'] });
-      if(error) throw error;
-      alert('✅ บันทึกเรียบร้อย');
-      exitForm.reset();
-      memberInfo.style.display='none';
-      loadExitTable();
-    }catch(err){
-      alert('❌ เกิดข้อผิดพลาด: '+err.message);
-    }
-  });
-
-  // --- โหลดตาราง ---
-  async function loadExitTable(){
-    const { data, error } = await supabaseClient.from('member_exit')
-      .select('*')
-      .order('member_id', { ascending:true });
-    if(error){ alert('❌ โหลดตารางไม่สำเร็จ: '+error.message); return; }
-    exitTableBody.innerHTML='';
-    data.forEach(row=>{
-      const tr = document.createElement('tr');
-      tr.innerHTML=`
-        <td>${row.member_id}</td>
-        <td>${row.first_name} ${row.last_name}</td>
-        <td>${row.group}</td>
-        <td>${row.member_status}</td>
-        <td>${row.meeting_date || ''}</td>
-        <td>${row.share_amount ?? ''}</td>
-        <td>${row.receive_date || ''}</td>
-        <td><button onclick="deleteExit('${row.member_id}')">ลบ</button></td>
-      `;
-      exitTableBody.appendChild(tr);
-    });
-  }
-
-  // --- ลบข้อมูล ---
-  window.deleteExit = async (member_id)=>{
-    if(!confirm('ต้องการลบข้อมูลสมาชิกนี้?')) return;
-    const { error } = await supabaseClient.from('member_exit').delete().eq('member_id', member_id);
-    if(error) return alert('❌ ลบไม่สำเร็จ: '+error.message);
-    loadExitTable();
-  };
-
-  // --- Init ---
-  loadExitTable();
-</script>
-
+  <h2>ระบบบันทึกข้อมูลสมาชิกลาออก / เสียชีวิต</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>รหัสสมาชิก</th>
+        <th>ชื่อ - นามสกุล</th>
+        <th>กลุ่ม</th>
+        <th>สถานะ</th>
+        <th>วันที่ประชุม</th>
+        <th>จำนวนเงิน</th>
+        <th>วันที่รับเงิน</th>
+        <th>ดำเนินการ</th>
+      </tr>
+    </thead>
+    <tbody id="memberTableBody">
+      <tr><td colspan="8" style="text-align:center;">กำลังโหลดข้อมูล...</td></tr>
+    </tbody>
+  </table>
 </body>
 </html>
