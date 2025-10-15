@@ -1,30 +1,39 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>บันทึกข้อมูลสมาชิกลาออก / เสียชีวิต</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     const supabaseUrl = "https://ttottijljxoinptmhgtu.supabase.co";
     const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y";
-    const { createClient } = supabase;
+    const { createClient } = window.supabase;
     const client = createClient(supabaseUrl, supabaseKey);
 
     async function loadMembers() {
+      console.log("🟢 เริ่มโหลดข้อมูลสมาชิก...");
+
       const { data, error } = await client
         .from('members')
-        .select('member_id, title, first_name, last_name, group, member_status')
+        .select('member_id, title, first_name, last_name, "group", member_status')
         .in('member_status', ['ลาออก', 'เสียชีวิต']);
 
       if (error) {
-        console.error('Error loading members:', error);
-        alert('ไม่สามารถดึงข้อมูลสมาชิกได้');
+        console.error('❌ Error loading members:', error);
+        alert('ไม่สามารถดึงข้อมูลสมาชิกได้: ' + error.message);
         return;
       }
 
+      console.log("✅ ดึงข้อมูลสำเร็จ:", data);
+
       const tableBody = document.getElementById('memberTableBody');
       tableBody.innerHTML = '';
+
+      if (data.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="8" style="text-align:center;">ไม่มีข้อมูลสมาชิก</td></tr>';
+        return;
+      }
 
       data.forEach(member => {
         const row = document.createElement('tr');
@@ -52,15 +61,15 @@
         return;
       }
 
-      const { data, error } = await client
+      const { error } = await client
         .from('member_exit')
         .insert([{ member_id, meeting_date, share_amount, receive_date }]);
 
       if (error) {
-        console.error('Error saving member_exit:', error);
-        alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
+        console.error('❌ Error saving member_exit:', error);
+        alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล: ' + error.message);
       } else {
-        alert('บันทึกข้อมูลเรียบร้อยแล้ว');
+        alert('✅ บันทึกข้อมูลเรียบร้อยแล้ว');
       }
     }
 
