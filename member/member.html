@@ -63,7 +63,7 @@ button.delete:hover { background:#c53030; }
   <div class="progress-step active" data-step="1">① ข้อมูลพื้นฐาน</div>
   <div class="progress-step" data-step="2">② ที่อยู่ / เบอร์โทร</div>
   <div class="progress-step" data-step="3">③ ข้อมูลเพิ่มเติม</div>
-  <div class="progress-step" data-step="4">④ ข้อมูลหุ้น / การประชุม</div>
+  <div class="progress-step" data-step="4" id="progressStep4">④ ข้อมูลการประชุม</div>
 </div>
 
 <form id="memberForm">
@@ -141,7 +141,7 @@ button.delete:hover { background:#c53030; }
 
   <!-- Step 4 -->
   <div class="form-step" id="step4" style="display:none;">
-    <h3>Step 4: ข้อมูลหุ้น / การประชุม</h3>
+    <h3>Step 4: ข้อมูลการประชุม</h3>
     <input type="date" name="meeting_date" placeholder="วันที่เข้าประชุม">
     <input type="number" name="share_amount" placeholder="จำนวนเงินหุ้น">
     <input type="date" name="receive_date" placeholder="วันที่รับเงิน">
@@ -202,23 +202,19 @@ button.delete:hover { background:#c53030; }
 const API_URL='https://ttottijljxoinptmhgtu.supabase.co/functions/v1/members';
 const form=document.getElementById('memberForm');
 const tableBody=document.querySelector('#memberTable tbody');
+const step4=document.getElementById('step4');
 let editId=null;
 let allMembers=[];
 let sortColumn=null, sortAsc=true;
 let currentPage=1, rowsPerPage=10;
 
 // --- Multi-step ---
-const formSteps = document.querySelectorAll('.form-step');
-const progressSteps = document.querySelectorAll('.progress-step');
-const step4 = document.getElementById('step4');
-let formStepIndex = 0;
+const formSteps=document.querySelectorAll('.form-step');
+const progressSteps=document.querySelectorAll('.progress-step');
+let formStepIndex=0;
 
-function updateProgressBar() {
-  const visibleSteps = Array.from(formSteps).filter(step => step.style.display !== 'none');
-  visibleSteps.forEach((step,i)=>{
-    const progress = progressSteps[i];
-    if(progress) progress.classList.toggle('active', i <= formStepIndex);
-  });
+function updateProgressBar(){
+  progressSteps.forEach((p,i)=>p.classList.toggle('active', i <= formStepIndex));
 }
 
 function showStep(n){
@@ -226,10 +222,11 @@ function showStep(n){
   const status = form.querySelector('select[name="member_status"]').value;
   if(status==='ลาออก' || status==='เสียชีวิต'){
     step4.style.display = 'block';
+    progressSteps[3].style.display='block';
   } else {
     step4.style.display = 'none';
+    progressSteps[3].style.display='none';
   }
-
   const visibleSteps = Array.from(formSteps).filter(step => step.style.display !== 'none');
   visibleSteps.forEach(step => step.classList.remove('active'));
   visibleSteps[formStepIndex].classList.add('active');
@@ -390,15 +387,23 @@ form.addEventListener('submit', async e=>{
   new FormData(form).forEach((v,k)=>formDataObj[k]=v);
   formDataObj.kyot_member=form.kyot_member.checked;
 
-  // แปลงค่าวันที่ว่างเป็น null
-  ['join_date','birthday','meeting_date','receive_date'].forEach(field=>{
+  // แปลงค่าว่างเป็น null สำหรับ date และ numeric
+  const dateFields = ['join_date','birthday','meeting_date','receive_date'];
+  const numericFields = ['share_amount'];
+
+  dateFields.forEach(field=>{
     if(formDataObj[field]==="") formDataObj[field]=null;
+  });
+
+  numericFields.forEach(field=>{
+    if(formDataObj[field]==="") formDataObj[field]=null;
+    else formDataObj[field]=Number(formDataObj[field]);
   });
 
   const method=editId?'PUT':'POST';
   const url=editId?`${API_URL}?member_id=${editId}`:API_URL;
 
-  try {
+  try{
     const res=await fetch(url,{
       method,
       headers:{'Content-Type':'application/json'},
@@ -411,13 +416,11 @@ form.addEventListener('submit', async e=>{
     form.reset();
     formStepIndex=0; showStep(formStepIndex);
     loadMembers();
-  } catch(err) {
+  } catch(err){
     alert("เกิดข้อผิดพลาด: "+err);
   }
 });
 
-// แสดง Step 0 ตอนโหลด
-showStep(0);
 loadMembers();
 </script>
 </body>
