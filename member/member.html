@@ -63,7 +63,6 @@ button.delete:hover { background:#c53030; }
   <div class="progress-step active" data-step="1">① ข้อมูลพื้นฐาน</div>
   <div class="progress-step" data-step="2">② ที่อยู่ / เบอร์โทร</div>
   <div class="progress-step" data-step="3">③ ข้อมูลเพิ่มเติม</div>
-  <div class="progress-step" data-step="4" id="progressStep4">④ ข้อมูลการประชุม</div>
 </div>
 
 <form id="memberForm">
@@ -80,25 +79,15 @@ button.delete:hover { background:#c53030; }
            name="id_card" required maxlength="17" 
            pattern="\d-\d{4}-\d{5}-\d{2}-\d" 
            title="เลขบัตรประชาชนต้องเป็นรูปแบบ x-xxxx-xxxxx-xx-x">
-    <small>📅 วันเกิด</small>
     <input type="date" name="birthday" required>
+    <small>📅 วันเกิด</small>
     <select name="gender" required>
       <option value="">--เลือกเพศ--</option>
       <option value="ชาย">ชาย</option>
       <option value="หญิง">หญิง</option>
+      <option value="อื่นๆ">อื่นๆ</option>
     </select>
-    <select name="group" required>
-      <option value="">--เลือกกลุ่ม--</option>
-      <option value="1">กลุ่มที่ 1</option>
-      <option value="2">กลุ่มที่ 2</option>
-      <option value="3">กลุ่มที่ 3</option>
-      <option value="4">กลุ่มที่ 4</option>
-      <option value="5">กลุ่มที่ 5</option>
-      <option value="6">กลุ่มที่ 6</option>
-      <option value="7">กลุ่มที่ 7</option>
-      <option value="8">กลุ่มที่ 8</option>
-      <option value="9">กลุ่มที่ 9</option>
-    </select>
+    <input placeholder="กลุ่มที่" name="group" required>
   </div>
 
   <!-- Step 2 -->
@@ -137,14 +126,6 @@ button.delete:hover { background:#c53030; }
     <input placeholder="เลขสมาชิก กยท" name="kyot_member_id">
     <input placeholder="ชื่อบิดา" name="father_name">
     <input placeholder="ชื่อมารดา" name="mother_name">
-  </div>
-
-  <!-- Step 4 -->
-  <div class="form-step" id="step4" style="display:none;">
-    <h3>Step 4: ข้อมูลการประชุม</h3>
-    <input type="date" name="meeting_date" placeholder="วันที่เข้าประชุม">
-    <input type="number" name="share_amount" placeholder="จำนวนเงินหุ้น">
-    <input type="date" name="receive_date" placeholder="วันที่รับเงิน">
   </div>
 
   <div class="form-navigation">
@@ -199,68 +180,37 @@ button.delete:hover { background:#c53030; }
 </div>
 
 <script>
+// --- JS ทั้งหมดเดิม ---
 const API_URL='https://ttottijljxoinptmhgtu.supabase.co/functions/v1/members';
 const form=document.getElementById('memberForm');
 const tableBody=document.querySelector('#memberTable tbody');
-const step4=document.getElementById('step4');
 let editId=null;
 let allMembers=[];
 let sortColumn=null, sortAsc=true;
 let currentPage=1, rowsPerPage=10;
 
-// --- Multi-step ---
+// Multi-step
 const formSteps=document.querySelectorAll('.form-step');
 const progressSteps=document.querySelectorAll('.progress-step');
 let formStepIndex=0;
-
-function updateProgressBar(){
-  progressSteps.forEach((p,i)=>p.classList.toggle('active', i <= formStepIndex));
-}
-
+showStep(formStepIndex);
+document.getElementById('nextBtn').addEventListener('click',()=>{ if(!validateStep(formStepIndex)) return; formStepIndex++; showStep(formStepIndex); });
+document.getElementById('prevBtn').addEventListener('click',()=>{ formStepIndex--; showStep(formStepIndex); });
 function showStep(n){
-  formStepIndex = n;
-  const status = form.querySelector('select[name="member_status"]').value;
-  if(status==='ลาออก' || status==='เสียชีวิต'){
-    step4.style.display = 'block';
-    progressSteps[3].style.display='block';
-  } else {
-    step4.style.display = 'none';
-    progressSteps[3].style.display='none';
-  }
-  const visibleSteps = Array.from(formSteps).filter(step => step.style.display !== 'none');
-  visibleSteps.forEach(step => step.classList.remove('active'));
-  visibleSteps[formStepIndex].classList.add('active');
-  updateProgressBar();
-
-  document.getElementById('prevBtn').style.display = formStepIndex===0?'none':'inline-block';
-  document.getElementById('nextBtn').style.display = formStepIndex===visibleSteps.length-1?'none':'inline-block';
-  document.getElementById('submitBtn').style.display = formStepIndex===visibleSteps.length-1?'inline-block':'none';
+  formSteps.forEach((step,i)=>step.classList.remove('active'));
+  formSteps[n].classList.add('active');
+  progressSteps.forEach((p,i)=>p.classList.toggle('active',i<=n));
+  document.getElementById('prevBtn').style.display=n===0?'none':'inline-block';
+  document.getElementById('nextBtn').style.display=n===formSteps.length-1?'none':'inline-block';
+  document.getElementById('submitBtn').style.display=n===formSteps.length-1?'inline-block':'none';
 }
-
-document.getElementById('nextBtn').addEventListener('click',()=>{
-  if(!validateStep(formStepIndex)) return;
-  formStepIndex++; showStep(formStepIndex);
-});
-document.getElementById('prevBtn').addEventListener('click',()=>{
-  formStepIndex--; showStep(formStepIndex);
-});
-
 function validateStep(n){
-  const inputs = Array.from(formSteps).filter(step => step.style.display !== 'none')[n].querySelectorAll('input,select');
+  const inputs=formSteps[n].querySelectorAll('input,select');
   for(let inp of inputs){
-    if(inp.hasAttribute('required') && !inp.value){ 
-      alert('กรุณากรอกข้อมูล: '+(inp.placeholder||inp.name)); 
-      inp.focus(); 
-      return false; 
-    }
+    if(inp.hasAttribute('required') && !inp.value){ alert('กรุณากรอกข้อมูล: '+(inp.placeholder||inp.name)); inp.focus(); return false; }
   }
   return true;
 }
-
-form.querySelector('select[name="member_status"]').addEventListener('change', ()=>{
-  formStepIndex = 0; 
-  showStep(formStepIndex);
-});
 
 // --- Format ID Card ---
 const idCardInput = document.querySelector('input[name="id_card"]');
@@ -386,39 +336,19 @@ form.addEventListener('submit', async e=>{
   const formDataObj={};
   new FormData(form).forEach((v,k)=>formDataObj[k]=v);
   formDataObj.kyot_member=form.kyot_member.checked;
-
-  // แปลงค่าว่างเป็น null สำหรับ date และ numeric
-  const dateFields = ['join_date','birthday','meeting_date','receive_date'];
-  const numericFields = ['share_amount'];
-
-  dateFields.forEach(field=>{
-    if(formDataObj[field]==="") formDataObj[field]=null;
-  });
-
-  numericFields.forEach(field=>{
-    if(formDataObj[field]==="") formDataObj[field]=null;
-    else formDataObj[field]=Number(formDataObj[field]);
-  });
-
   const method=editId?'PUT':'POST';
   const url=editId?`${API_URL}?member_id=${editId}`:API_URL;
-
-  try{
-    const res=await fetch(url,{
-      method,
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify(formDataObj)
-    });
-    const result=await res.json();
-    if(result.error) return alert(result.error);
-
-    editId=null;
-    form.reset();
-    formStepIndex=0; showStep(formStepIndex);
-    loadMembers();
-  } catch(err){
-    alert("เกิดข้อผิดพลาด: "+err);
-  }
+  const res=await fetch(url,{
+    method,
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(formDataObj)
+  });
+  const result=await res.json();
+  if(result.error) return alert(result.error);
+  editId=null;
+  form.reset();
+  formStepIndex=0; showStep(formStepIndex);
+  loadMembers();
 });
 
 loadMembers();
