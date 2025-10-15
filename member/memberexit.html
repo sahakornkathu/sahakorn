@@ -29,14 +29,16 @@ button.delete:hover { background:#c53030; }
 <h2>บันทึกข้อมูลสมาชิกลาออก/เสียชีวิต</h2>
 
 <form id="exitForm">
-  <select id="memberSelect" required>
-    <option value="">--กำลังโหลดสมาชิก--</option>
+  <input type="text" id="member_id_input" placeholder="กรอกเลขสมาชิก" required>
+  <select id="member_status" required>
+    <option value="">--สถานะสมาชิก--</option>
+    <option value="ลาออก">ลาออก</option>
+    <option value="เสียชีวิต">เสียชีวิต</option>
   </select>
 
   <div class="info-box" id="memberInfo" style="display:none;">
     <p><strong>ชื่อ-นามสกุล:</strong> <span id="fullname"></span></p>
     <p><strong>กลุ่ม:</strong> <span id="groupname"></span></p>
-    <p><strong>สถานะ:</strong> <span id="statusname"></span></p>
   </div>
 
   <input type="date" id="meeting_date" placeholder="วันที่เข้าประชุม">
@@ -57,7 +59,6 @@ button.delete:hover { background:#c53030; }
       <th>วันที่เข้าประชุม</th>
       <th>จำนวนเงินหุ้น</th>
       <th>วันที่รับเงิน</th>
-      <th>แก้ไข</th>
       <th>ลบ</th>
     </tr>
   </thead>
@@ -65,152 +66,111 @@ button.delete:hover { background:#c53030; }
 </table>
 
 <script>
-  // --- Supabase ---
-  const SUPABASE_URL = 'https://ttottijljxoinptmhgtu.supabase.co';
-  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'; // เปลี่ยนเป็นของคุณ
-  const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const SUPABASE_URL = 'https://ttottijljxoinptmhgtu.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'; // เปลี่ยนเป็นของคุณ
+const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  const memberSelect = document.getElementById('memberSelect');
-  const memberInfo = document.getElementById('memberInfo');
-  const fullNameEl = document.getElementById('fullname');
-  const groupNameEl = document.getElementById('groupname');
-  const statusNameEl = document.getElementById('statusname');
-  const exitForm = document.getElementById('exitForm');
-  const exitTableBody = document.querySelector('#exitTable tbody');
+const memberIdInput = document.getElementById('member_id_input');
+const memberStatusSelect = document.getElementById('member_status');
+const exitForm = document.getElementById('exitForm');
+const memberInfo = document.getElementById('memberInfo');
+const fullnameEl = document.getElementById('fullname');
+const groupnameEl = document.getElementById('groupname');
+const exitTableBody = document.querySelector('#exitTable tbody');
 
-  let memberData = [];
-  let editId = null;
+// --- ดึงข้อมูลสมาชิกตาม member_id ---
+async function fetchMember(member_id){
+  if(!member_id) return null;
+  const { data, error } = await supabase.from('members')
+    .select('member_id,first_name,last_name,"group"')
+    .eq('member_id', member_id)
+    .single();
+  if(error) return null;
+  return data;
+}
 
-  // --- โหลดสมาชิกจาก members ---
-  async function loadMembers() {
-    memberSelect.innerHTML = '<option>📡 กำลังโหลดสมาชิก...</option>';
-    try {
-      const { data, error } = await supabaseClient
-        .from('members')
-        .select('member_id, first_name, last_name, "group", member_status');
-      if (error) throw error;
-
-      // กรองสถานะลาออกหรือเสียชีวิต
-      memberData = data.filter(m => m.member_status==='ลาออก' || m.member_status==='เสียชีวิต');
-
-      if(memberData.length===0){
-        memberSelect.innerHTML = '<option>❌ ไม่มีสมาชิกลาออก/เสียชีวิต</option>';
-        return;
-      }
-
-      memberSelect.innerHTML = '<option value="">--เลือกสมาชิก--</option>';
-      memberData.forEach(m => {
-        const opt = document.createElement('option');
-        opt.value = m.member_id;
-        opt.textContent = `${m.member_id} - ${m.first_name} ${m.last_name} (กลุ่ม ${m.group})`;
-        memberSelect.appendChild(opt);
-      });
-      console.log('✅ โหลดสมาชิกเรียบร้อย:', memberData);
-    } catch(err){
-      alert('❌ โหลดสมาชิกไม่สำเร็จ: '+err.message);
-    }
+// --- แสดงข้อมูลสมาชิกเมื่อกรอกเลขสมาชิก ---
+memberIdInput.addEventListener('blur', async ()=>{
+  const member_id = memberIdInput.value.trim();
+  if(!member_id){ memberInfo.style.display='none'; return; }
+  const member = await fetchMember(member_id);
+  if(!member){ 
+    alert('ไม่พบสมาชิกนี้'); 
+    memberInfo.style.display='none';
+    return;
   }
+  fullnameEl.textContent = member.first_name + ' ' + member.last_name;
+  groupnameEl.textContent = member.group;
+  memberInfo.style.display='block';
+});
 
-  // --- แสดงข้อมูลเมื่อเลือกสมาชิก ---
-  memberSelect.addEventListener('change', () => {
-    const selectedId = memberSelect.value;
-    if (!selectedId) { memberInfo.style.display='none'; return; }
-    const member = memberData.find(m=>m.member_id===selectedId);
-    if(member){
-      fullNameEl.textContent = `${member.first_name} ${member.last_name}`;
-      groupNameEl.textContent = member.group;
-      statusNameEl.textContent = member.member_status;
-      memberInfo.style.display = 'block';
-    }
-  });
+// --- บันทึกข้อมูล ---
+exitForm.addEventListener('submit', async e=>{
+  e.preventDefault();
+  const member_id = memberIdInput.value.trim();
+  const status = memberStatusSelect.value;
+  if(!member_id || !status) return alert('กรุณากรอกข้อมูลให้ครบ');
 
-  // --- บันทึกข้อมูล ---
-  exitForm.addEventListener('submit', async e => {
-    e.preventDefault();
-    const selectedMember = memberData.find(m=>m.member_id===memberSelect.value);
-    if(!selectedMember) return alert('กรุณาเลือกสมาชิก');
+  const member = await fetchMember(member_id);
+  if(!member) return alert('ไม่พบสมาชิกนี้');
 
-    const payload = {
-      member_id: selectedMember.member_id,
-      first_name: selectedMember.first_name,
-      last_name: selectedMember.last_name,
-      group: selectedMember.group,
-      member_status: selectedMember.member_status,
-      meeting_date: document.getElementById('meeting_date').value || null,
-      share_amount: document.getElementById('share_amount').value ? Number(document.getElementById('share_amount').value) : null,
-      receive_date: document.getElementById('receive_date').value || null
-    };
-
-    try {
-      const { error } = await supabaseClient
-        .from('member_exit')
-        .upsert([payload], { onConflict:['member_id'] });
-      if(error) throw error;
-      alert('✅ บันทึกข้อมูลเรียบร้อย');
-      exitForm.reset();
-      memberInfo.style.display='none';
-      loadExitTable();
-      loadMembers();
-    } catch(err){
-      alert('❌ บันทึกไม่สำเร็จ: '+err.message);
-    }
-  });
-
-  // --- โหลดตาราง member_exit ---
-  async function loadExitTable() {
-    try {
-      const { data, error } = await supabaseClient
-        .from('member_exit')
-        .select('*')
-        .order('member_id', { ascending:true });
-      if(error) throw error;
-
-      exitTableBody.innerHTML = '';
-      data.forEach(row => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${row.member_id}</td>
-          <td>${row.first_name} ${row.last_name}</td>
-          <td>${row.group}</td>
-          <td>${row.member_status}</td>
-          <td>${row.meeting_date || ''}</td>
-          <td>${row.share_amount ?? ''}</td>
-          <td>${row.receive_date || ''}</td>
-          <td><button class="edit" onclick="editExit('${row.member_id}')">แก้ไข</button></td>
-          <td><button class="delete" onclick="deleteExit('${row.member_id}')">ลบ</button></td>
-        `;
-        exitTableBody.appendChild(tr);
-      });
-    } catch(err){
-      alert('❌ โหลดตารางไม่สำเร็จ: '+err.message);
-    }
-  }
-
-  // --- Edit / Delete ---
-  window.editExit = (id) => {
-    const row = memberData.find(m=>m.member_id===id);
-    if(!row) return alert('ไม่พบสมาชิก');
-    memberSelect.value = id;
-    memberSelect.dispatchEvent(new Event('change'));
-    editId = id;
+  const payload = {
+    member_id,
+    first_name: member.first_name,
+    last_name: member.last_name,
+    group: member.group,
+    member_status: status,
+    meeting_date: document.getElementById('meeting_date').value || null,
+    share_amount: document.getElementById('share_amount').value ? Number(document.getElementById('share_amount').value) : null,
+    receive_date: document.getElementById('receive_date').value || null
   };
 
-  window.deleteExit = async (id) => {
-    if(!confirm('ต้องการลบข้อมูลสมาชิกนี้?')) return;
-    try {
-      const { error } = await supabaseClient.from('member_exit').delete().eq('member_id', id);
-      if(error) throw error;
-      alert('✅ ลบข้อมูลเรียบร้อย');
-      loadExitTable();
-      loadMembers();
-    } catch(err){
-      alert('❌ ลบข้อมูลไม่สำเร็จ: '+err.message);
-    }
-  };
+  try{
+    const { error } = await supabase.from('member_exit').upsert([payload], { onConflict: ['member_id'] });
+    if(error) throw error;
+    alert('✅ บันทึกเรียบร้อย');
+    exitForm.reset();
+    memberInfo.style.display='none';
+    loadExitTable();
+  }catch(err){
+    alert('❌ เกิดข้อผิดพลาด: '+err.message);
+  }
+});
 
-  // --- Init ---
-  loadMembers();
+// --- โหลดตาราง ---
+async function loadExitTable(){
+  const { data, error } = await supabase.from('member_exit')
+    .select('*')
+    .order('member_id', { ascending:true });
+  if(error){ alert('❌ โหลดตารางไม่สำเร็จ: '+error.message); return; }
+  exitTableBody.innerHTML='';
+  data.forEach(row=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML=`
+      <td>${row.member_id}</td>
+      <td>${row.first_name} ${row.last_name}</td>
+      <td>${row.group}</td>
+      <td>${row.member_status}</td>
+      <td>${row.meeting_date || ''}</td>
+      <td>${row.share_amount ?? ''}</td>
+      <td>${row.receive_date || ''}</td>
+      <td><button onclick="deleteExit('${row.member_id}')">ลบ</button></td>
+    `;
+    exitTableBody.appendChild(tr);
+  });
+}
+
+// --- ลบข้อมูล ---
+window.deleteExit = async (member_id)=>{
+  if(!confirm('ต้องการลบข้อมูลสมาชิกนี้?')) return;
+  const { error } = await supabase.from('member_exit').delete().eq('member_id', member_id);
+  if(error) return alert('❌ ลบไม่สำเร็จ: '+error.message);
   loadExitTable();
+};
+
+// --- Init ---
+loadExitTable();
 </script>
+
 </body>
 </html>
