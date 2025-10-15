@@ -4,10 +4,27 @@
   <meta charset="UTF-8">
   <title>บันทึกข้อมูลสมาชิกลาออก / เสียชีวิต</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body { font-family: "Prompt", sans-serif; margin: 20px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 10px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+    th { background-color: #f4f4f4; }
+    input[type="text"], input[type="date"], input[type="number"] {
+      padding: 4px; width: 95%;
+    }
+    button { padding: 6px 10px; cursor: pointer; }
+    .saved { background-color: #c8e6c9; }
+    .search-box { margin-bottom: 15px; }
+  </style>
 </head>
 <body>
   <h2>รายชื่อสมาชิกที่ลาออก / เสียชีวิต</h2>
-  <table border="1" id="memberTable">
+
+  <div class="search-box">
+    🔍 <input type="text" id="searchInput" placeholder="ค้นหาชื่อหรือรหัสสมาชิก..." onkeyup="filterMembers()">
+  </div>
+
+  <table id="memberTable">
     <thead>
       <tr>
         <th>รหัสสมาชิก</th>
@@ -24,11 +41,30 @@
     <tbody id="memberBody"></tbody>
   </table>
 
+  <h3 style="margin-top:30px;">📋 ประวัติการบันทึก</h3>
+  <table id="historyTable">
+    <thead>
+      <tr>
+        <th>รหัสสมาชิก</th>
+        <th>ชื่อ</th>
+        <th>นามสกุล</th>
+        <th>กลุ่ม</th>
+        <th>สถานะ</th>
+        <th>วันที่ประชุม</th>
+        <th>จำนวนเงิน</th>
+        <th>วันที่รับเงิน</th>
+      </tr>
+    </thead>
+    <tbody id="historyBody"></tbody>
+  </table>
+
   <script>
     // 🟢 ตั้งค่า Supabase
-    const SUPABASE_URL = "https://ttottijljxoinptmhgtu.supabase.co"; // ← ใส่ URL ของคุณ
-    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y";   // ← ใส่ KEY ของคุณ
+    const SUPABASE_URL = "https://ttottijljxoinptmhgtu.supabase.coo"; // ← ใส่ URL ของคุณ
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y";                         // ← ใส่ KEY ของคุณ
     const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    let memberData = []; // เก็บข้อมูลสมาชิกทั้งหมด
 
     // 🟢 โหลดข้อมูลสมาชิกที่ลาออก / เสียชีวิต
     async function loadMembers() {
@@ -42,6 +78,13 @@
         return;
       }
 
+      memberData = data;
+      renderMemberTable(data);
+      loadHistory(); // โหลดประวัติหลังจากโหลดสมาชิก
+    }
+
+    // 🟢 แสดงข้อมูลสมาชิก
+    function renderMemberTable(data) {
       const tbody = document.getElementById('memberBody');
       tbody.innerHTML = '';
 
@@ -62,7 +105,18 @@
       });
     }
 
-    // 🟢 ฟังก์ชันบันทึกข้อมูลลง member_exit
+    // 🟢 ฟังก์ชันค้นหา
+    function filterMembers() {
+      const query = document.getElementById('searchInput').value.toLowerCase();
+      const filtered = memberData.filter(m =>
+        m.first_name.toLowerCase().includes(query) ||
+        m.last_name.toLowerCase().includes(query) ||
+        m.member_id.toLowerCase().includes(query)
+      );
+      renderMemberTable(filtered);
+    }
+
+    // 🟢 ฟังก์ชันบันทึกข้อมูล
     async function saveMemberExit(member_id, first_name, last_name, group, member_status) {
       const meeting_date = document.getElementById(`meeting_date_${member_id}`).value;
       const share_amount = document.getElementById(`share_amount_${member_id}`).value;
@@ -70,6 +124,18 @@
 
       if (!meeting_date || !share_amount || !receive_date) {
         alert('⚠️ กรุณากรอกข้อมูลให้ครบถ้วน');
+        return;
+      }
+
+      // ตรวจสอบว่ามีข้อมูลซ้ำหรือไม่
+      const { data: existing } = await client
+        .from('member_exit')
+        .select('member_id')
+        .eq('member_id', member_id)
+        .maybeSingle();
+
+      if (existing) {
+        alert('⚠️ สมาชิกนี้มีการบันทึกไว้แล้ว!');
         return;
       }
 
@@ -93,10 +159,43 @@
         alert('เกิดข้อผิดพลาด: ' + error.message);
       } else {
         alert(`✅ บันทึกข้อมูลของ ${first_name} ${last_name} สำเร็จ`);
+        loadHistory(); // โหลดใหม่
       }
     }
 
-    // 🟢 เริ่มโหลดข้อมูลเมื่อเปิดหน้าเว็บ
+    // 🟢 โหลดประวัติการบันทึก
+    async function loadHistory() {
+      const { data, error } = await client
+        .from('member_exit')
+        .select('*')
+        .order('receive_date', { ascending: false });
+
+      if (error) {
+        console.error('❌ Error loading history:', error);
+        return;
+      }
+
+      const tbody = document.getElementById('historyBody');
+      tbody.innerHTML = '';
+
+      data.forEach(item => {
+        const row = document.createElement('tr');
+        row.classList.add('saved');
+        row.innerHTML = `
+          <td>${item.member_id}</td>
+          <td>${item.first_name}</td>
+          <td>${item.last_name}</td>
+          <td>${item.group}</td>
+          <td>${item.member_status}</td>
+          <td>${item.meeting_date}</td>
+          <td>${item.share_amount}</td>
+          <td>${item.receive_date}</td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    // เริ่มโหลดข้อมูล
     loadMembers();
   </script>
 </body>
