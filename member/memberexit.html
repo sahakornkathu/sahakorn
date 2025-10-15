@@ -1,170 +1,103 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
   <title>บันทึกข้อมูลสมาชิกลาออก / เสียชีวิต</title>
-
-  <!-- โหลด Supabase SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <h2>รายชื่อสมาชิกที่ลาออก / เสียชีวิต</h2>
+  <table border="1" id="memberTable">
+    <thead>
+      <tr>
+        <th>รหัสสมาชิก</th>
+        <th>ชื่อ</th>
+        <th>นามสกุล</th>
+        <th>กลุ่ม</th>
+        <th>สถานะ</th>
+        <th>วันที่ประชุม</th>
+        <th>จำนวนเงิน</th>
+        <th>วันที่รับเงิน</th>
+        <th>บันทึก</th>
+      </tr>
+    </thead>
+    <tbody id="memberBody"></tbody>
+  </table>
 
   <script>
     // 🟢 ตั้งค่า Supabase
-    const supabaseUrl = "https://ttottijljxoinptmhgtu.supabase.co";
-    const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y";
-    const { createClient } = window.supabase;
-    const client = createClient(supabaseUrl, supabaseKey);
+    const SUPABASE_URL = "https://ttottijljxoinptmhgtu.supabase.co"; // ← ใส่ URL ของคุณ
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y";   // ← ใส่ KEY ของคุณ
+    const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // 🟢 โหลดข้อมูลสมาชิก
+    // 🟢 โหลดข้อมูลสมาชิกที่ลาออก / เสียชีวิต
     async function loadMembers() {
-      console.log("กำลังโหลดข้อมูลสมาชิก...");
-
       const { data, error } = await client
         .from('members')
-        .select('member_id, title, first_name, last_name, "group", member_status')
+        .select('member_id, title, first_name, last_name, group, member_status')
         .in('member_status', ['ลาออก', 'เสียชีวิต']);
 
       if (error) {
-        console.error('❌ โหลดข้อมูลสมาชิกผิดพลาด:', error);
-        alert('ไม่สามารถดึงข้อมูลสมาชิกได้: ' + error.message);
+        console.error('❌ Error loading members:', error);
         return;
       }
 
-      console.log("✅ ดึงข้อมูลสำเร็จ:", data);
-      const tableBody = document.getElementById('memberTableBody');
-      tableBody.innerHTML = '';
-
-      if (!data || data.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="8" style="text-align:center;">ไม่มีข้อมูลสมาชิก</td></tr>';
-        return;
-      }
+      const tbody = document.getElementById('memberBody');
+      tbody.innerHTML = '';
 
       data.forEach(member => {
         const row = document.createElement('tr');
         row.innerHTML = `
           <td>${member.member_id}</td>
-          <td>${member.title}${member.first_name} ${member.last_name}</td>
+          <td>${member.first_name}</td>
+          <td>${member.last_name}</td>
           <td>${member.group}</td>
           <td>${member.member_status}</td>
-          <td><input type="date" id="meeting_date_${member.member_id}" /></td>
-          <td><input type="number" id="share_amount_${member.member_id}" placeholder="จำนวนเงิน" /></td>
-          <td><input type="date" id="receive_date_${member.member_id}" /></td>
-          <td><button onclick="saveMemberExit('${member.member_id}')">บันทึก</button></td>
+          <td><input type="date" id="meeting_date_${member.member_id}"></td>
+          <td><input type="number" id="share_amount_${member.member_id}" placeholder="จำนวนเงิน"></td>
+          <td><input type="date" id="receive_date_${member.member_id}"></td>
+          <td><button onclick="saveMemberExit('${member.member_id}', '${member.first_name}', '${member.last_name}', '${member.group}', '${member.member_status}')">💾 บันทึก</button></td>
         `;
-        tableBody.appendChild(row);
+        tbody.appendChild(row);
       });
     }
 
-    // 🟢 ฟังก์ชันบันทึกข้อมูลสมาชิกลาออก / เสียชีวิต
-    async function saveMemberExit(member_id) {
+    // 🟢 ฟังก์ชันบันทึกข้อมูลลง member_exit
+    async function saveMemberExit(member_id, first_name, last_name, group, member_status) {
       const meeting_date = document.getElementById(`meeting_date_${member_id}`).value;
       const share_amount = document.getElementById(`share_amount_${member_id}`).value;
       const receive_date = document.getElementById(`receive_date_${member_id}`).value;
 
       if (!meeting_date || !share_amount || !receive_date) {
-        alert('กรุณากรอกข้อมูลให้ครบถ้วน');
+        alert('⚠️ กรุณากรอกข้อมูลให้ครบถ้วน');
         return;
       }
 
-      // ดึงข้อมูลสมาชิกจากตาราง members
-      const { data: memberData, error: memberError } = await client
-        .from('members')
-        .select('member_id, title, first_name, last_name, "group", member_status')
-        .eq('member_id', member_id)
-        .single();
-
-      if (memberError || !memberData) {
-        console.error('❌ ไม่สามารถดึงข้อมูลสมาชิก:', memberError);
-        alert('ไม่พบข้อมูลสมาชิก หรือไม่สามารถดึงข้อมูลได้');
-        return;
-      }
-
-      // รวมข้อมูลทั้งหมดที่จะบันทึก
       const insertData = {
-        member_id: memberData.member_id,
-        title: memberData.title,
-        first_name: memberData.first_name,
-        last_name: memberData.last_name,
-        group: memberData.group,
-        member_status: memberData.member_status,
+        member_id,
+        first_name,
+        last_name,
+        group,
+        member_status,
         meeting_date,
         share_amount,
         receive_date
       };
 
-      // บันทึกข้อมูลลงตาราง member_exit
       const { error } = await client
         .from('member_exit')
         .insert([insertData]);
 
       if (error) {
         console.error('❌ Error saving member_exit:', error);
-        alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล: ' + error.message);
+        alert('เกิดข้อผิดพลาด: ' + error.message);
       } else {
-        alert('✅ บันทึกข้อมูลเรียบร้อยแล้ว');
+        alert(`✅ บันทึกข้อมูลของ ${first_name} ${last_name} สำเร็จ`);
       }
     }
 
-    document.addEventListener('DOMContentLoaded', loadMembers);
+    // 🟢 เริ่มโหลดข้อมูลเมื่อเปิดหน้าเว็บ
+    loadMembers();
   </script>
-
-  <style>
-    body {
-      font-family: "Prompt", sans-serif;
-      margin: 40px;
-      background-color: #f9fafb;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background: #fff;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-    th, td {
-      border: 1px solid #ddd;
-      padding: 10px;
-      text-align: left;
-    }
-    th {
-      background-color: #4f46e5;
-      color: white;
-    }
-    input {
-      padding: 5px;
-      width: 100%;
-      box-sizing: border-box;
-    }
-    button {
-      background-color: #16a34a;
-      color: white;
-      border: none;
-      padding: 6px 10px;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    button:hover {
-      background-color: #15803d;
-    }
-  </style>
-</head>
-<body>
-  <h2>ระบบบันทึกข้อมูลสมาชิกลาออก / เสียชีวิต</h2>
-  <table>
-    <thead>
-      <tr>
-        <th>รหัสสมาชิก</th>
-        <th>ชื่อ - นามสกุล</th>
-        <th>กลุ่ม</th>
-        <th>สถานะ</th>
-        <th>วันที่ประชุม</th>
-        <th>จำนวนเงิน</th>
-        <th>วันที่รับเงิน</th>
-        <th>ดำเนินการ</th>
-      </tr>
-    </thead>
-    <tbody id="memberTableBody">
-      <tr><td colspan="8" style="text-align:center;">กำลังโหลดข้อมูล...</td></tr>
-    </tbody>
-  </table>
 </body>
 </html>
