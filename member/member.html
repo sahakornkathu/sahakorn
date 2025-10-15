@@ -3,10 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <title>ระบบจัดการสมาชิก</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap');
-body { font-family:"Prompt",sans-serif; background:#f0f4f8; margin:10px; color:#333; }
+body { font-family:"Prompt",sans-serif; background:#f0f4f8; margin:20px; color:#333; }
 h2 { text-align:center; color:#1e40af; margin-bottom:15px; }
 
 /* --- Form Step --- */
@@ -43,9 +42,9 @@ button.delete:hover { background:#c53030; }
 #pageInfo, #resultCount{ font-weight:500; color:#2d3748; font-size:13px; }
 
 /* --- Responsive --- */
-@media(max-width:768px){
-  input, select { width:96%; margin:5px 2%; }
-  .form-step { padding:15px 10px; }
+@media screen and (max-width:768px){
+  input, select { width:100%; margin:5px 0; }
+  table, #filterDiv { width:95%; font-size:12px; }
 }
 </style>
 </head>
@@ -53,6 +52,7 @@ button.delete:hover { background:#c53030; }
 
 <h2>ฟอร์มบันทึกสมาชิก</h2>
 <form id="memberForm">
+
   <!-- Step 1 -->
   <div class="form-step">
     <h3>Step 1: ข้อมูลพื้นฐาน</h3>
@@ -61,13 +61,14 @@ button.delete:hover { background:#c53030; }
     <input placeholder="คำนำหน้า" name="title" required>
     <input placeholder="ชื่อ" name="first_name" required>
     <input placeholder="นามสกุล" name="last_name" required>
-    <input placeholder="เลขบัตรประชาชน" name="id_card" maxlength="17" required>
+    <input placeholder="เลขบัตรประชาชน x-xxxx-xxxxx-xx-x" name="id_card" pattern="\d{1}-\d{4}-\d{5}-\d{2}-\d{1}" title="กรอกเลขบัตรประชาชน 13 หลักตามรูปแบบ x-xxxx-xxxxx-xx-x" required>
     <input type="date" name="birthday" required>
     <input placeholder="กลุ่มที่" name="group" required>
     <select name="gender" required>
       <option value="">--เพศ--</option>
       <option value="ชาย">ชาย</option>
       <option value="หญิง">หญิง</option>
+      <option value="อื่นๆ">อื่นๆ</option>
     </select>
   </div>
 
@@ -109,26 +110,15 @@ button.delete:hover { background:#c53030; }
     <input placeholder="ชื่อมารดา" name="mother_name">
   </div>
 
-  <!-- Conditional Section: ลาออก / เสียชีวิต -->
-  <div class="form-step" id="exitInfo" style="display:none;">
-    <h3>ข้อมูลการลาออก / เสียชีวิต</h3>
-    <input type="date" name="meeting_date" placeholder="วันที่เข้าประชุม" required>
-    <input name="first_name_exit" placeholder="ชื่อ" readonly>
-    <input name="last_name_exit" placeholder="นามสกุล" readonly>
-    <input name="group_exit" placeholder="กลุ่ม" readonly>
-    <input name="member_id_exit" placeholder="เลขสมาชิก" readonly>
-    <input type="number" name="share_amount" placeholder="จำนวนเงินหุ้น" required>
-    <input type="date" name="payment_date" placeholder="วันที่รับเงินหุ้น" required>
-
-    <h4>สวัสดิการกรณีเสียชีวิต</h4>
-    <select name="beneficiary" required>
-      <option value="">--ผู้รับสวัสดิการ--</option>
-      <option value="สมาชิก">สมาชิก</option>
-      <option value="บิดา">บิดา</option>
-      <option value="มารดา">มารดา</option>
-    </select>
-    <input type="date" name="benefit_date" placeholder="วันที่รับเงินสวัสดิการ" required>
-    <input type="number" name="benefit_amount" placeholder="จำนวนเงินสวัสดิการ" required>
+  <!-- Step 4: หุ้น / สวัสดิการ (แสดงเฉพาะลาออก/เสียชีวิต) -->
+  <div class="form-step">
+    <h3>Step 4: ข้อมูลหุ้น / สวัสดิการ</h3>
+    <input type="date" placeholder="วันที่เข้าประชุม" name="meeting_date">
+    <input placeholder="จำนวนเงินหุ้น" name="share_amount">
+    <input type="date" placeholder="วันที่รับเงิน" name="payment_date">
+    <input placeholder="ผู้รับสวัสดิการ (สมาชิก/บิดา/มารดา)" name="beneficiary">
+    <input type="date" placeholder="วันที่รับสวัสดิการ" name="benefit_date">
+    <input placeholder="จำนวนเงินสวัสดิการ" name="benefit_amount">
   </div>
 
   <div class="form-navigation">
@@ -154,6 +144,7 @@ button.delete:hover { background:#c53030; }
     <option value="">--เพศ--</option>
     <option value="ชาย">ชาย</option>
     <option value="หญิง">หญิง</option>
+    <option value="อื่นๆ">อื่นๆ</option>
   </select>
   <span id="resultCount"></span>
 </div>
@@ -183,7 +174,11 @@ button.delete:hover { background:#c53030; }
 </div>
 
 <script>
-const API_URL='https://ttottijljxoinptmhgtu.supabase.co/functions/v1/members';
+const SUPABASE_URL='https://ttottijljxoinptmhgtu.supabase.co';
+const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y';
+const API_URL=`${SUPABASE_URL}/rest/v1/members`;
+const EXIT_API_URL=`${SUPABASE_URL}/rest/v1/member_exit`;
+
 const form=document.getElementById('memberForm');
 const tableBody=document.querySelector('#memberTable tbody');
 let editId=null;
@@ -226,43 +221,15 @@ function validateStep(n){
   return true;
 }
 
-// --- Conditional Exit Section ---
-const memberStatusField = form.querySelector('select[name="member_status"]');
-const exitInfo = document.getElementById('exitInfo');
-memberStatusField.addEventListener('change', ()=>{
-  if(memberStatusField.value==='ลาออก' || memberStatusField.value==='เสียชีวิต'){
-    exitInfo.style.display='block';
-    exitInfo.querySelectorAll('input, select').forEach(inp=>inp.required=true);
-    form.querySelector('input[name="first_name_exit"]').value = form.querySelector('input[name="first_name"]').value;
-    form.querySelector('input[name="last_name_exit"]').value = form.querySelector('input[name="last_name"]').value;
-    form.querySelector('input[name="group_exit"]').value = form.querySelector('input[name="group"]').value;
-    form.querySelector('input[name="member_id_exit"]').value = form.querySelector('input[name="member_id"]').value;
-  } else {
-    exitInfo.style.display='none';
-    exitInfo.querySelectorAll('input, select').forEach(inp=>inp.required=false);
-  }
-});
-
-// --- Format ID Card ---
-form.querySelector('input[name="id_card"]').addEventListener('input', e=>{
-  let value=e.target.value.replace(/\D/g,'').slice(0,13);
-  let formatted='';
-  if(value.length>0) formatted += value[0];
-  if(value.length>1) formatted += '-' + value.slice(1,5);
-  if(value.length>5) formatted += '-' + value.slice(5,10);
-  if(value.length>10) formatted += '-' + value.slice(10,12);
-  if(value.length>12) formatted += '-' + value.slice(12,13);
-  e.target.value = formatted;
-});
-
 // --- Load Members ---
 async function loadMembers(){
   try{
-    const res=await fetch(API_URL);
+    const res=await fetch(API_URL+'?select=*',{
+      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}
+    });
     const result=await res.json();
-    if(result.error){ alert(result.error); return; }
-    if(!Array.isArray(result.data)){ alert("ข้อมูลสมาชิกไม่ถูกต้อง"); return; }
-    allMembers=result.data; filterMembers();
+    allMembers=result;
+    filterMembers();
   }catch(err){ alert("เกิดข้อผิดพลาด: "+err); }
 }
 
@@ -281,7 +248,7 @@ function renderTable(members){
       <td>${m.group}</td>
       <td>${m.province}</td>
       <td>${m.member_status}</td>
-      <td>${m.gender}</td>
+      <td>${m.gender||''}</td>
       <td><button class="edit" onclick="editMember('${m.member_id}')">แก้ไข</button></td>
       <td><button class="delete" onclick="deleteMember('${m.member_id}')">ลบ</button></td>
     `;
@@ -339,23 +306,25 @@ document.querySelectorAll('#memberTable th[data-column]').forEach(th=>{ th.addEv
 
 // --- Edit / Delete ---
 async function editMember(id){
-  const res=await fetch(`${API_URL}?member_id=${id}`);
+  const res=await fetch(`${API_URL}?member_id=eq.${id}`,{
+    headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}
+  });
   const result=await res.json();
-  if(result.error) return alert(result.error);
   editId=id;
-  Object.keys(result.data[0]).forEach(key=>{
+  Object.keys(result[0]).forEach(key=>{
     if(form[key]){
-      if(form[key].type==='checkbox') form[key].checked=result.data[0][key];
-      else form[key].value=result.data[0][key];
+      if(form[key].type==='checkbox') form[key].checked=result[0][key];
+      else form[key].value=result[0][key];
     }
   });
   formStepIndex=0; showStep(formStepIndex);
 }
 async function deleteMember(id){
   if(!confirm('ต้องการลบสมาชิกนี้?')) return;
-  const res=await fetch(`${API_URL}?member_id=${id}`,{method:'DELETE'});
-  const result=await res.json();
-  if(result.error) return alert(result.error);
+  await fetch(`${API_URL}?member_id=eq.${id}`,{
+    method:'DELETE',
+    headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}
+  });
   loadMembers();
 }
 
@@ -365,15 +334,39 @@ form.addEventListener('submit', async e=>{
   const formDataObj={};
   new FormData(form).forEach((v,k)=>formDataObj[k]=v);
   formDataObj.kyot_member=form.kyot_member.checked;
-  const method=editId?'PUT':'POST';
-  const url=editId?`${API_URL}?member_id=${editId}`:API_URL;
+
+  const method=editId?'PATCH':'POST';
+  const url=editId?`${API_URL}?member_id=eq.${editId}`:API_URL;
+
   const res=await fetch(url,{
     method,
-    headers:{'Content-Type':'application/json'},
+    headers:{'Content-Type':'application/json','apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY},
     body:JSON.stringify(formDataObj)
   });
   const result=await res.json();
   if(result.error) return alert(result.error);
+
+  // --- ถ้าลาออก / เสียชีวิต ---
+  if(formDataObj.member_status==='ลาออก' || formDataObj.member_status==='เสียชีวิต'){
+    const exitData = {
+      member_id: formDataObj.member_id,
+      first_name_exit: formDataObj.first_name,
+      last_name_exit: formDataObj.last_name,
+      group_exit: formDataObj.group,
+      meeting_date: form.meeting_date.value || null,
+      share_amount: form.share_amount.value ? parseFloat(form.share_amount.value) : null,
+      payment_date: form.payment_date.value || null,
+      beneficiary: form.beneficiary.value || null,
+      benefit_date: form.benefit_date.value || null,
+      benefit_amount: form.benefit_amount.value ? parseFloat(form.benefit_amount.value) : null
+    };
+    await fetch(EXIT_API_URL,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY},
+      body:JSON.stringify(exitData)
+    });
+  }
+
   editId=null;
   form.reset();
   formStepIndex=0; showStep(formStepIndex);
