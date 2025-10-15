@@ -63,7 +63,7 @@ button.delete:hover { background:#c53030; }
   <div class="progress-step active" data-step="1">① ข้อมูลพื้นฐาน</div>
   <div class="progress-step" data-step="2">② ที่อยู่ / เบอร์โทร</div>
   <div class="progress-step" data-step="3">③ ข้อมูลเพิ่มเติม</div>
-  <div class="progress-step" data-step="4">④ หุ้น / การประชุม</div>
+  <div class="progress-step" data-step="4">④ ข้อมูลหุ้น / การประชุม</div>
 </div>
 
 <form id="memberForm">
@@ -140,7 +140,7 @@ button.delete:hover { background:#c53030; }
   </div>
 
   <!-- Step 4 -->
-  <div class="form-step" id="step4">
+  <div class="form-step" id="step4" style="display:none;">
     <h3>Step 4: ข้อมูลหุ้น / การประชุม</h3>
     <input type="date" name="meeting_date" placeholder="วันที่เข้าประชุม">
     <input type="number" name="share_amount" placeholder="จำนวนเงินหุ้น">
@@ -199,7 +199,6 @@ button.delete:hover { background:#c53030; }
 </div>
 
 <script>
-// --- JS ทั้งหมดเดิม ---
 const API_URL='https://ttottijljxoinptmhgtu.supabase.co/functions/v1/members';
 const form=document.getElementById('memberForm');
 const tableBody=document.querySelector('#memberTable tbody');
@@ -208,31 +207,63 @@ let allMembers=[];
 let sortColumn=null, sortAsc=true;
 let currentPage=1, rowsPerPage=10;
 
-// Multi-step
-const formSteps=document.querySelectorAll('.form-step');
-const progressSteps=document.querySelectorAll('.progress-step');
-let formStepIndex=0;
-showStep(formStepIndex);
-document.getElementById('nextBtn').addEventListener('click',()=>{ if(!validateStep(formStepIndex)) return; formStepIndex++; showStep(formStepIndex); });
-document.getElementById('prevBtn').addEventListener('click',()=>{ formStepIndex--; showStep(formStepIndex); });
-function showStep(n){
-  formSteps.forEach((step,i)=>step.classList.remove('active'));
-  if(formSteps[n]){
-    formSteps[n].classList.add('active');
-  }
-  progressSteps.forEach((p,i)=>p.classList.toggle('active',i<=n));
-  document.getElementById('prevBtn').style.display=n===0?'none':'inline-block';
-  const lastStepIndex=formSteps.length-1;
-  document.getElementById('nextBtn').style.display=n===lastStepIndex?'none':'inline-block';
-  document.getElementById('submitBtn').style.display=n===lastStepIndex?'inline-block':'none';
+// --- Multi-step ---
+const formSteps = document.querySelectorAll('.form-step');
+const progressSteps = document.querySelectorAll('.progress-step');
+const step4 = document.getElementById('step4');
+let formStepIndex = 0;
+
+function updateProgressBar() {
+  const visibleSteps = Array.from(formSteps).filter(step => step.style.display !== 'none');
+  visibleSteps.forEach((step,i)=>{
+    const progress = progressSteps[i];
+    if(progress) progress.classList.toggle('active', i <= formStepIndex);
+  });
 }
+
+function showStep(n){
+  formStepIndex = n;
+  const status = form.querySelector('select[name="member_status"]').value;
+  if(status==='ลาออก' || status==='เสียชีวิต'){
+    step4.style.display = 'block';
+  } else {
+    step4.style.display = 'none';
+  }
+
+  const visibleSteps = Array.from(formSteps).filter(step => step.style.display !== 'none');
+  visibleSteps.forEach(step => step.classList.remove('active'));
+  visibleSteps[formStepIndex].classList.add('active');
+  updateProgressBar();
+
+  document.getElementById('prevBtn').style.display = formStepIndex===0?'none':'inline-block';
+  document.getElementById('nextBtn').style.display = formStepIndex===visibleSteps.length-1?'none':'inline-block';
+  document.getElementById('submitBtn').style.display = formStepIndex===visibleSteps.length-1?'inline-block':'none';
+}
+
+document.getElementById('nextBtn').addEventListener('click',()=>{
+  if(!validateStep(formStepIndex)) return;
+  formStepIndex++; showStep(formStepIndex);
+});
+document.getElementById('prevBtn').addEventListener('click',()=>{
+  formStepIndex--; showStep(formStepIndex);
+});
+
 function validateStep(n){
-  const inputs=formSteps[n].querySelectorAll('input,select');
+  const inputs = Array.from(formSteps).filter(step => step.style.display !== 'none')[n].querySelectorAll('input,select');
   for(let inp of inputs){
-    if(inp.hasAttribute('required') && !inp.value){ alert('กรุณากรอกข้อมูล: '+(inp.placeholder||inp.name)); inp.focus(); return false; }
+    if(inp.hasAttribute('required') && !inp.value){ 
+      alert('กรุณากรอกข้อมูล: '+(inp.placeholder||inp.name)); 
+      inp.focus(); 
+      return false; 
+    }
   }
   return true;
 }
+
+form.querySelector('select[name="member_status"]').addEventListener('change', ()=>{
+  formStepIndex = 0; 
+  showStep(formStepIndex);
+});
 
 // --- Format ID Card ---
 const idCardInput = document.querySelector('input[name="id_card"]');
@@ -358,32 +389,35 @@ form.addEventListener('submit', async e=>{
   const formDataObj={};
   new FormData(form).forEach((v,k)=>formDataObj[k]=v);
   formDataObj.kyot_member=form.kyot_member.checked;
+
+  // แปลงค่าวันที่ว่างเป็น null
+  ['join_date','birthday','meeting_date','receive_date'].forEach(field=>{
+    if(formDataObj[field]==="") formDataObj[field]=null;
+  });
+
   const method=editId?'PUT':'POST';
   const url=editId?`${API_URL}?member_id=${editId}`:API_URL;
-  const res=await fetch(url,{
-    method,
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify(formDataObj)
-  });
-  const result=await res.json();
-  if(result.error) return alert(result.error);
-  editId=null;
-  form.reset();
-  formStepIndex=0; showStep(formStepIndex);
-  loadMembers();
-});
 
-// --- แสดง/ซ่อน Step4 ตามสถานะสมาชิก ---
-form.querySelector('select[name="member_status"]').addEventListener('change', e=>{
-  const step4 = document.getElementById('step4');
-  const val = e.target.value;
-  if(val === 'ลาออก' || val === 'เสียชีวิต'){
-    step4.style.display = 'block';
-  } else {
-    step4.style.display = 'none';
+  try {
+    const res=await fetch(url,{
+      method,
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(formDataObj)
+    });
+    const result=await res.json();
+    if(result.error) return alert(result.error);
+
+    editId=null;
+    form.reset();
+    formStepIndex=0; showStep(formStepIndex);
+    loadMembers();
+  } catch(err) {
+    alert("เกิดข้อผิดพลาด: "+err);
   }
 });
 
+// แสดง Step 0 ตอนโหลด
+showStep(0);
 loadMembers();
 </script>
 </body>
