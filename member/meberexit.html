@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>บันทึกข้อมูลสมาชิกลาออก/เสียชีวิต</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap');
+body { font-family:"Prompt",sans-serif; background:#f0f4f8; margin:20px; color:#333; }
+h2 { text-align:center; color:#1e40af; margin-bottom:15px; }
+form { max-width:500px; margin:auto; background:#fff; padding:20px; border-radius:12px; box-shadow:0 5px 20px rgba(0,0,0,0.08); }
+input, select { display:block; width:100%; margin:10px 0; padding:8px 10px; border:1px solid #ccc; border-radius:6px; font-size:14px; background:#f9fafb; }
+input:focus, select:focus { outline:none; border-color:#4a90e2; box-shadow:0 0 5px rgba(74,144,226,0.3); background:#fff; }
+button { padding:10px 15px; border:none; border-radius:6px; cursor:pointer; background:#4a90e2; color:#fff; font-size:14px; margin-top:10px; }
+button:hover { background:#357abd; }
+</style>
+</head>
+<body>
+
+<h2>บันทึกข้อมูลสมาชิกลาออก/เสียชีวิต</h2>
+
+<form id="exitForm">
+  <select id="memberSelect" required>
+    <option value="">--เลือกสมาชิก--</option>
+  </select>
+
+  <input type="date" id="meeting_date" placeholder="วันที่เข้าประชุม">
+  <input type="number" step="0.01" id="share_amount" placeholder="จำนวนเงินหุ้น">
+  <input type="date" id="receive_date" placeholder="วันที่รับเงิน">
+
+  <button type="submit">💾 บันทึกข้อมูล</button>
+</form>
+
+<script>
+const API_URL_MEMBERS='https://ttottijljxoinptmhgtu.supabase.co/functions/v1/members';
+const API_URL_EXIT='https://ttottijljxoinptmhgtu.supabase.co/functions/v1/member_exit';
+
+const memberSelect=document.getElementById('memberSelect');
+const exitForm=document.getElementById('exitForm');
+
+// โหลดสมาชิกลาออก/เสียชีวิต
+async function loadExitMembers(){
+  try{
+    const res=await fetch(API_URL_MEMBERS);
+    const data=await res.json();
+    if(data.error){ alert(data.error); return; }
+    const exitMembers=data.data.filter(m=>m.member_status==='ลาออก' || m.member_status==='เสียชีวิต');
+    memberSelect.innerHTML='<option value="">--เลือกสมาชิก--</option>';
+    exitMembers.forEach(m=>{
+      const opt=document.createElement('option');
+      opt.value=m.member_id;
+      opt.textContent=`${m.member_id} - ${m.first_name} ${m.last_name} (กลุ่ม ${m.group})`;
+      memberSelect.appendChild(opt);
+    });
+  }catch(err){ alert("โหลดสมาชิกผิดพลาด: "+err); }
+}
+
+// บันทึกข้อมูล Step4
+exitForm.addEventListener('submit', async e=>{
+  e.preventDefault();
+  const member_id=memberSelect.value;
+  if(!member_id){ alert('กรุณาเลือกสมาชิก'); return; }
+
+  const payload={
+    member_id,
+    meeting_date: document.getElementById('meeting_date').value || null,
+    share_amount: document.getElementById('share_amount').value? Number(document.getElementById('share_amount').value):null,
+    receive_date: document.getElementById('receive_date').value || null
+  };
+
+  try{
+    const res=await fetch(`${API_URL_EXIT}?member_id=${member_id}`,{
+      method:'PUT',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(payload)
+    });
+    const result=await res.json();
+    if(result.error) return alert(result.error);
+    alert('บันทึกข้อมูลเรียบร้อยแล้ว');
+    exitForm.reset();
+  }catch(err){
+    alert('เกิดข้อผิดพลาด: '+err);
+  }
+});
+
+loadExitMembers();
+</script>
+</body>
+</html>
