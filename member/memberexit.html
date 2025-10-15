@@ -60,7 +60,7 @@ button:hover { background:#357abd; }
     console.log('📡 กำลังโหลดข้อมูลสมาชิก...');
     const { data, error } = await supabase.from('members')
       .select('member_id,first_name,last_name,group,member_status')
-      .in('member_status', ['ลาออก','เสียชีวิต']);
+      .in('member_status', ["ลาออก","เสียชีวิต"]);
 
     if (error) { 
       console.error('❌ โหลดข้อมูลผิดพลาด:', error); 
