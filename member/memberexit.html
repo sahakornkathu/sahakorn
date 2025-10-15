@@ -8,10 +8,11 @@
   <script>
     const supabaseUrl = "https://ttottijljxoinptmhgtu.supabase.co";
     const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y";
-    const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+    const { createClient } = supabase;
+    const client = createClient(supabaseUrl, supabaseKey);
 
     async function loadMembers() {
-      const { data, error } = await supabase
+      const { data, error } = await client
         .from('members')
         .select('member_id, title, first_name, last_name, group, member_status')
         .in('member_status', ['ลาออก', 'เสียชีวิต']);
@@ -51,7 +52,7 @@
         return;
       }
 
-      const { data, error } = await supabase
+      const { data, error } = await client
         .from('member_exit')
         .insert([{ member_id, meeting_date, share_amount, receive_date }]);
 
