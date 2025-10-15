@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>บันทึกข้อมูลสมาชิกลาออก/เสียชีวิต</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap');
 body { font-family:"Prompt",sans-serif; background:#f0f4f8; margin:20px; color:#333; }
 h2 { text-align:center; color:#1e40af; margin-bottom:15px; }
 form { max-width:500px; margin:auto; background:#fff; padding:20px; border-radius:12px; box-shadow:0 5px 20px rgba(0,0,0,0.08); }
@@ -32,53 +31,67 @@ button:hover { background:#357abd; }
 </form>
 
 <script>
-const API_URL_MEMBERS='https://ttottijljxoinptmhgtu.supabase.co/functions/v1/members';
-const API_URL_EXIT='https://ttottijljxoinptmhgtu.supabase.co/functions/v1/member_exit';
+const SUPABASE_URL = 'https://ttottijljxoinptmhgtu.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'; // ใส่ key ของคุณ
+const API_MEMBERS = `${SUPABASE_URL}/rest/v1/members?select=member_id,first_name,last_name,"group",member_status`;
 
-const memberSelect=document.getElementById('memberSelect');
-const exitForm=document.getElementById('exitForm');
+const memberSelect = document.getElementById('memberSelect');
+const exitForm = document.getElementById('exitForm');
 
 // โหลดสมาชิกลาออก/เสียชีวิต
-async function loadExitMembers(){
-  try{
-    const res=await fetch(API_URL_MEMBERS);
-    const data=await res.json();
-    if(data.error){ alert(data.error); return; }
-    const exitMembers=data.data.filter(m=>m.member_status==='ลาออก' || m.member_status==='เสียชีวิต');
-    memberSelect.innerHTML='<option value="">--เลือกสมาชิก--</option>';
-    exitMembers.forEach(m=>{
-      const opt=document.createElement('option');
-      opt.value=m.member_id;
-      opt.textContent=`${m.member_id} - ${m.first_name} ${m.last_name} (กลุ่ม ${m.group})`;
+async function loadExitMembers() {
+  try {
+    const res = await fetch(API_MEMBERS, {
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    const data = await res.json();
+    const exitMembers = data.filter(m => m.member_status === 'ลาออก' || m.member_status === 'เสียชีวิต');
+    memberSelect.innerHTML = '<option value="">--เลือกสมาชิก--</option>';
+    exitMembers.forEach(m => {
+      const opt = document.createElement('option');
+      opt.value = m.member_id;
+      opt.textContent = `${m.member_id} - ${m.first_name} ${m.last_name} (กลุ่ม ${m.group})`;
       memberSelect.appendChild(opt);
     });
-  }catch(err){ alert("โหลดสมาชิกผิดพลาด: "+err); }
+  } catch(err) {
+    alert('โหลดสมาชิกผิดพลาด: '+err);
+  }
 }
 
 // บันทึกข้อมูล Step4
-exitForm.addEventListener('submit', async e=>{
+exitForm.addEventListener('submit', async e => {
   e.preventDefault();
-  const member_id=memberSelect.value;
+  const member_id = memberSelect.value;
   if(!member_id){ alert('กรุณาเลือกสมาชิก'); return; }
 
-  const payload={
-    member_id,
+  const payload = {
     meeting_date: document.getElementById('meeting_date').value || null,
-    share_amount: document.getElementById('share_amount').value? Number(document.getElementById('share_amount').value):null,
+    share_amount: document.getElementById('share_amount').value ? Number(document.getElementById('share_amount').value) : null,
     receive_date: document.getElementById('receive_date').value || null
   };
 
-  try{
-    const res=await fetch(`${API_URL_EXIT}?member_id=${member_id}`,{
-      method:'PUT',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify(payload)
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/member_exit?member_id=eq.${member_id}`, {
+      method: 'PATCH',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
     });
-    const result=await res.json();
-    if(result.error) return alert(result.error);
-    alert('บันทึกข้อมูลเรียบร้อยแล้ว');
-    exitForm.reset();
-  }catch(err){
+    if(res.ok) {
+      alert('บันทึกข้อมูลเรียบร้อยแล้ว');
+      exitForm.reset();
+    } else {
+      const err = await res.json();
+      alert('เกิดข้อผิดพลาด: '+JSON.stringify(err));
+    }
+  } catch(err) {
     alert('เกิดข้อผิดพลาด: '+err);
   }
 });
