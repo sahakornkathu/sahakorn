@@ -12,6 +12,7 @@ form { max-width:500px; margin:auto; background:#fff; padding:20px; border-radiu
 input, select { display:block; width:100%; margin:10px 0; padding:8px 10px; border:1px solid #ccc; border-radius:6px; font-size:14px; background:#f9fafb; }
 button { padding:10px 15px; border:none; border-radius:6px; cursor:pointer; background:#4a90e2; color:#fff; font-size:14px; margin-top:10px; }
 button:hover { background:#357abd; }
+.info-box { background:#e0f2fe; padding:10px; border-radius:8px; margin-bottom:10px; }
 </style>
 </head>
 <body>
@@ -23,6 +24,11 @@ button:hover { background:#357abd; }
     <option value="">--เลือกสมาชิก--</option>
   </select>
 
+  <div class="info-box" id="memberInfo" style="display:none;">
+    <p><strong>ชื่อ-นามสกุล:</strong> <span id="fullname"></span></p>
+    <p><strong>กลุ่ม:</strong> <span id="groupname"></span></p>
+  </div>
+
   <input type="date" id="meeting_date" placeholder="วันที่เข้าประชุม">
   <input type="number" step="0.01" id="share_amount" placeholder="จำนวนเงินหุ้น">
   <input type="date" id="receive_date" placeholder="วันที่รับเงิน">
@@ -32,12 +38,18 @@ button:hover { background:#357abd; }
 
 <script>
 const SUPABASE_URL = 'https://ttottijljxoinptmhgtu.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'; // ⚠️ เปลี่ยนเป็นคีย์จริง
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'; // ⚠️ ใส่ anon key จริงของคุณ
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const memberSelect = document.getElementById('memberSelect');
 const exitForm = document.getElementById('exitForm');
+const infoBox = document.getElementById('memberInfo');
+const fullNameEl = document.getElementById('fullname');
+const groupNameEl = document.getElementById('groupname');
 
+let memberData = []; // เก็บข้อมูลสมาชิกทั้งหมด
+
+// โหลดข้อมูลสมาชิกลาออก/เสียชีวิต
 async function loadExitMembers() {
   console.log('📡 กำลังโหลดข้อมูลสมาชิก...');
   const { data, error } = await supabase
@@ -51,7 +63,8 @@ async function loadExitMembers() {
     return;
   }
 
-  console.log('✅ ข้อมูลที่ดึงได้:', data);
+  memberData = data;
+  console.log('✅ ข้อมูลที่ดึงได้:', memberData);
 
   memberSelect.innerHTML = '<option value="">--เลือกสมาชิก--</option>';
   if (!data || data.length === 0) {
@@ -69,13 +82,36 @@ async function loadExitMembers() {
   });
 }
 
+// เมื่อเลือกสมาชิก → แสดงข้อมูล
+memberSelect.addEventListener('change', () => {
+  const selectedId = memberSelect.value;
+  if (!selectedId) {
+    infoBox.style.display = 'none';
+    return;
+  }
+
+  const member = memberData.find(m => m.member_id === selectedId);
+  if (member) {
+    fullNameEl.textContent = `${member.first_name} ${member.last_name}`;
+    groupNameEl.textContent = member.group;
+    infoBox.style.display = 'block';
+  }
+});
+
+// เมื่อกดบันทึกข้อมูล
 exitForm.addEventListener('submit', async e => {
   e.preventDefault();
   const member_id = memberSelect.value;
   if (!member_id) return alert('กรุณาเลือกสมาชิก');
 
+  const member = memberData.find(m => m.member_id === member_id);
+  if (!member) return alert('ไม่พบข้อมูลสมาชิกในระบบ');
+
   const payload = {
     member_id,
+    first_name: member.first_name,
+    last_name: member.last_name,
+    group: member.group,
     meeting_date: document.getElementById('meeting_date').value || null,
     share_amount: document.getElementById('share_amount').value ? Number(document.getElementById('share_amount').value) : null,
     receive_date: document.getElementById('receive_date').value || null
@@ -93,6 +129,7 @@ exitForm.addEventListener('submit', async e => {
   } else {
     alert('✅ บันทึกข้อมูลเรียบร้อยแล้ว');
     exitForm.reset();
+    infoBox.style.display = 'none';
   }
 });
 
