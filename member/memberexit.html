@@ -3,8 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>บันทึกข้อมูลสมาชิกลาออก/เสียชีวิต</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.7.0/dist/umd/supabase.min.js"></script>
+<title>บันทึกสมาชิกลาออก/เสียชีวิต</title>
+
+<!-- Supabase SDK -->
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+
 <style>
 body { font-family:"Prompt",sans-serif; background:#f0f4f8; margin:20px; color:#333; }
 h2 { text-align:center; color:#1e40af; margin-bottom:15px; }
@@ -26,7 +29,7 @@ button:hover { background:#357abd; }
 
   <div class="info-box" id="memberInfo" style="display:none;">
     <p><strong>ชื่อ-นามสกุล:</strong> <span id="fullname"></span></p>
-    <p><strong>กลุ่ม:</strong> <span id="group"></span></p>
+    <p><strong>กลุ่ม:</strong> <span id="groupname"></span></p>
   </div>
 
   <input type="date" id="meeting_date" placeholder="วันที่เข้าประชุม">
@@ -37,112 +40,106 @@ button:hover { background:#357abd; }
 </form>
 
 <script>
-const SUPABASE_URL = 'https://ttottijljxoinptmhgtu.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'; // ⚠️ ใส่ anon key จริงของคุณ
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  // --- ตั้งค่า Supabase ---
+  const SUPABASE_URL = 'https://ttottijljxoinptmhgtu.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'; // เปลี่ยนเป็น anon key จริงของคุณ
+  const { createClient } = supabase;
+  const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
+  window.supabase = supabaseClient;
 
-async function testConnection() {
-  console.log('🚀 กำลังทดสอบการเชื่อมต่อ Supabase...');
-  const { data, error } = await supabase.from('members').select('*').limit(3);
-  console.log('data:', data);
-  console.log('error:', error);
-}
-testConnection();
+  const memberSelect = document.getElementById('memberSelect');
+  const exitForm = document.getElementById('exitForm');
+  const infoBox = document.getElementById('memberInfo');
+  const fullNameEl = document.getElementById('fullname');
+  const groupNameEl = document.getElementById('groupname');
 
-  
-const memberSelect = document.getElementById('memberSelect');
-const exitForm = document.getElementById('exitForm');
-const infoBox = document.getElementById('memberInfo');
-const fullNameEl = document.getElementById('fullname');
-const groupEl = document.getElementById('group');
+  let memberData = [];
 
-let memberData = []; // เก็บข้อมูลสมาชิกทั้งหมด
+  // --- โหลดสมาชิกลาออก/เสียชีวิต ---
+  async function loadExitMembers() {
+    console.log('📡 กำลังโหลดข้อมูลสมาชิก...');
+    const { data, error } = await supabase.from('members')
+      .select('member_id,first_name,last_name,group,member_status')
+      .in('member_status', ['ลาออก','เสียชีวิต']);
 
-// โหลดข้อมูลสมาชิกลาออก/เสียชีวิต
-async function loadExitMembers() {
-  console.log('📡 กำลังโหลดข้อมูลสมาชิก...');
-  const { data, error } = await supabase
-    .from('members')
-    .select('member_id,first_name,last_name,group,member_status')
-    .in('member_status', ['ลาออก', 'เสียชีวิต']);
+    if (error) { 
+      console.error('❌ โหลดข้อมูลผิดพลาด:', error); 
+      alert('โหลดข้อมูลผิดพลาด: ' + error.message); 
+      return; 
+    }
 
-  if (error) {
-    console.error('❌ โหลดข้อมูลผิดพลาด:', error);
-    alert('โหลดข้อมูลผิดพลาด: ' + error.message);
-    return;
+    memberData = data || [];
+    console.log('✅ ข้อมูลที่ดึงได้:', memberData);
+
+    memberSelect.innerHTML = '<option value="">--เลือกสมาชิก--</option>';
+
+    if (!memberData.length) {
+      const opt = document.createElement('option');
+      opt.textContent = 'ไม่มีข้อมูลสมาชิกลาออกหรือเสียชีวิต';
+      memberSelect.appendChild(opt);
+      return;
+    }
+
+    memberData.forEach(m => {
+      const opt = document.createElement('option');
+      opt.value = m.member_id;
+      opt.textContent = `${m.member_id} - ${m.first_name} ${m.last_name} (กลุ่ม ${m.group})`;
+      memberSelect.appendChild(opt);
+    });
   }
 
-  memberData = data;
-  console.log('✅ ข้อมูลที่ดึงได้:', memberData);
-
-  memberSelect.innerHTML = '<option value="">--เลือกสมาชิก--</option>';
-  if (!data || data.length === 0) {
-    const opt = document.createElement('option');
-    opt.textContent = 'ไม่มีข้อมูลสมาชิกลาออกหรือเสียชีวิต';
-    memberSelect.appendChild(opt);
-    return;
-  }
-
-  data.forEach(m => {
-    const opt = document.createElement('option');
-    opt.value = m.member_id;
-    opt.textContent = `${m.member_id} - ${m.first_name} ${m.last_name} (กลุ่ม ${m.group})`;
-    memberSelect.appendChild(opt);
+  // --- เลือกสมาชิก ---
+  memberSelect.addEventListener('change', () => {
+    const selectedId = memberSelect.value;
+    if (!selectedId) {
+      infoBox.style.display = 'none';
+      return;
+    }
+    const member = memberData.find(m => m.member_id === selectedId);
+    if (member) {
+      fullNameEl.textContent = `${member.first_name} ${member.last_name}`;
+      groupNameEl.textContent = member.group;
+      infoBox.style.display = 'block';
+    }
   });
-}
 
-// เมื่อเลือกสมาชิก → แสดงข้อมูล
-memberSelect.addEventListener('change', () => {
-  const selectedId = memberSelect.value;
-  if (!selectedId) {
-    infoBox.style.display = 'none';
-    return;
-  }
+  // --- บันทึกข้อมูลลง member_exit ---
+  exitForm.addEventListener('submit', async e => {
+    e.preventDefault();
+    const member_id = memberSelect.value;
+    if (!member_id) return alert('กรุณาเลือกสมาชิก');
 
-  const member = memberData.find(m => m.member_id === selectedId);
-  if (member) {
-    fullNameEl.textContent = `${member.first_name} ${member.last_name}`;
-    groupEl.textContent = member.group;
-    infoBox.style.display = 'block';
-  }
-});
+    const member = memberData.find(m => m.member_id === member_id);
+    if (!member) return alert('ไม่พบข้อมูลสมาชิกในระบบ');
 
-// เมื่อกดบันทึกข้อมูล
-exitForm.addEventListener('submit', async e => {
-  e.preventDefault();
-  const member_id = memberSelect.value;
-  if (!member_id) return alert('กรุณาเลือกสมาชิก');
+    const payload = {
+      member_id,
+      first_name: member.first_name,
+      last_name: member.last_name,
+      group: member.group,
+      meeting_date: document.getElementById('meeting_date').value || null,
+      share_amount: document.getElementById('share_amount').value ? Number(document.getElementById('share_amount').value) : null,
+      receive_date: document.getElementById('receive_date').value || null
+    };
 
-  const member = memberData.find(m => m.member_id === member_id);
-  if (!member) return alert('ไม่พบข้อมูลสมาชิกในระบบ');
+    console.log('📤 กำลังบันทึกข้อมูล:', payload);
 
-  const payload = {
-    member_id,
-    first_name: member.first_name,
-    last_name: member.last_name,
-    group: member.group,
-    meeting_date: document.getElementById('meeting_date').value || null,
-    share_amount: document.getElementById('share_amount').value ? Number(document.getElementById('share_amount').value) : null,
-    receive_date: document.getElementById('receive_date').value || null
-  };
+    const { error } = await supabase
+      .from('member_exit')
+      .upsert([payload], { onConflict: ['member_id'] });
 
-  console.log('📤 กำลังบันทึกข้อมูล:', payload);
+    if (error) {
+      console.error('❌ บันทึกไม่สำเร็จ:', error);
+      alert('บันทึกไม่สำเร็จ: ' + error.message);
+    } else {
+      alert('✅ บันทึกข้อมูลเรียบร้อยแล้ว');
+      exitForm.reset();
+      infoBox.style.display = 'none';
+    }
+  });
 
-  const { error } = await supabase
-    .from('member_exit')
-    .upsert([payload], { onConflict: ['member_id'] });
-
-  if (error) {
-    console.error('❌ บันทึกไม่สำเร็จ:', error);
-    alert('บันทึกไม่สำเร็จ: ' + error.message);
-  } else {
-    alert('✅ บันทึกข้อมูลเรียบร้อยแล้ว');
-    exitForm.reset();
-    infoBox.style.display = 'none';
-  }
-});
-
-loadExitMembers();
+  // --- เริ่มโหลดสมาชิกเมื่อเปิดหน้า ---
+  loadExitMembers();
 </script>
 </body>
 </html>
