@@ -26,7 +26,7 @@ button:hover { background:#357abd; }
 
   <div class="info-box" id="memberInfo" style="display:none;">
     <p><strong>ชื่อ-นามสกุล:</strong> <span id="fullname"></span></p>
-    <p><strong>กลุ่ม:</strong> <span id="groupname"></span></p>
+    <p><strong>กลุ่ม:</strong> <span id="group"></span></p>
   </div>
 
   <input type="date" id="meeting_date" placeholder="วันที่เข้าประชุม">
@@ -45,7 +45,7 @@ const memberSelect = document.getElementById('memberSelect');
 const exitForm = document.getElementById('exitForm');
 const infoBox = document.getElementById('memberInfo');
 const fullNameEl = document.getElementById('fullname');
-const groupNameEl = document.getElementById('groupname');
+const groupEl = document.getElementById('group');
 
 let memberData = []; // เก็บข้อมูลสมาชิกทั้งหมด
 
@@ -93,7 +93,7 @@ memberSelect.addEventListener('change', () => {
   const member = memberData.find(m => m.member_id === selectedId);
   if (member) {
     fullNameEl.textContent = `${member.first_name} ${member.last_name}`;
-    groupNameEl.textContent = member.group;
+    groupEl.textContent = member.group;
     infoBox.style.display = 'block';
   }
 });
