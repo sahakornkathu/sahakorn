@@ -124,19 +124,22 @@
   </table>
 </div>
 
+<!-- ✅ ใช้ Supabase JS SDK v2 -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const SUPABASE_URL = "https://ttottijljxoinptmhgtu.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y";
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const { createClient } = supabase;
+const SUPABASE_URL = "https://ttottijljxoinptmhgtu.supabase.co"; // แก้เป็นของคุณ
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y"; // แก้เป็นของคุณ
+const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 async function loadMembers() {
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from('members')
     .select('member_id, title, first_name, last_name, group');
 
   if (error) {
     console.error(error);
+    alert("ไม่สามารถดึงข้อมูลสมาชิกได้");
     return;
   }
 
@@ -172,7 +175,7 @@ async function loadMembers() {
     tbody.appendChild(historyTr);
   });
 
-  // บันทึกข้อมูล
+  // 📌 ปุ่มบันทึก
   document.querySelectorAll(".saveBtn").forEach((btn, index) => {
     btn.addEventListener("click", async () => {
       const tr = btn.closest("tr");
@@ -186,7 +189,7 @@ async function loadMembers() {
         return;
       }
 
-      const { error } = await supabase
+      const { error } = await db
         .from("welfare")
         .insert([{ member_id: member.member_id, receive_date, amount, note }]);
 
@@ -194,7 +197,7 @@ async function loadMembers() {
         alert("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
         console.error(error);
       } else {
-        alert("บันทึกข้อมูลเรียบร้อยแล้ว");
+        alert("✅ บันทึกข้อมูลเรียบร้อยแล้ว");
         tr.querySelector(".receiveDate").value = "";
         tr.querySelector(".amount").value = "";
         tr.querySelector(".note").value = "";
@@ -202,7 +205,7 @@ async function loadMembers() {
     });
   });
 
-  // ดูประวัติ
+  // 📜 ปุ่มดูประวัติ
   document.querySelectorAll(".view-btn").forEach((btn, index) => {
     btn.addEventListener("click", async () => {
       const historyRow = btn.closest("tr").nextElementSibling;
@@ -210,7 +213,7 @@ async function loadMembers() {
       const member = data[index];
       historyRow.style.display = historyRow.style.display === "table-row" ? "none" : "table-row";
 
-      const { data: welfare, error } = await supabase
+      const { data: welfare, error } = await db
         .from("welfare")
         .select("receive_date, amount, note, created_at")
         .eq("member_id", member.member_id)
@@ -245,7 +248,7 @@ async function loadMembers() {
   });
 }
 
-// ฟังก์ชันค้นหา
+// 🔎 ฟังก์ชันค้นหา
 document.getElementById("searchMemberId").addEventListener("input", filterTable);
 document.getElementById("searchName").addEventListener("input", filterTable);
 
