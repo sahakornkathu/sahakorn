@@ -63,82 +63,90 @@ button.delete:hover { background:#c53030; }
 #resultCount { font-size: 14px; font-weight: 500; color: #2d3748; }
 .date-filter { display: flex; align-items: center; gap: 5px; flex: 1 1 280px; } */
 
-   #filterDiv {
-  background: #ffffff;
-  padding: 20px 25px;
-  border-radius: 12px;
-  max-width: 960px;
-  margin: 20px auto;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-  display: flex;
-  flex-wrap: wrap;
-  gap: 15px;
-  align-items: center;
-  justify-content: flex-start;
+   /* Filter Box */
+#filterDiv {
+    background: #ffffff;
+    padding: 15px 20px;
+    border-radius: 10px;
+    max-width: 950px;
+    margin: 20px auto;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+#filterDiv label {
+    font-size: 14px;
+    color: #1e40af;
+    font-weight: 500;
+    margin-right: 5px;
 }
 
 #filterDiv input,
 #filterDiv select {
-  padding: 8px 12px;
-  border: 1px solid #cbd5e0;
-  border-radius: 8px;
-  font-size: 14px;
-  background: #f9fafb;
-  flex: 1 1 180px;
+    padding: 6px 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 14px;
+    background: #f9fafb;
+    flex: 1 1 180px;
+    transition: 0.2s;
+}
+
+#filterDiv input:focus,
+#filterDiv select:focus {
+    border-color: #4a90e2;
+    box-shadow: 0 0 5px rgba(74,144,226,0.3);
+    background: #fff;
 }
 
 #filterDiv button {
-  background: #4a90e2;
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  padding: 9px 16px;
-  cursor: pointer;
-  font-size: 14px;
+    background: #4a90e2;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 14px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: 0.2s;
 }
 
 #filterDiv button:hover {
-  background: #357abd;
-}
-
-.date-filter {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex: 1 1 100%;
-}
-
-.bottom-row {
-  display: flex;
-  gap: 10px;
-  flex: 1 1 100%;
-  align-items: center;
+    background: #357abd;
 }
 
 #resultCount {
-  font-size: 14px;
-  font-weight: 500;
-  color: #2d3748;
-  margin-left: auto;
+    font-size: 14px;
+    font-weight: 500;
+    color: #2d3748;
+    margin-left: 10px;
+}
+
+/* จัดกลุ่มวันที่ให้อยู่ด้วยกัน */
+.date-filter {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex: 1 1 280px;
+}
+
+/* เพศ + ปุ่มด้านล่าง */
+.bottom-filters {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 5px;
 }
 
 /* Responsive */
 @media (max-width:768px){
-  #filterDiv {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  .date-filter, .bottom-row {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  #resultCount {
-    margin-left: 0;
-    margin-top: 10px;
-  }
-  #filterDiv button {
-    width: 100%;
-  }
+    #filterDiv{ flex-direction: column; align-items:flex-start; }
+    .date-filter{ flex-direction: column; align-items:flex-start; gap:2px; }
+    .bottom-filters{ flex-direction: column; align-items:flex-start; }
 }
 
 
@@ -254,6 +262,7 @@ button.delete:hover { background:#c53030; }
     <option value="อื่นๆ">อื่นๆ</option>
   </select>
   <button id="printReport">🖨️ ปริ้นรายงานสมาชิก</button>
+  <button id="clearFilter">🧹 ล้างตัวกรอง</button>
   <span id="resultCount"></span>
 </div>
 
@@ -411,6 +420,15 @@ form.addEventListener('submit', async(e)=>{
 window.editMember=(id)=>{ const m=allMembers.find(x=>x.member_id===id); if(!m) return; editId=id; for(let k in m){ if(form.elements[k]) form.elements[k].value=m[k]; } formStepIndex=0; showStep(0); }
 window.deleteMember=async(id)=>{ if(!confirm('ลบสมาชิกนี้?')) return; try{ await fetch(API_URL+'/'+id,{method:'DELETE'}); allMembers=allMembers.filter(m=>m.member_id!==id); renderTable(); }catch(err){ alert(err); } }
 
+
+// --- Clear Filter ---
+document.getElementById('clearFilter').addEventListener('click',()=>{
+  ['searchMemberId','searchName','searchGroup','searchProvince','searchStatus','searchGender','searchJoinDateStart','searchJoinDateEnd']
+  .forEach(id=>document.getElementById(id).value='');
+  currentPage=1; filterMembers();
+});
+  
+  
 // --- Print ---
 document.getElementById('printReport').addEventListener('click', () => {
   const groupFilter = document.getElementById('searchGroup').value.toLowerCase();
