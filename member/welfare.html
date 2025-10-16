@@ -68,7 +68,7 @@
   // --- Supabase Initialization ---
   const supabaseUrl = 'https://ttottijljxoinptmhgtu.supabase.co';
   const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'; // เปลี่ยนเป็น ANON KEY ของคุณ
-  const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+   const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
   const memberSelect = document.getElementById('memberSelect');
   const welfareForm = document.getElementById('welfareForm');
