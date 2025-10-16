@@ -53,8 +53,6 @@ button.delete:hover { background:#c53030; }
   .progress-container::before{ display:none; }
   .progress-step{ width:100%; text-align:left; padding:10px 15px; border-radius:10px; font-size:14px; }
 }
-#printBtn { margin:10px auto; display:block; padding:8px 15px; background:#38a169; color:#fff; border:none; border-radius:6px; cursor:pointer; }
-#printBtn:hover { background:#2f855a; }
 </style>
 </head>
 <body>
@@ -89,6 +87,7 @@ button.delete:hover { background:#c53030; }
       <option value="หญิง">หญิง</option>
       <option value="อื่นๆ">อื่นๆ</option>
     </select>
+
     <select name="group" required>
       <option value="">--เลือกกลุ่ม--</option>
       <option value="1">กลุ่มที่ 1</option>
@@ -169,9 +168,8 @@ button.delete:hover { background:#c53030; }
   <span id="resultCount"></span>
 </div>
 
-<button id="printReport">🖨️ ปริ้นรายงานสมาชิก</button>
-
 <h2>รายการสมาชิก</h2>
+<button id="printReport">🖨️ ปริ้นรายงานสมาชิก</button>
 <table id="memberTable">
   <thead>
     <tr>
@@ -367,54 +365,29 @@ form.addEventListener('submit', async e=>{
 
 // --- Print Report ---
 document.getElementById('printReport').addEventListener('click', () => {
-  const idFilter = document.getElementById('searchMemberId').value.toLowerCase();
-  const nameFilter = document.getElementById('searchName').value.toLowerCase();
-  const groupFilter = document.getElementById('searchGroup').value.toLowerCase();
-  const provinceFilter = document.getElementById('searchProvince').value.toLowerCase();
-  const statusFilter = document.getElementById('searchStatus').value;
-  const genderFilter = document.getElementById('searchGender').value;
-
+  const groupFilter = document.getElementById('searchGroup').value || 'ทั้งหมด';
   const filtered = allMembers.filter(m => {
-    return (!idFilter || m.member_id.toLowerCase().includes(idFilter)) &&
-           (!nameFilter || m.first_name.toLowerCase().includes(nameFilter) || m.last_name.toLowerCase().includes(nameFilter)) &&
-           (!groupFilter || (m.group && m.group.toLowerCase().includes(groupFilter))) &&
-           (!provinceFilter || (m.province && m.province.toLowerCase().includes(provinceFilter))) &&
-           (!statusFilter || m.member_status === statusFilter) &&
-           (!genderFilter || m.gender === genderFilter);
+    if(groupFilter === 'ทั้งหมด') return true;
+    return m.group && m.group.toLowerCase() === groupFilter.toLowerCase();
   });
-
   let printContent = `
-    <h2>รายงานสมาชิก</h2>
-    <table border="1" cellspacing="0" cellpadding="5" style="width:100%; border-collapse:collapse;">
-      <tr>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+      <div><img src="https://via.placeholder.com/100x50?text=Logo" alt="Logo"></div>
+      <div style="text-align:right;"><h2>รายงานกลุ่มที่ ${groupFilter}</h2></div>
+    </div>
+    <table border="1" cellspacing="0" cellpadding="5" style="width:100%; border-collapse:collapse; font-family:sans-serif;">
+      <tr style="background-color:#4a90e2; color:white;">
         <th>เลขสมาชิก</th>
-        <th>ชื่อ</th>
-        <th>นามสกุล</th>
-        <th>กลุ่ม</th>
-        <th>เบอร์โทรศัพท์</th>
+        <th>คำนำหน้า ชื่อ นามสกุล</th>
         <th>ที่อยู่</th>
-        <th>จังหวัด</th>
-        <th>สถานะ</th>
       </tr>
   `;
   filtered.forEach(m => {
+    const fullName = `${m.title||''} ${m.first_name||''} ${m.last_name||''}`.trim();
     const fullAddress = `${m.house_no||''} ${m.moo||''} ${m.street||''} ${m.village||''} ${m.subdistrict||''} ${m.district||''} ${m.province||''} ${m.postal_code||''}`.replace(/\s+/g,' ').trim();
-    const phone = m.phone || m.phone_alt || '';
-    printContent += `
-      <tr>
-        <td>${m.member_id}</td>
-        <td>${m.first_name}</td>
-        <td>${m.last_name}</td>
-        <td>${m.group}</td>
-        <td>${phone}</td>
-        <td>${fullAddress}</td>
-        <td>${m.province}</td>
-        <td>${m.member_status}</td>
-      </tr>
-    `;
+    printContent += `<tr><td>${m.member_id}</td><td>${fullName}</td><td>${fullAddress}</td></tr>`;
   });
   printContent += '</table>';
-
   const w = window.open('', '', 'width=900,height=600');
   w.document.write('<html><head><title>รายงานสมาชิก</title></head><body>');
   w.document.write(printContent);
