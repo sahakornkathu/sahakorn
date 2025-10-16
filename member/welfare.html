@@ -30,22 +30,13 @@
       justify-content: flex-start;
     }
 
-    #filterDiv input,
-    #filterDiv select {
+    #filterDiv input {
       padding: 6px 10px;
       border: 1px solid #ccc;
       border-radius: 6px;
       font-size: 14px;
       background: #f9fafb;
       flex: 1 1 180px;
-      transition: 0.2s;
-    }
-
-    #filterDiv input:focus,
-    #filterDiv select:focus {
-      border-color: #4a90e2;
-      box-shadow: 0 0 5px rgba(74,144,226,0.3);
-      background: #fff;
     }
 
     table {
@@ -77,7 +68,7 @@
       color: white;
       border: none;
       border-radius: 6px;
-      padding: 8px 12px;
+      padding: 6px 10px;
       cursor: pointer;
       transition: 0.2s;
     }
@@ -86,27 +77,56 @@
       background: #1d4ed8;
     }
 
-    .form-welfare {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      justify-content: center;
-      margin-top: 10px;
-    }
-
-    .form-welfare input,
-    .form-welfare select {
-      padding: 6px 10px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      flex: 1 1 200px;
-    }
-
     #successMsg {
       color: green;
       text-align: center;
       margin-top: 10px;
       display: none;
+    }
+
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.4);
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-content {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      width: 90%;
+      max-width: 600px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
+
+    .modal-content h3 {
+      color: #1e3a8a;
+      margin-top: 0;
+    }
+
+    .modal table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .modal th {
+      background: #2563eb;
+      color: white;
+    }
+
+    .close {
+      float: right;
+      cursor: pointer;
+      font-size: 18px;
+      color: #333;
     }
   </style>
 </head>
@@ -131,12 +151,31 @@
         <th>จำนวนเงิน</th>
         <th>หมายเหตุ</th>
         <th>บันทึก</th>
+        <th>ดูประวัติ</th>
       </tr>
     </thead>
     <tbody></tbody>
   </table>
 
   <p id="successMsg">✅ บันทึกเรียบร้อยแล้ว!</p>
+
+  <!-- Modal -->
+  <div id="historyModal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h3>ประวัติสวัสดิการสมาชิก</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>วันที่รับเงิน</th>
+            <th>จำนวนเงิน</th>
+            <th>หมายเหตุ</th>
+          </tr>
+        </thead>
+        <tbody id="historyTableBody"></tbody>
+      </table>
+    </div>
+  </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
@@ -147,6 +186,9 @@
     const searchBtn = document.getElementById("searchBtn");
     const tableBody = document.querySelector("#memberTable tbody");
     const successMsg = document.getElementById("successMsg");
+    const modal = document.getElementById("historyModal");
+    const closeModal = document.querySelector(".close");
+    const historyTableBody = document.getElementById("historyTableBody");
 
     async function loadMembers() {
       const memberId = document.getElementById("searchMemberId").value.trim();
@@ -187,12 +229,16 @@
               <option value="ตนเองเสียชีวิต">ตนเองเสียชีวิต</option>
             </select>
           </td>
-          <td><button class="btn saveBtn">💾 บันทึก</button></td>
+          <td><button class="btn saveBtn">💾</button></td>
+          <td><button class="btn viewBtn">📜</button></td>
         `;
         tableBody.appendChild(row);
 
         const saveBtn = row.querySelector(".saveBtn");
         saveBtn.addEventListener("click", () => saveWelfare(member.member_id, row));
+
+        const viewBtn = row.querySelector(".viewBtn");
+        viewBtn.addEventListener("click", () => viewHistory(member.member_id));
       });
     }
 
@@ -207,22 +253,50 @@
       }
 
       const { error } = await supabase.from("welfare").insert([
-        {
-          member_id: memberId,
-          receive_date: receiveDate,
-          amount: amount,
-          remark: remark
-        }
+        { member_id: memberId, receive_date: receiveDate, amount, remark }
       ]);
 
       if (error) {
-        alert("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
+        alert("❌ บันทึกไม่สำเร็จ");
         console.error(error);
       } else {
         successMsg.style.display = "block";
         setTimeout(() => successMsg.style.display = "none", 2000);
       }
     }
+
+    async function viewHistory(memberId) {
+      const { data, error } = await supabase
+        .from("welfare")
+        .select("*")
+        .eq("member_id", memberId)
+        .order("receive_date", { ascending: false });
+
+      if (error) {
+        console.error(error);
+        return;
+      }
+
+      historyTableBody.innerHTML = "";
+      if (data.length === 0) {
+        historyTableBody.innerHTML = `<tr><td colspan="3">ไม่มีข้อมูลสวัสดิการ</td></tr>`;
+      } else {
+        data.forEach(item => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td>${new Date(item.receive_date).toLocaleDateString("th-TH")}</td>
+            <td>${Number(item.amount).toLocaleString()} บาท</td>
+            <td>${item.remark}</td>
+          `;
+          historyTableBody.appendChild(row);
+        });
+      }
+
+      modal.style.display = "flex";
+    }
+
+    closeModal.onclick = () => modal.style.display = "none";
+    window.onclick = (e) => { if (e.target === modal) modal.style.display = "none"; };
 
     searchBtn.addEventListener("click", loadMembers);
   </script>
