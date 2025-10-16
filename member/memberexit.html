@@ -111,8 +111,8 @@
 </div>
 
 <script>
-const SUPABASE_URL = "https://ttottijljxoinptmhgtu.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y"; 
+const SUPABASE_URL = "https://ttottijljxoinptmhgtu.supabase.co"; 
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y";                           
 const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let chart = null;
@@ -324,7 +324,7 @@ async function printReport(){
   w.print();
 }
 
-// ==================== PRINT PDF ====================
+// ==================== PRINT PDF (THSarabun ฝัง Base64) ====================
 async function printPDFReport(){
   const startDate = document.getElementById('printStartDate').value;
   const endDate = document.getElementById('printEndDate').value;
@@ -338,18 +338,17 @@ async function printPDFReport(){
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF('p','mm','a4');
 
-  // --- ฝังฟอนต์ THSarabun (Base64) ---
-  // Base64 THSarabun ปกติ
-  const THSarabunNormal = "AAEAAAASAQAABAAgR0RFRrRCsIIAA..."; // ตรงนี้ใส่ Base64 ของฟอนต์ THSarabun-Regular.ttf (ยาวมาก)
-  // Base64 THSarabun ตัวหนา
-  const THSarabunBold = "AAEAAAARAQAABAAgR0RFRrRCsIIA..."; // Base64 ของ THSarabun-Bold.ttf
-
-  doc.addFileToVFS("THSarabun.ttf", THSarabunNormal);
+  // เพิ่มฟอนต์ THSarabun แบบ Base64 (รวม Regular + Bold)
+  // Regular
+  const thFontRegular = "AAEAAAASAQAABAAgR0RFRrRCsIIAA..."; // <-- ใส่ Base64 ของ THSarabun
+  doc.addFileToVFS("THSarabun.ttf", thFontRegular);
   doc.addFont("THSarabun.ttf", "THSarabun", "normal");
-  doc.addFileToVFS("THSarabun-Bold.ttf", THSarabunBold);
+  // Bold
+  const thFontBold = "AAEAAAASAQAABAAgR0RFRrRCsIIAA..."; // <-- ใส่ Base64 ของ THSarabun Bold
+  doc.addFileToVFS("THSarabun-Bold.ttf", thFontBold);
   doc.addFont("THSarabun-Bold.ttf", "THSarabun", "bold");
 
-  doc.setFont("THSarabun", "normal"); // ใช้ฟอนต์ THSarabun
+  doc.setFont("THSarabun");
   doc.setFontSize(18);
   doc.text("รายงานสมาชิกลาออก / เสียชีวิต", 105, 15, {align:"center"});
   doc.setFontSize(12);
@@ -375,13 +374,12 @@ async function printPDFReport(){
     body:tableRows,
     startY:30,
     theme:'grid',
-    headStyles:{fillColor:[59,130,246], font:"THSarabun", fontStyle:"bold"},
-    styles:{font:"THSarabun", fontSize:10}
+    headStyles:{fillColor:[59,130,246]},
+    styles:{font:"THSarabun", fontStyle:"normal", fontSize:10}
   });
 
   doc.save(`รายงานสมาชิก_${new Date().toISOString().split('T')[0]}.pdf`);
 }
-
 
 // ==================== Pagination ====================
 document.getElementById('prevPageMembers').addEventListener('click',()=>{if(currentPageMembers>1){currentPageMembers--;loadMembers(currentPageMembers);}});
