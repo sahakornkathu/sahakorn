@@ -6,8 +6,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
 </head>
 <body class="bg-gray-100 font-sans">
 
@@ -79,7 +77,6 @@
     <input type="date" id="printStartDate" class="border rounded p-2">
     <input type="date" id="printEndDate" class="border rounded p-2">
     <button onclick="printReport()" class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded">🖨️ พิมพ์ HTML</button>
-    <button onclick="printPDFReport()" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">📄 พิมพ์ PDF</button>
   </div>
 
   <div class="overflow-x-auto">
@@ -322,63 +319,6 @@ async function printReport(){
   w.document.close();
   w.focus();
   w.print();
-}
-
-// ==================== PRINT PDF (THSarabun ฝัง Base64) ====================
-async function printPDFReport(){
-  const startDate = document.getElementById('printStartDate').value;
-  const endDate = document.getElementById('printEndDate').value;
-
-  let query = client.from('member_exit').select('*').order('receive_date',{ascending:false});
-  if(startDate) query = query.gte('receive_date',startDate);
-  if(endDate) query = query.lte('receive_date',endDate);
-  const {data,error} = await query;
-  if(error){alert(error.message); return;}
-
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF('p','mm','a4');
-
-  // เพิ่มฟอนต์ THSarabun แบบ Base64 (รวม Regular + Bold)
-  // Regular
-  const thFontRegular = "AAEAAAASAQAABAAgR0RFRrRCsIIAA..."; // <-- ใส่ Base64 ของ THSarabun
-  doc.addFileToVFS("THSarabun.ttf", thFontRegular);
-  doc.addFont("THSarabun.ttf", "THSarabun", "normal");
-  // Bold
-  const thFontBold = "AAEAAAASAQAABAAgR0RFRrRCsIIAA..."; // <-- ใส่ Base64 ของ THSarabun Bold
-  doc.addFileToVFS("THSarabun-Bold.ttf", thFontBold);
-  doc.addFont("THSarabun-Bold.ttf", "THSarabun", "bold");
-
-  doc.setFont("THSarabun");
-  doc.setFontSize(18);
-  doc.text("รายงานสมาชิกลาออก / เสียชีวิต", 105, 15, {align:"center"});
-  doc.setFontSize(12);
-  doc.text(`ช่วงวันที่: ${startDate||'ทั้งหมด'} ถึง ${endDate||'ทั้งหมด'}`, 105, 23, {align:"center"});
-
-  const tableColumn = ["รหัส","ชื่อ","นามสกุล","กลุ่ม","สถานะ","วันที่ประชุม","จำนวนเงิน","วันที่รับเงิน"];
-  const tableRows = [];
-  data.forEach(item=>{
-    tableRows.push([
-      item.member_id,
-      item.first_name,
-      item.last_name,
-      item.group,
-      item.member_status,
-      item.meeting_date,
-      item.share_amount,
-      item.receive_date
-    ]);
-  });
-
-  doc.autoTable({
-    head:[tableColumn],
-    body:tableRows,
-    startY:30,
-    theme:'grid',
-    headStyles:{fillColor:[59,130,246]},
-    styles:{font:"THSarabun", fontStyle:"normal", fontSize:10}
-  });
-
-  doc.save(`รายงานสมาชิก_${new Date().toISOString().split('T')[0]}.pdf`);
 }
 
 // ==================== Pagination ====================
