@@ -380,12 +380,14 @@ document.getElementById('printReport').addEventListener('click', () => {
         <th>เลขสมาชิก</th>
         <th>คำนำหน้า ชื่อ นามสกุล</th>
         <th>ที่อยู่</th>
+        <th>เบอร์โทร</th>
       </tr>
   `;
   filtered.forEach(m => {
     const fullName = `${m.title||''} ${m.first_name||''} ${m.last_name||''}`.trim();
     const fullAddress = `${m.house_no||''} ${m.moo||''} ${m.street||''} ${m.village||''} ${m.subdistrict||''} ${m.district||''} ${m.province||''} ${m.postal_code||''}`.replace(/\s+/g,' ').trim();
-    printContent += `<tr><td>${m.member_id}</td><td>${fullName}</td><td>${fullAddress}</td></tr>`;
+    const phone = m.phone || '';
+    printContent += `<tr><td>${m.member_id}</td><td>${fullName}</td><td>${fullAddress}</td><td>${phone}</td></tr>`;
   });
   printContent += '</table>';
   const w = window.open('', '', 'width=900,height=600');
