@@ -18,8 +18,10 @@ small{ font-size:12px; color:#555; }
 .form-navigation { text-align:center; margin-top:15px; }
 .form-navigation button { padding:6px 12px; margin:3px; border:none; border-radius:6px; cursor:pointer; background:#4a90e2; color:#fff; }
 .form-navigation button:hover { background:#357abd; }
-#filterDiv { background:#fff; padding:12px 15px; border-radius:10px; max-width:950px; margin:25px auto 15px; box-shadow:0 4px 12px rgba(0,0,0,0.08); display:flex; flex-wrap:wrap; gap:6px; }
+#filterDiv { background:#fff; padding:12px 15px; border-radius:10px; max-width:950px; margin:25px auto 15px; box-shadow:0 4px 12px rgba(0,0,0,0.08); display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
 #filterDiv input, #filterDiv select { padding:5px 8px; border:1px solid #ccc; border-radius:6px; font-size:13px; background:#f9fafb; flex:1 1 150px; }
+#filterDiv button { padding:6px 12px; background:#4a90e2; color:#fff; border:none; border-radius:6px; cursor:pointer; }
+#filterDiv button:hover { background:#357abd; }
 table { border-collapse: collapse; width:100%; max-width:1000px; margin:auto; font-size:13px; background:#fff; border-radius:10px; overflow:hidden; box-shadow:0 4px 12px rgba(0,0,0,0.08); }
 th, td { border:1px solid #e2e8f0; padding:6px 8px; text-align:center; }
 th { background:#4a90e2; color:#fff; cursor:pointer; position:relative; font-weight:500; }
@@ -70,7 +72,7 @@ button.delete:hover { background:#c53030; }
   <div class="form-step">
     <h3>Step 1: ข้อมูลพื้นฐาน</h3>
     <input placeholder="เลขสมาชิก" name="member_id" required>
-     <small>📅 วันที่เข้าร่วมสมาชิก</small>
+    <small>📅 วันที่เข้าร่วมสมาชิก</small>
     <input type="date" name="join_date" required>
     <input placeholder="คำนำหน้า" name="title" required>
     <input placeholder="ชื่อ" name="first_name" required>
@@ -165,6 +167,7 @@ button.delete:hover { background:#c53030; }
     <option value="หญิง">หญิง</option>
     <option value="อื่นๆ">อื่นๆ</option>
   </select>
+  <button id="printReport">🖨️ ปริ้นรายงานสมาชิก</button>
   <span id="resultCount"></span>
 </div>
 
@@ -192,7 +195,6 @@ button.delete:hover { background:#c53030; }
 </div>
 
 <script>
-// --- JS ทั้งหมดเดิม ---
 const API_URL='https://ttottijljxoinptmhgtu.supabase.co/functions/v1/members';
 const form=document.getElementById('memberForm');
 const tableBody=document.querySelector('#memberTable tbody');
@@ -201,7 +203,7 @@ let allMembers=[];
 let sortColumn=null, sortAsc=true;
 let currentPage=1, rowsPerPage=10;
 
-// Multi-step
+// --- Multi-step Form ---
 const formSteps=document.querySelectorAll('.form-step');
 const progressSteps=document.querySelectorAll('.progress-step');
 let formStepIndex=0;
@@ -361,6 +363,58 @@ form.addEventListener('submit', async e=>{
   form.reset();
   formStepIndex=0; showStep(formStepIndex);
   loadMembers();
+});
+
+// --- Print Report ---
+document.getElementById('printReport').addEventListener('click', () => {
+  const idFilter = document.getElementById('searchMemberId').value.toLowerCase();
+  const nameFilter = document.getElementById('searchName').value.toLowerCase();
+  const groupFilter = document.getElementById('searchGroup').value.toLowerCase();
+  const provinceFilter = document.getElementById('searchProvince').value.toLowerCase();
+  const statusFilter = document.getElementById('searchStatus').value;
+  const genderFilter = document.getElementById('searchGender').value;
+
+  const filtered = allMembers.filter(m => {
+    return (!idFilter || m.member_id.toLowerCase().includes(idFilter)) &&
+           (!nameFilter || m.first_name.toLowerCase().includes(nameFilter) || m.last_name.toLowerCase().includes(nameFilter)) &&
+           (!groupFilter || (m.group && m.group.toLowerCase().includes(groupFilter))) &&
+           (!provinceFilter || (m.province && m.province.toLowerCase().includes(provinceFilter))) &&
+           (!statusFilter || m.member_status === statusFilter) &&
+           (!genderFilter || m.gender === genderFilter);
+  });
+
+  let printContent = `
+    <h2>รายงานสมาชิก</h2>
+    <table border="1" cellspacing="0" cellpadding="5" style="width:100%; border-collapse:collapse;">
+      <tr>
+        <th>เลขสมาชิก</th>
+        <th>ชื่อ</th>
+        <th>นามสกุล</th>
+        <th>กลุ่ม</th>
+        <th>จังหวัด</th>
+        <th>สถานะ</th>
+      </tr>
+  `;
+  filtered.forEach(m => {
+    printContent += `
+      <tr>
+        <td>${m.member_id}</td>
+        <td>${m.first_name}</td>
+        <td>${m.last_name}</td>
+        <td>${m.group}</td>
+        <td>${m.province}</td>
+        <td>${m.member_status}</td>
+      </tr>
+    `;
+  });
+  printContent += '</table>';
+
+  const w = window.open('', '', 'width=900,height=600');
+  w.document.write('<html><head><title>รายงานสมาชิก</title></head><body>');
+  w.document.write(printContent);
+  w.document.write('</body></html>');
+  w.document.close();
+  w.print();
 });
 
 loadMembers();
