@@ -19,7 +19,7 @@ small{ font-size:12px; color:#555; }
 .form-navigation button { padding:6px 12px; margin:3px; border:none; border-radius:6px; cursor:pointer; background:#4a90e2; color:#fff; }
 .form-navigation button:hover { background:#357abd; }
 #filterDiv { background:#fff; padding:12px 15px; border-radius:10px; max-width:950px; margin:25px auto 15px; box-shadow:0 4px 12px rgba(0,0,0,0.08); display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
-#filterDiv input, #filterDiv select { padding:5px 8px; border:1px solid #ccc; border-radius:6px; font-size:13px; background:#f9fafb; flex:1 1 150px; }
+#filterDiv input, #filterDiv select { padding:5px 8px; border:1px solid #ccc; border-radius:6px; font-size:13px; flex:1 1 150px; }
 #filterDiv label { font-size:13px; color:#1e40af; margin:0 3px; }
 table { border-collapse: collapse; width:100%; max-width:1000px; margin:auto; font-size:13px; background:#fff; border-radius:10px; overflow:hidden; box-shadow:0 4px 12px rgba(0,0,0,0.08); }
 th, td { border:1px solid #e2e8f0; padding:6px 8px; text-align:center; }
@@ -54,10 +54,8 @@ button.delete:hover { background:#c53030; }
   .progress-container::before{ display:none; }
   .progress-step{ width:100%; text-align:left; padding:10px 15px; border-radius:10px; font-size:14px; }
 }
-
-  /* -------ค้นหา------- */
-  <style>
-  #filterDiv {
+/* -------ค้นหา------- */
+#filterDiv {
     background: #ffffff;
     padding: 15px 20px;
     border-radius: 10px;
@@ -69,17 +67,15 @@ button.delete:hover { background:#c53030; }
     gap: 10px;
     align-items: center;
     justify-content: flex-start;
-  }
-
-  #filterDiv label {
+}
+#filterDiv label {
     font-size: 14px;
     color: #1e40af;
     font-weight: 500;
     margin-right: 5px;
-  }
-
-  #filterDiv input,
-  #filterDiv select {
+}
+#filterDiv input,
+#filterDiv select {
     padding: 6px 10px;
     border: 1px solid #ccc;
     border-radius: 6px;
@@ -87,16 +83,14 @@ button.delete:hover { background:#c53030; }
     background: #f9fafb;
     flex: 1 1 180px;
     transition: 0.2s;
-  }
-
-  #filterDiv input:focus,
-  #filterDiv select:focus {
+}
+#filterDiv input:focus,
+#filterDiv select:focus {
     border-color: #4a90e2;
     box-shadow: 0 0 5px rgba(74,144,226,0.3);
     background: #fff;
-  }
-
-  #filterDiv button {
+}
+#filterDiv button {
     background: #4a90e2;
     color: #fff;
     border: none;
@@ -105,26 +99,22 @@ button.delete:hover { background:#c53030; }
     cursor: pointer;
     font-size: 14px;
     transition: 0.2s;
-  }
-
-  #filterDiv button:hover {
+}
+#filterDiv button:hover {
     background: #357abd;
-  }
-
-  #resultCount {
+}
+#resultCount {
     font-size: 14px;
     font-weight: 500;
     color: #2d3748;
-  }
-
-  /* จัดกลุ่มวันที่ให้อยู่ด้วยกัน */
-  .date-filter {
+}
+/* จัดกลุ่มวันที่ให้อยู่ด้วยกัน */
+.date-filter {
     display: flex;
     align-items: center;
     gap: 5px;
     flex: 1 1 280px;
-  }
-</style>
+}
 </style>
 </head>
 <body>
@@ -152,7 +142,8 @@ button.delete:hover { background:#c53030; }
            pattern="\d-\d{4}-\d{5}-\d{2}-\d" 
            title="เลขบัตรประชาชนต้องเป็นรูปแบบ x-xxxx-xxxxx-xx-x">
     <small>📅 วันเกิด</small>
-    <input type="date" name="birthday" required>
+    <input type="date" name="birthday" id="birthday" required>
+    <input type="number" id="age" name="age" placeholder="อายุ" readonly>
     <select name="gender" required>
       <option value="">--เลือกเพศ--</option>
       <option value="ชาย">ชาย</option>
@@ -225,13 +216,11 @@ button.delete:hover { background:#c53030; }
   <input id="searchName" placeholder="ชื่อ / นามสกุล">
   <input id="searchGroup" placeholder="กลุ่ม">
   <input id="searchProvince" placeholder="จังหวัด">
-
-  <!-- เพิ่มฟิลเตอร์ช่วงวันที่เป็นสมาชิก -->
-  <br><label>จากวันที่</label>
+  <br>
+  <label>จากวันที่</label>
   <input type="date" id="searchJoinDateStart">
   <label>ถึงวันที่</label>
   <input type="date" id="searchJoinDateEnd">
-
   <select id="searchStatus">
     <option value="">--สถานะสมาชิก--</option>
     <option value="สมาชิก">สมาชิก</option>
@@ -244,9 +233,8 @@ button.delete:hover { background:#c53030; }
     <option value="หญิง">หญิง</option>
     <option value="อื่นๆ">อื่นๆ</option>
   </select>
-  
-   <br> <button id="printReport">🖨️ ปริ้นรายงานสมาชิก</button>
-  
+  <br>
+  <button id="printReport">🖨️ ปริ้นรายงานสมาชิก</button>
   <span id="resultCount"></span>
 </div>
 
@@ -277,12 +265,14 @@ button.delete:hover { background:#c53030; }
 const API_URL='https://ttottijljxoinptmhgtu.supabase.co/functions/v1/members';
 const form=document.getElementById('memberForm');
 const tableBody=document.querySelector('#memberTable tbody');
+const birthdayInput=document.getElementById('birthday');
+const ageInput=document.getElementById('age');
 let editId=null;
 let allMembers=[];
 let sortColumn=null, sortAsc=true;
 let currentPage=1, rowsPerPage=10;
 
-// Multi-step
+// --- Multi-step ---
 const formSteps=document.querySelectorAll('.form-step');
 const progressSteps=document.querySelectorAll('.progress-step');
 let formStepIndex=0;
@@ -305,18 +295,44 @@ function validateStep(n){
   return true;
 }
 
+// --- Calculate Age ---
+birthdayInput.addEventListener('change', function() {
+  const birthDate = new Date(this.value);
+  if (!isNaN(birthDate)) {
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) age--;
+    ageInput.value = age;
+  } else {
+    ageInput.value = '';
+  }
+});
+
 // --- Format ID Card ---
 const idCardInput = document.querySelector('input[name="id_card"]');
 idCardInput.addEventListener('input', e => {
   let value = e.target.value.replace(/\D/g,'');
-  if(value.length > 13) value = value.slice(0,13); 
-  let formatted = '';
-  if(value.length>0) formatted += value[0];
-  if(value.length>1) formatted += '-' + value.slice(1,5);
-  if(value.length>5) formatted += '-' + value.slice(5,10);
-  if(value.length>10) formatted += '-' + value.slice(10,12);
-  if(value.length>12) formatted += '-' + value.slice(12,13);
-  e.target.value = formatted;
+  if(value.length>1)value=value[0]+'-'+value.slice(1,5)+'-'+value.slice(5,10)+'-'+value.slice(10,12)+'-'+value.slice(12,13);
+  e.target.value=value;
+});
+
+// --- Submit Form ---
+form.addEventListener('submit', async e=>{
+  e.preventDefault();
+  const formData=Object.fromEntries(new FormData(form).entries());
+  if(editId) formData.member_id=editId;
+  try{
+    const res=await fetch(API_URL,{ method:'POST', body:JSON.stringify(formData), headers:{'Content-Type':'application/json'} });
+    const result=await res.json();
+    if(result.error) return alert(result.error);
+    alert('บันทึกข้อมูลเรียบร้อย');
+    form.reset();
+    ageInput.value='';
+    editId=null;
+    loadMembers();
+    formStepIndex=0; showStep(formStepIndex);
+  }catch(err){ alert(err); }
 });
 
 // --- Load Members ---
@@ -324,90 +340,29 @@ async function loadMembers(){
   try{
     const res=await fetch(API_URL);
     const result=await res.json();
-    if(result.error){ alert(result.error); return; }
-    if(!Array.isArray(result.data)){ alert("ข้อมูลสมาชิกไม่ถูกต้อง"); return; }
-    allMembers=result.data; filterMembers();
-  }catch(err){ alert("เกิดข้อผิดพลาด: "+err); }
+    allMembers=result.data||[];
+    renderTable();
+  }catch(err){ console.error(err); }
 }
-
-// --- Render Table ---
-function renderTable(members){
-  tableBody.innerHTML='';
+function renderTable(){
+  let rows=allMembers.slice();
+  if(sortColumn) rows.sort((a,b)=>sortAsc?a[sortColumn]>b[sortColumn]?1:-1:a[sortColumn]<b[sortColumn]?1:-1);
   const start=(currentPage-1)*rowsPerPage;
   const end=start+rowsPerPage;
-  const paginated=members.slice(start,end);
-  paginated.forEach(m=>{
+  const pageRows=rows.slice(start,end);
+  tableBody.innerHTML='';
+  pageRows.forEach(m=>{
     const tr=document.createElement('tr');
-    tr.innerHTML=`
-      <td>${m.member_id}</td>
-      <td>${m.first_name}</td>
-      <td>${m.last_name}</td>
-      <td>${m.group}</td>
-      <td>${m.province}</td>
-      <td>${m.member_status}</td>
+    tr.innerHTML=`<td>${m.member_id||''}</td><td>${m.first_name||''}</td><td>${m.last_name||''}</td><td>${m.group||''}</td><td>${m.province||''}</td><td>${m.member_status||''}</td>
       <td><button class="edit" onclick="editMember('${m.member_id}')">แก้ไข</button></td>
-      <td><button class="delete" onclick="deleteMember('${m.member_id}')">ลบ</button></td>
-    `;
+      <td><button class="delete" onclick="deleteMember('${m.member_id}')">ลบ</button></td>`;
     tableBody.appendChild(tr);
   });
-  const totalPages=Math.max(1, Math.ceil(members.length/rowsPerPage));
-  if(currentPage>totalPages) currentPage=totalPages;
-  document.getElementById('pageInfo').textContent=`หน้า ${currentPage} จาก ${totalPages}`;
-  document.getElementById('resultCount').textContent=`พบ ${members.length} รายการ`;
+  document.getElementById('pageInfo').textContent=`หน้า ${currentPage}`;
+  document.getElementById('resultCount').textContent=`จำนวนทั้งหมด: ${rows.length} รายการ`;
 }
 
-// --- Filter ---
-function filterMembers(){
-  const idFilter=document.getElementById('searchMemberId').value.toLowerCase();
-  const nameFilter=document.getElementById('searchName').value.toLowerCase();
-  const groupFilter=document.getElementById('searchGroup').value.toLowerCase();
-  const provinceFilter=document.getElementById('searchProvince').value.toLowerCase();
-  const statusFilter=document.getElementById('searchStatus').value;
-  const genderFilter=document.getElementById('searchGender').value;
-  const joinDateStart=document.getElementById('searchJoinDateStart').value;
-  const joinDateEnd=document.getElementById('searchJoinDateEnd').value;
-
-  let filtered=allMembers.filter(m=>{
-    const joinDate = m.join_date ? (m.join_date.split('T')[0] || m.join_date) : '';
-    return (!idFilter|| (m.member_id && m.member_id.toLowerCase().includes(idFilter))) &&
-           (!nameFilter||( (m.first_name && m.first_name.toLowerCase().includes(nameFilter)) || (m.last_name && m.last_name.toLowerCase().includes(nameFilter)) )) &&
-           (!groupFilter||(m.group&&m.group.toLowerCase().includes(groupFilter))) &&
-           (!provinceFilter||(m.province&&m.province.toLowerCase().includes(provinceFilter))) &&
-           (!statusFilter||m.member_status===statusFilter) &&
-           (!genderFilter||m.gender===genderFilter) &&
-           (!joinDateStart || joinDate >= joinDateStart) &&
-           (!joinDateEnd || joinDate <= joinDateEnd);
-  });
-
-  if(sortColumn){
-    filtered.sort((a,b)=>{
-      let valA=a[sortColumn]||'', valB=b[sortColumn]||'';
-      valA=valA.toString().toLowerCase(); valB=valB.toString().toLowerCase();
-      if(valA<valB) return sortAsc?-1:1;
-      if(valA>valB) return sortAsc?1:-1;
-      return 0;
-    });
-  }
-  renderTable(filtered);
-}
-
-// --- Pagination ---
-document.getElementById('prevPage').addEventListener('click',()=>{ if(currentPage>1){ currentPage--; filterMembers(); } });
-document.getElementById('nextPage').addEventListener('click',()=>{ const totalPages=Math.ceil(allMembers.length/rowsPerPage); if(currentPage<totalPages){ currentPage++; filterMembers(); } });
-['searchMemberId','searchName','searchGroup','searchProvince','searchStatus','searchGender','searchJoinDateStart','searchJoinDateEnd']
-.forEach(id=>document.getElementById(id).addEventListener('input',()=>{ currentPage=1; filterMembers(); }));
-
-// --- Sorting ---
-function sortTable(column){
-  if(sortColumn===column) sortAsc=!sortAsc; else { sortColumn=column; sortAsc=true; }
-  document.querySelectorAll('.sort-icon').forEach(el=>el.textContent='');
-  const icon=document.querySelector(`th[data-column="${column}"] .sort-icon`);
-  if(icon) icon.textContent=sortAsc?'▲':'▼';
-  filterMembers();
-}
-document.querySelectorAll('#memberTable th[data-column]').forEach(th=>{ th.addEventListener('click',()=>sortTable(th.dataset.column)); });
-
-// --- Edit / Delete ---
+// --- Edit Member ---
 async function editMember(id){
   try{
     const res=await fetch(`${API_URL}?member_id=${id}`);
@@ -421,112 +376,47 @@ async function editMember(id){
           else form[key].value=result.data[0][key];
         }
       });
+      // --- คำนวณอายุ ---
+      if(result.data[0].birthday){
+        const birthDate=new Date(result.data[0].birthday);
+        const today=new Date();
+        let age=today.getFullYear()-birthDate.getFullYear();
+        const monthDiff=today.getMonth()-birthDate.getMonth();
+        if(monthDiff<0 || (monthDiff===0 && today.getDate()<birthDate.getDate())) age--;
+        ageInput.value=age;
+      }
       formStepIndex=0; showStep(formStepIndex);
-    } else {
-      alert('ไม่พบข้อมูลสมาชิก');
-    }
+    } else alert('ไม่พบข้อมูลสมาชิก');
   }catch(err){ alert('เกิดข้อผิดพลาด: '+err); }
 }
+
+// --- Delete Member ---
 async function deleteMember(id){
-  if(!confirm('ต้องการลบสมาชิกนี้?')) return;
+  if(!confirm('คุณแน่ใจว่าจะลบสมาชิกนี้?')) return;
   try{
-    const res=await fetch(`${API_URL}?member_id=${id}`,{method:'DELETE'});
+    const res=await fetch(`${API_URL}?member_id=${id}`,{ method:'DELETE' });
     const result=await res.json();
     if(result.error) return alert(result.error);
+    alert('ลบเรียบร้อย');
     loadMembers();
-  }catch(err){ alert('เกิดข้อผิดพลาด: '+err); }
+  }catch(err){ console.error(err); }
 }
 
-// --- Submit ---
-form.addEventListener('submit', async e=>{
-  e.preventDefault();
-  const formDataObj={};
-  new FormData(form).forEach((v,k)=>formDataObj[k]=v);
-  formDataObj.kyot_member=form.kyot_member.checked;
-  const method=editId?'PUT':'POST';
-  const url=editId?`${API_URL}?member_id=${editId}`:API_URL;
-  try{
-    const res=await fetch(url,{
-      method,
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify(formDataObj)
-    });
-    const result=await res.json();
-    if(result.error) return alert(result.error);
-    editId=null;
-    form.reset();
-    formStepIndex=0; showStep(formStepIndex);
-    loadMembers();
-  }catch(err){ alert('เกิดข้อผิดพลาด: '+err); }
-});
+// --- Pagination ---
+document.getElementById('prevPage').addEventListener('click',()=>{ if(currentPage>1){ currentPage--; renderTable(); } });
+document.getElementById('nextPage').addEventListener('click',()=>{ if(currentPage*rowsPerPage<allMembers.length){ currentPage++; renderTable(); } });
 
-// --- Print Report ---
-document.getElementById('printReport').addEventListener('click', () => {
-  const groupFilter = document.getElementById('searchGroup').value.toLowerCase();
-  const statusFilter = document.getElementById('searchStatus').value;
-  const genderFilter = document.getElementById('searchGender').value;
-  const joinDateStart=document.getElementById('searchJoinDateStart').value;
-  const joinDateEnd=document.getElementById('searchJoinDateEnd').value;
-
-  const filtered = allMembers.filter(m => {
-    const joinDate = m.join_date ? (m.join_date.split('T')[0] || m.join_date) : '';
-    return (!groupFilter || (m.group && m.group.toLowerCase() === groupFilter)) &&
-           (!statusFilter || m.member_status === statusFilter) &&
-           (!genderFilter || m.gender === genderFilter) &&
-           (!joinDateStart || joinDate >= joinDateStart) &&
-           (!joinDateEnd || joinDate <= joinDateEnd);
+// --- Sorting ---
+document.querySelectorAll('th[data-column]').forEach(th=>{
+  th.addEventListener('click',()=>{ 
+    const col=th.getAttribute('data-column');
+    if(sortColumn===col) sortAsc=!sortAsc; else { sortColumn=col; sortAsc=true; }
+    renderTable();
   });
-
-  const groupLabel = groupFilter ? `กลุ่มที่ ${groupFilter}` : 'ทั้งหมด';
-
-  let printContent = `
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-      <div style="flex:0 0 auto;"><img src="https://lh5.googleusercontent.com/d/1B0sZdUz54kO4zAv0oJgoN4Aipy3UyCyR=w100-h100" alt="Logo" style="max-width:100px;height:auto;"></div>
-      <div style="flex:1;text-align:center;">
-        <h2 style="margin:0;">รายงาน ${groupLabel}</h2>
-        <div style="font-size:14px;">สถานะสมาชิก: ${statusFilter || 'ทั้งหมด'} | เพศ: ${genderFilter || 'ทั้งหมด'}</div>
-        <div style="font-size:13px;">ช่วงวันที่: ${joinDateStart || 'เริ่มต้น'} - ${joinDateEnd || 'สิ้นสุด'}</div>
-      </div>
-      <div style="flex:0 0 100px;"></div>
-    </div>
-    <table border="1" cellspacing="0" cellpadding="5" 
-      style="width:100%; border-collapse:collapse; font-family:'Prompt',sans-serif; font-size:13px;">
-      <tr style="background-color:#4a90e2; color:white;">
-        <th>เลขสมาชิก</th>
-        <th>คำนำหน้า ชื่อ นามสกุล</th>
-        <th>วันที่เป็นสมาชิก</th>
-        <th>ที่อยู่</th>
-        <th>เบอร์โทร</th>
-      </tr>
-  `;
-
-  filtered.forEach(m => {
-    const fullName = `${m.title||''} ${m.first_name||''} ${m.last_name||''}`.trim();
-    const joinDate = m.join_date ? (m.join_date.split('T')[0] || m.join_date) : '';
-    const fullAddress = `${m.house_no||''} ${m.moo||''} ${m.street||''} ${m.village||''} ${m.subdistrict||''} ${m.district||''} ${m.province||''} ${m.postal_code||''}`.replace(/\s+/g,' ').trim();
-    const phone = m.phone || '';
-    printContent += `
-      <tr>
-        <td>${m.member_id}</td>
-        <td>${fullName}</td>
-        <td>${joinDate}</td>
-        <td>${fullAddress}</td>
-        <td>${phone}</td>
-      </tr>`;
-  });
-
-  printContent += '</table>';
-
-  const w = window.open('', '', 'width=900,height=600');
-  w.document.write('<html><head><title>รายงานสมาชิก</title>');
-  w.document.write('<style>body{font-family:"Prompt",sans-serif; margin:20px;} h2{text-align:center;}</style></head><body>');
-  w.document.write(printContent);
-  w.document.write('</body></html>');
-  w.document.close();
-  w.print();
 });
 
 loadMembers();
 </script>
+
 </body>
 </html>
