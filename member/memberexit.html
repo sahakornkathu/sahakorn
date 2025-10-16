@@ -90,15 +90,27 @@ let currentPageHistory = 1;
 const pageSizeHistory = 10;
 let historyData = [];
 
-// โหลดสมาชิก
+// โหลดสมาชิก (ยกเว้นคนที่อยู่ใน member_exit)
 async function loadMembers(page = 1) {
+  // ดึง member_id ที่อยู่ใน member_exit
+  const { data: exitedData, error: exitedError } = await client
+    .from('member_exit')
+    .select('member_id');
+
+  if (exitedError) { console.error(exitedError); return; }
+
+  const exitedIds = exitedData.map(e => e.member_id);
+
+  // Pagination
   const from = (page - 1) * pageSizeMembers;
   const to = page * pageSizeMembers - 1;
 
+  // ดึงสมาชิกลาออก/เสียชีวิต ที่ยังไม่บันทึก
   const { data, error, count } = await client
     .from('members')
     .select('member_id, first_name, last_name, group, member_status', { count: 'exact' })
     .in('member_status', ['ลาออก','เสียชีวิต'])
+    .not('member_id', 'in', `(${exitedIds.map(id => `'${id}'`).join(',')})`)
     .range(from, to);
 
   if (error) { console.error(error); return; }
@@ -153,9 +165,6 @@ async function saveMemberExit(member_id, first_name, last_name, group, member_st
 
   if (!meeting_date || !share_amount || !receive_date) { alert('กรุณากรอกข้อมูลให้ครบ'); return; }
 
-  const { data: existing } = await client.from('member_exit').select('member_id').eq('member_id', member_id).maybeSingle();
-  if (existing) { alert('สมาชิกนี้มีบันทึกแล้ว'); return; }
-
   const { error } = await client.from('member_exit').insert([{
     member_id, first_name, last_name, group, member_status,
     meeting_date, share_amount, receive_date
@@ -163,6 +172,7 @@ async function saveMemberExit(member_id, first_name, last_name, group, member_st
   if (error) { alert(error.message); return; }
 
   alert(`บันทึก ${first_name} ${last_name} สำเร็จ`);
+  loadMembers(currentPageMembers);
   loadHistory(currentPageHistory);
 }
 
@@ -236,6 +246,7 @@ async function deleteHistory(member_id) {
   const { error } = await client.from('member_exit').delete().eq('member_id', member_id);
   if (error) { alert(error.message); return; }
   alert('ลบเรียบร้อย');
+  loadMembers(currentPageMembers);
   loadHistory(currentPageHistory);
 }
 
