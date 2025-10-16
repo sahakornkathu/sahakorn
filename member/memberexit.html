@@ -328,7 +328,7 @@ async function printReport(){
 async function printPDFReport(){
   const startDate = document.getElementById('printStartDate').value;
   const endDate = document.getElementById('printEndDate').value;
-  
+
   let query = client.from('member_exit').select('*').order('receive_date',{ascending:false});
   if(startDate) query = query.gte('receive_date',startDate);
   if(endDate) query = query.lte('receive_date',endDate);
@@ -338,15 +338,18 @@ async function printPDFReport(){
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF('p','mm','a4');
 
-  // ====== ฝังฟอนต์ THSarabun ======
-  const THSarabunNormal = "BASE64_NORMAL"; // ใส่ Base64 ของ THSarabun.ttf
-  const THSarabunBold   = "BASE64_BOLD";   // ใส่ Base64 ของ THSarabun-Bold.ttf
+  // --- ฝังฟอนต์ THSarabun (Base64) ---
+  // Base64 THSarabun ปกติ
+  const THSarabunNormal = "AAEAAAASAQAABAAgR0RFRrRCsIIAA..."; // ตรงนี้ใส่ Base64 ของฟอนต์ THSarabun-Regular.ttf (ยาวมาก)
+  // Base64 THSarabun ตัวหนา
+  const THSarabunBold = "AAEAAAARAQAABAAgR0RFRrRCsIIA..."; // Base64 ของ THSarabun-Bold.ttf
+
   doc.addFileToVFS("THSarabun.ttf", THSarabunNormal);
   doc.addFont("THSarabun.ttf", "THSarabun", "normal");
   doc.addFileToVFS("THSarabun-Bold.ttf", THSarabunBold);
   doc.addFont("THSarabun-Bold.ttf", "THSarabun", "bold");
-  doc.setFont("THSarabun");
 
+  doc.setFont("THSarabun", "normal"); // ใช้ฟอนต์ THSarabun
   doc.setFontSize(18);
   doc.text("รายงานสมาชิกลาออก / เสียชีวิต", 105, 15, {align:"center"});
   doc.setFontSize(12);
@@ -372,12 +375,13 @@ async function printPDFReport(){
     body:tableRows,
     startY:30,
     theme:'grid',
-    headStyles:{fillColor:[59,130,246]},
-    styles:{font:"THSarabun", fontStyle:"normal", fontSize:10}
+    headStyles:{fillColor:[59,130,246], font:"THSarabun", fontStyle:"bold"},
+    styles:{font:"THSarabun", fontSize:10}
   });
 
   doc.save(`รายงานสมาชิก_${new Date().toISOString().split('T')[0]}.pdf`);
 }
+
 
 // ==================== Pagination ====================
 document.getElementById('prevPageMembers').addEventListener('click',()=>{if(currentPageMembers>1){currentPageMembers--;loadMembers(currentPageMembers);}});
