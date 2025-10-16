@@ -4,59 +4,61 @@
   <meta charset="UTF-8">
   <title>ระบบสมาชิกลาออก / เสียชีวิต</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <style>
-    body { font-family: "Prompt", sans-serif; margin: 20px; }
-    table { border-collapse: collapse; width: 100%; margin-top: 10px; }
-    th, td { border: 1px solid #ccc; padding: 6px; text-align: center; }
-    th { background-color: #f4f4f4; }
-    input[type="text"], input[type="date"], input[type="number"] { padding: 4px; width: 90%; }
-    button { padding: 4px 8px; cursor: pointer; margin: 2px; }
-    .saved { background-color: #e6f7ff; }
-    .search-box { margin-bottom: 15px; }
-  </style>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
+<body class="bg-gray-100 font-sans">
 
-<h2>รายชื่อสมาชิกที่ลาออก / เสียชีวิต</h2>
+<div class="container mx-auto p-6">
+  <h1 class="text-2xl font-bold mb-4">📌 ระบบสมาชิกลาออก / เสียชีวิต</h1>
 
-<div class="search-box">
-  🔍 <input type="text" id="searchInput" placeholder="ค้นหาชื่อหรือรหัสสมาชิก..." onkeyup="filterMembers()">
+  <!-- ค้นหา -->
+  <div class="mb-6">
+    <input type="text" id="searchInput" placeholder="ค้นหาชื่อหรือรหัสสมาชิก..."
+      onkeyup="filterMembers()"
+      class="w-full p-2 border rounded shadow focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+  </div>
+
+  <!-- ตารางสมาชิก -->
+  <div class="overflow-x-auto mb-10">
+    <table class="min-w-full bg-white shadow rounded">
+      <thead class="bg-indigo-600 text-white">
+        <tr>
+          <th class="p-3">รหัส</th>
+          <th class="p-3">ชื่อ</th>
+          <th class="p-3">นามสกุล</th>
+          <th class="p-3">กลุ่ม</th>
+          <th class="p-3">สถานะ</th>
+          <th class="p-3">วันที่ประชุม</th>
+          <th class="p-3">จำนวนเงิน</th>
+          <th class="p-3">วันที่รับเงิน</th>
+          <th class="p-3">บันทึก</th>
+        </tr>
+      </thead>
+      <tbody id="memberBody" class="divide-y"></tbody>
+    </table>
+  </div>
+
+  <!-- ประวัติ -->
+  <h2 class="text-xl font-semibold mb-3">📋 ประวัติการบันทึก</h2>
+  <div class="overflow-x-auto">
+    <table class="min-w-full bg-white shadow rounded">
+      <thead class="bg-gray-700 text-white">
+        <tr>
+          <th class="p-3">รหัส</th>
+          <th class="p-3">ชื่อ</th>
+          <th class="p-3">นามสกุล</th>
+          <th class="p-3">กลุ่ม</th>
+          <th class="p-3">สถานะ</th>
+          <th class="p-3">วันที่ประชุม</th>
+          <th class="p-3">จำนวนเงิน</th>
+          <th class="p-3">วันที่รับเงิน</th>
+          <th class="p-3">จัดการ</th>
+        </tr>
+      </thead>
+      <tbody id="historyBody" class="divide-y"></tbody>
+    </table>
+  </div>
 </div>
-
-<table id="memberTable">
-  <thead>
-    <tr>
-      <th>รหัสสมาชิก</th>
-      <th>ชื่อ</th>
-      <th>นามสกุล</th>
-      <th>กลุ่ม</th>
-      <th>สถานะ</th>
-      <th>วันที่ประชุม</th>
-      <th>จำนวนเงิน</th>
-      <th>วันที่รับเงิน</th>
-      <th>บันทึก</th>
-    </tr>
-  </thead>
-  <tbody id="memberBody"></tbody>
-</table>
-
-<h3 style="margin-top:30px;">📋 ประวัติการบันทึก</h3>
-<table id="historyTable">
-  <thead>
-    <tr>
-      <th>รหัสสมาชิก</th>
-      <th>ชื่อ</th>
-      <th>นามสกุล</th>
-      <th>กลุ่ม</th>
-      <th>สถานะ</th>
-      <th>วันที่ประชุม</th>
-      <th>จำนวนเงิน</th>
-      <th>วันที่รับเงิน</th>
-      <th>จัดการ</th>
-    </tr>
-  </thead>
-  <tbody id="historyBody"></tbody>
-</table>
 
 <script>
 const SUPABASE_URL = "https://ttottijljxoinptmhgtu.supabase.co"; // ใส่ URL ของคุณ
@@ -65,12 +67,12 @@ const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let memberData = [];
 
-// โหลดข้อมูลสมาชิก
+// โหลดสมาชิก
 async function loadMembers() {
   const { data, error } = await client
     .from('members')
     .select('member_id, first_name, last_name, group, member_status')
-    .in('member_status', ['ลาออก', 'เสียชีวิต']);
+    .in('member_status', ['ลาออก','เสียชีวิต']);
 
   if (error) { console.error(error); return; }
   memberData = data;
@@ -78,103 +80,89 @@ async function loadMembers() {
   loadHistory();
 }
 
-// แสดงข้อมูลสมาชิก
+// แสดงตารางสมาชิก
 function renderMemberTable(data) {
   const tbody = document.getElementById('memberBody');
   tbody.innerHTML = '';
-
   data.forEach(m => {
     const row = document.createElement('tr');
+    row.className = "hover:bg-gray-100 transition";
     row.innerHTML = `
-      <td>${m.member_id}</td>
-      <td>${m.first_name}</td>
-      <td>${m.last_name}</td>
-      <td>${m.group}</td>
-      <td>${m.member_status}</td>
-      <td><input type="date" id="meeting_date_${m.member_id}"></td>
-      <td><input type="number" id="share_amount_${m.member_id}" placeholder="จำนวนเงิน"></td>
-      <td><input type="date" id="receive_date_${m.member_id}"></td>
-      <td><button onclick="saveMemberExit('${m.member_id}', '${m.first_name}', '${m.last_name}', '${m.group}', '${m.member_status}')">💾 บันทึก</button></td>
+      <td class="p-2">${m.member_id}</td>
+      <td class="p-2">${m.first_name}</td>
+      <td class="p-2">${m.last_name}</td>
+      <td class="p-2">${m.group}</td>
+      <td class="p-2">${m.member_status}</td>
+      <td class="p-2"><input type="date" id="meeting_date_${m.member_id}" class="border rounded p-1 w-full"></td>
+      <td class="p-2"><input type="number" id="share_amount_${m.member_id}" class="border rounded p-1 w-full"></td>
+      <td class="p-2"><input type="date" id="receive_date_${m.member_id}" class="border rounded p-1 w-full"></td>
+      <td class="p-2"><button onclick="saveMemberExit('${m.member_id}','${m.first_name}','${m.last_name}','${m.group}','${m.member_status}')" 
+        class="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded">💾 บันทึก</button></td>
     `;
     tbody.appendChild(row);
   });
 }
 
-// ค้นหาสมาชิก
+// ค้นหา
 function filterMembers() {
-  const query = document.getElementById('searchInput').value.toLowerCase();
-  const filtered = memberData.filter(m =>
-    m.first_name.toLowerCase().includes(query) ||
-    m.last_name.toLowerCase().includes(query) ||
-    m.member_id.toLowerCase().includes(query)
-  );
-  renderMemberTable(filtered);
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  renderMemberTable(memberData.filter(m =>
+    m.first_name.toLowerCase().includes(q) ||
+    m.last_name.toLowerCase().includes(q) ||
+    m.member_id.toLowerCase().includes(q)
+  ));
 }
 
-// บันทึกข้อมูลสมาชิก
+// บันทึกสมาชิก
 async function saveMemberExit(member_id, first_name, last_name, group, member_status) {
   const meeting_date = document.getElementById(`meeting_date_${member_id}`).value;
   const share_amount = document.getElementById(`share_amount_${member_id}`).value;
   const receive_date = document.getElementById(`receive_date_${member_id}`).value;
 
-  if (!meeting_date || !share_amount || !receive_date) {
-    alert('⚠️ กรุณากรอกข้อมูลให้ครบถ้วน');
-    return;
-  }
+  if (!meeting_date || !share_amount || !receive_date) { alert('กรุณากรอกข้อมูลให้ครบ'); return; }
 
-  // ตรวจสอบซ้ำ
-  const { data: existing } = await client
-    .from('member_exit')
-    .select('member_id')
-    .eq('member_id', member_id)
-    .maybeSingle();
-
-  if (existing) { alert('⚠️ สมาชิกนี้มีการบันทึกไว้แล้ว!'); return; }
+  const { data: existing } = await client.from('member_exit').select('member_id').eq('member_id', member_id).maybeSingle();
+  if (existing) { alert('สมาชิกนี้มีบันทึกแล้ว'); return; }
 
   const { error } = await client.from('member_exit').insert([{
     member_id, first_name, last_name, group, member_status,
     meeting_date, share_amount, receive_date
   }]);
+  if (error) { alert(error.message); return; }
 
-  if (error) { alert('เกิดข้อผิดพลาด: ' + error.message); return; }
-  alert(`✅ บันทึก ${first_name} ${last_name} สำเร็จ`);
+  alert(`บันทึก ${first_name} ${last_name} สำเร็จ`);
   loadHistory();
 }
 
 // โหลดประวัติ
 async function loadHistory() {
-  const { data, error } = await client
-    .from('member_exit')
-    .select('*')
-    .order('receive_date', { ascending: false });
-
+  const { data, error } = await client.from('member_exit').select('*').order('receive_date', {ascending:false});
   if (error) { console.error(error); return; }
 
   const tbody = document.getElementById('historyBody');
   tbody.innerHTML = '';
-
   data.forEach(item => {
     const row = document.createElement('tr');
-    row.classList.add('saved');
+    row.className = "hover:bg-gray-100 transition";
     row.innerHTML = `
-      <td>${item.member_id}</td>
-      <td><input type="text" value="${item.first_name}" id="edit_fname_${item.member_id}"></td>
-      <td><input type="text" value="${item.last_name}" id="edit_lname_${item.member_id}"></td>
-      <td><input type="text" value="${item.group}" id="edit_group_${item.member_id}"></td>
-      <td>${item.member_status}</td>
-      <td><input type="date" value="${item.meeting_date}" id="edit_meeting_${item.member_id}"></td>
-      <td><input type="number" value="${item.share_amount}" id="edit_share_${item.member_id}"></td>
-      <td><input type="date" value="${item.receive_date}" id="edit_receive_${item.member_id}"></td>
-      <td>
-        <button onclick="updateHistory('${item.member_id}')">💾 Save</button>
-        <button onclick="deleteHistory('${item.member_id}')">🗑️ Delete</button>
+      <td class="p-2">${item.member_id}</td>
+      <td class="p-2"><input type="text" id="edit_fname_${item.member_id}" value="${item.first_name}" class="border rounded p-1 w-full"></td>
+      <td class="p-2"><input type="text" id="edit_lname_${item.member_id}" value="${item.last_name}" class="border rounded p-1 w-full"></td>
+      <td class="p-2"><input type="text" id="edit_group_${item.member_id}" value="${item.group}" class="border rounded p-1 w-full"></td>
+      <td class="p-2">${item.member_status}</td>
+      <td class="p-2"><input type="date" id="edit_meeting_${item.member_id}" value="${item.meeting_date}" class="border rounded p-1 w-full"></td>
+      <td class="p-2"><input type="number" id="edit_share_${item.member_id}" value="${item.share_amount}" class="border rounded p-1 w-full"></td>
+      <td class="p-2"><input type="date" id="edit_receive_${item.member_id}" value="${item.receive_date}" class="border rounded p-1 w-full"></td>
+      <td class="p-2">
+        <button onclick="updateHistory('${item.member_id}')" class="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded">💾 Save</button>
+        <button onclick="deleteHistory('${item.member_id}')" class="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded">🗑️ Delete</button>
       </td>
     `;
     tbody.appendChild(row);
   });
 }
 
-// แก้ไขข้อมูล
+// อัปเดตประวัติ
 async function updateHistory(member_id) {
   const updated = {
     first_name: document.getElementById(`edit_fname_${member_id}`).value,
@@ -185,26 +173,22 @@ async function updateHistory(member_id) {
     receive_date: document.getElementById(`edit_receive_${member_id}`).value
   };
 
-  const { error } = await client
-    .from('member_exit')
-    .update(updated)
-    .eq('member_id', member_id);
-
-  if (error) { alert('❌ Error: ' + error.message); return; }
-  alert('✅ บันทึกเรียบร้อย');
+  const { error } = await client.from('member_exit').update(updated).eq('member_id', member_id);
+  if (error) { alert(error.message); return; }
+  alert('แก้ไขเรียบร้อย');
   loadHistory();
 }
 
-// ลบข้อมูล
+// ลบประวัติ
 async function deleteHistory(member_id) {
   if (!confirm('คุณต้องการลบข้อมูลนี้หรือไม่?')) return;
   const { error } = await client.from('member_exit').delete().eq('member_id', member_id);
-  if (error) { alert('❌ Error: ' + error.message); return; }
-  alert('✅ ลบข้อมูลเรียบร้อย');
+  if (error) { alert(error.message); return; }
+  alert('ลบเรียบร้อย');
   loadHistory();
 }
 
-// เริ่มโหลด
+// โหลดเริ่มต้น
 loadMembers();
 </script>
 </body>
