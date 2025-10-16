@@ -3,46 +3,49 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>บันทึกสวัสดิการสมาชิก</title>
-<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
+<title>สวัสดิการสมาชิก</title>
 <style>
-body { font-family:"Prompt",sans-serif; background:#f0f4f8; margin:20px; color:#333; }
-h2 { text-align:center; color:#1e40af; margin-bottom:15px; }
-form { max-width:600px; margin:auto; background:#fff; padding:20px; border-radius:12px; box-shadow:0 5px 20px rgba(0,0,0,0.08); }
-input, select, button { display:block; width:100%; margin:8px 0; padding:8px 10px; border:1px solid #ccc; border-radius:6px; font-size:14px; }
-input:focus, select:focus { outline:none; border-color:#4a90e2; box-shadow:0 0 5px rgba(74,144,226,0.3); background:#fff; }
-button { background:#4a90e2; color:#fff; border:none; cursor:pointer; transition:0.2s; }
-button:hover { background:#357abd; }
-table { border-collapse:collapse; width:95%; max-width:1000px; margin:20px auto; font-size:13px; background:#fff; border-radius:10px; overflow:hidden; box-shadow:0 4px 12px rgba(0,0,0,0.08);}
-th, td { border:1px solid #e2e8f0; padding:6px 8px; text-align:center; }
-th { background:#4a90e2; color:#fff; font-weight:500; }
-tr:nth-child(even){ background:#f9fafb; }
-tr:hover{ background:#edf2f7; }
-.edit, .delete { padding:4px 8px; border-radius:4px; font-size:12px; color:#fff; border:none; cursor:pointer; }
-.edit { background:#4a90e2; }
-.edit:hover { background:#357abd; }
-.delete { background:#f56565; }
-.delete:hover { background:#c53030; }
+body{font-family:"Prompt",sans-serif; background:#f0f4f8; margin:20px; color:#333;}
+h2{text-align:center; color:#1e40af; margin-bottom:15px;}
+#formContainer{max-width:600px; margin:auto; background:#fff; padding:20px; border-radius:10px; box-shadow:0 4px 12px rgba(0,0,0,0.08);}
+input, select, button{padding:6px 10px; margin:5px 0; border:1px solid #ccc; border-radius:6px; width:100%; font-size:14px;}
+button{background:#4a90e2; color:#fff; border:none; cursor:pointer;}
+button:hover{background:#357abd;}
+table{border-collapse:collapse; width:100%; margin-top:20px;}
+th, td{border:1px solid #e2e8f0; padding:6px; text-align:center;}
+th{background:#4a90e2; color:#fff;}
+tr:nth-child(even){background:#f9fafb;}
+tr:hover{background:#edf2f7;}
+.editBtn{background:#f59e0b;}
+.editBtn:hover{background:#d97706;}
+.deleteBtn{background:#f56565;}
+.deleteBtn:hover{background:#c53030;}
 </style>
 </head>
 <body>
 
 <h2>บันทึกสวัสดิการสมาชิก</h2>
 
-<form id="welfareForm">
-  <select id="memberSelect" required>
-    <option value="">--เลือกสมาชิก--</option>
-  </select>
-  <input type="date" id="receive_date" required placeholder="วันที่รับเงิน">
-  <input type="number" id="amount" required placeholder="จำนวนเงิน">
-  <select id="note" required>
-    <option value="">--เหตุผล--</option>
+<div id="formContainer">
+  <label>สมาชิก</label>
+  <select id="memberSelect"></select>
+
+  <label>วันที่รับเงิน</label>
+  <input type="date" id="receiveDate">
+
+  <label>จำนวนเงิน</label>
+  <input type="number" id="amount">
+
+  <label>หมายเหตุ</label>
+  <select id="note">
+    <option value="">--เลือกเหตุผล--</option>
     <option value="พ่อเสียชีวิต">พ่อเสียชีวิต</option>
     <option value="แม่เสียชีวิต">แม่เสียชีวิต</option>
     <option value="ตนเองเสียชีวิต">ตนเองเสียชีวิต</option>
   </select>
-  <button type="submit">💾 บันทึก</button>
-</form>
+
+  <button id="saveBtn">💾 บันทึก</button>
+</div>
 
 <h2>ประวัติสวัสดิการ</h2>
 <table id="welfareTable">
@@ -51,7 +54,7 @@ tr:hover{ background:#edf2f7; }
       <th>สมาชิก</th>
       <th>วันที่รับเงิน</th>
       <th>จำนวนเงิน</th>
-      <th>เหตุผล</th>
+      <th>หมายเหตุ</th>
       <th>แก้ไข</th>
       <th>ลบ</th>
     </tr>
@@ -59,92 +62,99 @@ tr:hover{ background:#edf2f7; }
   <tbody></tbody>
 </table>
 
+<!-- โหลด Supabase ก่อนใช้งาน -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/supabase.min.js"></script>
 <script>
 const supabaseUrl = 'https://ttottijljxoinptmhgtu.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'; // เปลี่ยนเป็น ANON KEY ของคุณ
 const supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
-const memberSelect = document.getElementById('memberSelect');
-const welfareForm = document.getElementById('welfareForm');
-const tableBody = document.querySelector('#welfareTable tbody');
+let editId = null;
 
-let editWelfareId = null;
-
-// Load members
-async function loadMembers() {
-  const { data, error } = await supabase.from('members').select('member_id,title,first_name,last_name,group');
-  if(error) return console.error(error);
-  memberSelect.innerHTML = '<option value="">--เลือกสมาชิก--</option>';
+// โหลดสมาชิก
+async function loadMembers(){
+  const { data, error } = await supabase.from('members').select('member_id, title, first_name, last_name, "group"');
+  if(error) return alert(error.message);
+  const select = document.getElementById('memberSelect');
+  select.innerHTML = '<option value="">--เลือกสมาชิก--</option>';
   data.forEach(m=>{
-    const opt = document.createElement('option');
-    opt.value = m.member_id;
-    opt.textContent = `[${m.member_id}] ${m.title}${m.first_name} ${m.last_name} (กลุ่ม ${m.group})`;
-    memberSelect.appendChild(opt);
+    const option = document.createElement('option');
+    option.value = m.member_id;
+    option.textContent = `${m.title} ${m.first_name} ${m.last_name} (กลุ่ม ${m.group})`;
+    select.appendChild(option);
   });
 }
 loadMembers();
 
-// Load welfare history
-async function loadWelfare() {
+// โหลดประวัติ
+async function loadWelfare(){
   const { data, error } = await supabase.from('welfare').select('*');
-  if(error) return console.error(error);
-  tableBody.innerHTML = '';
+  if(error) return console.log(error);
+  const tbody = document.querySelector('#welfareTable tbody');
+  tbody.innerHTML = '';
   data.forEach(row=>{
     const tr = document.createElement('tr');
-    const memberText = memberSelect.querySelector(`option[value="${row.member_id}"]`)?.textContent || row.member_id;
+    const memberText = row.member_name || row.member_id;
     tr.innerHTML = `
       <td>${memberText}</td>
       <td>${row.receive_date}</td>
       <td>${row.amount}</td>
       <td>${row.note}</td>
-      <td><button class="edit" onclick="editRecord(${row.id})">แก้ไข</button></td>
-      <td><button class="delete" onclick="deleteRecord(${row.id})">ลบ</button></td>
+      <td><button class="editBtn" onclick="editWelfare(${row.id})">แก้ไข</button></td>
+      <td><button class="deleteBtn" onclick="deleteWelfare(${row.id})">ลบ</button></td>
     `;
-    tableBody.appendChild(tr);
+    tbody.appendChild(tr);
   });
 }
 loadWelfare();
 
-// Edit
-window.editRecord = async function(id){
-  const { data, error } = await supabase.from('welfare').select('*').eq('id',id).single();
-  if(error) return console.error(error);
-  editWelfareId = id;
-  memberSelect.value = data.member_id;
-  document.getElementById('receive_date').value = data.receive_date;
-  document.getElementById('amount').value = data.amount;
-  document.getElementById('note').value = data.note;
-};
+// บันทึก
+document.getElementById('saveBtn').addEventListener('click', async()=>{
+  const member_id = document.getElementById('memberSelect').value;
+  const memberText = document.getElementById('memberSelect').selectedOptions[0].text;
+  const receive_date = document.getElementById('receiveDate').value;
+  const amount = document.getElementById('amount').value;
+  const note = document.getElementById('note').value;
 
-// Delete
-window.deleteRecord = async function(id){
-  if(!confirm('ต้องการลบข้อมูลนี้?')) return;
-  const { error } = await supabase.from('welfare').delete().eq('id',id);
-  if(error) return console.error(error);
-  loadWelfare();
-};
+  if(!member_id || !receive_date || !amount || !note) return alert('กรุณากรอกข้อมูลให้ครบ');
 
-// Submit
-welfareForm.addEventListener('submit', async e=>{
-  e.preventDefault();
-  const data = {
-    member_id: memberSelect.value,
-    receive_date: document.getElementById('receive_date').value,
-    amount: parseFloat(document.getElementById('amount').value),
-    note: document.getElementById('note').value
-  };
-  if(editWelfareId){
-    const { error } = await supabase.from('welfare').update(data).eq('id',editWelfareId);
-    if(error) return console.error(error);
-    editWelfareId = null;
+  const rowData = { member_id, member_name: memberText, receive_date, amount, note };
+  let result;
+  if(editId){
+    result = await supabase.from('welfare').update(rowData).eq('id', editId);
+    editId = null;
   } else {
-    const { error } = await supabase.from('welfare').insert([data]);
-    if(error) return console.error(error);
+    result = await supabase.from('welfare').insert([rowData]);
   }
-  welfareForm.reset();
+
+  if(result.error) return alert(result.error.message);
+
+  // เคลียร์ฟอร์ม
+  document.getElementById('memberSelect').value = '';
+  document.getElementById('receiveDate').value = '';
+  document.getElementById('amount').value = '';
+  document.getElementById('note').value = '';
   loadWelfare();
 });
+
+// แก้ไข
+async function editWelfare(id){
+  const { data, error } = await supabase.from('welfare').select('*').eq('id', id).single();
+  if(error) return alert(error.message);
+  document.getElementById('memberSelect').value = data.member_id;
+  document.getElementById('receiveDate').value = data.receive_date;
+  document.getElementById('amount').value = data.amount;
+  document.getElementById('note').value = data.note;
+  editId = id;
+}
+
+// ลบ
+async function deleteWelfare(id){
+  if(!confirm('คุณต้องการลบรายการนี้หรือไม่?')) return;
+  const { error } = await supabase.from('welfare').delete().eq('id', id);
+  if(error) return alert(error.message);
+  loadWelfare();
+}
 </script>
 </body>
 </html>
