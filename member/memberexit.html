@@ -12,14 +12,14 @@
   <h1 class="text-2xl font-bold mb-4">📌 ระบบสมาชิกลาออก / เสียชีวิต</h1>
 
   <!-- ค้นหา -->
-  <div class="mb-6">
-    <input type="text" id="searchInput" placeholder="ค้นหาชื่อหรือรหัสสมาชิก..."
-      onkeyup="filterMembers()"
+  <div class="mb-4">
+    <input type="text" id="searchInput" placeholder="ค้นหาชื่อหรือรหัสสมาชิก..." 
+      onkeyup="filterMembers()" 
       class="w-full p-2 border rounded shadow focus:outline-none focus:ring-2 focus:ring-indigo-400" />
   </div>
 
   <!-- ตารางสมาชิก -->
-  <div class="overflow-x-auto mb-10">
+  <div class="overflow-x-auto mb-2">
     <table class="min-w-full bg-white shadow rounded">
       <thead class="bg-indigo-600 text-white">
         <tr>
@@ -36,6 +36,13 @@
       </thead>
       <tbody id="memberBody" class="divide-y"></tbody>
     </table>
+  </div>
+
+  <!-- Pagination สมาชิก -->
+  <div class="flex justify-between my-4">
+    <button id="prevPageMembers" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">◀ ก่อนหน้า</button>
+    <span id="pageInfoMembers" class="font-semibold"></span>
+    <button id="nextPageMembers" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">ถัดไป ▶</button>
   </div>
 
   <!-- ประวัติ -->
@@ -58,6 +65,14 @@
       <tbody id="historyBody" class="divide-y"></tbody>
     </table>
   </div>
+
+  <!-- Pagination ประวัติ -->
+  <div class="flex justify-between my-4">
+    <button id="prevPageHistory" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">◀ ก่อนหน้า</button>
+    <span id="pageInfoHistory" class="font-semibold"></span>
+    <button id="nextPageHistory" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">ถัดไป ▶</button>
+  </div>
+
 </div>
 
 <script>
@@ -65,22 +80,39 @@ const SUPABASE_URL = "https://ttottijljxoinptmhgtu.supabase.co"; // ใส่ UR
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y";                           // ใส่ KEY ของคุณ
 const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+// สมาชิก Pagination
+let currentPageMembers = 1;
+const pageSizeMembers = 10;
 let memberData = [];
 
+// ประวัติ Pagination
+let currentPageHistory = 1;
+const pageSizeHistory = 10;
+let historyData = [];
+
 // โหลดสมาชิก
-async function loadMembers() {
-  const { data, error } = await client
+async function loadMembers(page = 1) {
+  const from = (page - 1) * pageSizeMembers;
+  const to = page * pageSizeMembers - 1;
+
+  const { data, error, count } = await client
     .from('members')
-    .select('member_id, first_name, last_name, group, member_status')
-    .in('member_status', ['ลาออก','เสียชีวิต']);
+    .select('member_id, first_name, last_name, group, member_status', { count: 'exact' })
+    .in('member_status', ['ลาออก','เสียชีวิต'])
+    .range(from, to);
 
   if (error) { console.error(error); return; }
+
   memberData = data;
   renderMemberTable(data);
-  loadHistory();
+
+  const totalPages = Math.ceil(count / pageSizeMembers);
+  document.getElementById('pageInfoMembers').innerText = `หน้า ${page} / ${totalPages}`;
+  document.getElementById('prevPageMembers').disabled = page === 1;
+  document.getElementById('nextPageMembers').disabled = page === totalPages;
 }
 
-// แสดงตารางสมาชิก
+// ตารางสมาชิก
 function renderMemberTable(data) {
   const tbody = document.getElementById('memberBody');
   tbody.innerHTML = '';
@@ -131,14 +163,33 @@ async function saveMemberExit(member_id, first_name, last_name, group, member_st
   if (error) { alert(error.message); return; }
 
   alert(`บันทึก ${first_name} ${last_name} สำเร็จ`);
-  loadHistory();
+  loadHistory(currentPageHistory);
 }
 
-// โหลดประวัติ
-async function loadHistory() {
-  const { data, error } = await client.from('member_exit').select('*').order('receive_date', {ascending:false});
+// โหลดประวัติพร้อม Pagination
+async function loadHistory(page = 1) {
+  const from = (page - 1) * pageSizeHistory;
+  const to = page * pageSizeHistory - 1;
+
+  const { data, error, count } = await client
+    .from('member_exit')
+    .select('*', { count: 'exact' })
+    .order('receive_date', {ascending:false})
+    .range(from, to);
+
   if (error) { console.error(error); return; }
 
+  historyData = data;
+  renderHistoryTable(data);
+
+  const totalPages = Math.ceil(count / pageSizeHistory);
+  document.getElementById('pageInfoHistory').innerText = `หน้า ${page} / ${totalPages}`;
+  document.getElementById('prevPageHistory').disabled = page === 1;
+  document.getElementById('nextPageHistory').disabled = page === totalPages;
+}
+
+// ตารางประวัติ
+function renderHistoryTable(data) {
   const tbody = document.getElementById('historyBody');
   tbody.innerHTML = '';
   data.forEach(item => {
@@ -154,7 +205,7 @@ async function loadHistory() {
       <td class="p-2"><input type="number" id="edit_share_${item.member_id}" value="${item.share_amount}" class="border rounded p-1 w-full"></td>
       <td class="p-2"><input type="date" id="edit_receive_${item.member_id}" value="${item.receive_date}" class="border rounded p-1 w-full"></td>
       <td class="p-2">
-        <button onclick="updateHistory('${item.member_id}')" class="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded">💾 Save</button>
+        <button onclick="updateHistory('${item.member_id}')" class="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded mb-1">💾 Save</button>
         <button onclick="deleteHistory('${item.member_id}')" class="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded">🗑️ Delete</button>
       </td>
     `;
@@ -162,7 +213,7 @@ async function loadHistory() {
   });
 }
 
-// อัปเดตประวัติ
+// แก้ไขประวัติ
 async function updateHistory(member_id) {
   const updated = {
     first_name: document.getElementById(`edit_fname_${member_id}`).value,
@@ -176,7 +227,7 @@ async function updateHistory(member_id) {
   const { error } = await client.from('member_exit').update(updated).eq('member_id', member_id);
   if (error) { alert(error.message); return; }
   alert('แก้ไขเรียบร้อย');
-  loadHistory();
+  loadHistory(currentPageHistory);
 }
 
 // ลบประวัติ
@@ -185,11 +236,38 @@ async function deleteHistory(member_id) {
   const { error } = await client.from('member_exit').delete().eq('member_id', member_id);
   if (error) { alert(error.message); return; }
   alert('ลบเรียบร้อย');
-  loadHistory();
+  loadHistory(currentPageHistory);
 }
 
+// ปุ่ม pagination สมาชิก
+document.getElementById('prevPageMembers').addEventListener('click', () => {
+  if (currentPageMembers > 1) {
+    currentPageMembers--;
+    loadMembers(currentPageMembers);
+  }
+});
+
+document.getElementById('nextPageMembers').addEventListener('click', () => {
+  currentPageMembers++;
+  loadMembers(currentPageMembers);
+});
+
+// ปุ่ม pagination ประวัติ
+document.getElementById('prevPageHistory').addEventListener('click', () => {
+  if (currentPageHistory > 1) {
+    currentPageHistory--;
+    loadHistory(currentPageHistory);
+  }
+});
+
+document.getElementById('nextPageHistory').addEventListener('click', () => {
+  currentPageHistory++;
+  loadHistory(currentPageHistory);
+});
+
 // โหลดเริ่มต้น
-loadMembers();
+loadMembers(currentPageMembers);
+loadHistory(currentPageHistory);
 </script>
 </body>
 </html>
