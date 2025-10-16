@@ -6,17 +6,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-  <style>
-  body{font-family:Arial,sans-serif;padding:20px;}
-  table{width:100%;border-collapse:collapse;margin-top:20px;}
-  th,td{border:1px solid #000;padding:8px;text-align:left;}
-  th{background-color:#f0f0f0;}
-  h1{text-align:center;margin:0;}
-  .logo{display:block;margin:0 auto 10px auto;width:80px;height:auto;} /* ปรับความกว้างเป็น 80px */
-</style>
-
-  
 </head>
 <body class="bg-gray-100 font-sans">
 
@@ -119,8 +108,8 @@
 </div>
 
 <script>
-const SUPABASE_URL = "https://ttottijljxoinptmhgtu.supabase.co"; 
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y";                           
+const SUPABASE_URL = "https://ttottijljxoinptmhgtu.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y";
 const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let chart = null;
@@ -289,11 +278,13 @@ async function loadDashboard(){
 async function printReport(){
   const startDate = document.getElementById('printStartDate').value;
   const endDate = document.getElementById('printEndDate').value;
+  const logoUrl = 'https://your-logo-url.com/logo.png'; // เปลี่ยนเป็น URL โลโก้ของคุณ
+
   let query = client.from('member_exit').select('*').order('receive_date',{ascending:false});
   if(startDate) query = query.gte('receive_date',startDate);
   if(endDate) query = query.lte('receive_date',endDate);
   const {data,error} = await query;
-  if(error){alert(error.message);return;}
+  if(error){alert(error.message); return;}
 
   let html = `<html><head><title>รายงานสมาชิกลาออก/เสียชีวิต</title>
   <style>
@@ -301,11 +292,20 @@ async function printReport(){
     table{width:100%;border-collapse:collapse;margin-top:20px;}
     th,td{border:1px solid #000;padding:8px;text-align:left;}
     th{background-color:#f0f0f0;}
-    h1{text-align:center;}
-  </style></head><body>
-  <img src="https://lh5.googleusercontent.com/d/1B0sZdUz54kO4zAv0oJgoN4Aipy3UyCyR" class="logo">
+    h1{text-align:center;margin:5px 0;}
+    .logo{display:block;margin:0 auto 5px auto;width:60px;height:auto;}
+    @media print{
+      body{margin:10mm;}
+      table{page-break-inside:auto;}
+      tr{page-break-inside:avoid; page-break-after:auto;}
+      thead{display:table-header-group;}
+      tfoot{display:table-footer-group;}
+    }
+  </style>
+  </head><body>
+  <img src="${logoUrl}" class="logo">
   <h1>รายงานสมาชิกลาออก / เสียชีวิต</h1>
-  <p>ช่วงวันที่: ${startDate||'ทั้งหมด'} ถึง ${endDate||'ทั้งหมด'}</p>
+  <p style="text-align:center;">ช่วงวันที่: ${startDate||'ทั้งหมด'} ถึง ${endDate||'ทั้งหมด'}</p>
   <table>
   <thead><tr>
     <th>รหัส</th><th>ชื่อ</th><th>นามสกุล</th><th>กลุ่ม</th>
@@ -326,6 +326,7 @@ async function printReport(){
   });
 
   html+=`</tbody></table></body></html>`;
+
   const w = window.open('','_blank');
   w.document.write(html);
   w.document.close();
@@ -333,23 +334,15 @@ async function printReport(){
   w.print();
 }
 
-// ==================== Pagination ====================
-document.getElementById('prevPageMembers').addEventListener('click',()=>{if(currentPageMembers>1){currentPageMembers--;loadMembers(currentPageMembers);}});
-document.getElementById('nextPageMembers').addEventListener('click',()=>{currentPageMembers++;loadMembers(currentPageMembers);});
-document.getElementById('prevPageHistory').addEventListener('click',()=>{if(currentPageHistory>1){currentPageHistory--;loadHistory(currentPageHistory);}});
-document.getElementById('nextPageHistory').addEventListener('click',()=>{currentPageHistory++;loadHistory(currentPageHistory);});
-
-// ค่าเริ่มต้นปีปัจจุบัน
-const today=new Date();
-document.getElementById('startDate').value=`${today.getFullYear()}-01-01`;
-document.getElementById('endDate').value=`${today.getFullYear()}-12-31`;
-document.getElementById('printStartDate').value=`${today.getFullYear()}-01-01`;
-document.getElementById('printEndDate').value=`${today.getFullYear()}-12-31`;
-
-// โหลดเริ่มต้น
+// ==================== INIT ====================
 loadMembers(currentPageMembers);
 loadHistory(currentPageHistory);
-loadDashboard();
+
+document.getElementById('prevPageMembers').onclick=()=>{ if(currentPageMembers>1){ currentPageMembers--; loadMembers(currentPageMembers); } };
+document.getElementById('nextPageMembers').onclick=()=>{ currentPageMembers++; loadMembers(currentPageMembers); };
+document.getElementById('prevPageHistory').onclick=()=>{ if(currentPageHistory>1){ currentPageHistory--; loadHistory(currentPageHistory); } };
+document.getElementById('nextPageHistory').onclick=()=>{ currentPageHistory++; loadHistory(currentPageHistory); };
 </script>
+
 </body>
 </html>
