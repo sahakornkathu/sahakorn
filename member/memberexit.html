@@ -328,7 +328,7 @@ async function printReport(){
 async function printPDFReport(){
   const startDate = document.getElementById('printStartDate').value;
   const endDate = document.getElementById('printEndDate').value;
-  
+
   let query = client.from('member_exit').select('*').order('receive_date',{ascending:false});
   if(startDate) query = query.gte('receive_date',startDate);
   if(endDate) query = query.lte('receive_date',endDate);
@@ -336,33 +336,16 @@ async function printPDFReport(){
   if(error){alert(error.message); return;}
 
   const { jsPDF } = window.jspdf;
-  const doc = new jsPDF('p', 'mm', 'a4');
+  const doc = new jsPDF();
 
-  // โหลดฟอนต์ไทย THSarabunNew
-  const fontUrl = "https://raw.githubusercontent.com/google/fonts/main/ofl/thaisarabunnew/THSarabunNew-Regular.ttf";
-  const fontBoldUrl = "https://raw.githubusercontent.com/google/fonts/main/ofl/thaisarabunnew/THSarabunNew-Bold.ttf";
-  const fontResponse = await fetch(fontUrl);
-  const fontData = await fontResponse.arrayBuffer();
-  doc.addFileToVFS("THSarabunNew.ttf", fontData);
+  // ใช้ฟอนต์ไทย built-in
+  doc.setFont("THSarabun");
 
-  const fontBoldResponse = await fetch(fontBoldUrl);
-  const fontBoldData = await fontBoldResponse.arrayBuffer();
-  doc.addFileToVFS("THSarabunNew-Bold.ttf", fontBoldData);
-
-  doc.addFont("THSarabunNew.ttf", "THSarabunNew", "normal");
-  doc.addFont("THSarabunNew-Bold.ttf", "THSarabunNew", "bold");
-
-  doc.setFont("THSarabunNew");
-
-  // Header
   doc.setFontSize(18);
-  doc.setFont("THSarabunNew", "bold");
   doc.text("รายงานสมาชิกลาออก / เสียชีวิต", 105, 15, {align: "center"});
   doc.setFontSize(12);
-  doc.setFont("THSarabunNew", "normal");
   doc.text(`ช่วงวันที่: ${startDate||'ทั้งหมด'} ถึง ${endDate||'ทั้งหมด'}`, 105, 23, {align: "center"});
 
-  // ตาราง
   const tableColumn = ["รหัส","ชื่อ","นามสกุล","กลุ่ม","สถานะ","วันที่ประชุม","จำนวนเงิน","วันที่รับเงิน"];
   const tableRows = [];
 
@@ -385,16 +368,8 @@ async function printPDFReport(){
     body: tableRows,
     startY: 30,
     theme: 'grid',
-    headStyles:{
-      fillColor:[59,130,246],
-      font:"THSarabunNew",
-      fontStyle:"bold"
-    },
-    styles:{
-      font:"THSarabunNew",
-      fontStyle:"normal",
-      fontSize:10
-    }
+    headStyles:{fillColor:[59,130,246]},
+    styles:{fontSize:10, font:"THSarabun"}
   });
 
   doc.save(`รายงานสมาชิก_${new Date().toISOString().split('T')[0]}.pdf`);
