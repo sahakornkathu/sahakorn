@@ -180,6 +180,7 @@ async function saveMemberExit(member_id, first_name, last_name, group, member_st
   alert(`บันทึก ${first_name} ${last_name} สำเร็จ`);
   loadMembers(currentPageMembers);
   loadHistory(currentPageHistory);
+  loadDashboard(); // ✅ อัปเดต Dashboard หลังบันทึก
 }
 
 // ==================== HISTORY ====================
@@ -222,149 +223,40 @@ function renderHistoryTable(data){
   });
 }
 
-async function updateHistory(member_id){
-  const updated={
-    first_name: document.getElementById(`edit_fname_${member_id}`).value,
-    last_name: document.getElementById(`edit_lname_${member_id}`).value,
-    group: document.getElementById(`edit_group_${member_id}`).value,
-    meeting_date: document.getElementById(`edit_meeting_${member_id}`).value,
-    share_amount: document.getElementById(`edit_share_${member_id}`).value,
-    receive_date: document.getElementById(`edit_receive_${member_id}`).value
-  };
-  const {error} = await client.from('member_exit').update(updated).eq('member_id',member_id);
-  if(error){alert(error.message); return;}
-  alert('แก้ไขเรียบร้อย');
-  loadHistory(currentPageHistory);
-}
-
-async function deleteHistory(member_id){
-  if(!confirm('คุณต้องการลบข้อมูลนี้หรือไม่?')) return;
-  const {error} = await client.from('member_exit').delete().eq('member_id',member_id);
-  if(error){alert(error.message); return;}
-  alert('ลบเรียบร้อย');
-  loadMembers(currentPageMembers);
-  loadHistory(currentPageHistory);
-}
-
 // ==================== DASHBOARD ====================
 async function loadDashboard(){
   const startDate = document.getElementById('startDate').value;
   const endDate = document.getElementById('endDate').value;
-
-  // ✅ แก้ตรงนี้ให้ chain ต่อกันในบรรทัดเดียว
-  let query = client.from('member_exit').select('member_id, member_status, receive_date', { count: 'exact' });
-  if (startDate && endDate) {
-    query = query.gte('receive_date', startDate).lte('receive_date', endDate);
-  } else if (startDate) {
-    query = query.gte('receive_date', startDate);
-  } else if (endDate) {
-    query = query.lte('receive_date', endDate);
-  }
-
-  const { data, error } = await query;
-  if (error) { alert(error.message); return; }
-
-  const countResign = data.filter(d => d.member_status === 'ลาออก').length;
-  const countDeceased = data.filter(d => d.member_status === 'เสียชีวิต').length;
-
-  document.getElementById('countResign').innerText = countResign;
-  document.getElementById('countDeceased').innerText = countDeceased;
-
-  const ctx = document.getElementById('statusChart').getContext('2d');
-  if (chart) chart.destroy();
-  chart = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: ['ลาออก', 'เสียชีวิต'],
-      datasets: [{
-        label: 'จำนวนสมาชิก',
-        data: [countResign, countDeceased],
-        backgroundColor: ['#3B82F6', '#EF4444']
-      }]
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: { display: false },
-        title: { display: true, text: 'จำนวนสมาชิกตามสถานะ' }
-      },
-      scales: {
-        y: { beginAtZero: true, precision: 0 }
-      }
-    }
-  });
-}
-
-
-// ==================== PRINT HTML ====================
-async function printReport(){
-  const startDate = document.getElementById('printStartDate').value;
-  const endDate = document.getElementById('printEndDate').value;
-  const logoUrl = 'https://your-logo-url.com/logo.png'; // เปลี่ยนเป็น URL โลโก้ของคุณ
-
-  let query = client.from('member_exit').select('*').order('receive_date',{ascending:false});
+  let query = client.from('member_exit').select('member_id, member_status, receive_date');
   if(startDate) query = query.gte('receive_date',startDate);
   if(endDate) query = query.lte('receive_date',endDate);
   const {data,error} = await query;
-  if(error){alert(error.message); return;}
+  if(error){ alert(error.message); return; }
 
-  let html = `<html><head><title>รายงานสมาชิกลาออก/เสียชีวิต</title>
-  <style>
-    body{font-family:Arial,sans-serif;padding:20px;}
-    table{width:100%;border-collapse:collapse;margin-top:20px;}
-    th,td{border:1px solid #000;padding:8px;text-align:left;}
-    th{background-color:#f0f0f0;}
-    h1{text-align:center;margin:5px 0;}
-    .logo{display:block;margin:0 auto 5px auto;width:60px;height:auto;}
-    @media print{
-      body{margin:10mm;}
-      table{page-break-inside:auto;}
-      tr{page-break-inside:avoid; page-break-after:auto;}
-      thead{display:table-header-group;}
-      tfoot{display:table-footer-group;}
-    }
-  </style>
-  </head><body>
-  <img src="https://lh5.googleusercontent.com/d/1B0sZdUz54kO4zAv0oJgoN4Aipy3UyCyR" class="logo">
-  <h1>รายงานสมาชิกลาออก / เสียชีวิต</h1>
-  <p style="text-align:center;">ช่วงวันที่: ${startDate||'ทั้งหมด'} ถึง ${endDate||'ทั้งหมด'}</p>
-  <table>
-  <thead><tr>
-    <th>รหัส</th><th>ชื่อ</th><th>นามสกุล</th><th>กลุ่ม</th>
-    <th>สถานะ</th><th>วันที่ประชุม</th><th>จำนวนเงิน</th><th>วันที่รับเงิน</th>
-  </tr></thead><tbody>`;
+  const countResign = data?.filter(d=>d.member_status==='ลาออก').length || 0;
+  const countDeceased = data?.filter(d=>d.member_status==='เสียชีวิต').length || 0;
 
-  data.forEach(item=>{
-    html+=`<tr>
-      <td>${item.member_id}</td>
-      <td>${item.first_name}</td>
-      <td>${item.last_name}</td>
-      <td>${item.group}</td>
-      <td>${item.member_status}</td>
-      <td>${item.meeting_date}</td>
-      <td>${item.share_amount}</td>
-      <td>${item.receive_date}</td>
-    </tr>`;
+  document.getElementById('countResign').innerText=countResign;
+  document.getElementById('countDeceased').innerText=countDeceased;
+
+  const ctx = document.getElementById('statusChart').getContext('2d');
+  if(chart) chart.destroy();
+  chart = new Chart(ctx,{
+    type:'bar',
+    data:{
+      labels:['ลาออก','เสียชีวิต'],
+      datasets:[{label:'จำนวนสมาชิก',data:[countResign,countDeceased],backgroundColor:['#3B82F6','#EF4444']}]
+    },
+    options:{responsive:true,plugins:{legend:{display:false},title:{display:true,text:'จำนวนสมาชิกตามสถานะ'}},scales:{y:{beginAtZero:true,precision:0}}}
   });
-
-  html+=`</tbody></table></body></html>`;
-
-  const w = window.open('','_blank');
-  w.document.write(html);
-  w.document.close();
-  w.focus();
-  w.print();
 }
 
 // ==================== INIT ====================
 loadMembers(currentPageMembers);
 loadHistory(currentPageHistory);
-
-document.getElementById('prevPageMembers').onclick=()=>{ if(currentPageMembers>1){ currentPageMembers--; loadMembers(currentPageMembers); } };
-document.getElementById('nextPageMembers').onclick=()=>{ currentPageMembers++; loadMembers(currentPageMembers); };
-document.getElementById('prevPageHistory').onclick=()=>{ if(currentPageHistory>1){ currentPageHistory--; loadHistory(currentPageHistory); } };
-document.getElementById('nextPageHistory').onclick=()=>{ currentPageHistory++; loadHistory(currentPageHistory); };
+loadDashboard(); // ✅ เพิ่มตรงนี้ เพื่อให้ Dashboard โหลดอัตโนมัติเมื่อเปิดหน้า
 </script>
+
 
 </body>
 </html>
