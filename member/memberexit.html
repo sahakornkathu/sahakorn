@@ -130,7 +130,12 @@ function renderMemberTable(data, exitedIds) {
   data.forEach(m => {
     const isExited = exitedIds.includes(m.member_id); // ตรวจสอบว่าบันทึกแล้ว
     const row = document.createElement('tr');
-    row.className = "hover:bg-gray-100 transition";
+
+    // เพิ่มสีพื้นแถวถ้าบันทึกแล้ว
+    row.className = isExited 
+      ? "bg-gray-200 hover:bg-gray-200 transition" 
+      : "hover:bg-gray-100 transition";
+
     row.innerHTML = `
       <td class="p-2">${m.member_id}</td>
       <td class="p-2">${m.first_name}</td>
@@ -257,26 +262,18 @@ async function deleteHistory(member_id) {
 
 // ปุ่ม pagination สมาชิก
 document.getElementById('prevPageMembers').addEventListener('click', () => {
-  if (currentPageMembers > 1) {
-    currentPageMembers--;
-    loadMembers(currentPageMembers);
-  }
+  if (currentPageMembers > 1) { currentPageMembers--; loadMembers(currentPageMembers); }
 });
 document.getElementById('nextPageMembers').addEventListener('click', () => {
-  currentPageMembers++;
-  loadMembers(currentPageMembers);
+  currentPageMembers++; loadMembers(currentPageMembers);
 });
 
 // ปุ่ม pagination ประวัติ
 document.getElementById('prevPageHistory').addEventListener('click', () => {
-  if (currentPageHistory > 1) {
-    currentPageHistory--;
-    loadHistory(currentPageHistory);
-  }
+  if (currentPageHistory > 1) { currentPageHistory--; loadHistory(currentPageHistory); }
 });
 document.getElementById('nextPageHistory').addEventListener('click', () => {
-  currentPageHistory++;
-  loadHistory(currentPageHistory);
+  currentPageHistory++; loadHistory(currentPageHistory);
 });
 
 // โหลดเริ่มต้น
