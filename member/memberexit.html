@@ -1,112 +1,112 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8">
-  <title>ระบบสมาชิกลาออก/เสียชีวิต + Dashboard + รายงาน</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+<meta charset="UTF-8">
+<title>ระบบสมาชิกลาออก/เสียชีวิต + Dashboard + รายงาน</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
 </head>
 <body class="bg-gray-100 font-sans">
 
 <div class="container mx-auto p-6">
-  <h1 class="text-2xl font-bold mb-6">📌 ระบบสมาชิกลาออก/เสียชีวิต + Dashboard + รายงาน</h1>
+<h1 class="text-2xl font-bold mb-6">📌 ระบบสมาชิกลาออก/เสียชีวิต + Dashboard + รายงาน</h1>
 
-  <!-- Dashboard -->
-  <div class="bg-white p-4 rounded shadow mb-6">
-    <h2 class="text-xl font-semibold mb-4">📊 Dashboard</h2>
-    <div class="flex gap-4 mb-4">
-      <input type="date" id="startDate" class="border rounded p-2">
-      <input type="date" id="endDate" class="border rounded p-2">
-      <button onclick="loadDashboard()" class="bg-indigo-500 text-white px-4 py-2 rounded hover:bg-indigo-600">🔄 โหลด</button>
+<!-- Dashboard -->
+<div class="bg-white p-4 rounded shadow mb-6">
+  <h2 class="text-xl font-semibold mb-4">📊 Dashboard</h2>
+  <div class="flex gap-4 mb-4">
+    <input type="date" id="startDate" class="border rounded p-2">
+    <input type="date" id="endDate" class="border rounded p-2">
+    <button onclick="loadDashboard()" class="bg-indigo-500 text-white px-4 py-2 rounded hover:bg-indigo-600">🔄 โหลด</button>
+  </div>
+  <div class="grid grid-cols-2 gap-6 mb-6">
+    <div class="bg-gray-100 p-4 rounded shadow text-center">
+      <h2 class="text-lg font-semibold">สมาชิกลาออก</h2>
+      <p id="countResign" class="text-3xl font-bold mt-2">0</p>
     </div>
-    <div class="grid grid-cols-2 gap-6 mb-6">
-      <div class="bg-gray-100 p-4 rounded shadow text-center">
-        <h2 class="text-lg font-semibold">สมาชิกลาออก</h2>
-        <p id="countResign" class="text-3xl font-bold mt-2">0</p>
-      </div>
-      <div class="bg-gray-100 p-4 rounded shadow text-center">
-        <h2 class="text-lg font-semibold">สมาชิกเสียชีวิต</h2>
-        <p id="countDeceased" class="text-3xl font-bold mt-2">0</p>
-      </div>
-    </div>
-    <div class="bg-white p-4 rounded shadow">
-      <canvas id="statusChart"></canvas>
+    <div class="bg-gray-100 p-4 rounded shadow text-center">
+      <h2 class="text-lg font-semibold">สมาชิกเสียชีวิต</h2>
+      <p id="countDeceased" class="text-3xl font-bold mt-2">0</p>
     </div>
   </div>
-
-  <!-- ค้นหา สมาชิก -->
-  <div class="mb-4">
-    <input type="text" id="searchInput" placeholder="ค้นหาชื่อหรือรหัสสมาชิก..." 
-      onkeyup="filterMembers()" 
-      class="w-full p-2 border rounded shadow focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+  <div class="bg-white p-4 rounded shadow">
+    <canvas id="statusChart"></canvas>
   </div>
+</div>
 
-  <!-- ตารางสมาชิก -->
-  <div class="overflow-x-auto mb-2">
-    <table class="min-w-full bg-white shadow rounded">
-      <thead class="bg-indigo-600 text-white">
-        <tr>
-          <th class="p-3">รหัส</th>
-          <th class="p-3">ชื่อ</th>
-          <th class="p-3">นามสกุล</th>
-          <th class="p-3">กลุ่ม</th>
-          <th class="p-3">สถานะ</th>
-          <th class="p-3">วันที่ประชุม</th>
-          <th class="p-3">จำนวนเงิน</th>
-          <th class="p-3">วันที่รับเงิน</th>
-          <th class="p-3">บันทึก</th>
-        </tr>
-      </thead>
-      <tbody id="memberBody" class="divide-y"></tbody>
-    </table>
-  </div>
+<!-- ค้นหา สมาชิก -->
+<div class="mb-4">
+  <input type="text" id="searchInput" placeholder="ค้นหาชื่อหรือรหัสสมาชิก..." 
+    onkeyup="filterMembers()" 
+    class="w-full p-2 border rounded shadow focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+</div>
 
-  <!-- Pagination สมาชิก -->
-  <div class="flex justify-between my-4">
-    <button id="prevPageMembers" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">◀ ก่อนหน้า</button>
-    <span id="pageInfoMembers" class="font-semibold"></span>
-    <button id="nextPageMembers" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">ถัดไป ▶</button>
-  </div>
+<!-- ตารางสมาชิก -->
+<div class="overflow-x-auto mb-2">
+  <table class="min-w-full bg-white shadow rounded">
+    <thead class="bg-indigo-600 text-white">
+      <tr>
+        <th class="p-3">รหัส</th>
+        <th class="p-3">ชื่อ</th>
+        <th class="p-3">นามสกุล</th>
+        <th class="p-3">กลุ่ม</th>
+        <th class="p-3">สถานะ</th>
+        <th class="p-3">วันที่ประชุม</th>
+        <th class="p-3">จำนวนเงิน</th>
+        <th class="p-3">วันที่รับเงิน</th>
+        <th class="p-3">บันทึก</th>
+      </tr>
+    </thead>
+    <tbody id="memberBody" class="divide-y"></tbody>
+  </table>
+</div>
 
-  <!-- ประวัติ -->
-  <h2 class="text-xl font-semibold mb-2">📋 ประวัติการบันทึก</h2>
+<!-- Pagination สมาชิก -->
+<div class="flex justify-between my-4">
+  <button id="prevPageMembers" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">◀ ก่อนหน้า</button>
+  <span id="pageInfoMembers" class="font-semibold"></span>
+  <button id="nextPageMembers" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">ถัดไป ▶</button>
+</div>
 
-  <!-- ตัวเลือกวันที่พิมพ์ -->
-  <div class="flex gap-4 mb-2">
-    <input type="date" id="printStartDate" class="border rounded p-2">
-    <input type="date" id="printEndDate" class="border rounded p-2">
-    <button onclick="printReport()" class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded">🖨️ พิมพ์ HTML</button>
-    <button onclick="printPDFReport()" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">📄 พิมพ์ PDF</button>
-  </div>
+<!-- ประวัติ -->
+<h2 class="text-xl font-semibold mb-2">📋 ประวัติการบันทึก</h2>
 
-  <div class="overflow-x-auto">
-    <table class="min-w-full bg-white shadow rounded">
-      <thead class="bg-gray-700 text-white">
-        <tr>
-          <th class="p-3">รหัส</th>
-          <th class="p-3">ชื่อ</th>
-          <th class="p-3">นามสกุล</th>
-          <th class="p-3">กลุ่ม</th>
-          <th class="p-3">สถานะ</th>
-          <th class="p-3">วันที่ประชุม</th>
-          <th class="p-3">จำนวนเงิน</th>
-          <th class="p-3">วันที่รับเงิน</th>
-          <th class="p-3">จัดการ</th>
-        </tr>
-      </thead>
-      <tbody id="historyBody" class="divide-y"></tbody>
-    </table>
-  </div>
+<!-- ตัวเลือกวันที่พิมพ์ -->
+<div class="flex gap-4 mb-2">
+  <input type="date" id="printStartDate" class="border rounded p-2">
+  <input type="date" id="printEndDate" class="border rounded p-2">
+  <button onclick="printReport()" class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded">🖨️ พิมพ์ HTML</button>
+  <button onclick="printPDFReport()" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">📄 พิมพ์ PDF</button>
+</div>
 
-  <!-- Pagination ประวัติ -->
-  <div class="flex justify-between my-4">
-    <button id="prevPageHistory" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">◀ ก่อนหน้า</button>
-    <span id="pageInfoHistory" class="font-semibold"></span>
-    <button id="nextPageHistory" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">ถัดไป ▶</button>
-  </div>
+<div class="overflow-x-auto">
+  <table class="min-w-full bg-white shadow rounded">
+    <thead class="bg-gray-700 text-white">
+      <tr>
+        <th class="p-3">รหัส</th>
+        <th class="p-3">ชื่อ</th>
+        <th class="p-3">นามสกุล</th>
+        <th class="p-3">กลุ่ม</th>
+        <th class="p-3">สถานะ</th>
+        <th class="p-3">วันที่ประชุม</th>
+        <th class="p-3">จำนวนเงิน</th>
+        <th class="p-3">วันที่รับเงิน</th>
+        <th class="p-3">จัดการ</th>
+      </tr>
+    </thead>
+    <tbody id="historyBody" class="divide-y"></tbody>
+  </table>
+</div>
+
+<!-- Pagination ประวัติ -->
+<div class="flex justify-between my-4">
+  <button id="prevPageHistory" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">◀ ก่อนหน้า</button>
+  <span id="pageInfoHistory" class="font-semibold"></span>
+  <button id="nextPageHistory" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">ถัดไป ▶</button>
+</div>
 
 </div>
 
@@ -324,7 +324,7 @@ async function printReport(){
   w.print();
 }
 
-// ==================== PRINT PDF ====================
+// ==================== PRINT PDF ภาษาไทย ====================
 async function printPDFReport(){
   const startDate = document.getElementById('printStartDate').value;
   const endDate = document.getElementById('printEndDate').value;
@@ -336,20 +336,23 @@ async function printPDFReport(){
   if(error){alert(error.message); return;}
 
   const { jsPDF } = window.jspdf;
-  const doc = new jsPDF('p', 'mm', 'a4');
+  const doc = new jsPDF('p','mm','a4');
 
-  // Header
+  // ฟอนต์ไทย
+  const THSarabunNormal = "AAEAAAALAIAAAwAwT1MvMgg..."; // ใส่ Base64 ฟอนต์จริง
+  doc.addFileToVFS("THSarabun.ttf", THSarabunNormal);
+  doc.addFont("THSarabun.ttf", "THSarabun", "normal");
+  doc.setFont("THSarabun");
+
   doc.setFontSize(18);
-  doc.text("รายงานสมาชิกลาออก / เสียชีวิต", 105, 15, {align: "center"});
+  doc.text("รายงานสมาชิกลาออก / เสียชีวิต", 105, 15, {align:"center"});
   doc.setFontSize(12);
-  doc.text(`ช่วงวันที่: ${startDate||'ทั้งหมด'} ถึง ${endDate||'ทั้งหมด'}`, 105, 23, {align: "center"});
+  doc.text(`ช่วงวันที่: ${startDate||'ทั้งหมด'} ถึง ${endDate||'ทั้งหมด'}`, 105, 23, {align:"center"});
 
-  // ตาราง
   const tableColumn = ["รหัส","ชื่อ","นามสกุล","กลุ่ม","สถานะ","วันที่ประชุม","จำนวนเงิน","วันที่รับเงิน"];
   const tableRows = [];
-
   data.forEach(item=>{
-    const row = [
+    tableRows.push([
       item.member_id,
       item.first_name,
       item.last_name,
@@ -358,8 +361,7 @@ async function printPDFReport(){
       item.meeting_date,
       item.share_amount,
       item.receive_date
-    ];
-    tableRows.push(row);
+    ]);
   });
 
   doc.autoTable({
@@ -368,7 +370,7 @@ async function printPDFReport(){
     startY: 30,
     theme: 'grid',
     headStyles:{fillColor:[59,130,246]},
-    styles:{fontSize:10}
+    styles:{font:"THSarabun", fontSize:10}
   });
 
   doc.save(`รายงานสมาชิก_${new Date().toISOString().split('T')[0]}.pdf`);
@@ -391,6 +393,7 @@ document.getElementById('printEndDate').value=`${today.getFullYear()}-12-31`;
 loadMembers(currentPageMembers);
 loadHistory(currentPageHistory);
 loadDashboard();
+
 </script>
 </body>
 </html>
