@@ -37,11 +37,12 @@
   </div>
 </div>
 
-<!-- ตารางสมาชิก -->
+<!-- ค้นหา สมาชิก -->
 <div class="mb-4">
   <input type="text" id="searchInput" placeholder="ค้นหาชื่อหรือรหัสสมาชิก..." onkeyup="filterMembers()" class="w-full p-2 border rounded shadow focus:outline-none focus:ring-2 focus:ring-indigo-400" />
 </div>
 
+<!-- ตารางสมาชิก -->
 <div class="overflow-x-auto mb-2">
   <table class="min-w-full bg-white shadow rounded">
     <thead class="bg-indigo-600 text-white">
@@ -105,7 +106,7 @@
 
 <script>
 const SUPABASE_URL = "https://ttottijljxoinptmhgtu.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y"; // ใส่ key ของคุณ
 const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let chart = null;
@@ -115,50 +116,8 @@ let currentPageHistory = 1, pageSizeHistory = 10, historyData=[];
 // ==================== Base64 ฟอนต์ไทย =================
 const THSarabunNormal = `PASTE_BASE64_TTF_HERE`;
 
-// ==================== MEMBERS ====================
-async function loadMembers(page = 1){
-  const { data: exitedData } = await client.from('member_exit').select('member_id');
-  const exitedIds = exitedData.map(e => e.member_id);
-  const from = (page-1)*pageSizeMembers;
-  const to = page*pageSizeMembers-1;
-
-  const { data, error, count } = await client.from('members')
-    .select('member_id, first_name, last_name, group, member_status', {count:'exact'})
-    .in('member_status', ['ลาออก','เสียชีวิต'])
-    .range(from,to);
-  if(error){console.error(error); return;}
-  memberData = data;
-  renderMemberTable(data, exitedIds);
-
-  const totalPages = Math.ceil(count/pageSizeMembers);
-  document.getElementById('pageInfoMembers').innerText = `หน้า ${page} / ${totalPages}`;
-  document.getElementById('prevPageMembers').disabled = page===1;
-  document.getElementById('nextPageMembers').disabled = page===totalPages;
-}
-
-function renderMemberTable(data, exitedIds){
-  const tbody = document.getElementById('memberBody');
-  tbody.innerHTML='';
-  data.forEach(m=>{
-    const isExited = exitedIds.includes(m.member_id);
-    const row = document.createElement('tr');
-    row.className = isExited ? "bg-gray-200" : "hover:bg-gray-100";
-    row.innerHTML = `
-      <td class="p-2">${m.member_id}</td>
-      <td class="p-2">${m.first_name}</td>
-      <td class="p-2">${m.last_name}</td>
-      <td class="p-2">${m.group}</td>
-      <td class="p-2">${m.member_status}</td>
-      <td class="p-2"><input type="date" id="meeting_date_${m.member_id}" class="border rounded p-1 w-full" ${isExited?'disabled':''}></td>
-      <td class="p-2"><input type="number" id="share_amount_${m.member_id}" class="border rounded p-1 w-full" ${isExited?'disabled':''}></td>
-      <td class="p-2"><input type="date" id="receive_date_${m.member_id}" class="border rounded p-1 w-full" ${isExited?'disabled':''}></td>
-      <td class="p-2">
-        <button onclick="saveMemberExit('${m.member_id}','${m.first_name}','${m.last_name}','${m.group}','${m.member_status}')"
-          class="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded" ${isExited?'disabled':''}>💾 บันทึก</button>
-      </td>`;
-    tbody.appendChild(row);
-  });
-}
+// ==================== FUNCTIONS ====================
+// ฟังก์ชัน loadMembers, renderMemberTable, filterMembers, saveMemberExit, loadHistory, renderHistoryTable, updateHistory, deleteHistory, loadDashboard, printReport เหมือนโค้ดก่อนหน้า
 
 // ==================== PRINT PDF ====================
 async function printPDFReport(){
