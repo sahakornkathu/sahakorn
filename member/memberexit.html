@@ -1,266 +1,208 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8">
-  <title>ระบบสมาชิกลาออก/เสียชีวิต + Dashboard + รายงาน</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<meta charset="UTF-8">
+<title>ระบบบันทึกสมาชิกลาออก / เสียชีวิต</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.1/jspdf.plugin.autotable.min.js"></script>
+<style>
+  body { font-family: "TH Sarabun New", sans-serif; margin: 20px; }
+  h2 { margin-bottom: 10px; }
+  table { border-collapse: collapse; width: 100%; margin-top: 10px; }
+  th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+  th { background-color: #f2f2f2; }
+  button { padding: 5px 10px; margin: 5px; }
+  .dashboard {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 20px;
+  }
+  .card {
+    padding: 15px;
+    border-radius: 10px;
+    text-align: center;
+    background: #f9fafb;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    width: 200px;
+  }
+  .filter {
+    margin-bottom: 10px;
+    text-align: center;
+  }
+</style>
 </head>
-<body class="bg-gray-100 font-sans">
+<body>
 
-<div class="container mx-auto p-6">
-  <h1 class="text-2xl font-bold mb-6">📌 ระบบสมาชิกลาออก/เสียชีวิต + Dashboard + รายงาน</h1>
+<h2>📋 ระบบบันทึกสมาชิกลาออก / เสียชีวิต</h2>
 
-  <!-- Dashboard -->
-  <div class="bg-white p-4 rounded shadow mb-6">
-    <h2 class="text-xl font-semibold mb-4">📊 Dashboard</h2>
-    <div class="flex gap-4 mb-4">
-      <input type="date" id="startDate" class="border rounded p-2">
-      <input type="date" id="endDate" class="border rounded p-2">
-      <button onclick="loadDashboard()" class="bg-indigo-500 text-white px-4 py-2 rounded hover:bg-indigo-600">🔄 โหลด</button>
-    </div>
-    <div class="grid grid-cols-2 gap-6 mb-6">
-      <div class="bg-gray-100 p-4 rounded shadow text-center">
-        <h2 class="text-lg font-semibold">สมาชิกลาออก</h2>
-        <p id="countResign" class="text-3xl font-bold mt-2">0</p>
-      </div>
-      <div class="bg-gray-100 p-4 rounded shadow text-center">
-        <h2 class="text-lg font-semibold">สมาชิกเสียชีวิต</h2>
-        <p id="countDeceased" class="text-3xl font-bold mt-2">0</p>
-      </div>
-    </div>
-    <div class="bg-white p-4 rounded shadow">
-      <canvas id="statusChart"></canvas>
-    </div>
-  </div>
-
-  <!-- ค้นหา สมาชิก -->
-  <div class="mb-4">
-    <input type="text" id="searchInput" placeholder="ค้นหาชื่อหรือรหัสสมาชิก..." 
-      onkeyup="filterMembers()" 
-      class="w-full p-2 border rounded shadow focus:outline-none focus:ring-2 focus:ring-indigo-400" />
-  </div>
-
-  <!-- ตารางสมาชิก -->
-  <div class="overflow-x-auto mb-2">
-    <table class="min-w-full bg-white shadow rounded">
-      <thead class="bg-indigo-600 text-white">
-        <tr>
-          <th class="p-3">รหัส</th>
-          <th class="p-3">ชื่อ</th>
-          <th class="p-3">นามสกุล</th>
-          <th class="p-3">กลุ่ม</th>
-          <th class="p-3">สถานะ</th>
-          <th class="p-3">วันที่ประชุม</th>
-          <th class="p-3">จำนวนเงิน</th>
-          <th class="p-3">วันที่รับเงิน</th>
-          <th class="p-3">บันทึก</th>
-        </tr>
-      </thead>
-      <tbody id="memberBody" class="divide-y"></tbody>
-    </table>
-  </div>
-
-  <!-- Pagination สมาชิก -->
-  <div class="flex justify-between my-4">
-    <button id="prevPageMembers" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">◀ ก่อนหน้า</button>
-    <span id="pageInfoMembers" class="font-semibold"></span>
-    <button id="nextPageMembers" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">ถัดไป ▶</button>
-  </div>
-
-  <!-- ประวัติ -->
-  <h2 class="text-xl font-semibold mb-2">📋 ประวัติการบันทึก</h2>
-
-  <!-- ตัวเลือกวันที่พิมพ์ -->
-  <div class="flex gap-4 mb-2">
-    <input type="date" id="printStartDate" class="border rounded p-2">
-    <input type="date" id="printEndDate" class="border rounded p-2">
-    <button onclick="printReport()" class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded">🖨️ พิมพ์ HTML</button>
-  </div>
-
-  <div class="overflow-x-auto">
-    <table class="min-w-full bg-white shadow rounded">
-      <thead class="bg-gray-700 text-white">
-        <tr>
-          <th class="p-3">รหัส</th>
-          <th class="p-3">ชื่อ</th>
-          <th class="p-3">นามสกุล</th>
-          <th class="p-3">กลุ่ม</th>
-          <th class="p-3">สถานะ</th>
-          <th class="p-3">วันที่ประชุม</th>
-          <th class="p-3">จำนวนเงิน</th>
-          <th class="p-3">วันที่รับเงิน</th>
-          <th class="p-3">จัดการ</th>
-        </tr>
-      </thead>
-      <tbody id="historyBody" class="divide-y"></tbody>
-    </table>
-  </div>
-
-  <!-- Pagination ประวัติ -->
-  <div class="flex justify-between my-4">
-    <button id="prevPageHistory" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">◀ ก่อนหน้า</button>
-    <span id="pageInfoHistory" class="font-semibold"></span>
-    <button id="nextPageHistory" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">ถัดไป ▶</button>
-  </div>
-
+<!-- Dashboard -->
+<div class="filter">
+  <label>เริ่มต้น: <input type="date" id="startDate"></label>
+  <label>สิ้นสุด: <input type="date" id="endDate"></label>
+  <button onclick="loadDashboard()">📊 แสดงข้อมูล</button>
+  <button onclick="printReport()">🖨️ พิมพ์รายงาน</button>
 </div>
 
+<div class="dashboard">
+  <div class="card">
+    <h3>ลาออก</h3>
+    <h1 id="countResign">0</h1>
+  </div>
+  <div class="card">
+    <h3>เสียชีวิต</h3>
+    <h1 id="countDeceased">0</h1>
+  </div>
+</div>
+<canvas id="statusChart" height="100"></canvas>
+
+<hr>
+
+<!-- รายชื่อสมาชิก -->
+<h3>รายชื่อสมาชิก</h3>
+<table id="memberTable">
+  <thead>
+    <tr>
+      <th>รหัส</th><th>ชื่อ</th><th>นามสกุล</th><th>กลุ่ม</th><th>สถานะ</th><th>การทำรายการ</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<hr>
+
+<!-- ประวัติการลาออก / เสียชีวิต -->
+<h3>ประวัติการลาออก / เสียชีวิต</h3>
+<table id="exitTable">
+  <thead>
+    <tr>
+      <th>รหัส</th><th>ชื่อ</th><th>นามสกุล</th><th>กลุ่ม</th><th>สถานะ</th><th>วันที่</th><th>เครื่องมือ</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
 <script>
-const SUPABASE_URL = "https://ttottijljxoinptmhgtu.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y";
+// === CONFIG SUPABASE ===
+const SUPABASE_URL = "https://ttottijljxoinptmhgtu.supabase.co";  // 👈 เปลี่ยน URL ของคุณ
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y";              // 👈 ใส่ Key ของคุณ
 const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-let chart = null;
-let currentPageMembers = 1, pageSizeMembers = 10, memberData=[];
-let currentPageHistory = 1, pageSizeHistory = 10, historyData=[];
+let chart;
 
-// ==================== MEMBERS ====================
-async function loadMembers(page = 1){
-  const { data: exitedData } = await client.from('member_exit').select('member_id');
-  const exitedIds = exitedData.map(e => e.member_id);
-  const from = (page-1)*pageSizeMembers;
-  const to = page*pageSizeMembers-1;
+// โหลดข้อมูลทั้งหมด
+document.addEventListener('DOMContentLoaded', () => {
+  loadMembers();
+  loadExitHistory();
+  loadDashboard();
+});
 
-  const { data, error, count } = await client.from('members')
-    .select('member_id, first_name, last_name, group, member_status', {count:'exact'})
-    .in('member_status', ['ลาออก','เสียชีวิต'])
-    .range(from,to);
-  if(error){console.error(error); return;}
-  memberData = data;
-  renderMemberTable(data, exitedIds);
+// โหลดรายชื่อสมาชิก
+async function loadMembers(){
+  const {data: members, error} = await client.from('members').select('*');
+  if(error){ console.error(error); return; }
 
-  const totalPages = Math.ceil(count/pageSizeMembers);
-  document.getElementById('pageInfoMembers').innerText = `หน้า ${page} / ${totalPages}`;
-  document.getElementById('prevPageMembers').disabled = page===1;
-  document.getElementById('nextPageMembers').disabled = page===totalPages;
-}
+  // ดึงรายชื่อที่อยู่ใน member_exit แล้ว
+  const {data: exits} = await client.from('member_exit').select('member_id');
+  const exitedIds = exits ? exits.map(e => e.member_id) : [];
 
-function renderMemberTable(data, exitedIds){
-  const tbody = document.getElementById('memberBody');
-  tbody.innerHTML='';
-  data.forEach(m=>{
-    const isExited = exitedIds.includes(m.member_id);
-    const row = document.createElement('tr');
-    row.className = isExited ? "bg-gray-200" : "hover:bg-gray-100";
-    row.innerHTML = `
-      <td class="p-2">${m.member_id}</td>
-      <td class="p-2">${m.first_name}</td>
-      <td class="p-2">${m.last_name}</td>
-      <td class="p-2">${m.group}</td>
-      <td class="p-2">${m.member_status}</td>
-      <td class="p-2"><input type="date" id="meeting_date_${m.member_id}" class="border rounded p-1 w-full" ${isExited?'disabled':''}></td>
-      <td class="p-2"><input type="number" id="share_amount_${m.member_id}" class="border rounded p-1 w-full" ${isExited?'disabled':''}></td>
-      <td class="p-2"><input type="date" id="receive_date_${m.member_id}" class="border rounded p-1 w-full" ${isExited?'disabled':''}></td>
-      <td class="p-2">
-        <button onclick="saveMemberExit('${m.member_id}','${m.first_name}','${m.last_name}','${m.group}','${m.member_status}')"
-          class="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded" ${isExited?'disabled':''}>💾 บันทึก</button>
+  const tbody = document.querySelector("#memberTable tbody");
+  tbody.innerHTML = "";
+
+  members.forEach(m => {
+    const tr = document.createElement("tr");
+    const disabled = exitedIds.includes(m.member_id);
+    tr.innerHTML = `
+      <td>${m.member_id}</td>
+      <td>${m.first_name}</td>
+      <td>${m.last_name}</td>
+      <td>${m.group}</td>
+      <td>${m.member_status}</td>
+      <td>
+        <button ${disabled ? 'disabled' : ''} onclick="saveExit('${m.member_id}','ลาออก')">ลาออก</button>
+        <button ${disabled ? 'disabled' : ''} onclick="saveExit('${m.member_id}','เสียชีวิต')">เสียชีวิต</button>
       </td>`;
-    tbody.appendChild(row);
+    tbody.appendChild(tr);
   });
 }
 
-function filterMembers(){
-  const q = document.getElementById('searchInput').value.toLowerCase();
-  renderMemberTable(memberData.filter(m=>
-    m.first_name.toLowerCase().includes(q)||
-    m.last_name.toLowerCase().includes(q)||
-    m.member_id.toLowerCase().includes(q)
-  ));
+// บันทึกข้อมูลลาออก/เสียชีวิต
+async function saveExit(member_id, status){
+  const today = new Date().toISOString().split('T')[0];
+  const {data: member} = await client.from('members').select('*').eq('member_id', member_id).single();
+  if(!member) return;
+
+  const { error } = await client.from('member_exit').insert({
+    member_id: member.member_id,
+    first_name: member.first_name,
+    last_name: member.last_name,
+    group: member.group,
+    meeting_date: today,
+    share_amount: 0,
+    receive_date: today,
+    member_status: status
+  });
+  if(error){ alert("❌ " + error.message); return; }
+
+  alert("✅ บันทึกสำเร็จ");
+  loadMembers();
+  loadExitHistory();
+  loadDashboard();
 }
 
-async function saveMemberExit(member_id, first_name, last_name, group, member_status){
-  const meeting_date = document.getElementById(`meeting_date_${member_id}`).value;
-  const share_amount = document.getElementById(`share_amount_${member_id}`).value;
-  const receive_date = document.getElementById(`receive_date_${member_id}`).value;
-  if(!meeting_date || !share_amount || !receive_date){ alert('กรุณากรอกข้อมูลให้ครบ'); return;}
-  const {error} = await client.from('member_exit').insert([{member_id, first_name, last_name, group, member_status, meeting_date, share_amount, receive_date}]);
-  if(error){ alert(error.message); return;}
-  alert(`บันทึก ${first_name} ${last_name} สำเร็จ`);
-  loadMembers(currentPageMembers);
-  loadHistory(currentPageHistory);
-}
+// โหลดประวัติ
+async function loadExitHistory(){
+  const {data, error} = await client.from('member_exit').select('*').order('receive_date', {ascending:false});
+  if(error){ console.error(error); return; }
 
-// ==================== HISTORY ====================
-async function loadHistory(page=1){
-  const from = (page-1)*pageSizeHistory;
-  const to = page*pageSizeHistory-1;
-  const { data, error, count } = await client.from('member_exit')
-    .select('*',{count:'exact'})
-    .order('receive_date',{ascending:false})
-    .range(from,to);
-  if(error){ console.error(error); return;}
-  historyData = data;
-  renderHistoryTable(data);
-  const totalPages = Math.ceil(count/pageSizeHistory);
-  document.getElementById('pageInfoHistory').innerText = `หน้า ${page} / ${totalPages}`;
-  document.getElementById('prevPageHistory').disabled = page===1;
-  document.getElementById('nextPageHistory').disabled = page===totalPages;
-}
-
-function renderHistoryTable(data){
-  const tbody = document.getElementById('historyBody');
-  tbody.innerHTML='';
-  data.forEach(item=>{
-    const row = document.createElement('tr');
-    row.className="hover:bg-gray-100 transition";
-    row.innerHTML = `
-      <td class="p-2">${item.member_id}</td>
-      <td class="p-2"><input type="text" id="edit_fname_${item.member_id}" value="${item.first_name}" class="border rounded p-1 w-full"></td>
-      <td class="p-2"><input type="text" id="edit_lname_${item.member_id}" value="${item.last_name}" class="border rounded p-1 w-full"></td>
-      <td class="p-2"><input type="text" id="edit_group_${item.member_id}" value="${item.group}" class="border rounded p-1 w-full"></td>
-      <td class="p-2">${item.member_status}</td>
-      <td class="p-2"><input type="date" id="edit_meeting_${item.member_id}" value="${item.meeting_date}" class="border rounded p-1 w-full"></td>
-      <td class="p-2"><input type="number" id="edit_share_${item.member_id}" value="${item.share_amount}" class="border rounded p-1 w-full"></td>
-      <td class="p-2"><input type="date" id="edit_receive_${item.member_id}" value="${item.receive_date}" class="border rounded p-1 w-full"></td>
-      <td class="p-2">
-        <button onclick="updateHistory('${item.member_id}')" class="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded mb-1">💾 Save</button>
-        <button onclick="deleteHistory('${item.member_id}')" class="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded">🗑️ Delete</button>
-      </td>`;
-    tbody.appendChild(row);
+  const tbody = document.querySelector("#exitTable tbody");
+  tbody.innerHTML = "";
+  data.forEach(d=>{
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${d.member_id}</td>
+      <td>${d.first_name}</td>
+      <td>${d.last_name}</td>
+      <td>${d.group}</td>
+      <td>${d.member_status}</td>
+      <td>${d.receive_date}</td>
+      <td><button onclick="deleteExit(${d.id})">ลบ</button></td>
+    `;
+    tbody.appendChild(tr);
   });
 }
 
-async function updateHistory(member_id){
-  const updated={
-    first_name: document.getElementById(`edit_fname_${member_id}`).value,
-    last_name: document.getElementById(`edit_lname_${member_id}`).value,
-    group: document.getElementById(`edit_group_${member_id}`).value,
-    meeting_date: document.getElementById(`edit_meeting_${member_id}`).value,
-    share_amount: document.getElementById(`edit_share_${member_id}`).value,
-    receive_date: document.getElementById(`edit_receive_${member_id}`).value
-  };
-  const {error} = await client.from('member_exit').update(updated).eq('member_id',member_id);
-  if(error){alert(error.message); return;}
-  alert('แก้ไขเรียบร้อย');
-  loadHistory(currentPageHistory);
+async function deleteExit(id){
+  if(!confirm("แน่ใจว่าต้องการลบ?")) return;
+  await client.from('member_exit').delete().eq('id', id);
+  loadExitHistory();
+  loadMembers();
+  loadDashboard();
 }
 
-async function deleteHistory(member_id){
-  if(!confirm('คุณต้องการลบข้อมูลนี้หรือไม่?')) return;
-  const {error} = await client.from('member_exit').delete().eq('member_id',member_id);
-  if(error){alert(error.message); return;}
-  alert('ลบเรียบร้อย');
-  loadMembers(currentPageMembers);
-  loadHistory(currentPageHistory);
-}
-
-// ==================== DASHBOARD ====================
+// === Dashboard ===
 async function loadDashboard(){
   const startDate = document.getElementById('startDate').value;
   const endDate = document.getElementById('endDate').value;
+
   let query = client.from('member_exit').select('member_id, member_status, receive_date');
-  if(startDate) query = query.gte('receive_date',startDate);
-  if(endDate) query = query.lte('receive_date',endDate);
-  const {data,error} = await query;
-  if(error){ alert(error.message); return; }
+  if(startDate && endDate){
+    query = query.gte('receive_date', startDate).lte('receive_date', endDate);
+  } else if(startDate){
+    query = query.gte('receive_date', startDate);
+  } else if(endDate){
+    query = query.lte('receive_date', endDate);
+  }
+
+  const {data, error} = await query;
+  if(error){ console.error(error); return; }
 
   const countResign = data.filter(d=>d.member_status==='ลาออก').length;
   const countDeceased = data.filter(d=>d.member_status==='เสียชีวิต').length;
 
-  document.getElementById('countResign').innerText=countResign;
-  document.getElementById('countDeceased').innerText=countDeceased;
+  document.getElementById('countResign').innerText = countResign;
+  document.getElementById('countDeceased').innerText = countDeceased;
 
   const ctx = document.getElementById('statusChart').getContext('2d');
   if(chart) chart.destroy();
@@ -268,81 +210,63 @@ async function loadDashboard(){
     type:'bar',
     data:{
       labels:['ลาออก','เสียชีวิต'],
-      datasets:[{label:'จำนวนสมาชิก',data:[countResign,countDeceased],backgroundColor:['#3B82F6','#EF4444']}]
+      datasets:[{
+        label:'จำนวนสมาชิก',
+        data:[countResign,countDeceased],
+        backgroundColor:['#3B82F6','#EF4444']
+      }]
     },
-    options:{responsive:true,plugins:{legend:{display:false},title:{display:true,text:'จำนวนสมาชิกตามสถานะ'}},scales:{y:{beginAtZero:true,precision:0}}}
-  });
-}
-
-// ==================== PRINT HTML ====================
-async function printReport(){
-  const startDate = document.getElementById('printStartDate').value;
-  const endDate = document.getElementById('printEndDate').value;
-  const logoUrl = 'https://your-logo-url.com/logo.png'; // เปลี่ยนเป็น URL โลโก้ของคุณ
-
-  let query = client.from('member_exit').select('*').order('receive_date',{ascending:false});
-  if(startDate) query = query.gte('receive_date',startDate);
-  if(endDate) query = query.lte('receive_date',endDate);
-  const {data,error} = await query;
-  if(error){alert(error.message); return;}
-
-  let html = `<html><head><title>รายงานสมาชิกลาออก/เสียชีวิต</title>
-  <style>
-    body{font-family:Arial,sans-serif;padding:20px;}
-    table{width:100%;border-collapse:collapse;margin-top:20px;}
-    th,td{border:1px solid #000;padding:8px;text-align:left;}
-    th{background-color:#f0f0f0;}
-    h1{text-align:center;margin:5px 0;}
-    .logo{display:block;margin:0 auto 5px auto;width:60px;height:auto;}
-    @media print{
-      body{margin:10mm;}
-      table{page-break-inside:auto;}
-      tr{page-break-inside:avoid; page-break-after:auto;}
-      thead{display:table-header-group;}
-      tfoot{display:table-footer-group;}
+    options:{
+      responsive:true,
+      plugins:{legend:{display:false}},
+      scales:{y:{beginAtZero:true}}
     }
-  </style>
-  </head><body>
-  <img src="https://lh5.googleusercontent.com/d/1B0sZdUz54kO4zAv0oJgoN4Aipy3UyCyR" class="logo">
-  <h1>รายงานสมาชิกลาออก / เสียชีวิต</h1>
-  <p style="text-align:center;">ช่วงวันที่: ${startDate||'ทั้งหมด'} ถึง ${endDate||'ทั้งหมด'}</p>
-  <table>
-  <thead><tr>
-    <th>รหัส</th><th>ชื่อ</th><th>นามสกุล</th><th>กลุ่ม</th>
-    <th>สถานะ</th><th>วันที่ประชุม</th><th>จำนวนเงิน</th><th>วันที่รับเงิน</th>
-  </tr></thead><tbody>`;
-
-  data.forEach(item=>{
-    html+=`<tr>
-      <td>${item.member_id}</td>
-      <td>${item.first_name}</td>
-      <td>${item.last_name}</td>
-      <td>${item.group}</td>
-      <td>${item.member_status}</td>
-      <td>${item.meeting_date}</td>
-      <td>${item.share_amount}</td>
-      <td>${item.receive_date}</td>
-    </tr>`;
   });
-
-  html+=`</tbody></table></body></html>`;
-
-  const w = window.open('','_blank');
-  w.document.write(html);
-  w.document.close();
-  w.focus();
-  w.print();
 }
 
-// ==================== INIT ====================
-loadMembers(currentPageMembers);
-loadHistory(currentPageHistory);
+// === พิมพ์รายงาน ===
+async function printReport(){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
 
-document.getElementById('prevPageMembers').onclick=()=>{ if(currentPageMembers>1){ currentPageMembers--; loadMembers(currentPageMembers); } };
-document.getElementById('nextPageMembers').onclick=()=>{ currentPageMembers++; loadMembers(currentPageMembers); };
-document.getElementById('prevPageHistory').onclick=()=>{ if(currentPageHistory>1){ currentPageHistory--; loadHistory(currentPageHistory); } };
-document.getElementById('nextPageHistory').onclick=()=>{ currentPageHistory++; loadHistory(currentPageHistory); };
+  // ใส่โลโก้ (เล็ก อยู่บนหัวทุกหน้า)
+  const logoUrl = 'https://upload.wikimedia.org/wikipedia/commons/4/4a/Logo_2024.png'; // 👈 เปลี่ยนลิงก์โลโก้ได้
+  const logo = await loadImage(logoUrl);
+  doc.addImage(logo, 'PNG', 10, 5, 20, 20); // ขนาดเล็กพอดี
+
+  doc.setFontSize(16);
+  doc.text('รายงานสมาชิกลาออก / เสียชีวิต', 105, 20, { align: 'center' });
+
+  const { data } = await client.from('member_exit').select('*').order('receive_date', {ascending:false});
+  const rows = data.map((d, i) => [
+    i+1,
+    d.member_id,
+    d.first_name + " " + d.last_name,
+    d.group,
+    d.member_status,
+    d.receive_date
+  ]);
+
+  doc.autoTable({
+    startY: 30,
+    head: [['#','รหัส','ชื่อ-นามสกุล','กลุ่ม','สถานะ','วันที่']],
+    body: rows,
+  });
+
+  doc.save('รายงานสมาชิกลาออก_เสียชีวิต.pdf');
+}
+
+// ฟังก์ชันโหลดรูปภาพ
+function loadImage(url){
+  return new Promise((resolve,reject)=>{
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = ()=>resolve(img);
+    img.onerror = reject;
+    img.src = url;
+  });
+}
+
 </script>
-
 </body>
 </html>
