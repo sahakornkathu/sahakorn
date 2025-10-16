@@ -90,7 +90,7 @@ let currentPageHistory = 1;
 const pageSizeHistory = 10;
 let historyData = [];
 
-// โหลดสมาชิก (ยกเว้นคนที่อยู่ใน member_exit)
+// โหลดสมาชิก (โชว์ทุกคน แต่ถ้าบันทึกแล้ว ปุ่มบันทึก disabled)
 async function loadMembers(page = 1) {
   // ดึง member_id ที่อยู่ใน member_exit
   const { data: exitedData, error: exitedError } = await client
@@ -105,18 +105,17 @@ async function loadMembers(page = 1) {
   const from = (page - 1) * pageSizeMembers;
   const to = page * pageSizeMembers - 1;
 
-  // ดึงสมาชิกลาออก/เสียชีวิต ที่ยังไม่บันทึก
+  // ดึงสมาชิกลาออก/เสียชีวิต
   const { data, error, count } = await client
     .from('members')
     .select('member_id, first_name, last_name, group, member_status', { count: 'exact' })
     .in('member_status', ['ลาออก','เสียชีวิต'])
-    .not('member_id', 'in', `(${exitedIds.map(id => `'${id}'`).join(',')})`)
     .range(from, to);
 
   if (error) { console.error(error); return; }
 
   memberData = data;
-  renderMemberTable(data);
+  renderMemberTable(data, exitedIds);
 
   const totalPages = Math.ceil(count / pageSizeMembers);
   document.getElementById('pageInfoMembers').innerText = `หน้า ${page} / ${totalPages}`;
@@ -125,10 +124,11 @@ async function loadMembers(page = 1) {
 }
 
 // ตารางสมาชิก
-function renderMemberTable(data) {
+function renderMemberTable(data, exitedIds) {
   const tbody = document.getElementById('memberBody');
   tbody.innerHTML = '';
   data.forEach(m => {
+    const isExited = exitedIds.includes(m.member_id); // ตรวจสอบว่าบันทึกแล้ว
     const row = document.createElement('tr');
     row.className = "hover:bg-gray-100 transition";
     row.innerHTML = `
@@ -137,11 +137,16 @@ function renderMemberTable(data) {
       <td class="p-2">${m.last_name}</td>
       <td class="p-2">${m.group}</td>
       <td class="p-2">${m.member_status}</td>
-      <td class="p-2"><input type="date" id="meeting_date_${m.member_id}" class="border rounded p-1 w-full"></td>
-      <td class="p-2"><input type="number" id="share_amount_${m.member_id}" class="border rounded p-1 w-full"></td>
-      <td class="p-2"><input type="date" id="receive_date_${m.member_id}" class="border rounded p-1 w-full"></td>
-      <td class="p-2"><button onclick="saveMemberExit('${m.member_id}','${m.first_name}','${m.last_name}','${m.group}','${m.member_status}')" 
-        class="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded">💾 บันทึก</button></td>
+      <td class="p-2"><input type="date" id="meeting_date_${m.member_id}" class="border rounded p-1 w-full" ${isExited ? 'disabled' : ''}></td>
+      <td class="p-2"><input type="number" id="share_amount_${m.member_id}" class="border rounded p-1 w-full" ${isExited ? 'disabled' : ''}></td>
+      <td class="p-2"><input type="date" id="receive_date_${m.member_id}" class="border rounded p-1 w-full" ${isExited ? 'disabled' : ''}></td>
+      <td class="p-2">
+        <button onclick="saveMemberExit('${m.member_id}','${m.first_name}','${m.last_name}','${m.group}','${m.member_status}')"
+          class="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded"
+          ${isExited ? 'disabled class="bg-gray-400 cursor-not-allowed"' : ''}>
+          💾 บันทึก
+        </button>
+      </td>
     `;
     tbody.appendChild(row);
   });
@@ -257,7 +262,6 @@ document.getElementById('prevPageMembers').addEventListener('click', () => {
     loadMembers(currentPageMembers);
   }
 });
-
 document.getElementById('nextPageMembers').addEventListener('click', () => {
   currentPageMembers++;
   loadMembers(currentPageMembers);
@@ -270,7 +274,6 @@ document.getElementById('prevPageHistory').addEventListener('click', () => {
     loadHistory(currentPageHistory);
   }
 });
-
 document.getElementById('nextPageHistory').addEventListener('click', () => {
   currentPageHistory++;
   loadHistory(currentPageHistory);
