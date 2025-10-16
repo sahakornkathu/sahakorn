@@ -133,21 +133,34 @@ button.delete:hover { background:#c53030; }
     flex: 1 1 280px;
 }
 
-/* เพศ + ปุ่มด้านล่างให้อยู่บรรทัดเดียว */
 .bottom-filters {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
-    margin-top: 5px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  margin-top: 10px;
+  width: 100%;
+}
+
+.bottom-filters select {
+  flex: 1 1 200px;
+}
+
+.buttons-group {
+  display: flex;
+  gap: 10px;
 }
 
 /* Responsive */
 @media (max-width:768px){
     #filterDiv{ flex-direction: column; align-items:flex-start; }
-    .date-filter{ flex-direction: column; align-items:flex-start; gap:2px; }
-    .bottom-filters{ flex-direction: column; align-items:flex-start; gap:5px; }
+    .date-filter{ flex-direction: column; align-items:flex-start; gap:5px; }
+    .bottom-filters{ flex-direction: column; align-items:flex-start; gap:8px; }
+    .buttons-group{ width: 100%; justify-content: flex-start; }
+    .bottom-filters select{ width:100%; }
 }
+
 
 
 
@@ -263,9 +276,11 @@ button.delete:hover { background:#c53030; }
     <option value="หญิง">หญิง</option>
     <option value="อื่นๆ">อื่นๆ</option>
   </select>
+    <div class="buttons-group">
   <button id="printReport">🖨️ ปริ้นรายงานสมาชิก</button>
   <button id="clearFilter">🧹 ล้างตัวกรอง</button>
      </div>
+    </div>
   <span id="resultCount"></span>
 </div>
 
