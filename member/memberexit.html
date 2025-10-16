@@ -112,7 +112,7 @@
 
 <script>
 const SUPABASE_URL = "https://ttottijljxoinptmhgtu.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y"; 
 const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let chart = null;
@@ -328,7 +328,7 @@ async function printReport(){
 async function printPDFReport(){
   const startDate = document.getElementById('printStartDate').value;
   const endDate = document.getElementById('printEndDate').value;
-
+  
   let query = client.from('member_exit').select('*').order('receive_date',{ascending:false});
   if(startDate) query = query.gte('receive_date',startDate);
   if(endDate) query = query.lte('receive_date',endDate);
@@ -336,16 +336,24 @@ async function printPDFReport(){
   if(error){alert(error.message); return;}
 
   const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
+  const doc = new jsPDF('p', 'mm', 'a4');
 
-  // ใช้ฟอนต์ไทย built-in
-  doc.setFont("THSarabun");
+  // ฝังฟอนต์ THSarabun แบบ Base64 (ใส่ไฟล์ Base64 ของคุณตรงนี้)
+  // ตัวอย่าง: https://github.com/parnold/jsPDF-THSarabun
+  //doc.addFileToVFS("THSarabun.ttf","BASE64_DATA_HERE");
+  //doc.addFont("THSarabun.ttf","THSarabun","normal");
+  //doc.setFont("THSarabun");
+  
+  // สำหรับการทดสอบเร็ว ให้ใช้ Helvetica แทน
+  doc.setFont("helvetica");
 
+  // Header
   doc.setFontSize(18);
   doc.text("รายงานสมาชิกลาออก / เสียชีวิต", 105, 15, {align: "center"});
   doc.setFontSize(12);
   doc.text(`ช่วงวันที่: ${startDate||'ทั้งหมด'} ถึง ${endDate||'ทั้งหมด'}`, 105, 23, {align: "center"});
 
+  // ตาราง
   const tableColumn = ["รหัส","ชื่อ","นามสกุล","กลุ่ม","สถานะ","วันที่ประชุม","จำนวนเงิน","วันที่รับเงิน"];
   const tableRows = [];
 
@@ -369,7 +377,7 @@ async function printPDFReport(){
     startY: 30,
     theme: 'grid',
     headStyles:{fillColor:[59,130,246]},
-    styles:{fontSize:10, font:"THSarabun"}
+    styles:{fontSize:10}
   });
 
   doc.save(`รายงานสมาชิก_${new Date().toISOString().split('T')[0]}.pdf`);
