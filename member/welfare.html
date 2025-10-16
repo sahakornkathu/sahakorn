@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>บันทึกสวัสดิการสมาชิก</title>
+  <style>
+    body {
+      font-family: "Prompt", sans-serif;
+      background: #f3f4f6;
+      padding: 20px;
+    }
+
+    h2 {
+      text-align: center;
+      color: #1e3a8a;
+    }
+
+    #filterDiv {
+      background: #ffffff;
+      padding: 15px 20px;
+      border-radius: 10px;
+      max-width: 900px;
+      margin: 20px auto;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      justify-content: flex-start;
+    }
+
+    #filterDiv input,
+    #filterDiv select {
+      padding: 6px 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 14px;
+      background: #f9fafb;
+      flex: 1 1 180px;
+      transition: 0.2s;
+    }
+
+    #filterDiv input:focus,
+    #filterDiv select:focus {
+      border-color: #4a90e2;
+      box-shadow: 0 0 5px rgba(74,144,226,0.3);
+      background: #fff;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      margin-top: 15px;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    th, td {
+      padding: 10px;
+      text-align: center;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    th {
+      background: #2563eb;
+      color: white;
+    }
+
+    tr:hover {
+      background: #f1f5f9;
+    }
+
+    .btn {
+      background: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 8px 12px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .btn:hover {
+      background: #1d4ed8;
+    }
+
+    .form-welfare {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 10px;
+    }
+
+    .form-welfare input,
+    .form-welfare select {
+      padding: 6px 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      flex: 1 1 200px;
+    }
+
+    #successMsg {
+      color: green;
+      text-align: center;
+      margin-top: 10px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <h2>บันทึกสวัสดิการสมาชิก</h2>
+
+  <div id="filterDiv">
+    <input id="searchMemberId" placeholder="ค้นหาเลขสมาชิก">
+    <input id="searchName" placeholder="ค้นหาชื่อ / นามสกุล">
+    <button class="btn" id="searchBtn">🔍 ค้นหา</button>
+  </div>
+
+  <table id="memberTable">
+    <thead>
+      <tr>
+        <th>เลขสมาชิก</th>
+        <th>คำนำหน้า</th>
+        <th>ชื่อ</th>
+        <th>นามสกุล</th>
+        <th>กลุ่ม</th>
+        <th>วันที่รับเงิน</th>
+        <th>จำนวนเงิน</th>
+        <th>หมายเหตุ</th>
+        <th>บันทึก</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <p id="successMsg">✅ บันทึกเรียบร้อยแล้ว!</p>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = "https://ttottijljxoinptmhgtu.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y";
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    const searchBtn = document.getElementById("searchBtn");
+    const tableBody = document.querySelector("#memberTable tbody");
+    const successMsg = document.getElementById("successMsg");
+
+    async function loadMembers() {
+      const memberId = document.getElementById("searchMemberId").value.trim();
+      const name = document.getElementById("searchName").value.trim();
+
+      let query = supabase.from("members").select("*");
+
+      if (memberId) query = query.ilike("member_id", `%${memberId}%`);
+      if (name) query = query.or(`first_name.ilike.%${name}%,last_name.ilike.%${name}%`);
+
+      const { data, error } = await query;
+
+      if (error) {
+        console.error(error);
+        return;
+      }
+
+      renderTable(data);
+    }
+
+    function renderTable(members) {
+      tableBody.innerHTML = "";
+      members.forEach(member => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${member.member_id}</td>
+          <td>${member.title}</td>
+          <td>${member.first_name}</td>
+          <td>${member.last_name}</td>
+          <td>${member.group}</td>
+          <td><input type="date" class="receiveDate"></td>
+          <td><input type="number" class="amount" min="0"></td>
+          <td>
+            <select class="remark">
+              <option value="">--เลือก--</option>
+              <option value="พ่อเสียชีวิต">พ่อเสียชีวิต</option>
+              <option value="แม่เสียชีวิต">แม่เสียชีวิต</option>
+              <option value="ตนเองเสียชีวิต">ตนเองเสียชีวิต</option>
+            </select>
+          </td>
+          <td><button class="btn saveBtn">💾 บันทึก</button></td>
+        `;
+        tableBody.appendChild(row);
+
+        const saveBtn = row.querySelector(".saveBtn");
+        saveBtn.addEventListener("click", () => saveWelfare(member.member_id, row));
+      });
+    }
+
+    async function saveWelfare(memberId, row) {
+      const receiveDate = row.querySelector(".receiveDate").value;
+      const amount = row.querySelector(".amount").value;
+      const remark = row.querySelector(".remark").value;
+
+      if (!receiveDate || !amount || !remark) {
+        alert("กรุณากรอกข้อมูลให้ครบถ้วน");
+        return;
+      }
+
+      const { error } = await supabase.from("welfare").insert([
+        {
+          member_id: memberId,
+          receive_date: receiveDate,
+          amount: amount,
+          remark: remark
+        }
+      ]);
+
+      if (error) {
+        alert("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
+        console.error(error);
+      } else {
+        successMsg.style.display = "block";
+        setTimeout(() => successMsg.style.display = "none", 2000);
+      }
+    }
+
+    searchBtn.addEventListener("click", loadMembers);
+  </script>
+</body>
+</html>
