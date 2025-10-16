@@ -250,29 +250,51 @@ async function deleteHistory(member_id){
 async function loadDashboard(){
   const startDate = document.getElementById('startDate').value;
   const endDate = document.getElementById('endDate').value;
-  let query = client.from('member_exit').select('member_id, member_status, receive_date');
-  if(startDate) query = query.gte('receive_date',startDate);
-  if(endDate) query = query.lte('receive_date',endDate);
-  const {data,error} = await query;
-  if(error){ alert(error.message); return; }
 
-  const countResign = data.filter(d=>d.member_status==='ลาออก').length;
-  const countDeceased = data.filter(d=>d.member_status==='เสียชีวิต').length;
+  // ✅ แก้ตรงนี้ให้ chain ต่อกันในบรรทัดเดียว
+  let query = client.from('member_exit').select('member_id, member_status, receive_date', { count: 'exact' });
+  if (startDate && endDate) {
+    query = query.gte('receive_date', startDate).lte('receive_date', endDate);
+  } else if (startDate) {
+    query = query.gte('receive_date', startDate);
+  } else if (endDate) {
+    query = query.lte('receive_date', endDate);
+  }
 
-  document.getElementById('countResign').innerText=countResign;
-  document.getElementById('countDeceased').innerText=countDeceased;
+  const { data, error } = await query;
+  if (error) { alert(error.message); return; }
+
+  const countResign = data.filter(d => d.member_status === 'ลาออก').length;
+  const countDeceased = data.filter(d => d.member_status === 'เสียชีวิต').length;
+
+  document.getElementById('countResign').innerText = countResign;
+  document.getElementById('countDeceased').innerText = countDeceased;
 
   const ctx = document.getElementById('statusChart').getContext('2d');
-  if(chart) chart.destroy();
-  chart = new Chart(ctx,{
-    type:'bar',
-    data:{
-      labels:['ลาออก','เสียชีวิต'],
-      datasets:[{label:'จำนวนสมาชิก',data:[countResign,countDeceased],backgroundColor:['#3B82F6','#EF4444']}]
+  if (chart) chart.destroy();
+  chart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['ลาออก', 'เสียชีวิต'],
+      datasets: [{
+        label: 'จำนวนสมาชิก',
+        data: [countResign, countDeceased],
+        backgroundColor: ['#3B82F6', '#EF4444']
+      }]
     },
-    options:{responsive:true,plugins:{legend:{display:false},title:{display:true,text:'จำนวนสมาชิกตามสถานะ'}},scales:{y:{beginAtZero:true,precision:0}}}
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+        title: { display: true, text: 'จำนวนสมาชิกตามสถานะ' }
+      },
+      scales: {
+        y: { beginAtZero: true, precision: 0 }
+      }
+    }
   });
 }
+
 
 // ==================== PRINT HTML ====================
 async function printReport(){
