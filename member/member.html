@@ -365,17 +365,30 @@ form.addEventListener('submit', async e=>{
 
 // --- Print Report ---
 document.getElementById('printReport').addEventListener('click', () => {
-  const groupFilter = document.getElementById('searchGroup').value || 'ทั้งหมด';
+  const groupFilter = document.getElementById('searchGroup').value.toLowerCase();
+  const statusFilter = document.getElementById('searchStatus').value;
+  const genderFilter = document.getElementById('searchGender').value;
+
   const filtered = allMembers.filter(m => {
-    if(groupFilter === 'ทั้งหมด') return true;
-    return m.group && m.group.toLowerCase() === groupFilter.toLowerCase();
+    return (!groupFilter || (m.group && m.group.toLowerCase() === groupFilter)) &&
+           (!statusFilter || m.member_status === statusFilter) &&
+           (!genderFilter || m.gender === genderFilter);
   });
+
+  // หาชื่อกลุ่มแสดงในหัวรายงาน
+  const groupLabel = groupFilter ? `กลุ่มที่ ${groupFilter}` : 'ทั้งหมด';
+
   let printContent = `
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-      <div><img src="https://lh5.googleusercontent.com/d/1B0sZdUz54kO4zAv0oJgoN4Aipy3UyCyR=w100-h100" alt="Logo"></div>
-      <div style="text-align:right;"><h2>รายงานกลุ่มที่ ${groupFilter}</h2></div>
+      <div style="flex:0 0 auto;"><img src="https://lh5.googleusercontent.com/d/1B0sZdUz54kO4zAv0oJgoN4Aipy3UyCyR=w100-h100" alt="Logo" style="max-width:100px;height:auto;"></div>
+      <div style="flex:1;text-align:center;">
+        <h2 style="margin:0;">รายงาน${groupLabel}</h2>
+        <div style="font-size:14px;">สถานะสมาชิก: ${statusFilter || 'ทั้งหมด'} | เพศ: ${genderFilter || 'ทั้งหมด'}</div>
+      </div>
+      <div style="flex:0 0 100px;"></div>
     </div>
-    <table border="1" cellspacing="0" cellpadding="5" style="width:100%; border-collapse:collapse; font-family:sans-serif;">
+    <table border="1" cellspacing="0" cellpadding="5" 
+      style="width:100%; border-collapse:collapse; font-family:'Prompt',sans-serif; font-size:13px;">
       <tr style="background-color:#4a90e2; color:white;">
         <th>เลขสมาชิก</th>
         <th>คำนำหน้า ชื่อ นามสกุล</th>
@@ -383,15 +396,25 @@ document.getElementById('printReport').addEventListener('click', () => {
         <th>เบอร์โทร</th>
       </tr>
   `;
+
   filtered.forEach(m => {
     const fullName = `${m.title||''} ${m.first_name||''} ${m.last_name||''}`.trim();
     const fullAddress = `${m.house_no||''} ${m.moo||''} ${m.street||''} ${m.village||''} ${m.subdistrict||''} ${m.district||''} ${m.province||''} ${m.postal_code||''}`.replace(/\s+/g,' ').trim();
     const phone = m.phone || '';
-    printContent += `<tr><td>${m.member_id}</td><td>${fullName}</td><td>${fullAddress}</td><td>${phone}</td></tr>`;
+    printContent += `
+      <tr>
+        <td>${m.member_id}</td>
+        <td>${fullName}</td>
+        <td>${fullAddress}</td>
+        <td>${phone}</td>
+      </tr>`;
   });
+
   printContent += '</table>';
+
   const w = window.open('', '', 'width=900,height=600');
-  w.document.write('<html><head><title>รายงานสมาชิก</title></head><body>');
+  w.document.write('<html><head><title>รายงานสมาชิก</title>');
+  w.document.write('<style>body{font-family:"Prompt",sans-serif; margin:20px;} h2{text-align:center;}</style></head><body>');
   w.document.write(printContent);
   w.document.write('</body></html>');
   w.document.close();
