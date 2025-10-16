@@ -336,29 +336,26 @@ async function printPDFReport(){
   if(error){alert(error.message); return;}
 
   const { jsPDF } = window.jspdf;
-  const doc = new jsPDF('p', 'mm', 'a4');
+  const doc = new jsPDF('p','mm','a4');
 
-  // ฝังฟอนต์ THSarabun แบบ Base64 (ใส่ไฟล์ Base64 ของคุณตรงนี้)
-  // ตัวอย่าง: https://github.com/parnold/jsPDF-THSarabun
-  //doc.addFileToVFS("THSarabun.ttf","BASE64_DATA_HERE");
-  //doc.addFont("THSarabun.ttf","THSarabun","normal");
-  //doc.setFont("THSarabun");
-  
-  // สำหรับการทดสอบเร็ว ให้ใช้ Helvetica แทน
-  doc.setFont("helvetica");
+  // ====== ฝังฟอนต์ THSarabun ======
+  const THSarabunNormal = "BASE64_NORMAL"; // ใส่ Base64 ของ THSarabun.ttf
+  const THSarabunBold   = "BASE64_BOLD";   // ใส่ Base64 ของ THSarabun-Bold.ttf
+  doc.addFileToVFS("THSarabun.ttf", THSarabunNormal);
+  doc.addFont("THSarabun.ttf", "THSarabun", "normal");
+  doc.addFileToVFS("THSarabun-Bold.ttf", THSarabunBold);
+  doc.addFont("THSarabun-Bold.ttf", "THSarabun", "bold");
+  doc.setFont("THSarabun");
 
-  // Header
   doc.setFontSize(18);
-  doc.text("รายงานสมาชิกลาออก / เสียชีวิต", 105, 15, {align: "center"});
+  doc.text("รายงานสมาชิกลาออก / เสียชีวิต", 105, 15, {align:"center"});
   doc.setFontSize(12);
-  doc.text(`ช่วงวันที่: ${startDate||'ทั้งหมด'} ถึง ${endDate||'ทั้งหมด'}`, 105, 23, {align: "center"});
+  doc.text(`ช่วงวันที่: ${startDate||'ทั้งหมด'} ถึง ${endDate||'ทั้งหมด'}`, 105, 23, {align:"center"});
 
-  // ตาราง
   const tableColumn = ["รหัส","ชื่อ","นามสกุล","กลุ่ม","สถานะ","วันที่ประชุม","จำนวนเงิน","วันที่รับเงิน"];
   const tableRows = [];
-
   data.forEach(item=>{
-    const row = [
+    tableRows.push([
       item.member_id,
       item.first_name,
       item.last_name,
@@ -367,17 +364,16 @@ async function printPDFReport(){
       item.meeting_date,
       item.share_amount,
       item.receive_date
-    ];
-    tableRows.push(row);
+    ]);
   });
 
   doc.autoTable({
-    head: [tableColumn],
-    body: tableRows,
-    startY: 30,
-    theme: 'grid',
+    head:[tableColumn],
+    body:tableRows,
+    startY:30,
+    theme:'grid',
     headStyles:{fillColor:[59,130,246]},
-    styles:{fontSize:10}
+    styles:{font:"THSarabun", fontStyle:"normal", fontSize:10}
   });
 
   doc.save(`รายงานสมาชิก_${new Date().toISOString().split('T')[0]}.pdf`);
