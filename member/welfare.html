@@ -2,272 +2,149 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<title>บันทึกและดูประวัติสวัสดิการสมาชิก</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>บันทึกสวัสดิการสมาชิก</title>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-  body {
-    font-family: "Prompt", sans-serif;
-    background: #f3f4f6;
-    padding: 20px;
-  }
-
-  .container {
-    background: #fff;
-    border-radius: 12px;
-    max-width: 1000px;
-    margin: 0 auto;
-    padding: 20px 30px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-  }
-
-  h2 {
-    color: #1e40af;
-    margin-bottom: 20px;
-    text-align: center;
-  }
-
-  .form-group {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-bottom: 15px;
-  }
-
-  input, select {
-    padding: 8px 10px;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    flex: 1 1 220px;
-    font-size: 14px;
-  }
-
-  button {
-    background: #1d4ed8;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    padding: 10px 18px;
-    cursor: pointer;
-    font-size: 15px;
-  }
-
-  button:hover {
-    background: #2563eb;
-  }
-
-  #memberTable {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 15px;
-  }
-
-  #memberTable th, #memberTable td {
-    padding: 8px 10px;
-    border: 1px solid #ddd;
-    text-align: left;
-  }
-
-  #memberTable th {
-    background: #e0e7ff;
-  }
-
-  .history-row {
-    background: #f9fafb;
-    display: none;
-  }
-
-  .history-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 10px;
-  }
-
-  .history-table th, .history-table td {
-    border: 1px solid #ddd;
-    padding: 6px 8px;
-  }
-
-  .history-table th {
-    background: #f1f5f9;
-  }
-
-  .view-btn {
-    background: #6b7280;
-  }
-
-  .view-btn:hover {
-    background: #4b5563;
-  }
+body { font-family:"Prompt",sans-serif; background:#f0f4f8; margin:20px; color:#333; }
+h2 { text-align:center; color:#1e40af; margin-bottom:15px; }
+form { max-width:600px; margin:auto; background:#fff; padding:20px; border-radius:12px; box-shadow:0 5px 20px rgba(0,0,0,0.08); }
+input, select, button { display:block; width:100%; margin:8px 0; padding:8px 10px; border:1px solid #ccc; border-radius:6px; font-size:14px; }
+input:focus, select:focus { outline:none; border-color:#4a90e2; box-shadow:0 0 5px rgba(74,144,226,0.3); background:#fff; }
+button { background:#4a90e2; color:#fff; border:none; cursor:pointer; transition:0.2s; }
+button:hover { background:#357abd; }
+table { border-collapse:collapse; width:95%; max-width:1000px; margin:20px auto; font-size:13px; background:#fff; border-radius:10px; overflow:hidden; box-shadow:0 4px 12px rgba(0,0,0,0.08);}
+th, td { border:1px solid #e2e8f0; padding:6px 8px; text-align:center; }
+th { background:#4a90e2; color:#fff; font-weight:500; }
+tr:nth-child(even){ background:#f9fafb; }
+tr:hover{ background:#edf2f7; }
+.edit, .delete { padding:4px 8px; border-radius:4px; font-size:12px; color:#fff; border:none; cursor:pointer; }
+.edit { background:#4a90e2; }
+.edit:hover { background:#357abd; }
+.delete { background:#f56565; }
+.delete:hover { background:#c53030; }
 </style>
 </head>
 <body>
-<div class="container">
-  <h2>บันทึกและดูประวัติสวัสดิการสมาชิก</h2>
 
-  <div class="form-group">
-    <input type="text" id="searchMemberId" placeholder="ค้นหาเลขสมาชิก...">
-    <input type="text" id="searchName" placeholder="ค้นหาชื่อหรือนามสกุล...">
-  </div>
+<h2>บันทึกสวัสดิการสมาชิก</h2>
 
-  <table id="memberTable">
-    <thead>
-      <tr>
-        <th>เลขสมาชิก</th>
-        <th>ชื่อ-นามสกุล</th>
-        <th>กลุ่ม</th>
-        <th>วันที่รับเงิน</th>
-        <th>จำนวนเงิน</th>
-        <th>หมายเหตุ</th>
-        <th>จัดการ</th>
-      </tr>
-    </thead>
-    <tbody id="memberBody"></tbody>
-  </table>
-</div>
+<form id="welfareForm">
+  <select id="memberSelect" required>
+    <option value="">--เลือกสมาชิก--</option>
+  </select>
+  <input type="date" id="receive_date" required placeholder="วันที่รับเงิน">
+  <input type="number" id="amount" required placeholder="จำนวนเงิน">
+  <select id="note" required>
+    <option value="">--เหตุผล--</option>
+    <option value="พ่อเสียชีวิต">พ่อเสียชีวิต</option>
+    <option value="แม่เสียชีวิต">แม่เสียชีวิต</option>
+    <option value="ตนเองเสียชีวิต">ตนเองเสียชีวิต</option>
+  </select>
+  <button type="submit">💾 บันทึก</button>
+</form>
 
-<!-- ✅ ใช้ Supabase JS SDK v2 -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<h2>ประวัติสวัสดิการ</h2>
+<table id="welfareTable">
+  <thead>
+    <tr>
+      <th>สมาชิก</th>
+      <th>วันที่รับเงิน</th>
+      <th>จำนวนเงิน</th>
+      <th>เหตุผล</th>
+      <th>แก้ไข</th>
+      <th>ลบ</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/supabase.min.js"></script>
 <script>
-const { createClient } = supabase;
-const SUPABASE_URL = "https://ttottijljxoinptmhgtu.supabase.co"; // แก้เป็นของคุณ
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y"; // แก้เป็นของคุณ
-const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+const supabaseUrl = 'https://ttottijljxoinptmhgtu.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y';
+const supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
+const memberSelect = document.getElementById('memberSelect');
+const welfareForm = document.getElementById('welfareForm');
+const tableBody = document.querySelector('#welfareTable tbody');
+
+let editWelfareId = null;
+
+// Load members
 async function loadMembers() {
-  const { data, error } = await db
-    .from('members')
-    .select('member_id, title, first_name, last_name, group');
-
-  if (error) {
-    console.error(error);
-    alert("ไม่สามารถดึงข้อมูลสมาชิกได้");
-    return;
-  }
-
-  const tbody = document.getElementById("memberBody");
-  tbody.innerHTML = "";
-  data.forEach(m => {
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${m.member_id}</td>
-      <td>${m.title}${m.first_name} ${m.last_name}</td>
-      <td>${m.group || '-'}</td>
-      <td><input type="date" class="receiveDate"></td>
-      <td><input type="number" class="amount" placeholder="0.00"></td>
-      <td>
-        <select class="note">
-          <option value="">--เลือกหมายเหตุ--</option>
-          <option value="พ่อเสียชีวิต">พ่อเสียชีวิต</option>
-          <option value="แม่เสียชีวิต">แม่เสียชีวิต</option>
-          <option value="ตนเองเสียชีวิต">ตนเองเสียชีวิต</option>
-        </select>
-      </td>
-      <td>
-        <button class="saveBtn">บันทึก</button>
-        <button class="view-btn">ดูประวัติ</button>
-      </td>
-    `;
-    tbody.appendChild(tr);
-
-    // แถวแสดงประวัติ
-    const historyTr = document.createElement("tr");
-    historyTr.classList.add("history-row");
-    historyTr.innerHTML = `<td colspan="7"><div class="history"></div></td>`;
-    tbody.appendChild(historyTr);
-  });
-
-  // 📌 ปุ่มบันทึก
-  document.querySelectorAll(".saveBtn").forEach((btn, index) => {
-    btn.addEventListener("click", async () => {
-      const tr = btn.closest("tr");
-      const member = data[index];
-      const receive_date = tr.querySelector(".receiveDate").value;
-      const amount = tr.querySelector(".amount").value;
-      const note = tr.querySelector(".note").value;
-
-      if (!receive_date || !amount || !note) {
-        alert("กรุณากรอกข้อมูลให้ครบก่อนบันทึก");
-        return;
-      }
-
-      const { error } = await db
-        .from("welfare")
-        .insert([{ member_id: member.member_id, receive_date, amount, note }]);
-
-      if (error) {
-        alert("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
-        console.error(error);
-      } else {
-        alert("✅ บันทึกข้อมูลเรียบร้อยแล้ว");
-        tr.querySelector(".receiveDate").value = "";
-        tr.querySelector(".amount").value = "";
-        tr.querySelector(".note").value = "";
-      }
-    });
-  });
-
-  // 📜 ปุ่มดูประวัติ
-  document.querySelectorAll(".view-btn").forEach((btn, index) => {
-    btn.addEventListener("click", async () => {
-      const historyRow = btn.closest("tr").nextElementSibling;
-      const historyDiv = historyRow.querySelector(".history");
-      const member = data[index];
-      historyRow.style.display = historyRow.style.display === "table-row" ? "none" : "table-row";
-
-      const { data: welfare, error } = await db
-        .from("welfare")
-        .select("receive_date, amount, note, created_at")
-        .eq("member_id", member.member_id)
-        .order("receive_date", { ascending: false });
-
-      if (error) {
-        console.error(error);
-        return;
-      }
-
-      if (!welfare.length) {
-        historyDiv.innerHTML = `<p style="color:gray;">ยังไม่มีประวัติการรับสวัสดิการ</p>`;
-        return;
-      }
-
-      let html = `
-        <table class="history-table">
-          <thead><tr><th>วันที่รับเงิน</th><th>จำนวนเงิน</th><th>หมายเหตุ</th><th>วันที่บันทึก</th></tr></thead>
-          <tbody>
-            ${welfare.map(w => `
-              <tr>
-                <td>${w.receive_date || '-'}</td>
-                <td>${w.amount || '-'}</td>
-                <td>${w.note || '-'}</td>
-                <td>${new Date(w.created_at).toLocaleString("th-TH")}</td>
-              </tr>`).join('')}
-          </tbody>
-        </table>
-      `;
-      historyDiv.innerHTML = html;
-    });
+  const { data, error } = await supabase.from('members').select('member_id,title,first_name,last_name,group');
+  if(error) return console.error(error);
+  memberSelect.innerHTML = '<option value="">--เลือกสมาชิก--</option>';
+  data.forEach(m=>{
+    const opt = document.createElement('option');
+    opt.value = m.member_id;
+    opt.textContent = `[${m.member_id}] ${m.title}${m.first_name} ${m.last_name} (กลุ่ม ${m.group})`;
+    memberSelect.appendChild(opt);
   });
 }
-
-// 🔎 ฟังก์ชันค้นหา
-document.getElementById("searchMemberId").addEventListener("input", filterTable);
-document.getElementById("searchName").addEventListener("input", filterTable);
-
-function filterTable() {
-  const idVal = document.getElementById("searchMemberId").value.toLowerCase();
-  const nameVal = document.getElementById("searchName").value.toLowerCase();
-  const rows = document.querySelectorAll("#memberBody tr:not(.history-row)");
-
-  rows.forEach(row => {
-    const idText = row.cells[0].innerText.toLowerCase();
-    const nameText = row.cells[1].innerText.toLowerCase();
-    row.style.display = (idText.includes(idVal) && nameText.includes(nameVal)) ? "" : "none";
-    if (row.nextElementSibling.classList.contains("history-row")) {
-      row.nextElementSibling.style.display = "none";
-    }
-  });
-}
-
 loadMembers();
+
+// Load welfare history
+async function loadWelfare() {
+  const { data, error } = await supabase.from('welfare').select('*');
+  if(error) return console.error(error);
+  tableBody.innerHTML = '';
+  data.forEach(row=>{
+    const tr = document.createElement('tr');
+    const memberText = memberSelect.querySelector(`option[value="${row.member_id}"]`)?.textContent || row.member_id;
+    tr.innerHTML = `
+      <td>${memberText}</td>
+      <td>${row.receive_date}</td>
+      <td>${row.amount}</td>
+      <td>${row.note}</td>
+      <td><button class="edit" onclick="editRecord(${row.id})">แก้ไข</button></td>
+      <td><button class="delete" onclick="deleteRecord(${row.id})">ลบ</button></td>
+    `;
+    tableBody.appendChild(tr);
+  });
+}
+loadWelfare();
+
+// Edit
+window.editRecord = async function(id){
+  const { data, error } = await supabase.from('welfare').select('*').eq('id',id).single();
+  if(error) return console.error(error);
+  editWelfareId = id;
+  memberSelect.value = data.member_id;
+  document.getElementById('receive_date').value = data.receive_date;
+  document.getElementById('amount').value = data.amount;
+  document.getElementById('note').value = data.note;
+};
+
+// Delete
+window.deleteRecord = async function(id){
+  if(!confirm('ต้องการลบข้อมูลนี้?')) return;
+  const { error } = await supabase.from('welfare').delete().eq('id',id);
+  if(error) return console.error(error);
+  loadWelfare();
+};
+
+// Submit
+welfareForm.addEventListener('submit', async e=>{
+  e.preventDefault();
+  const data = {
+    member_id: memberSelect.value,
+    receive_date: document.getElementById('receive_date').value,
+    amount: parseFloat(document.getElementById('amount').value),
+    note: document.getElementById('note').value
+  };
+  if(editWelfareId){
+    const { error } = await supabase.from('welfare').update(data).eq('id',editWelfareId);
+    if(error) return console.error(error);
+    editWelfareId = null;
+  } else {
+    const { error } = await supabase.from('welfare').insert([data]);
+    if(error) return console.error(error);
+  }
+  welfareForm.reset();
+  loadWelfare();
+});
 </script>
 </body>
 </html>
