@@ -18,10 +18,8 @@ small{ font-size:12px; color:#555; }
 .form-navigation { text-align:center; margin-top:15px; }
 .form-navigation button { padding:6px 12px; margin:3px; border:none; border-radius:6px; cursor:pointer; background:#4a90e2; color:#fff; }
 .form-navigation button:hover { background:#357abd; }
-#filterDiv { background:#fff; padding:12px 15px; border-radius:10px; max-width:950px; margin:25px auto 15px; box-shadow:0 4px 12px rgba(0,0,0,0.08); display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+#filterDiv { background:#fff; padding:12px 15px; border-radius:10px; max-width:950px; margin:25px auto 15px; box-shadow:0 4px 12px rgba(0,0,0,0.08); display:flex; flex-wrap:wrap; gap:6px; }
 #filterDiv input, #filterDiv select { padding:5px 8px; border:1px solid #ccc; border-radius:6px; font-size:13px; background:#f9fafb; flex:1 1 150px; }
-#filterDiv button { padding:6px 12px; background:#4a90e2; color:#fff; border:none; border-radius:6px; cursor:pointer; }
-#filterDiv button:hover { background:#357abd; }
 table { border-collapse: collapse; width:100%; max-width:1000px; margin:auto; font-size:13px; background:#fff; border-radius:10px; overflow:hidden; box-shadow:0 4px 12px rgba(0,0,0,0.08); }
 th, td { border:1px solid #e2e8f0; padding:6px 8px; text-align:center; }
 th { background:#4a90e2; color:#fff; cursor:pointer; position:relative; font-weight:500; }
@@ -55,6 +53,8 @@ button.delete:hover { background:#c53030; }
   .progress-container::before{ display:none; }
   .progress-step{ width:100%; text-align:left; padding:10px 15px; border-radius:10px; font-size:14px; }
 }
+#printBtn { margin:10px auto; display:block; padding:8px 15px; background:#38a169; color:#fff; border:none; border-radius:6px; cursor:pointer; }
+#printBtn:hover { background:#2f855a; }
 </style>
 </head>
 <body>
@@ -89,7 +89,6 @@ button.delete:hover { background:#c53030; }
       <option value="หญิง">หญิง</option>
       <option value="อื่นๆ">อื่นๆ</option>
     </select>
-
     <select name="group" required>
       <option value="">--เลือกกลุ่ม--</option>
       <option value="1">กลุ่มที่ 1</option>
@@ -167,9 +166,10 @@ button.delete:hover { background:#c53030; }
     <option value="หญิง">หญิง</option>
     <option value="อื่นๆ">อื่นๆ</option>
   </select>
-  <button id="printReport">🖨️ ปริ้นรายงานสมาชิก</button>
   <span id="resultCount"></span>
 </div>
+
+<button id="printReport">🖨️ ปริ้นรายงานสมาชิก</button>
 
 <h2>รายการสมาชิก</h2>
 <table id="memberTable">
@@ -203,7 +203,7 @@ let allMembers=[];
 let sortColumn=null, sortAsc=true;
 let currentPage=1, rowsPerPage=10;
 
-// --- Multi-step Form ---
+// Multi-step
 const formSteps=document.querySelectorAll('.form-step');
 const progressSteps=document.querySelectorAll('.progress-step');
 let formStepIndex=0;
@@ -391,17 +391,23 @@ document.getElementById('printReport').addEventListener('click', () => {
         <th>ชื่อ</th>
         <th>นามสกุล</th>
         <th>กลุ่ม</th>
+        <th>เบอร์โทรศัพท์</th>
+        <th>ที่อยู่</th>
         <th>จังหวัด</th>
         <th>สถานะ</th>
       </tr>
   `;
   filtered.forEach(m => {
+    const fullAddress = `${m.house_no||''} ${m.moo||''} ${m.street||''} ${m.village||''} ${m.subdistrict||''} ${m.district||''} ${m.province||''} ${m.postal_code||''}`.replace(/\s+/g,' ').trim();
+    const phone = m.phone || m.phone_alt || '';
     printContent += `
       <tr>
         <td>${m.member_id}</td>
         <td>${m.first_name}</td>
         <td>${m.last_name}</td>
         <td>${m.group}</td>
+        <td>${phone}</td>
+        <td>${fullAddress}</td>
         <td>${m.province}</td>
         <td>${m.member_status}</td>
       </tr>
