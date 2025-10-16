@@ -54,14 +54,82 @@ button.delete:hover { background:#c53030; }
   .progress-container::before{ display:none; }
   .progress-step{ width:100%; text-align:left; padding:10px 15px; border-radius:10px; font-size:14px; }
 }
-#filterDiv { background: #ffffff; padding: 15px 20px; border-radius: 10px; max-width: 950px; margin: 20px auto; box-shadow: 0 4px 10px rgba(0,0,0,0.08); display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: flex-start; }
+/* #filterDiv { background: #ffffff; padding: 15px 20px; border-radius: 10px; max-width: 950px; margin: 20px auto; box-shadow: 0 4px 10px rgba(0,0,0,0.08); display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: flex-start; }
 #filterDiv label { font-size: 14px; color: #1e40af; font-weight: 500; margin-right: 5px; }
 #filterDiv input, #filterDiv select { padding: 6px 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; background: #f9fafb; flex: 1 1 180px; transition: 0.2s; }
 #filterDiv input:focus, #filterDiv select:focus { border-color: #4a90e2; box-shadow: 0 0 5px rgba(74,144,226,0.3); background: #fff; }
 #filterDiv button { background: #4a90e2; color: #fff; border: none; border-radius: 6px; padding: 8px 14px; cursor: pointer; font-size: 14px; transition: 0.2s; }
 #filterDiv button:hover { background: #357abd; }
 #resultCount { font-size: 14px; font-weight: 500; color: #2d3748; }
-.date-filter { display: flex; align-items: center; gap: 5px; flex: 1 1 280px; }
+.date-filter { display: flex; align-items: center; gap: 5px; flex: 1 1 280px; } */
+
+   #filterDiv {
+    background: #ffffff;
+    padding: 15px 20px;
+    border-radius: 10px;
+    max-width: 950px;
+    margin: 20px auto;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    justify-content: flex-start;
+  }
+
+  #filterDiv label {
+    font-size: 14px;
+    color: #1e40af;
+    font-weight: 500;
+    margin-right: 5px;
+  }
+
+  #filterDiv input,
+  #filterDiv select {
+    padding: 6px 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 14px;
+    background: #f9fafb;
+    flex: 1 1 180px;
+    transition: 0.2s;
+  }
+
+  #filterDiv input:focus,
+  #filterDiv select:focus {
+    border-color: #4a90e2;
+    box-shadow: 0 0 5px rgba(74,144,226,0.3);
+    background: #fff;
+  }
+
+  #filterDiv button {
+    background: #4a90e2;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 14px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: 0.2s;
+  }
+
+  #filterDiv button:hover {
+    background: #357abd;
+  }
+
+  #resultCount {
+    font-size: 14px;
+    font-weight: 500;
+    color: #2d3748;
+  }
+
+  /* จัดกลุ่มวันที่ให้อยู่ด้วยกัน */
+  .date-filter {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex: 1 1 280px;
+  }
 </style>
 </head>
 <body>
