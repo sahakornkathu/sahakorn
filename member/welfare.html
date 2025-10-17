@@ -5,47 +5,71 @@
 <title>บันทึกและดูประวัติสวัสดิการสมาชิก</title>
 <style>
   body { font-family: "Prompt", sans-serif; background: #f3f4f6; padding: 20px; }
-  .container { background: #fff; border-radius: 12px; max-width: 1100px; margin: 0 auto; padding: 25px 30px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+  .container {
+    background: #fff;
+    border-radius: 12px;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 25px 30px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  }
   h2 { color: #1e40af; text-align: center; margin-bottom: 20px; }
 
-  /* ส่วนค้นหา + พิมพ์ */
+  /* 🔹 ส่วนค้นหาและพิมพ์ */
   .filter-bar {
-    display: flex; flex-wrap: wrap; gap: 10px;
-    margin-bottom: 15px; align-items: center; justify-content: space-between;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 15px;
+    align-items: center;
+    justify-content: space-between;
   }
   .filter-inputs { display: flex; flex-wrap: wrap; gap: 10px; flex: 1; }
   input, select {
     padding: 8px 10px;
-    border-radius: 8px; border: 1px solid #ccc;
+    border-radius: 8px;
+    border: 1px solid #ccc;
     font-size: 14px;
   }
   .print-btn {
-    background: #0ea5e9; color: white; border: none;
-    border-radius: 8px; padding: 8px 16px;
-    cursor: pointer; font-size: 14px; transition: 0.2s;
+    background: #0ea5e9;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 16px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: 0.2s;
   }
   .print-btn:hover { background: #0284c7; }
 
-  /* ตาราง */
-  table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-  th, td { padding: 8px 10px; border: 1px solid #ddd; text-align: center; }
-  th { background: #e0e7ff; }
+  /* 🔹 ตาราง */
+  table { width: 100%; border-collapse: collapse; margin-top: 15px; table-layout: fixed; }
+  th, td {
+    padding: 10px 8px;
+    border: 1px solid #ddd;
+    text-align: center;
+    word-wrap: break-word;
+    white-space: nowrap;
+  }
+  th { background: #e0e7ff; font-weight: 600; }
+  td input, td select { width: 100%; box-sizing: border-box; }
 
-  /* ปุ่ม */
+  /* 🔹 ปุ่มในตาราง */
   .saveBtn { background: #2563eb; color: white; border: none; border-radius: 8px; padding: 8px 14px; margin-right: 6px; cursor: pointer; }
   .saveBtn:hover { background: #1e40af; }
   .view-btn { background: #6b7280; color: white; border: none; border-radius: 8px; padding: 8px 14px; cursor: pointer; }
   .view-btn:hover { background: #4b5563; }
 
-  .edit-history { background: #facc15; color: #111; border-radius: 6px; padding: 5px 10px; border: none; }
+  .edit-history { background: #facc15; color: #111; border-radius: 6px; padding: 5px 10px; border: none; cursor: pointer; }
   .edit-history:hover { background: #eab308; }
-  .delete-history { background: #ef4444; color: white; border-radius: 6px; padding: 5px 10px; border: none; }
+  .delete-history { background: #ef4444; color: white; border-radius: 6px; padding: 5px 10px; border: none; cursor: pointer; }
   .delete-history:hover { background: #dc2626; }
 
   .action-buttons { display: flex; gap: 6px; justify-content: center; }
   .history-row { background: #f9fafb; display: none; }
-  .history-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-  .history-table th, .history-table td { border: 1px solid #ddd; padding: 6px 8px; text-align: center; }
+  .history-table { width: 100%; border-collapse: collapse; margin-top: 10px; table-layout: fixed; }
+  .history-table th, .history-table td { border: 1px solid #ddd; padding: 6px 8px; text-align: center; white-space: nowrap; }
   .history-table th { background: #f1f5f9; }
 </style>
 </head>
@@ -53,7 +77,7 @@
 <div class="container">
   <h2>บันทึกและดูประวัติสวัสดิการสมาชิก</h2>
 
-  <!-- 🔹 ช่องค้นหาและพิมพ์รายงาน -->
+  <!-- 🔹 ค้นหา + ปุ่มพิมพ์ -->
   <div class="filter-bar">
     <div class="filter-inputs">
       <input type="text" id="searchMemberId" placeholder="ค้นหาเลขสมาชิก...">
@@ -67,13 +91,13 @@
   <table id="memberTable">
     <thead>
       <tr>
-        <th>เลขสมาชิก</th>
-        <th>ชื่อ-นามสกุล</th>
-        <th>กลุ่ม</th>
-        <th>วันที่รับเงิน</th>
-        <th>จำนวนเงิน</th>
-        <th>หมายเหตุ</th>
-        <th>จัดการ</th>
+        <th style="width:10%;">เลขสมาชิก</th>
+        <th style="width:20%;">ชื่อ-นามสกุล</th>
+        <th style="width:12%;">กลุ่ม</th>
+        <th style="width:15%;">วันที่รับเงิน</th>
+        <th style="width:12%;">จำนวนเงิน</th>
+        <th style="width:18%;">หมายเหตุ</th>
+        <th style="width:13%;">จัดการ</th>
       </tr>
     </thead>
     <tbody id="memberBody"></tbody>
@@ -183,7 +207,6 @@ function filterTable() {
   const idVal = document.getElementById("searchMemberId").value.toLowerCase();
   const nameVal = document.getElementById("searchName").value.toLowerCase();
   const groupVal = document.getElementById("searchGroup").value.toLowerCase();
-  const dateVal = document.getElementById("searchDate").value;
   const rows = document.querySelectorAll("#memberBody tr:not(.history-row)");
 
   rows.forEach(row => {
@@ -206,12 +229,14 @@ function filterTable() {
   document.getElementById(id).addEventListener("input", filterTable);
 });
 
-// 🖨️ พิมพ์รายงาน
+// 🖨️ พิมพ์รายงาน + รวมยอด
 document.getElementById("printReport").addEventListener("click", async () => {
   const { data, error } = await db
     .from("welfare")
     .select("*, members:member_id(member_id, title, first_name, last_name, group)");
   if (error || !data.length) return alert("ไม่มีข้อมูล");
+
+  let total = data.reduce((sum, r) => sum + Number(r.amount || 0), 0).toFixed(2);
 
   const printWindow = window.open("", "_blank");
   printWindow.document.write(`
@@ -219,14 +244,17 @@ document.getElementById("printReport").addEventListener("click", async () => {
   <style>
     body{font-family:"Prompt",sans-serif;margin:40px;}
     h2{text-align:center;}
-    p{text-align:center;}
+    p{text-align:center;margin:4px;}
     .logo{width:90px;display:block;margin:0 auto 10px auto;}
-    table{width:100%;border-collapse:collapse;margin-top:10px;}
-    th,td{border:1px solid #ccc;padding:8px;text-align:center;}
+    table{width:100%;border-collapse:collapse;margin-top:10px;table-layout:fixed;}
+    th,td{border:1px solid #ccc;padding:8px;text-align:center;white-space:nowrap;}
     th{background:#f1f5f9;}
+    tfoot td{font-weight:bold;background:#f9fafb;}
   </style></head><body>
-  <img src="https://lh5.googleusercontent.com/d/1B0sZdUz54kO4zAv0oJgoN4Aipy3UyCyR" class="logo">
-  <h2>รายงานสวัสดิการสมาชิก</h2>
+  <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/Thailand_emblem_gold.svg/1200px-Thailand_emblem_gold.svg.png" class="logo">
+  <h2>กองทุนสวัสดิการชุมชนบ้านใหม่</h2>
+  <p><b>รายงานสวัสดิการสมาชิก</b></p>
+  <p>วันที่พิมพ์รายงาน: ${new Date().toLocaleDateString("th-TH")}</p>
   <table>
     <thead><tr><th>วันที่รับเงิน</th><th>เลขสมาชิก</th><th>ชื่อ-นามสกุล</th><th>กลุ่ม</th><th>จำนวนเงิน</th><th>หมายเหตุ</th></tr></thead>
     <tbody>
@@ -236,10 +264,11 @@ document.getElementById("printReport").addEventListener("click", async () => {
         <td>${r.members.member_id}</td>
         <td>${r.members.title}${r.members.first_name} ${r.members.last_name}</td>
         <td>${r.members.group}</td>
-        <td>${r.amount}</td>
+        <td>${Number(r.amount).toLocaleString()}</td>
         <td>${r.note}</td>
       </tr>`).join("")}
     </tbody>
+    <tfoot><tr><td colspan="4">รวมทั้งสิ้น</td><td colspan="2">${Number(total).toLocaleString()} บาท</td></tr></tfoot>
   </table>
   </body></html>`);
   printWindow.document.close();
