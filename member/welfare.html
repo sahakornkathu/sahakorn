@@ -27,8 +27,8 @@
   #printReportBtn { background:#059669; color:white; font-weight: 500; }
   #printReportBtn:hover { background:#047857; }
 
-  /* จัดปุ่มในตาราง */
-  td button { display: inline-block; margin: 3px 2px; }
+  /* ปุ่มอยู่บรรทัดเดียวกัน */
+  td button { display: inline-flex; align-items: center; justify-content: center; gap: 4px; margin: 2px; vertical-align: middle; }
 
   /* ตาราง */
   #memberTable { width: 100%; border-collapse: collapse; margin-top: 15px; }
@@ -104,8 +104,10 @@ async function loadMembers() {
         </select>
       </td>
       <td>
-        <button class="saveBtn">💾 บันทึก</button>
-        <button class="view-btn">📜 ดูประวัติ</button>
+        <div style="display:flex; gap:6px;">
+          <button class="saveBtn">💾 บันทึก</button>
+          <button class="view-btn">📜 ดูประวัติ</button>
+        </div>
       </td>
     `;
     tbody.appendChild(tr);
