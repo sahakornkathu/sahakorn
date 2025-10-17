@@ -100,7 +100,7 @@
 <script>
 const { createClient } = supabase;
 const SUPABASE_URL = "https://ttottijljxoinptmhgtu.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y";
 const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // 🖨️ ปุ่มพิมพ์รายงาน (แก้ไขเฉพาะส่วนนี้)
@@ -133,7 +133,7 @@ document.getElementById("printReport").addEventListener("click", async () => {
     }
     tfoot td{font-weight:bold;background:#f9fafb;}
   </style></head><body>
-  <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/Thailand_emblem_gold.svg/1200px-Thailand_emblem_gold.svg.png" class="logo">
+  <img src="https://lh5.googleusercontent.com/d/1B0sZdUz54kO4zAv0oJgoN4Aipy3UyCyR" class="logo">
   <h2>กองทุนสวัสดิการชุมชนบ้านใหม่</h2>
   <p><b>รายงานสวัสดิการสมาชิก</b></p>
   <p>วันที่พิมพ์รายงาน: ${new Date().toLocaleDateString("th-TH")}</p>
