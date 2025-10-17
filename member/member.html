@@ -315,7 +315,6 @@ function validateStep(n){
   const inputs=formSteps[n].querySelectorAll('input,select');
   for(let inp of inputs){
     if(inp.hasAttribute('required') && !inp.value){
-      // ใช้ placeholder ถ้ามี ไม่งั้นใช้ name
       const label = inp.placeholder || inp.name || 'ข้อมูลที่จำเป็น';
       alert('กรุณากรอกข้อมูล: ' + label);
       inp.focus();
@@ -325,7 +324,7 @@ function validateStep(n){
   return true;
 }
 
-// Calculate age
+// คำนวณอายุ
 document.getElementById('birthday').addEventListener('change', function(){
   if(!this.value){ document.getElementById('age').value=''; return; }
   const birthDate = new Date(this.value);
@@ -336,12 +335,12 @@ document.getElementById('birthday').addEventListener('change', function(){
   document.getElementById('age').value = age >= 0 ? age : '';
 });
 
-// --- ID Card Format ---
+// --- ฟังก์ชันจัดรูปแบบเลขบัตรประชาชน ---
 const idCardInput = document.querySelector('input[name="id_card"]');
 if(idCardInput){
   idCardInput.addEventListener('input', function (e) {
     let value = e.target.value.replace(/\D/g, ''); // เอาแต่ตัวเลข
-    if (value.length > 13) value = value.slice(0, 13); // จำกัด 13 หลัก (เลขบัตรประชาชนไทย 13 หลัก)
+    if (value.length > 13) value = value.slice(0, 13); // จำกัด 13 หลัก
     let formatted = '';
     if (value.length > 0) formatted += value.substring(0, 1);
     if (value.length > 1) formatted += '-' + value.substring(1, 5);
@@ -352,19 +351,28 @@ if(idCardInput){
   });
 }
 
-// --- Load Members ---
+// --- ฟังก์ชันตรวจสอบความถูกต้องเลขบัตรประชาชน ---
+function isValidThaiID(id) {
+  const num = id.replace(/\D/g, ''); // เอาแต่ตัวเลข
+  if (num.length !== 13) return false;
+  let sum = 0;
+  for (let i = 0; i < 12; i++) sum += parseInt(num.charAt(i)) * (13 - i);
+  const check = (11 - (sum % 11)) % 10;
+  return check === parseInt(num.charAt(12));
+}
+
+// --- โหลดข้อมูลสมาชิก ---
 async function loadMembers(){
   try{
     const res=await fetch(API_URL);
     const result=await res.json();
     if(result.error){ alert(result.error); return; }
-    // รองรับทั้งรูปแบบที่คืน { data: [...] } หรือ คืน array โดยตรง
     allMembers = Array.isArray(result) ? result : (result.data || []);
     renderTable();
   }catch(err){ alert("เกิดข้อผิดพลาด: "+err); }
 }
 
-// --- Render Table + Filter ---
+// --- แสดงตาราง + ฟิลเตอร์ ---
 function renderTable(){
   let rows = allMembers.slice();
 
@@ -378,20 +386,14 @@ function renderTable(){
   const gender=document.getElementById('searchGender').value;
 
   rows=rows.filter(m=>{
-    if(memberId && !(m.member_id || '').toString().includes(memberId)) return false;
+    if(memberId && !(m.member_id || '').includes(memberId)) return false;
     if(name && !(((m.first_name||'') + (m.last_name||'')).toLowerCase().includes(name))) return false;
     if(group && (m.group || '').toString() != group) return false;
     if(province && !((m.province||'').toLowerCase().includes(province))) return false;
     if(status && (m.member_status || '') != status) return false;
     if(gender && (m.gender || '') != gender) return false;
-    if(startDate){
-      const jd = m.join_date ? new Date((m.join_date.split && m.join_date.split('T')) ? m.join_date.split('T')[0] : m.join_date) : null;
-      if(!jd || jd < startDate) return false;
-    }
-    if(endDate){
-      const jd = m.join_date ? new Date((m.join_date.split && m.join_date.split('T')) ? m.join_date.split('T')[0] : m.join_date) : null;
-      if(!jd || jd > endDate) return false;
-    }
+    if(startDate && new Date(m.join_date) < startDate) return false;
+    if(endDate && new Date(m.join_date) > endDate) return false;
     return true;
   });
 
@@ -402,7 +404,6 @@ function renderTable(){
     return sortAsc ? (aa>bb?1:-1) : (aa<bb?1:-1);
   });
 
-  const totalRows = rows.length;
   const start=(currentPage-1)*rowsPerPage;
   const end=start+rowsPerPage;
   const pageRows=rows.slice(start,end);
@@ -416,8 +417,8 @@ function renderTable(){
     tableBody.appendChild(tr);
   });
 
-  document.getElementById('pageInfo').textContent=`หน้า ${currentPage} (แสดง ${Math.min(end,totalRows)} จาก ${totalRows} รายการ)`;
-  document.getElementById('resultCount').textContent=`จำนวนทั้งหมด: ${totalRows} รายการ`;
+  document.getElementById('pageInfo').textContent=`หน้า ${currentPage}`;
+  document.getElementById('resultCount').textContent=`จำนวนทั้งหมด: ${rows.length} รายการ`;
 }
 
 // --- Sorting ---
@@ -435,66 +436,41 @@ document.getElementById('nextPage').addEventListener('click',()=>{ currentPage++
 
 // --- Filters Event ---
 ['searchMemberId','searchName','searchGroup','searchProvince','searchStatus','searchGender','searchJoinDateStart','searchJoinDateEnd']
-.forEach(id=>{
-  const el=document.getElementById(id);
-  if(el) el.addEventListener('input',()=>{ currentPage=1; renderTable(); });
-});
+.forEach(id=>document.getElementById(id).addEventListener('input',()=>{ currentPage=1; renderTable(); }));
 
-// --- Form Submit ---
+// --- บันทึกข้อมูล ---
 form.addEventListener('submit', async(e)=>{
   e.preventDefault();
   const data=Object.fromEntries(new FormData(form));
-  // ถ้าแก้ไข ให้ใช้ editId เป็น member_id (ตามที่โค้ดเดิมต้องการ)
-  if(editId) data.member_id = editId;
+
+  // ✅ ตรวจสอบเลขบัตรก่อนบันทึก
+  const idCardRaw = data.id_card.replace(/\D/g, '');
+  if(!isValidThaiID(idCardRaw)){
+    alert('เลขบัตรประชาชนไม่ถูกต้อง กรุณาตรวจสอบอีกครั้ง');
+    form.elements['id_card'].focus();
+    return;
+  }
+
+  data.id_card = idCardRaw; // ✅ เก็บเลขล้วน (ไม่ใส่ขีด)
+  if(editId) data.member_id=editId;
+
   try{
     const res=await fetch(API_URL,{method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)});
     const result=await res.json();
     if(result.error){ alert(result.error); return; }
-    alert('บันทึกสำเร็จ');
-    form.reset();
-    editId=null;
-    formStepIndex=0;
-    showStep(0);
-    await loadMembers();
+    alert('บันทึกสำเร็จ ✅');
+    form.reset(); editId=null; formStepIndex=0; showStep(0); await loadMembers();
   }catch(err){ alert("เกิดข้อผิดพลาด: "+err); }
 });
 
 // --- Edit / Delete ---
-window.editMember=(id)=>{ 
-  const m=allMembers.find(x=>x.member_id===id || x.member_id==id);
-  if(!m) { alert('ไม่พบข้อมูลสมาชิกนี้'); return; }
-  editId=id;
-  for(let k in m){
-    if(form.elements[k]) form.elements[k].value = m[k] ?? '';
-  }
-  // หากมีวันที่ในรูปแบบ ISO ให้แยกก่อนใส่ input[type=date]
-  if(m.join_date && form.elements['join_date']){
-    const jd = (m.join_date.split && m.join_date.split('T')) ? m.join_date.split('T')[0] : m.join_date;
-    form.elements['join_date'].value = jd;
-  }
-  if(m.birthday && form.elements['birthday']){
-    const bd = (m.birthday.split && m.birthday.split('T')) ? m.birthday.split('T')[0] : m.birthday;
-    form.elements['birthday'].value = bd;
-    // อัปเดตอายุ
-    const ev = new Event('change');
-    form.elements['birthday'].dispatchEvent(ev);
-  }
-  formStepIndex=0; showStep(0);
-}
-
-window.deleteMember=async(id)=>{
-  if(!confirm('ลบสมาชิกนี้?')) return;
-  try{
-    await fetch(API_URL+'/'+encodeURIComponent(id),{method:'DELETE'});
-    allMembers=allMembers.filter(m=> (m.member_id||'') !== (id||''));
-    renderTable();
-  }catch(err){ alert(err); }
-}
+window.editMember=(id)=>{ const m=allMembers.find(x=>x.member_id===id); if(!m) return; editId=id; for(let k in m){ if(form.elements[k]) form.elements[k].value=m[k]; } formStepIndex=0; showStep(0); }
+window.deleteMember=async(id)=>{ if(!confirm('ลบสมาชิกนี้?')) return; try{ await fetch(API_URL+'/'+id,{method:'DELETE'}); allMembers=allMembers.filter(m=>m.member_id!==id); renderTable(); }catch(err){ alert(err); } }
 
 // --- Clear Filter ---
 document.getElementById('clearFilter').addEventListener('click',()=>{
   ['searchMemberId','searchName','searchGroup','searchProvince','searchStatus','searchGender','searchJoinDateStart','searchJoinDateEnd']
-  .forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  .forEach(id=>document.getElementById(id).value='');
   currentPage=1; renderTable();
 });
 
@@ -507,8 +483,8 @@ document.getElementById('printReport').addEventListener('click', () => {
   const joinDateEnd=document.getElementById('searchJoinDateEnd').value;
 
   const filtered = allMembers.filter(m => {
-    const joinDate = m.join_date ? (m.join_date.split && m.join_date.split('T') ? m.join_date.split('T')[0] : m.join_date) : '';
-    return (!groupFilter || (m.group && m.group.toString().toLowerCase() === groupFilter)) &&
+    const joinDate = m.join_date ? (m.join_date.split('T')[0] || m.join_date) : '';
+    return (!groupFilter || (m.group && m.group.toLowerCase() === groupFilter)) &&
            (!statusFilter || m.member_status === statusFilter) &&
            (!genderFilter || m.gender === genderFilter) &&
            (!joinDateStart || joinDate >= joinDateStart) &&
@@ -516,7 +492,6 @@ document.getElementById('printReport').addEventListener('click', () => {
   });
 
   const groupLabel = groupFilter ? `กลุ่มที่ ${groupFilter}` : 'ทั้งหมด';
-
   let printContent = `
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
       <div style="flex:0 0 auto;"><img src="https://lh5.googleusercontent.com/d/1B0sZdUz54kO4zAv0oJgoN4Aipy3UyCyR=w100-h100" alt="Logo" style="max-width:100px;height:auto;"></div>
@@ -527,34 +502,22 @@ document.getElementById('printReport').addEventListener('click', () => {
       </div>
       <div style="flex:0 0 100px;"></div>
     </div>
-    <table border="1" cellspacing="0" cellpadding="5" 
-      style="width:100%; border-collapse:collapse; font-family:'Prompt',sans-serif; font-size:13px;">
+    <table border="1" cellspacing="0" cellpadding="5" style="width:100%; border-collapse:collapse; font-family:'Prompt',sans-serif; font-size:13px;">
       <tr style="background-color:#4a90e2; color:white;">
         <th>เลขสมาชิก</th>
         <th>คำนำหน้า ชื่อ นามสกุล</th>
         <th>วันที่เป็นสมาชิก</th>
         <th>ที่อยู่</th>
         <th>เบอร์โทร</th>
-      </tr>
-  `;
-
+      </tr>`;
   filtered.forEach(m => {
     const fullName = `${m.title||''} ${m.first_name||''} ${m.last_name||''}`.trim();
-    const joinDate = m.join_date ? (m.join_date.split && m.join_date.split('T') ? m.join_date.split('T')[0] : m.join_date) : '';
+    const joinDate = m.join_date ? (m.join_date.split('T')[0] || m.join_date) : '';
     const fullAddress = `${m.house_no||''} ${m.moo||''} ${m.street||''} ${m.village||''} ${m.subdistrict||''} ${m.district||''} ${m.province||''} ${m.postal_code||''}`.replace(/\s+/g,' ').trim();
     const phone = m.phone || '';
-    printContent += `
-      <tr>
-        <td>${m.member_id}</td>
-        <td>${fullName}</td>
-        <td>${joinDate}</td>
-        <td>${fullAddress}</td>
-        <td>${phone}</td>
-      </tr>`;
+    printContent += `<tr><td>${m.member_id}</td><td>${fullName}</td><td>${joinDate}</td><td>${fullAddress}</td><td>${phone}</td></tr>`;
   });
-
   printContent += '</table>';
-
   const w = window.open('', '', 'width=900,height=600');
   w.document.write('<html><head><title>รายงานสมาชิก</title>');
   w.document.write('<style>body{font-family:"Prompt",sans-serif; margin:20px;} h2{text-align:center;}</style></head><body>');
@@ -564,9 +527,10 @@ document.getElementById('printReport').addEventListener('click', () => {
   w.print();
 });
 
-// Initial Load
+// โหลดข้อมูลเริ่มต้น
 loadMembers();
 </script>
+
 
 </body>
 </html>
