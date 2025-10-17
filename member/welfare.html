@@ -9,19 +9,37 @@
   h2 { color: #1e40af; margin-bottom: 20px; text-align: center; }
   .form-group { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px; }
   input, select { padding: 8px 10px; border: 1px solid #ccc; border-radius: 8px; flex: 1 1 220px; font-size: 14px; }
-  button { background: #1d4ed8; color: white; border: none; border-radius: 8px; padding: 10px 18px; cursor: pointer; font-size: 15px; }
-  button:hover { background: #2563eb; }
+  button { border: none; border-radius: 8px; padding: 8px 14px; cursor: pointer; font-size: 14px; transition: all 0.2s ease-in-out; }
+
+  /* ปุ่มหลัก */
+  .saveBtn { background: #3b82f6; color: white; font-weight: 500; }
+  .saveBtn:hover { background: #2563eb; transform: translateY(-1px); }
+
+  /* ปุ่มดูประวัติ */
+  .view-btn { background: #6b7280; color: white; font-weight: 500; margin-left: 6px; }
+  .view-btn:hover { background: #4b5563; transform: translateY(-1px); }
+
+  /* ปุ่มลบ */
+  .delete-btn { background: #dc2626; color: white; padding: 6px 10px; border-radius: 6px; }
+  .delete-btn:hover { background: #b91c1c; }
+
+  /* ปุ่มพิมพ์รายงาน */
+  #printReportBtn { background:#059669; color:white; font-weight: 500; }
+  #printReportBtn:hover { background:#047857; }
+
+  /* จัดปุ่มในตาราง */
+  td button { display: inline-block; margin: 3px 2px; }
+
+  /* ตาราง */
   #memberTable { width: 100%; border-collapse: collapse; margin-top: 15px; }
-  #memberTable th, #memberTable td { padding: 8px 10px; border: 1px solid #ddd; text-align: left; }
+  #memberTable th, #memberTable td { padding: 8px 10px; border: 1px solid #ddd; text-align: left; vertical-align: middle; }
   #memberTable th { background: #e0e7ff; }
+
+  /* ประวัติ */
   .history-row { background: #f9fafb; display: none; }
   .history-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
   .history-table th, .history-table td { border: 1px solid #ddd; padding: 6px 8px; }
   .history-table th { background: #f1f5f9; }
-  .view-btn { background: #6b7280; }
-  .view-btn:hover { background: #4b5563; }
-  .delete-btn { background: #dc2626; color: white; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; }
-  .delete-btn:hover { background: #b91c1c; }
 </style>
 </head>
 <body>
@@ -31,14 +49,10 @@
   <div class="form-group">
     <input type="text" id="searchMemberId" placeholder="ค้นหาเลขสมาชิก...">
     <input type="text" id="searchName" placeholder="ค้นหาชื่อหรือนามสกุล...">
-
-    <!-- ฟิลเตอร์ -->
     <input type="date" id="filterDateStart">
     <input type="date" id="filterDateEnd">
     <input type="text" id="filterGroup" placeholder="กรอกชื่อกลุ่ม...">
-
-    <!-- ปุ่มพิมพ์รายงาน -->
-    <button id="printReportBtn" style="background:#059669;">🖨️ พิมพ์รายงาน</button>
+    <button id="printReportBtn">🖨️ พิมพ์รายงาน</button>
   </div>
 
   <table id="memberTable">
@@ -90,8 +104,8 @@ async function loadMembers() {
         </select>
       </td>
       <td>
-        <button class="saveBtn">บันทึก</button>
-        <button class="view-btn">ดูประวัติ</button>
+        <button class="saveBtn">💾 บันทึก</button>
+        <button class="view-btn">📜 ดูประวัติ</button>
       </td>
     `;
     tbody.appendChild(tr);
@@ -149,8 +163,8 @@ async function loadMembers() {
                 <td>${w.amount || '-'}</td>
                 <td>${w.note || '-'}</td>
                 <td>${new Date(w.created_at).toLocaleString("th-TH")}</td>
-                <td><button class="edit-history" data-id="${w.id}">แก้ไข</button></td>
-                <td><button class="delete-btn" data-id="${w.id}">ลบ</button></td>
+                <td><button class="edit-history" data-id="${w.id}">✏️ แก้ไข</button></td>
+                <td><button class="delete-btn" data-id="${w.id}">🗑️ ลบ</button></td>
               </tr>`).join('')}
           </tbody>
         </table>
@@ -170,7 +184,7 @@ async function loadMembers() {
         });
       });
 
-      // ลบประวัติ
+      // ลบ
       historyDiv.querySelectorAll(".delete-btn").forEach(delBtn => {
         delBtn.addEventListener("click", async () => {
           if (!confirm("คุณแน่ใจหรือไม่ว่าต้องการลบประวัตินี้?")) return;
@@ -201,17 +215,13 @@ function filterTable() {
 
 loadMembers();
 
-
-// === ส่วนพิมพ์รายงาน ===
+// === พิมพ์รายงาน ===
 document.getElementById("printReportBtn").addEventListener("click", async () => {
   const start = document.getElementById("filterDateStart").value;
   const end = document.getElementById("filterDateEnd").value;
   const group = document.getElementById("filterGroup").value.trim();
 
-  if (!start || !end) {
-    alert("กรุณาเลือกช่วงวันที่ก่อนพิมพ์รายงาน");
-    return;
-  }
+  if (!start || !end) { alert("กรุณาเลือกช่วงวันที่ก่อนพิมพ์รายงาน"); return; }
 
   let query = db.from("welfare")
     .select("member_id, receive_date, amount, note, members(title, first_name, last_name, group)")
