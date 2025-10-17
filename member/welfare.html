@@ -24,18 +24,12 @@
     color: white;
     margin-right: 6px;
   }
-  .saveBtn:hover {
-    background: #1e40af;
-    transform: translateY(-1px);
-  }
+  .saveBtn:hover { background: #1e40af; transform: translateY(-1px); }
   .view-btn {
     background: #6b7280;
     color: white;
   }
-  .view-btn:hover {
-    background: #4b5563;
-    transform: translateY(-1px);
-  }
+  .view-btn:hover { background: #4b5563; transform: translateY(-1px); }
 
   /* ปุ่มในประวัติ */
   .edit-history {
@@ -55,6 +49,16 @@
     font-size: 13px;
   }
   .delete-history:hover { background: #dc2626; }
+
+  .print-history {
+    background: #0ea5e9;
+    color: white;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 14px;
+    margin-bottom: 10px;
+  }
+  .print-history:hover { background: #0284c7; }
 
   /* ปุ่มให้อยู่ในบรรทัดเดียวกัน */
   .action-buttons {
@@ -165,7 +169,7 @@ async function loadMembers() {
     });
   });
 
-  // ปุ่มดูประวัติ + แก้ไข + ลบ
+  // ปุ่มดูประวัติ + พิมพ์รายงาน
   document.querySelectorAll(".view-btn").forEach((btn, index) => {
     btn.addEventListener("click", async () => {
       const historyRow = btn.closest("tr").nextElementSibling;
@@ -183,69 +187,82 @@ async function loadMembers() {
       if (!welfare.length) { historyDiv.innerHTML = `<p style="color:gray;">ยังไม่มีประวัติการรับสวัสดิการ</p>`; return; }
 
       let html = `
+        <button class="print-history">🖨️ พิมพ์รายงาน</button>
         <table class="history-table">
-          <thead><tr><th>วันที่รับเงิน</th><th>จำนวนเงิน</th><th>หมายเหตุ</th><th>วันที่บันทึก</th><th>จัดการ</th></tr></thead>
+          <thead><tr><th>วันที่รับเงิน</th><th>จำนวนเงิน</th><th>หมายเหตุ</th><th>วันที่บันทึก</th></tr></thead>
           <tbody>
             ${welfare.map(w => `
               <tr>
-                <td>${w.receive_date || '-'}</td>
-                <td>${w.amount || '-'}</td>
-                <td>${w.note || '-'}</td>
+                <td>${w.receive_date}</td>
+                <td>${w.amount}</td>
+                <td>${w.note}</td>
                 <td>${new Date(w.created_at).toLocaleString("th-TH")}</td>
-                <td>
-                  <button class="edit-history" data-id="${w.id}">แก้ไข</button>
-                  <button class="delete-history" data-id="${w.id}">ลบ</button>
-                </td>
               </tr>`).join('')}
           </tbody>
         </table>
       `;
       historyDiv.innerHTML = html;
 
-      // ปุ่มแก้ไข
-      historyDiv.querySelectorAll(".edit-history").forEach(editBtn => {
-        editBtn.addEventListener("click", async () => {
-          const record = welfare.find(w => w.id == editBtn.dataset.id);
-          const tr = btn.closest("tr");
-          tr.querySelector(".receiveDate").value = record.receive_date;
-          tr.querySelector(".amount").value = record.amount;
-          tr.querySelector(".note").value = record.note;
-          await db.from("welfare").delete().eq("id", record.id);
-          alert("คุณสามารถแก้ไขข้อมูลแล้วกดบันทึกเพื่ออัปเดต");
-        });
-      });
+      // ✅ ปุ่มพิมพ์รายงาน (มีตัวกรอง)
+      historyDiv.querySelector(".print-history").addEventListener("click", () => {
+        const groupFilter = prompt("กรอกชื่อกลุ่มที่ต้องการพิมพ์ (เว้นว่าง = ทุกกลุ่ม):", "");
+        const startDate = prompt("กรอกวันที่เริ่มต้น (YYYY-MM-DD):", "");
+        const endDate = prompt("กรอกวันที่สิ้นสุด (YYYY-MM-DD):", "");
 
-      // ปุ่มลบ
-      historyDiv.querySelectorAll(".delete-history").forEach(delBtn => {
-        delBtn.addEventListener("click", async () => {
-          if (!confirm("คุณแน่ใจหรือไม่ว่าต้องการลบข้อมูลนี้?")) return;
-          const { error } = await db.from("welfare").delete().eq("id", delBtn.dataset.id);
-          if (error) {
-            alert("❌ ลบข้อมูลไม่สำเร็จ");
-            console.error(error);
-          } else {
-            alert("🗑️ ลบข้อมูลเรียบร้อยแล้ว");
-            delBtn.closest("tr").remove();
-          }
+        // กรองข้อมูลก่อนพิมพ์
+        const filtered = welfare.filter(w => {
+          const inGroup = !groupFilter || (member.group === groupFilter);
+          const inDate =
+            (!startDate || w.receive_date >= startDate) &&
+            (!endDate || w.receive_date <= endDate);
+          return inGroup && inDate;
         });
+
+        if (!filtered.length) { alert("ไม่พบข้อมูลตามเงื่อนไขที่กรอง"); return; }
+
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(`
+          <html><head><title>รายงานสวัสดิการสมาชิก</title>
+          <style>
+            body { font-family: "Prompt", sans-serif; margin: 40px; }
+            h2 { text-align: center; margin-bottom: 6px; }
+            table { width: 100%; border-collapse: collapse; }
+            th, td { border: 1px solid #ccc; padding: 8px; text-align: center; font-size: 14px; }
+            th { background: #f1f5f9; }
+          </style></head><body>
+            <h2>รายงานสวัสดิการสมาชิก</h2>
+            <p><b>เลขสมาชิก:</b> ${member.member_id} | <b>ชื่อ:</b> ${member.title}${member.first_name} ${member.last_name} | <b>กลุ่ม:</b> ${member.group || '-'}</p>
+            <p><b>ช่วงวันที่:</b> ${startDate || '-'} ถึง ${endDate || '-'}</p>
+            <table>
+              <thead><tr><th>วันที่รับเงิน</th><th>จำนวนเงิน</th><th>หมายเหตุ</th></tr></thead>
+              <tbody>
+                ${filtered.map(w => `
+                  <tr>
+                    <td>${w.receive_date}</td>
+                    <td>${w.amount}</td>
+                    <td>${w.note}</td>
+                  </tr>`).join('')}
+              </tbody>
+            </table>
+          </body></html>
+        `);
+        printWindow.document.close();
+        printWindow.print();
       });
     });
   });
 }
 
-// ค้นหา
 document.getElementById("searchMemberId").addEventListener("input", filterTable);
 document.getElementById("searchName").addEventListener("input", filterTable);
 function filterTable() {
   const idVal = document.getElementById("searchMemberId").value.toLowerCase();
   const nameVal = document.getElementById("searchName").value.toLowerCase();
   const rows = document.querySelectorAll("#memberBody tr:not(.history-row)");
-
   rows.forEach(row => {
     const idText = row.cells[0].innerText.toLowerCase();
     const nameText = row.cells[1].innerText.toLowerCase();
     row.style.display = (idText.includes(idVal) && nameText.includes(nameVal)) ? "" : "none";
-    if (row.nextElementSibling.classList.contains("history-row")) row.nextElementSibling.style.display = "none";
   });
 }
 
