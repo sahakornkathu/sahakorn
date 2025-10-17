@@ -198,7 +198,7 @@ document.getElementById("printReportBtn").addEventListener("click", async () => 
   const start = document.getElementById("filterDateStart").value;
   const end = document.getElementById("filterDateEnd").value;
   const group = document.getElementById("filterGroup").value.trim();
-  const logoUrl = "https://upload.wikimedia.org/wikipedia/commons/6/6b/Thailand_emblem.png";
+  const logoUrl = "https://lh5.googleusercontent.com/d/1B0sZdUz54kO4zAv0oJgoN4Aipy3UyCyR";
 
   let query = db.from("welfare")
     .select("member_id, receive_date, amount, note, members(title, first_name, last_name, group)")
