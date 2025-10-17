@@ -20,6 +20,8 @@
   .history-table th { background: #f1f5f9; }
   .view-btn { background: #6b7280; }
   .view-btn:hover { background: #4b5563; }
+  .delete-btn { background: #dc2626; color: white; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; }
+  .delete-btn:hover { background: #b91c1c; }
 </style>
 </head>
 <body>
@@ -29,13 +31,13 @@
   <div class="form-group">
     <input type="text" id="searchMemberId" placeholder="ค้นหาเลขสมาชิก...">
     <input type="text" id="searchName" placeholder="ค้นหาชื่อหรือนามสกุล...">
-    
-    <!-- เพิ่มฟิลเตอร์วันที่และกลุ่ม -->
+
+    <!-- ฟิลเตอร์ -->
     <input type="date" id="filterDateStart">
     <input type="date" id="filterDateEnd">
     <input type="text" id="filterGroup" placeholder="กรอกชื่อกลุ่ม...">
-    
-    <!-- เพิ่มปุ่มพิมพ์รายงาน -->
+
+    <!-- ปุ่มพิมพ์รายงาน -->
     <button id="printReportBtn" style="background:#059669;">🖨️ พิมพ์รายงาน</button>
   </div>
 
@@ -120,7 +122,7 @@ async function loadMembers() {
     });
   });
 
-  // ดูประวัติ + แก้ไข
+  // ดูประวัติ + แก้ไข + ลบ
   document.querySelectorAll(".view-btn").forEach((btn, index) => {
     btn.addEventListener("click", async () => {
       const historyRow = btn.closest("tr").nextElementSibling;
@@ -139,7 +141,7 @@ async function loadMembers() {
 
       let html = `
         <table class="history-table">
-          <thead><tr><th>วันที่รับเงิน</th><th>จำนวนเงิน</th><th>หมายเหตุ</th><th>วันที่บันทึก</th><th>แก้ไข</th></tr></thead>
+          <thead><tr><th>วันที่รับเงิน</th><th>จำนวนเงิน</th><th>หมายเหตุ</th><th>วันที่บันทึก</th><th>แก้ไข</th><th>ลบ</th></tr></thead>
           <tbody>
             ${welfare.map(w => `
               <tr>
@@ -148,13 +150,14 @@ async function loadMembers() {
                 <td>${w.note || '-'}</td>
                 <td>${new Date(w.created_at).toLocaleString("th-TH")}</td>
                 <td><button class="edit-history" data-id="${w.id}">แก้ไข</button></td>
+                <td><button class="delete-btn" data-id="${w.id}">ลบ</button></td>
               </tr>`).join('')}
           </tbody>
         </table>
       `;
       historyDiv.innerHTML = html;
 
-      // แก้ไขในประวัติ
+      // แก้ไข
       historyDiv.querySelectorAll(".edit-history").forEach(editBtn => {
         editBtn.addEventListener("click", async () => {
           const record = welfare.find(w => w.id == editBtn.dataset.id);
@@ -162,9 +165,18 @@ async function loadMembers() {
           tr.querySelector(".receiveDate").value = record.receive_date;
           tr.querySelector(".amount").value = record.amount;
           tr.querySelector(".note").value = record.note;
-
           await db.from("welfare").delete().eq("id", record.id);
           alert("คุณสามารถแก้ไขข้อมูลแล้วกดบันทึกเพื่ออัปเดต");
+        });
+      });
+
+      // ลบประวัติ
+      historyDiv.querySelectorAll(".delete-btn").forEach(delBtn => {
+        delBtn.addEventListener("click", async () => {
+          if (!confirm("คุณแน่ใจหรือไม่ว่าต้องการลบประวัตินี้?")) return;
+          const { error } = await db.from("welfare").delete().eq("id", delBtn.dataset.id);
+          if (error) { alert("เกิดข้อผิดพลาดในการลบข้อมูล"); console.error(error); }
+          else { alert("✅ ลบข้อมูลเรียบร้อยแล้ว"); delBtn.closest("tr").remove(); }
         });
       });
     });
