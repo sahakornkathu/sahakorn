@@ -8,53 +8,41 @@
   .container { background: #fff; border-radius: 12px; max-width: 1100px; margin: 0 auto; padding: 25px 30px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
   h2 { color: #1e40af; text-align: center; margin-bottom: 20px; }
 
-  /* ส่วนกรอง */
+  /* ส่วนค้นหา + พิมพ์ */
   .filter-bar {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-bottom: 20px;
-    align-items: center;
+    display: flex; flex-wrap: wrap; gap: 10px;
+    margin-bottom: 15px; align-items: center; justify-content: space-between;
   }
-  .filter-bar select, .filter-bar input {
+  .filter-inputs { display: flex; flex-wrap: wrap; gap: 10px; flex: 1; }
+  input, select {
     padding: 8px 10px;
-    border-radius: 8px;
-    border: 1px solid #ccc;
+    border-radius: 8px; border: 1px solid #ccc;
     font-size: 14px;
   }
-  .filter-bar button {
-    padding: 8px 14px;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 14px;
-    transition: 0.2s;
+  .print-btn {
+    background: #0ea5e9; color: white; border: none;
+    border-radius: 8px; padding: 8px 16px;
+    cursor: pointer; font-size: 14px; transition: 0.2s;
   }
-  .filter-btn { background: #2563eb; color: white; }
-  .filter-btn:hover { background: #1d4ed8; }
-  .print-btn { background: #0ea5e9; color: white; }
   .print-btn:hover { background: #0284c7; }
 
-  /* ฟอร์มและตาราง */
-  .form-group { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px; }
-  input, select { padding: 8px 10px; border: 1px solid #ccc; border-radius: 8px; flex: 1 1 220px; font-size: 14px; }
-  button { border: none; border-radius: 8px; padding: 9px 16px; cursor: pointer; font-size: 14px; transition: 0.2s; }
-
-  .saveBtn { background: #2563eb; color: white; margin-right: 6px; }
-  .saveBtn:hover { background: #1e40af; transform: translateY(-1px); }
-  .view-btn { background: #6b7280; color: white; }
-  .view-btn:hover { background: #4b5563; transform: translateY(-1px); }
-
-  .edit-history { background: #facc15; color: #111; padding: 6px 10px; border-radius: 6px; font-size: 13px; }
-  .edit-history:hover { background: #eab308; }
-  .delete-history { background: #ef4444; color: white; padding: 6px 10px; border-radius: 6px; font-size: 13px; }
-  .delete-history:hover { background: #dc2626; }
-
-  .action-buttons { display: flex; gap: 6px; justify-content: center; }
-
+  /* ตาราง */
   table { width: 100%; border-collapse: collapse; margin-top: 15px; }
   th, td { padding: 8px 10px; border: 1px solid #ddd; text-align: center; }
   th { background: #e0e7ff; }
+
+  /* ปุ่ม */
+  .saveBtn { background: #2563eb; color: white; border: none; border-radius: 8px; padding: 8px 14px; margin-right: 6px; cursor: pointer; }
+  .saveBtn:hover { background: #1e40af; }
+  .view-btn { background: #6b7280; color: white; border: none; border-radius: 8px; padding: 8px 14px; cursor: pointer; }
+  .view-btn:hover { background: #4b5563; }
+
+  .edit-history { background: #facc15; color: #111; border-radius: 6px; padding: 5px 10px; border: none; }
+  .edit-history:hover { background: #eab308; }
+  .delete-history { background: #ef4444; color: white; border-radius: 6px; padding: 5px 10px; border: none; }
+  .delete-history:hover { background: #dc2626; }
+
+  .action-buttons { display: flex; gap: 6px; justify-content: center; }
   .history-row { background: #f9fafb; display: none; }
   .history-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
   .history-table th, .history-table td { border: 1px solid #ddd; padding: 6px 8px; text-align: center; }
@@ -65,19 +53,15 @@
 <div class="container">
   <h2>บันทึกและดูประวัติสวัสดิการสมาชิก</h2>
 
-  <!-- 🔹 ส่วนกรองด้านบน -->
+  <!-- 🔹 ช่องค้นหาและพิมพ์รายงาน -->
   <div class="filter-bar">
-    <select id="filterGroup"><option value="">-- เลือกกลุ่มทั้งหมด --</option></select>
-    <input type="date" id="filterStartDate" placeholder="วันที่เริ่มต้น">
-    <input type="date" id="filterEndDate" placeholder="วันที่สิ้นสุด">
-    <button class="filter-btn" id="applyFilter">🔍 กรองข้อมูล</button>
+    <div class="filter-inputs">
+      <input type="text" id="searchMemberId" placeholder="ค้นหาเลขสมาชิก...">
+      <input type="text" id="searchName" placeholder="ค้นหาชื่อ-นามสกุล...">
+      <input type="text" id="searchGroup" placeholder="ค้นหากลุ่ม...">
+      <input type="date" id="searchDate" placeholder="วันที่รับเงิน">
+    </div>
     <button class="print-btn" id="printReport">🖨️ พิมพ์รายงาน</button>
-  </div>
-
-  <!-- 🔹 ค้นหาสมาชิก -->
-  <div class="form-group">
-    <input type="text" id="searchMemberId" placeholder="ค้นหาเลขสมาชิก...">
-    <input type="text" id="searchName" placeholder="ค้นหาชื่อหรือนามสกุล...">
   </div>
 
   <table id="memberTable">
@@ -105,29 +89,15 @@ const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let allMembers = [];
 
-// โหลดข้อมูลกลุ่ม
-async function loadGroups() {
-  const { data } = await db.from("members").select("group").not("group", "is", null);
-  const uniqueGroups = [...new Set(data.map(d => d.group))];
-  const sel = document.getElementById("filterGroup");
-  uniqueGroups.forEach(g => {
-    const opt = document.createElement("option");
-    opt.value = g;
-    opt.textContent = g;
-    sel.appendChild(opt);
-  });
-}
-
-// โหลดข้อมูลสมาชิก
 async function loadMembers() {
   const { data, error } = await db.from("members").select("member_id, title, first_name, last_name, group");
   if (error) { console.error(error); alert("ไม่สามารถโหลดข้อมูลสมาชิกได้"); return; }
 
   allMembers = data;
-  renderMemberTable(data);
+  renderTable(data);
 }
 
-function renderMemberTable(data) {
+function renderTable(data) {
   const tbody = document.getElementById("memberBody");
   tbody.innerHTML = "";
   data.forEach(m => {
@@ -163,7 +133,6 @@ function renderMemberTable(data) {
   addButtonActions(data);
 }
 
-// จัดการปุ่ม
 function addButtonActions(data) {
   document.querySelectorAll(".saveBtn").forEach((btn, i) => {
     btn.addEventListener("click", async () => {
@@ -175,7 +144,7 @@ function addButtonActions(data) {
       if (!receive_date || !amount || !note) return alert("กรุณากรอกข้อมูลให้ครบ");
 
       const { error } = await db.from("welfare").insert([{ member_id: member.member_id, receive_date, amount, note }]);
-      if (error) alert("❌ บันทึกไม่สำเร็จ"); else alert("✅ บันทึกเรียบร้อย");
+      if (error) alert("❌ บันทึกไม่สำเร็จ"); else alert("✅ บันทึกเรียบร้อยแล้ว");
     });
   });
 
@@ -205,41 +174,44 @@ function addButtonActions(data) {
               </tr>`).join('')}
           </tbody>
         </table>`;
-
-      historyDiv.querySelectorAll(".delete-history").forEach(del => {
-        del.addEventListener("click", async () => {
-          if (!confirm("ยืนยันการลบข้อมูลนี้?")) return;
-          await db.from("welfare").delete().eq("id", del.dataset.id);
-          del.closest("tr").remove();
-        });
-      });
     });
   });
 }
 
-// ฟิลเตอร์และพิมพ์
-document.getElementById("applyFilter").addEventListener("click", async () => {
-  const group = document.getElementById("filterGroup").value;
-  const start = document.getElementById("filterStartDate").value;
-  const end = document.getElementById("filterEndDate").value;
-  const { data } = await db
-    .from("welfare")
-    .select("*, members:member_id(member_id, title, first_name, last_name, group)")
-    .order("receive_date", { ascending: true });
+// 🔍 ฟังก์ชันกรองอัตโนมัติ
+function filterTable() {
+  const idVal = document.getElementById("searchMemberId").value.toLowerCase();
+  const nameVal = document.getElementById("searchName").value.toLowerCase();
+  const groupVal = document.getElementById("searchGroup").value.toLowerCase();
+  const dateVal = document.getElementById("searchDate").value;
+  const rows = document.querySelectorAll("#memberBody tr:not(.history-row)");
 
-  const filtered = data.filter(r =>
-    (!group || r.members.group === group) &&
-    (!start || r.receive_date >= start) &&
-    (!end || r.receive_date <= end)
-  );
+  rows.forEach(row => {
+    const idText = row.cells[0].innerText.toLowerCase();
+    const nameText = row.cells[1].innerText.toLowerCase();
+    const groupText = row.cells[2].innerText.toLowerCase();
 
-  localStorage.setItem("reportData", JSON.stringify(filtered));
-  alert(`กรองข้อมูลสำเร็จ (${filtered.length} รายการ)`);
+    const match =
+      idText.includes(idVal) &&
+      nameText.includes(nameVal) &&
+      groupText.includes(groupVal);
+
+    row.style.display = match ? "" : "none";
+    if (row.nextElementSibling && row.nextElementSibling.classList.contains("history-row"))
+      row.nextElementSibling.style.display = "none";
+  });
+}
+
+["searchMemberId", "searchName", "searchGroup", "searchDate"].forEach(id => {
+  document.getElementById(id).addEventListener("input", filterTable);
 });
 
-document.getElementById("printReport").addEventListener("click", () => {
-  const reportData = JSON.parse(localStorage.getItem("reportData") || "[]");
-  if (!reportData.length) return alert("❗ กรุณากรองข้อมูลก่อนพิมพ์");
+// 🖨️ พิมพ์รายงาน
+document.getElementById("printReport").addEventListener("click", async () => {
+  const { data, error } = await db
+    .from("welfare")
+    .select("*, members:member_id(member_id, title, first_name, last_name, group)");
+  if (error || !data.length) return alert("ไม่มีข้อมูล");
 
   const printWindow = window.open("", "_blank");
   printWindow.document.write(`
@@ -259,7 +231,7 @@ document.getElementById("printReport").addEventListener("click", () => {
   <table>
     <thead><tr><th>วันที่รับเงิน</th><th>เลขสมาชิก</th><th>ชื่อ-นามสกุล</th><th>กลุ่ม</th><th>จำนวนเงิน</th><th>หมายเหตุ</th></tr></thead>
     <tbody>
-    ${reportData.map(r => `
+    ${data.map(r => `
       <tr>
         <td>${r.receive_date}</td>
         <td>${r.members.member_id}</td>
@@ -275,7 +247,6 @@ document.getElementById("printReport").addEventListener("click", () => {
   printWindow.print();
 });
 
-loadGroups();
 loadMembers();
 </script>
 </body>
