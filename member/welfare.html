@@ -210,38 +210,106 @@ document.getElementById("printReportBtn").addEventListener("click", async () => 
   if (error) return alert("ไม่สามารถดึงข้อมูลได้");
 
   let win = window.open("", "_blank");
-  win.document.write(`
-    <html><head>
-    <style>
-      body { font-family: "Prompt", sans-serif; margin: 40px; }
-      h2 { text-align: center; margin-bottom: 6px; }
-      .logo { width: 90px; display: block; margin: 0 auto 10px auto; }
-      table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-      th, td { border: 1px solid #ccc; padding: 6px; font-size: 14px; }
-      th { background: #e0e7ff; }
-    </style></head><body>
+ win.document.write(`
+<html>
+<head>
+  <title>รายงานสวัสดิการสมาชิก</title>
+  <style>
+    body {
+      font-family: "Prompt", sans-serif;
+      margin: 40px 60px;
+      background: #fff;
+      color: #111;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    .logo {
+      width: 80px;
+      display: block;
+      margin: 0 auto 10px auto;
+    }
+    h2 {
+      font-size: 20px;
+      margin: 5px 0 10px 0;
+      color: #1e40af;
+    }
+    p {
+      margin: 2px 0;
+      font-size: 14px;
+    }
+    hr {
+      border: none;
+      border-top: 1.5px solid #cbd5e1;
+      margin: 10px 0 15px 0;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      font-size: 13px;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 6px 8px;
+      text-align: left;
+    }
+    th {
+      background: #e0e7ff;
+      color: #1e3a8a;
+      font-weight: 600;
+    }
+    tr:nth-child(even) {
+      background: #f9fafb;
+    }
+    .footer {
+      text-align: right;
+      margin-top: 25px;
+      font-size: 12px;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
     <img src="${logoUrl}" class="logo">
     <h2>รายงานสวัสดิการสมาชิก</h2>
-    <p style="text-align:center;">ช่วงวันที่ ${start} ถึง ${end}</p>
-    ${group ? `<p style="text-align:center;">กลุ่ม: ${group}</p>` : ""}
-    <table>
-      <thead><tr><th>วันที่รับเงิน</th><th>เลขสมาชิก</th><th>ชื่อ-นามสกุล</th><th>กลุ่ม</th><th>จำนวนเงิน</th><th>หมายเหตุ</th></tr></thead>
-      <tbody>
+    <p>ช่วงวันที่ ${start} ถึง ${end}</p>
+    ${group ? `<p>กลุ่ม: ${group}</p>` : ""}
+  </div>
+  <hr>
+  <table>
+    <thead>
+      <tr>
+        <th>วันที่รับเงิน</th>
+        <th>เลขสมาชิก</th>
+        <th>ชื่อ-นามสกุล</th>
+        <th>กลุ่ม</th>
+        <th>จำนวนเงิน</th>
+        <th>หมายเหตุ</th>
+      </tr>
+    </thead>
+    <tbody>
       ${data.map(r => `
         <tr>
           <td>${r.receive_date}</td>
           <td>${r.member_id}</td>
           <td>${r.members?.title || ''}${r.members?.first_name || ''} ${r.members?.last_name || ''}</td>
           <td>${r.members?.group || '-'}</td>
-          <td>${r.amount}</td>
-          <td>${r.note}</td>
+          <td style="text-align:right;">${parseFloat(r.amount || 0).toLocaleString()}</td>
+          <td>${r.note || '-'}</td>
         </tr>`).join('')}
-      </tbody>
-    </table>
-    </body></html>
-  `);
-  win.print();
-});
+    </tbody>
+  </table>
+  <div class="footer">
+    วันที่พิมพ์รายงาน: ${new Date().toLocaleDateString("th-TH", {year:"numeric",month:"long",day:"numeric"})}
+  </div>
+</body>
+</html>
+`);
+win.print();
+
 </script>
 </body>
 </html>
