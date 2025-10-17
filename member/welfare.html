@@ -10,7 +10,7 @@
   .form-group { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px; }
   input, select { padding: 8px 10px; border: 1px solid #ccc; border-radius: 8px; flex: 1 1 220px; font-size: 14px; }
 
-  /* ปุ่มทั่วไป */
+  /* ปุ่มหลัก */
   button {
     border: none;
     border-radius: 8px;
@@ -37,6 +37,25 @@
     transform: translateY(-1px);
   }
 
+  /* ปุ่มในประวัติ */
+  .edit-history {
+    background: #facc15;
+    color: #111;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 13px;
+  }
+  .edit-history:hover { background: #eab308; }
+
+  .delete-history {
+    background: #ef4444;
+    color: white;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 13px;
+  }
+  .delete-history:hover { background: #dc2626; }
+
   /* ปุ่มให้อยู่ในบรรทัดเดียวกัน */
   .action-buttons {
     display: flex;
@@ -50,16 +69,8 @@
   #memberTable th { background: #e0e7ff; }
   .history-row { background: #f9fafb; display: none; }
   .history-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-  .history-table th, .history-table td { border: 1px solid #ddd; padding: 6px 8px; }
+  .history-table th, .history-table td { border: 1px solid #ddd; padding: 6px 8px; text-align: center; }
   .history-table th { background: #f1f5f9; }
-  .edit-history {
-    background: #facc15;
-    color: #111;
-    padding: 6px 10px;
-    border-radius: 6px;
-    font-size: 13px;
-  }
-  .edit-history:hover { background: #eab308; }
 </style>
 </head>
 <body>
@@ -134,7 +145,7 @@ async function loadMembers() {
     tbody.appendChild(historyTr);
   });
 
-  // บันทึก
+  // ปุ่มบันทึก
   document.querySelectorAll(".saveBtn").forEach((btn, index) => {
     btn.addEventListener("click", async () => {
       const tr = btn.closest("tr");
@@ -154,7 +165,7 @@ async function loadMembers() {
     });
   });
 
-  // ดูประวัติ + แก้ไข
+  // ปุ่มดูประวัติ + แก้ไข + ลบ
   document.querySelectorAll(".view-btn").forEach((btn, index) => {
     btn.addEventListener("click", async () => {
       const historyRow = btn.closest("tr").nextElementSibling;
@@ -173,7 +184,7 @@ async function loadMembers() {
 
       let html = `
         <table class="history-table">
-          <thead><tr><th>วันที่รับเงิน</th><th>จำนวนเงิน</th><th>หมายเหตุ</th><th>วันที่บันทึก</th><th>แก้ไข</th></tr></thead>
+          <thead><tr><th>วันที่รับเงิน</th><th>จำนวนเงิน</th><th>หมายเหตุ</th><th>วันที่บันทึก</th><th>จัดการ</th></tr></thead>
           <tbody>
             ${welfare.map(w => `
               <tr>
@@ -181,14 +192,17 @@ async function loadMembers() {
                 <td>${w.amount || '-'}</td>
                 <td>${w.note || '-'}</td>
                 <td>${new Date(w.created_at).toLocaleString("th-TH")}</td>
-                <td><button class="edit-history" data-id="${w.id}">แก้ไข</button></td>
+                <td>
+                  <button class="edit-history" data-id="${w.id}">แก้ไข</button>
+                  <button class="delete-history" data-id="${w.id}">ลบ</button>
+                </td>
               </tr>`).join('')}
           </tbody>
         </table>
       `;
       historyDiv.innerHTML = html;
 
-      // แก้ไขในประวัติ
+      // ปุ่มแก้ไข
       historyDiv.querySelectorAll(".edit-history").forEach(editBtn => {
         editBtn.addEventListener("click", async () => {
           const record = welfare.find(w => w.id == editBtn.dataset.id);
@@ -198,6 +212,21 @@ async function loadMembers() {
           tr.querySelector(".note").value = record.note;
           await db.from("welfare").delete().eq("id", record.id);
           alert("คุณสามารถแก้ไขข้อมูลแล้วกดบันทึกเพื่ออัปเดต");
+        });
+      });
+
+      // ปุ่มลบ
+      historyDiv.querySelectorAll(".delete-history").forEach(delBtn => {
+        delBtn.addEventListener("click", async () => {
+          if (!confirm("คุณแน่ใจหรือไม่ว่าต้องการลบข้อมูลนี้?")) return;
+          const { error } = await db.from("welfare").delete().eq("id", delBtn.dataset.id);
+          if (error) {
+            alert("❌ ลบข้อมูลไม่สำเร็จ");
+            console.error(error);
+          } else {
+            alert("🗑️ ลบข้อมูลเรียบร้อยแล้ว");
+            delBtn.closest("tr").remove();
+          }
         });
       });
     });
