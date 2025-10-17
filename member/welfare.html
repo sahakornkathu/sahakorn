@@ -243,32 +243,71 @@ document.getElementById("printReport").addEventListener("click", async () => {
   win.document.write(`
   <html><head><title>รายงานสวัสดิการ</title>
   <style>
-    body{font-family:"Prompt",sans-serif;margin:40px;}
-    h2{text-align:center;}
-    p{text-align:center;margin:4px;}
-    .logo{width:90px;display:block;margin:0 auto 10px auto;}
-    table{width:100%;border-collapse:collapse;margin-top:10px;}
-    th,td{border:1px solid #ccc;padding:8px;text-align:center;vertical-align:middle;}
-    th{background:#f1f5f9;}
-    td.name-cell{text-align:left;white-space:normal;word-wrap:break-word;max-width:260px;padding-left:10px;}
-    tfoot td{font-weight:bold;background:#f9fafb;}
+    body {
+      font-family: "Prompt", sans-serif;
+      margin: 40px;
+      font-size: 13px;
+    }
+    h2 { text-align: center; }
+    p { text-align: center; margin: 4px; }
+    .logo { width: 90px; display: block; margin: 0 auto 10px auto; }
+
+    /* 🔹 ปรับฟอนต์ในตารางให้เล็กลง */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      font-size: 12px; /* ✅ ปรับขนาดฟอนต์เล็กลง */
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 6px 8px; /* ✅ ลดระยะห่างให้เหมาะกับฟอนต์ */
+      text-align: center;
+      vertical-align: middle;
+    }
+    th {
+      background: #f1f5f9;
+      font-weight: 600;
+    }
+    td.name-cell {
+      text-align: left;
+      white-space: normal;
+      word-wrap: break-word;
+      max-width: 260px;
+      padding-left: 10px;
+    }
+    tfoot td {
+      font-weight: bold;
+      background: #f9fafb;
+    }
   </style></head><body>
+
   <img src="https://lh5.googleusercontent.com/d/1B0sZdUz54kO4zAv0oJgoN4Aipy3UyCyR" class="logo">
   <h2>กองทุนสวัสดิการชุมชนบ้านใหม่</h2>
   <p><b>รายงานสวัสดิการสมาชิก</b></p>
   <p>วันที่พิมพ์รายงาน: ${new Date().toLocaleDateString("th-TH")}</p>
+
   <table>
-    <thead><tr><th>วันที่รับเงิน</th><th>เลขสมาชิก</th><th>ชื่อ-นามสกุล</th><th>กลุ่ม</th><th>จำนวนเงิน</th><th>หมายเหตุ</th></tr></thead>
-    <tbody>
-    ${data.map(r => `
+    <thead>
       <tr>
-        <td>${r.receive_date}</td>
-        <td>${r.members.member_id}</td>
-        <td class="name-cell">${r.members.title}${r.members.first_name} ${r.members.last_name}</td>
-        <td>${r.members.group}</td>
-        <td>${Number(r.amount).toLocaleString()}</td>
-        <td>${r.note}</td>
-      </tr>`).join("")}
+        <th>วันที่รับเงิน</th>
+        <th>เลขสมาชิก</th>
+        <th>ชื่อ-นามสกุล</th>
+        <th>กลุ่ม</th>
+        <th>จำนวนเงิน</th>
+        <th>หมายเหตุ</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${data.map(r => `
+        <tr>
+          <td>${r.receive_date}</td>
+          <td>${r.members.member_id}</td>
+          <td class="name-cell">${r.members.title}${r.members.first_name} ${r.members.last_name}</td>
+          <td>${r.members.group}</td>
+          <td>${Number(r.amount).toLocaleString()}</td>
+          <td>${r.note}</td>
+        </tr>`).join("")}
     </tbody>
     <tfoot>
       <tr><td colspan="4">รวมจำนวนสมาชิกทั้งหมด</td><td colspan="2">${totalPeople} คน</td></tr>
@@ -276,9 +315,9 @@ document.getElementById("printReport").addEventListener("click", async () => {
     </tfoot>
   </table>
   </body></html>`);
-  win.document.close();
-  win.print();
-});
+
+win.document.close();
+win.print();
 
 loadMembers();
 </script>
