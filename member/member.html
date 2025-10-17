@@ -345,6 +345,26 @@ function validateStep(n){
     if(inp.hasAttribute('required') && !inp.value){ alert('กรุณากรอกข้อมูล: '+(inp.placeholder||inp.name)); inp.focus(); return false; }
   }
   return true;
+  
+// idcard
+function formatIDCard(input) {
+  // ลบอักขระที่ไม่ใช่ตัวเลข
+  let value = input.value.replace(/\D/g, "");
+
+  // จำกัดให้ไม่เกิน 13 หลัก
+  if (value.length > 13) value = value.slice(0, 13);
+
+  // เพิ่มขีดตามตำแหน่ง 1-4-5-2-1
+  let formatted = "";
+  if (value.length > 0) formatted = value.substring(0, 1);
+  if (value.length >= 2) formatted += "-" + value.substring(1, 5);
+  if (value.length >= 6) formatted += "-" + value.substring(5, 10);
+  if (value.length >= 11) formatted += "-" + value.substring(10, 12);
+  if (value.length >= 13) formatted += "-" + value.substring(12, 13);
+
+  input.value = formatted;
+
+  
 }
 
 // Calculate age
