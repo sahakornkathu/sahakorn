@@ -10,7 +10,6 @@
   .form-group { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px; }
   input, select { padding: 8px 10px; border: 1px solid #ccc; border-radius: 8px; flex: 1 1 220px; font-size: 14px; }
   button { border: none; border-radius: 8px; padding: 8px 14px; cursor: pointer; font-size: 14px; transition: all 0.2s ease-in-out; }
-
   .saveBtn { background: #3b82f6; color: white; font-weight: 500; }
   .saveBtn:hover { background: #2563eb; transform: translateY(-1px); }
   .view-btn { background: #6b7280; color: white; font-weight: 500; margin-left: 6px; }
@@ -19,13 +18,10 @@
   .delete-btn:hover { background: #b91c1c; }
   #printReportBtn { background:#059669; color:white; font-weight: 500; }
   #printReportBtn:hover { background:#047857; }
-
   td button { display: inline-flex; align-items: center; justify-content: center; gap: 4px; margin: 2px; vertical-align: middle; }
-
   #memberTable { width: 100%; border-collapse: collapse; margin-top: 15px; }
   #memberTable th, #memberTable td { padding: 8px 10px; border: 1px solid #ddd; text-align: left; vertical-align: middle; }
   #memberTable th { background: #e0e7ff; }
-
   .history-row { background: #f9fafb; display: none; }
   .history-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
   .history-table th, .history-table td { border: 1px solid #ddd; padding: 6px 8px; }
@@ -68,7 +64,6 @@ const SUPABASE_URL = "https://ttottijljxoinptmhgtu.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y";
 const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// ===========================
 async function loadMembers() {
   const { data, error } = await db
     .from('members')
@@ -109,84 +104,143 @@ async function loadMembers() {
     tbody.appendChild(historyTr);
   });
 
-  // ... (บันทึก + ดูประวัติ + แก้ไข + ลบ) — เหมือนเดิม ...
+  // 🟩 บันทึก
+  document.querySelectorAll(".saveBtn").forEach((btn, index) => {
+    btn.addEventListener("click", async () => {
+      const tr = btn.closest("tr");
+      const member = data[index];
+      const receive_date = tr.querySelector(".receiveDate").value;
+      const amount = tr.querySelector(".amount").value;
+      const note = tr.querySelector(".note").value;
+
+      if (!receive_date || !amount || !note) { alert("กรุณากรอกข้อมูลให้ครบก่อนบันทึก"); return; }
+
+      const { error } = await db.from("welfare").insert([
+        { member_id: member.member_id, receive_date, amount, note }
+      ]);
+      if (error) alert("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
+      else alert("✅ บันทึกข้อมูลเรียบร้อยแล้ว");
+    });
+  });
+
+  // 🟦 ดูประวัติ
+  document.querySelectorAll(".view-btn").forEach((btn, index) => {
+    btn.addEventListener("click", async () => {
+      const historyRow = btn.closest("tr").nextElementSibling;
+      const historyDiv = historyRow.querySelector(".history");
+      const member = data[index];
+
+      // toggle แสดง/ซ่อน
+      const visible = historyRow.style.display === "table-row";
+      document.querySelectorAll(".history-row").forEach(r => r.style.display = "none");
+      if (visible) return;
+      historyRow.style.display = "table-row";
+
+      const { data: welfare, error } = await db
+        .from("welfare")
+        .select("*")
+        .eq("member_id", member.member_id)
+        .order("receive_date", { ascending: false });
+
+      if (error) { console.error(error); historyDiv.innerHTML = `<p style="color:red;">เกิดข้อผิดพลาดในการโหลดข้อมูล</p>`; return; }
+      if (!welfare || welfare.length === 0) {
+        historyDiv.innerHTML = `<p style="color:gray;">ยังไม่มีประวัติการรับสวัสดิการ</p>`;
+        return;
+      }
+
+      historyDiv.innerHTML = `
+        <table class="history-table">
+          <thead><tr><th>วันที่รับเงิน</th><th>จำนวนเงิน</th><th>หมายเหตุ</th><th>วันที่บันทึก</th><th>แก้ไข</th><th>ลบ</th></tr></thead>
+          <tbody>
+            ${welfare.map(w => `
+              <tr>
+                <td>${w.receive_date}</td>
+                <td>${w.amount}</td>
+                <td>${w.note}</td>
+                <td>${new Date(w.created_at).toLocaleString("th-TH")}</td>
+                <td><button class="edit-history" data-id="${w.id}">✏️ แก้ไข</button></td>
+                <td><button class="delete-btn" data-id="${w.id}">🗑️ ลบ</button></td>
+              </tr>`).join("")}
+          </tbody>
+        </table>
+      `;
+
+      // event: แก้ไข
+      historyDiv.querySelectorAll(".edit-history").forEach(editBtn => {
+        editBtn.addEventListener("click", async () => {
+          const record = welfare.find(w => w.id == editBtn.dataset.id);
+          const tr = btn.closest("tr");
+          tr.querySelector(".receiveDate").value = record.receive_date;
+          tr.querySelector(".amount").value = record.amount;
+          tr.querySelector(".note").value = record.note;
+          await db.from("welfare").delete().eq("id", record.id);
+          alert("คุณสามารถแก้ไขข้อมูลแล้วกดบันทึกเพื่ออัปเดต");
+        });
+      });
+
+      // event: ลบ
+      historyDiv.querySelectorAll(".delete-btn").forEach(delBtn => {
+        delBtn.addEventListener("click", async () => {
+          if (!confirm("คุณแน่ใจหรือไม่ว่าต้องการลบประวัตินี้?")) return;
+          await db.from("welfare").delete().eq("id", delBtn.dataset.id);
+          alert("✅ ลบข้อมูลเรียบร้อยแล้ว");
+          delBtn.closest("tr").remove();
+        });
+      });
+    });
+  });
 }
 
-// ===========================
 loadMembers();
 
-// ===========================
-// พิมพ์รายงาน พร้อมโลโก้
-// ===========================
+// ✅ รายงานพร้อมโลโก้
 document.getElementById("printReportBtn").addEventListener("click", async () => {
   const start = document.getElementById("filterDateStart").value;
   const end = document.getElementById("filterDateEnd").value;
   const group = document.getElementById("filterGroup").value.trim();
-
-  if (!start || !end) { alert("กรุณาเลือกช่วงวันที่ก่อนพิมพ์รายงาน"); return; }
-
-  const logoUrl = "https://upload.wikimedia.org/wikipedia/commons/6/6b/Thailand_emblem.png"; // 🔁 เปลี่ยนโลโก้ที่นี่
+  const logoUrl = "https://lh5.googleusercontent.com/d/1B0sZdUz54kO4zAv0oJgoN4Aipy3UyCyR";
 
   let query = db.from("welfare")
     .select("member_id, receive_date, amount, note, members(title, first_name, last_name, group)")
     .gte("receive_date", start)
     .lte("receive_date", end);
-
   if (group) query = query.eq("members.group", group);
 
   const { data, error } = await query;
-  if (error) { console.error(error); alert("ไม่สามารถดึงข้อมูลได้"); return; }
+  if (error) return alert("ไม่สามารถดึงข้อมูลได้");
 
-  let reportWindow = window.open("", "_blank");
-  let html = `
-    <html>
-    <head>
-      <title>รายงานสวัสดิการสมาชิก</title>
-      <style>
-        body { font-family: "Prompt", sans-serif; margin: 40px; }
-        h2 { text-align: center; margin-bottom: 6px; }
-        p { text-align: center; margin: 0; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #ccc; padding: 6px; font-size: 14px; }
-        th { background: #e0e7ff; }
-        .logo { width: 90px; display: block; margin: 0 auto 10px auto; }
-        hr { border: 1px solid #ddd; margin-top: 15px; }
-      </style>
-    </head>
-    <body>
-      <img src="${logoUrl}" class="logo">
-      <h2>รายงานสวัสดิการสมาชิก</h2>
-      <p>ช่วงวันที่ ${start} ถึง ${end}</p>
-      ${group ? `<p>กลุ่ม: ${group}</p>` : ""}
-      <hr>
-      <table>
-        <thead>
-          <tr>
-            <th>วันที่รับเงิน</th>
-            <th>เลขสมาชิก</th>
-            <th>ชื่อ-นามสกุล</th>
-            <th>กลุ่ม</th>
-            <th>จำนวนเงิน</th>
-            <th>หมายเหตุ</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${data.map(r => `
-            <tr>
-              <td>${r.receive_date}</td>
-              <td>${r.member_id}</td>
-              <td>${r.members?.title || ''}${r.members?.first_name || ''} ${r.members?.last_name || ''}</td>
-              <td>${r.members?.group || '-'}</td>
-              <td>${r.amount}</td>
-              <td>${r.note}</td>
-            </tr>`).join('')}
-        </tbody>
-      </table>
+  let win = window.open("", "_blank");
+  win.document.write(`
+    <html><head><title>รายงานสวัสดิการสมาชิก</title>
+    <style>
+      body { font-family: "Prompt", sans-serif; margin: 40px; }
+      h2 { text-align: center; margin-bottom: 6px; }
+      .logo { width: 90px; display: block; margin: 0 auto 10px auto; }
+      table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+      th, td { border: 1px solid #ccc; padding: 6px; font-size: 14px; }
+      th { background: #e0e7ff; }
+    </style></head><body>
+    <img src="${logoUrl}" class="logo">
+    <h2>รายงานสวัสดิการสมาชิก</h2>
+    <p style="text-align:center;">ช่วงวันที่ ${start} ถึง ${end}</p>
+    ${group ? `<p style="text-align:center;">กลุ่ม: ${group}</p>` : ""}
+    <table>
+      <thead><tr><th>วันที่รับเงิน</th><th>เลขสมาชิก</th><th>ชื่อ-นามสกุล</th><th>กลุ่ม</th><th>จำนวนเงิน</th><th>หมายเหตุ</th></tr></thead>
+      <tbody>
+      ${data.map(r => `
+        <tr>
+          <td>${r.receive_date}</td>
+          <td>${r.member_id}</td>
+          <td>${r.members?.title || ''}${r.members?.first_name || ''} ${r.members?.last_name || ''}</td>
+          <td>${r.members?.group || '-'}</td>
+          <td>${r.amount}</td>
+          <td>${r.note}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
     </body></html>
-  `;
-
-  reportWindow.document.write(html);
-  reportWindow.print();
+  `);
+  win.print();
 });
 </script>
 </body>
