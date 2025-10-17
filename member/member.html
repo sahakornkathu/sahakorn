@@ -339,8 +339,8 @@ document.getElementById('birthday').addEventListener('change', function(){
 const idCardInput = document.querySelector('input[name="id_card"]');
 if(idCardInput){
   idCardInput.addEventListener('input', function (e) {
-    let value = e.target.value.replace(/\D/g, ''); // เอาแต่ตัวเลข
-    if (value.length > 13) value = value.slice(0, 13); // จำกัด 13 หลัก
+    let value = e.target.value.replace(/\D/g, '');
+    if (value.length > 13) value = value.slice(0, 13);
     let formatted = '';
     if (value.length > 0) formatted += value.substring(0, 1);
     if (value.length > 1) formatted += '-' + value.substring(1, 5);
@@ -351,9 +351,9 @@ if(idCardInput){
   });
 }
 
-// --- ฟังก์ชันตรวจสอบความถูกต้องเลขบัตรประชาชน ---
+// --- ตรวจสอบความถูกต้องเลขบัตรประชาชน ---
 function isValidThaiID(id) {
-  const num = id.replace(/\D/g, ''); // เอาแต่ตัวเลข
+  const num = id.replace(/\D/g, '');
   if (num.length !== 13) return false;
   let sum = 0;
   for (let i = 0; i < 12; i++) sum += parseInt(num.charAt(i)) * (13 - i);
@@ -438,27 +438,41 @@ document.getElementById('nextPage').addEventListener('click',()=>{ currentPage++
 ['searchMemberId','searchName','searchGroup','searchProvince','searchStatus','searchGender','searchJoinDateStart','searchJoinDateEnd']
 .forEach(id=>document.getElementById(id).addEventListener('input',()=>{ currentPage=1; renderTable(); }));
 
+// --- ตรวจสอบเลขบัตรซ้ำ ---
+function isDuplicateIDCard(id){
+  const raw = id.replace(/\D/g, '');
+  return allMembers.some(m => (m.id_card && m.id_card.replace(/\D/g,'') === raw));
+}
+
 // --- บันทึกข้อมูล ---
 form.addEventListener('submit', async(e)=>{
   e.preventDefault();
   const data=Object.fromEntries(new FormData(form));
 
-  // ✅ ตรวจสอบเลขบัตรก่อนบันทึก
   const idCardRaw = data.id_card.replace(/\D/g, '');
+
+  // ✅ ตรวจสอบเลขบัตรก่อนบันทึก
   if(!isValidThaiID(idCardRaw)){
-    alert('เลขบัตรประชาชนไม่ถูกต้อง กรุณาตรวจสอบอีกครั้ง');
+    alert('❌ เลขบัตรประชาชนไม่ถูกต้อง กรุณาตรวจสอบอีกครั้ง');
     form.elements['id_card'].focus();
     return;
   }
 
-  data.id_card = idCardRaw; // ✅ เก็บเลขล้วน (ไม่ใส่ขีด)
+  // ✅ ตรวจสอบเลขบัตรซ้ำ (ยกเว้นถ้าเป็นการแก้ไขของตัวเอง)
+  if(!editId && isDuplicateIDCard(idCardRaw)){
+    alert('⚠️ พบเลขบัตรประชาชนนี้ในระบบแล้ว กรุณาตรวจสอบ');
+    form.elements['id_card'].focus();
+    return;
+  }
+
+  data.id_card = idCardRaw;
   if(editId) data.member_id=editId;
 
   try{
     const res=await fetch(API_URL,{method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)});
     const result=await res.json();
     if(result.error){ alert(result.error); return; }
-    alert('บันทึกสำเร็จ ✅');
+    alert('✅ บันทึกสำเร็จ');
     form.reset(); editId=null; formStepIndex=0; showStep(0); await loadMembers();
   }catch(err){ alert("เกิดข้อผิดพลาด: "+err); }
 });
@@ -530,6 +544,8 @@ document.getElementById('printReport').addEventListener('click', () => {
 // โหลดข้อมูลเริ่มต้น
 loadMembers();
 </script>
+
+
 
 
 </body>
