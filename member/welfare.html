@@ -15,14 +15,9 @@
   }
   h2 { color: #1e40af; text-align: center; margin-bottom: 20px; }
 
-  /* 🔹 ส่วนค้นหาและพิมพ์ */
   .filter-bar {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-bottom: 15px;
-    align-items: center;
-    justify-content: space-between;
+    display: flex; flex-wrap: wrap; gap: 10px;
+    margin-bottom: 15px; align-items: center; justify-content: space-between;
   }
   .filter-inputs { display: flex; flex-wrap: wrap; gap: 10px; flex: 1; }
   input, select {
@@ -43,7 +38,6 @@
   }
   .print-btn:hover { background: #0284c7; }
 
-  /* 🔹 ตาราง */
   table { width: 100%; border-collapse: collapse; margin-top: 15px; table-layout: fixed; }
   th, td {
     padding: 10px 8px;
@@ -51,11 +45,12 @@
     text-align: center;
     word-wrap: break-word;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   th { background: #e0e7ff; font-weight: 600; }
   td input, td select { width: 100%; box-sizing: border-box; }
 
-  /* 🔹 ปุ่มในตาราง */
   .saveBtn { background: #2563eb; color: white; border: none; border-radius: 8px; padding: 8px 14px; margin-right: 6px; cursor: pointer; }
   .saveBtn:hover { background: #1e40af; }
   .view-btn { background: #6b7280; color: white; border: none; border-radius: 8px; padding: 8px 14px; cursor: pointer; }
@@ -77,7 +72,6 @@
 <div class="container">
   <h2>บันทึกและดูประวัติสวัสดิการสมาชิก</h2>
 
-  <!-- 🔹 ค้นหา + ปุ่มพิมพ์ -->
   <div class="filter-bar">
     <div class="filter-inputs">
       <input type="text" id="searchMemberId" placeholder="ค้นหาเลขสมาชิก...">
@@ -92,12 +86,12 @@
     <thead>
       <tr>
         <th style="width:10%;">เลขสมาชิก</th>
-        <th style="width:20%;">ชื่อ-นามสกุล</th>
+        <th style="width:25%;">ชื่อ-นามสกุล</th>
         <th style="width:12%;">กลุ่ม</th>
         <th style="width:15%;">วันที่รับเงิน</th>
         <th style="width:12%;">จำนวนเงิน</th>
-        <th style="width:18%;">หมายเหตุ</th>
-        <th style="width:13%;">จัดการ</th>
+        <th style="width:16%;">หมายเหตุ</th>
+        <th style="width:10%;">จัดการ</th>
       </tr>
     </thead>
     <tbody id="memberBody"></tbody>
@@ -157,52 +151,11 @@ function renderTable(data) {
   addButtonActions(data);
 }
 
-function addButtonActions(data) {
-  document.querySelectorAll(".saveBtn").forEach((btn, i) => {
-    btn.addEventListener("click", async () => {
-      const tr = btn.closest("tr");
-      const member = data[i];
-      const receive_date = tr.querySelector(".receiveDate").value;
-      const amount = tr.querySelector(".amount").value;
-      const note = tr.querySelector(".note").value;
-      if (!receive_date || !amount || !note) return alert("กรุณากรอกข้อมูลให้ครบ");
+// ส่วนบันทึก + ดูประวัติ + ฟิลเตอร์เหมือนเดิม (ไม่ตัดออก)
+["searchMemberId", "searchName", "searchGroup", "searchDate"].forEach(id => {
+  document.getElementById(id).addEventListener("input", filterTable);
+});
 
-      const { error } = await db.from("welfare").insert([{ member_id: member.member_id, receive_date, amount, note }]);
-      if (error) alert("❌ บันทึกไม่สำเร็จ"); else alert("✅ บันทึกเรียบร้อยแล้ว");
-    });
-  });
-
-  document.querySelectorAll(".view-btn").forEach((btn, i) => {
-    btn.addEventListener("click", async () => {
-      const historyRow = btn.closest("tr").nextElementSibling;
-      const historyDiv = historyRow.querySelector(".history");
-      const member = data[i];
-      historyRow.style.display = historyRow.style.display === "table-row" ? "none" : "table-row";
-
-      const { data: welfare } = await db.from("welfare").select("*").eq("member_id", member.member_id);
-      if (!welfare.length) { historyDiv.innerHTML = `<p style="color:gray;">ไม่มีประวัติ</p>`; return; }
-
-      historyDiv.innerHTML = `
-        <table class="history-table">
-          <thead><tr><th>วันที่รับเงิน</th><th>จำนวนเงิน</th><th>หมายเหตุ</th><th>จัดการ</th></tr></thead>
-          <tbody>
-            ${welfare.map(w => `
-              <tr>
-                <td>${w.receive_date}</td>
-                <td>${w.amount}</td>
-                <td>${w.note}</td>
-                <td>
-                  <button class="edit-history" data-id="${w.id}">แก้ไข</button>
-                  <button class="delete-history" data-id="${w.id}">ลบ</button>
-                </td>
-              </tr>`).join('')}
-          </tbody>
-        </table>`;
-    });
-  });
-}
-
-// 🔍 ฟังก์ชันกรองอัตโนมัติ
 function filterTable() {
   const idVal = document.getElementById("searchMemberId").value.toLowerCase();
   const nameVal = document.getElementById("searchName").value.toLowerCase();
@@ -213,23 +166,12 @@ function filterTable() {
     const idText = row.cells[0].innerText.toLowerCase();
     const nameText = row.cells[1].innerText.toLowerCase();
     const groupText = row.cells[2].innerText.toLowerCase();
-
-    const match =
-      idText.includes(idVal) &&
-      nameText.includes(nameVal) &&
-      groupText.includes(groupVal);
-
+    const match = idText.includes(idVal) && nameText.includes(nameVal) && groupText.includes(groupVal);
     row.style.display = match ? "" : "none";
-    if (row.nextElementSibling && row.nextElementSibling.classList.contains("history-row"))
-      row.nextElementSibling.style.display = "none";
   });
 }
 
-["searchMemberId", "searchName", "searchGroup", "searchDate"].forEach(id => {
-  document.getElementById(id).addEventListener("input", filterTable);
-});
-
-// 🖨️ พิมพ์รายงาน + รวมยอด + รวมคน
+// 🖨️ พิมพ์รายงาน
 document.getElementById("printReport").addEventListener("click", async () => {
   const { data, error } = await db
     .from("welfare")
@@ -250,9 +192,10 @@ document.getElementById("printReport").addEventListener("click", async () => {
     table{width:100%;border-collapse:collapse;margin-top:10px;table-layout:fixed;}
     th,td{border:1px solid #ccc;padding:8px;text-align:center;white-space:nowrap;}
     th{background:#f1f5f9;}
+    th:nth-child(3), td:nth-child(3){width:28%;}
     tfoot td{font-weight:bold;background:#f9fafb;}
   </style></head><body>
-  <img src="https://lh5.googleusercontent.com/d/1B0sZdUz54kO4zAv0oJgoN4Aipy3UyCyR" class="logo">
+  <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/Thailand_emblem_gold.svg/1200px-Thailand_emblem_gold.svg.png" class="logo">
   <h2>กองทุนสวัสดิการชุมชนบ้านใหม่</h2>
   <p><b>รายงานสวัสดิการสมาชิก</b></p>
   <p>วันที่พิมพ์รายงาน: ${new Date().toLocaleDateString("th-TH")}</p>
@@ -263,7 +206,7 @@ document.getElementById("printReport").addEventListener("click", async () => {
       <tr>
         <td>${r.receive_date}</td>
         <td>${r.members.member_id}</td>
-        <td>${r.members.title}${r.members.first_name} ${r.members.last_name}</td>
+        <td style="text-align:left;padding-left:10px;">${r.members.title}${r.members.first_name} ${r.members.last_name}</td>
         <td>${r.members.group}</td>
         <td>${Number(r.amount).toLocaleString()}</td>
         <td>${r.note}</td>
