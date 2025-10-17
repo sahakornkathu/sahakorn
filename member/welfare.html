@@ -15,6 +15,7 @@
   }
   h2 { color: #1e40af; text-align: center; margin-bottom: 20px; }
 
+  /* 🔹 ส่วนค้นหาและปุ่มพิมพ์ */
   .filter-bar {
     display: flex; flex-wrap: wrap; gap: 10px;
     margin-bottom: 15px; align-items: center; justify-content: space-between;
@@ -38,6 +39,7 @@
   }
   .print-btn:hover { background: #0284c7; }
 
+  /* 🔹 ตารางหลัก */
   table { width: 100%; border-collapse: collapse; margin-top: 15px; table-layout: fixed; }
   th, td {
     padding: 10px 8px;
@@ -49,17 +51,17 @@
   th { background: #e0e7ff; font-weight: 600; }
   td input, td select { width: 100%; box-sizing: border-box; }
 
+  /* 🔹 ปุ่ม */
   .saveBtn { background: #2563eb; color: white; border: none; border-radius: 8px; padding: 8px 14px; margin-right: 6px; cursor: pointer; }
   .saveBtn:hover { background: #1e40af; }
   .view-btn { background: #6b7280; color: white; border: none; border-radius: 8px; padding: 8px 14px; cursor: pointer; }
   .view-btn:hover { background: #4b5563; }
-
   .edit-history { background: #facc15; color: #111; border-radius: 6px; padding: 5px 10px; border: none; cursor: pointer; }
   .edit-history:hover { background: #eab308; }
   .delete-history { background: #ef4444; color: white; border-radius: 6px; padding: 5px 10px; border: none; cursor: pointer; }
   .delete-history:hover { background: #dc2626; }
-
   .action-buttons { display: flex; gap: 6px; justify-content: center; }
+
   .history-row { background: #f9fafb; display: none; }
   .history-table { width: 100%; border-collapse: collapse; margin-top: 10px; table-layout: fixed; }
   .history-table th, .history-table td { border: 1px solid #ddd; padding: 6px 8px; text-align: center; white-space: nowrap; }
@@ -70,6 +72,7 @@
 <div class="container">
   <h2>บันทึกและดูประวัติสวัสดิการสมาชิก</h2>
 
+  <!-- 🔹 ค้นหา + ปุ่มพิมพ์ -->
   <div class="filter-bar">
     <div class="filter-inputs">
       <input type="text" id="searchMemberId" placeholder="ค้นหาเลขสมาชิก...">
@@ -80,6 +83,7 @@
     <button class="print-btn" id="printReport">🖨️ พิมพ์รายงาน</button>
   </div>
 
+  <!-- 🔹 ตารางบันทึก -->
   <table id="memberTable">
     <thead>
       <tr>
@@ -96,6 +100,7 @@
   </table>
 </div>
 
+<!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 const { createClient } = supabase;
@@ -103,7 +108,65 @@ const SUPABASE_URL = "https://ttottijljxoinptmhgtu.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y";
 const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// 🖨️ ปุ่มพิมพ์รายงาน (แก้ไขเฉพาะส่วนนี้)
+// โหลดข้อมูลสมาชิก
+async function loadMembers() {
+  const { data, error } = await db.from("members").select("member_id, title, first_name, last_name, group");
+  if (error) return alert("โหลดข้อมูลสมาชิกไม่สำเร็จ");
+  renderTable(data);
+}
+
+function renderTable(data) {
+  const tbody = document.getElementById("memberBody");
+  tbody.innerHTML = "";
+  data.forEach(m => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${m.member_id}</td>
+      <td>${m.title}${m.first_name} ${m.last_name}</td>
+      <td>${m.group || '-'}</td>
+      <td><input type="date" class="receiveDate"></td>
+      <td><input type="number" class="amount" placeholder="0.00"></td>
+      <td>
+        <select class="note">
+          <option value="">--เลือกหมายเหตุ--</option>
+          <option value="พ่อเสียชีวิต">พ่อเสียชีวิต</option>
+          <option value="แม่เสียชีวิต">แม่เสียชีวิต</option>
+          <option value="ตนเองเสียชีวิต">ตนเองเสียชีวิต</option>
+        </select>
+      </td>
+      <td>
+        <div class="action-buttons">
+          <button class="saveBtn">บันทึก</button>
+          <button class="view-btn">ดูประวัติ</button>
+        </div>
+      </td>`;
+    tbody.appendChild(tr);
+
+    // แถวแสดงประวัติ
+    const historyTr = document.createElement("tr");
+    historyTr.classList.add("history-row");
+    historyTr.innerHTML = `<td colspan="7"><div class="history"></div></td>`;
+    tbody.appendChild(historyTr);
+  });
+}
+
+// 🔍 ค้นหาอัตโนมัติ
+["searchMemberId", "searchName", "searchGroup", "searchDate"].forEach(id => {
+  document.getElementById(id).addEventListener("input", filterTable);
+});
+function filterTable() {
+  const idVal = searchMemberId.value.toLowerCase();
+  const nameVal = searchName.value.toLowerCase();
+  const groupVal = searchGroup.value.toLowerCase();
+  document.querySelectorAll("#memberBody tr:not(.history-row)").forEach(r => {
+    const id = r.cells[0].innerText.toLowerCase();
+    const name = r.cells[1].innerText.toLowerCase();
+    const group = r.cells[2].innerText.toLowerCase();
+    r.style.display = id.includes(idVal) && name.includes(nameVal) && group.includes(groupVal) ? "" : "none";
+  });
+}
+
+// 🖨️ ปุ่มพิมพ์รายงาน (ปรับช่องชื่อให้ยืดหยุ่น)
 document.getElementById("printReport").addEventListener("click", async () => {
   const { data, error } = await db
     .from("welfare")
@@ -128,12 +191,12 @@ document.getElementById("printReport").addEventListener("click", async () => {
       text-align:left;
       white-space:normal;
       word-wrap:break-word;
-      max-width:240px;
       padding-left:10px;
+      max-width:260px;
     }
     tfoot td{font-weight:bold;background:#f9fafb;}
   </style></head><body>
-  <img src="https://lh5.googleusercontent.com/d/1B0sZdUz54kO4zAv0oJgoN4Aipy3UyCyR" class="logo">
+  <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/Thailand_emblem_gold.svg/1200px-Thailand_emblem_gold.svg.png" class="logo">
   <h2>กองทุนสวัสดิการชุมชนบ้านใหม่</h2>
   <p><b>รายงานสวัสดิการสมาชิก</b></p>
   <p>วันที่พิมพ์รายงาน: ${new Date().toLocaleDateString("th-TH")}</p>
@@ -142,7 +205,7 @@ document.getElementById("printReport").addEventListener("click", async () => {
       <tr>
         <th style="width:12%;">วันที่รับเงิน</th>
         <th style="width:10%;">เลขสมาชิก</th>
-        <th style="width:28%;">ชื่อ-นามสกุล</th>
+        <th style="width:30%;">ชื่อ-นามสกุล</th>
         <th style="width:12%;">กลุ่ม</th>
         <th style="width:12%;">จำนวนเงิน</th>
         <th style="width:14%;">หมายเหตุ</th>
@@ -168,6 +231,8 @@ document.getElementById("printReport").addEventListener("click", async () => {
   printWindow.document.close();
   printWindow.print();
 });
+
+loadMembers();
 </script>
 </body>
 </html>
