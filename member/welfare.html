@@ -5,100 +5,70 @@
 <title>บันทึกและดูประวัติสวัสดิการสมาชิก</title>
 <style>
   body { font-family: "Prompt", sans-serif; background: #f3f4f6; padding: 20px; }
-  .container { background: #fff; border-radius: 12px; max-width: 1000px; margin: 0 auto; padding: 20px 30px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+  .container { background: #fff; border-radius: 12px; max-width: 1100px; margin: 0 auto; padding: 20px 30px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
   h2 { color: #1e40af; margin-bottom: 20px; text-align: center; }
-  .form-group { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px; }
-  input, select { padding: 8px 10px; border: 1px solid #ccc; border-radius: 8px; flex: 1 1 220px; font-size: 14px; }
 
-  /* ปุ่มหลัก */
-  button {
+  .filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
+    align-items: center;
+  }
+  .filter-bar select, .filter-bar input {
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+  }
+  .filter-bar button {
+    padding: 8px 14px;
     border: none;
     border-radius: 8px;
-    padding: 9px 16px;
     cursor: pointer;
     font-size: 14px;
-    transition: all 0.2s ease;
+    transition: 0.2s;
   }
-  .saveBtn {
-    background: #2563eb;
-    color: white;
-    margin-right: 6px;
-  }
-  .saveBtn:hover { background: #1e40af; transform: translateY(-1px); }
-  .view-btn {
-    background: #6b7280;
-    color: white;
-  }
-  .view-btn:hover { background: #4b5563; transform: translateY(-1px); }
-
-  /* ปุ่มในประวัติ */
-  .edit-history {
-    background: #facc15;
-    color: #111;
-    padding: 6px 10px;
-    border-radius: 6px;
-    font-size: 13px;
-  }
-  .edit-history:hover { background: #eab308; }
-
-  .delete-history {
-    background: #ef4444;
-    color: white;
-    padding: 6px 10px;
-    border-radius: 6px;
-    font-size: 13px;
-  }
-  .delete-history:hover { background: #dc2626; }
-
-  .print-history {
-    background: #0ea5e9;
-    color: white;
-    padding: 8px 14px;
-    border-radius: 8px;
-    font-size: 14px;
-    margin-bottom: 10px;
-  }
-  .print-history:hover { background: #0284c7; }
-
-  /* ปุ่มให้อยู่ในบรรทัดเดียวกัน */
-  .action-buttons {
-    display: flex;
-    gap: 6px;
-    justify-content: center;
-  }
+  .filter-btn { background: #2563eb; color: white; }
+  .filter-btn:hover { background: #1d4ed8; }
+  .print-btn { background: #0ea5e9; color: white; }
+  .print-btn:hover { background: #0284c7; }
 
   /* ตาราง */
-  #memberTable { width: 100%; border-collapse: collapse; margin-top: 15px; }
-  #memberTable th, #memberTable td { padding: 8px 10px; border: 1px solid #ddd; text-align: left; vertical-align: middle; }
-  #memberTable th { background: #e0e7ff; }
-  .history-row { background: #f9fafb; display: none; }
-  .history-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-  .history-table th, .history-table td { border: 1px solid #ddd; padding: 6px 8px; text-align: center; }
-  .history-table th { background: #f1f5f9; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { border: 1px solid #ddd; padding: 8px 10px; text-align: center; }
+  th { background: #e0e7ff; }
+  tr:nth-child(even) { background: #f9fafb; }
 </style>
 </head>
 <body>
 <div class="container">
-  <h2>บันทึกและดูประวัติสวัสดิการสมาชิก</h2>
+  <h2>รายงานสวัสดิการสมาชิก</h2>
 
-  <div class="form-group">
-    <input type="text" id="searchMemberId" placeholder="ค้นหาเลขสมาชิก...">
-    <input type="text" id="searchName" placeholder="ค้นหาชื่อหรือนามสกุล...">
+  <!-- 🔹 ส่วนกรอง -->
+  <div class="filter-bar">
+    <select id="filterGroup">
+      <option value="">-- เลือกกลุ่มทั้งหมด --</option>
+    </select>
+    <input type="date" id="filterStartDate">
+    <input type="date" id="filterEndDate">
+    <button class="filter-btn" id="applyFilter">🔍 กรองข้อมูล</button>
+    <button class="print-btn" id="printReport">🖨️ พิมพ์รายงาน</button>
   </div>
 
-  <table id="memberTable">
+  <!-- 🔹 ตารางแสดงข้อมูล -->
+  <table id="reportTable">
     <thead>
       <tr>
+        <th>วันที่รับเงิน</th>
         <th>เลขสมาชิก</th>
         <th>ชื่อ-นามสกุล</th>
         <th>กลุ่ม</th>
-        <th>วันที่รับเงิน</th>
         <th>จำนวนเงิน</th>
         <th>หมายเหตุ</th>
-        <th>จัดการ</th>
       </tr>
     </thead>
-    <tbody id="memberBody"></tbody>
+    <tbody id="reportBody"></tbody>
   </table>
 </div>
 
@@ -106,167 +76,118 @@
 <script>
 const { createClient } = supabase;
 const SUPABASE_URL = "https://ttottijljxoinptmhgtu.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...";
 const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-async function loadMembers() {
+let allData = []; // เก็บข้อมูลทั้งหมด
+
+// โหลดกลุ่มใน dropdown
+async function loadGroups() {
+  const { data, error } = await db.from("members").select("group").not("group", "is", null);
+  if (!error && data.length) {
+    const uniqueGroups = [...new Set(data.map(item => item.group))];
+    const groupSelect = document.getElementById("filterGroup");
+    uniqueGroups.forEach(g => {
+      const opt = document.createElement("option");
+      opt.value = g;
+      opt.textContent = g;
+      groupSelect.appendChild(opt);
+    });
+  }
+}
+
+// โหลดข้อมูล welfare + สมาชิก
+async function loadData() {
   const { data, error } = await db
-    .from('members')
-    .select('member_id, title, first_name, last_name, group');
+    .from("welfare")
+    .select(`
+      receive_date, amount, note,
+      members:member_id (member_id, title, first_name, last_name, group)
+    `)
+    .order("receive_date", { ascending: false });
 
-  if (error) { console.error(error); alert("ไม่สามารถดึงข้อมูลสมาชิกได้"); return; }
+  if (error) {
+    console.error(error);
+    alert("เกิดข้อผิดพลาดในการดึงข้อมูล");
+    return;
+  }
 
-  const tbody = document.getElementById("memberBody");
+  allData = data;
+  renderTable(allData);
+}
+
+// ฟังก์ชันแสดงข้อมูลในตาราง
+function renderTable(data) {
+  const tbody = document.getElementById("reportBody");
   tbody.innerHTML = "";
-  data.forEach(m => {
+  if (!data.length) {
+    tbody.innerHTML = `<tr><td colspan="6" style="color:gray;">ไม่มีข้อมูล</td></tr>`;
+    return;
+  }
+
+  data.forEach(row => {
+    const m = row.members;
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td>${m.member_id}</td>
-      <td>${m.title}${m.first_name} ${m.last_name}</td>
+      <td>${row.receive_date || '-'}</td>
+      <td>${m.member_id || '-'}</td>
+      <td>${m.title || ''}${m.first_name || ''} ${m.last_name || ''}</td>
       <td>${m.group || '-'}</td>
-      <td><input type="date" class="receiveDate"></td>
-      <td><input type="number" class="amount" placeholder="0.00"></td>
-      <td>
-        <select class="note">
-          <option value="">--เลือกหมายเหตุ--</option>
-          <option value="พ่อเสียชีวิต">พ่อเสียชีวิต</option>
-          <option value="แม่เสียชีวิต">แม่เสียชีวิต</option>
-          <option value="ตนเองเสียชีวิต">ตนเองเสียชีวิต</option>
-        </select>
-      </td>
-      <td>
-        <div class="action-buttons">
-          <button class="saveBtn">บันทึก</button>
-          <button class="view-btn">ดูประวัติ</button>
-        </div>
-      </td>
+      <td>${row.amount || '-'}</td>
+      <td>${row.note || '-'}</td>
     `;
     tbody.appendChild(tr);
-
-    const historyTr = document.createElement("tr");
-    historyTr.classList.add("history-row");
-    historyTr.innerHTML = `<td colspan="7"><div class="history"></div></td>`;
-    tbody.appendChild(historyTr);
-  });
-
-  // ปุ่มบันทึก
-  document.querySelectorAll(".saveBtn").forEach((btn, index) => {
-    btn.addEventListener("click", async () => {
-      const tr = btn.closest("tr");
-      const member = data[index];
-      const receive_date = tr.querySelector(".receiveDate").value;
-      const amount = tr.querySelector(".amount").value;
-      const note = tr.querySelector(".note").value;
-
-      if (!receive_date || !amount || !note) { alert("กรุณากรอกข้อมูลให้ครบก่อนบันทึก"); return; }
-
-      const { error } = await db
-        .from("welfare")
-        .insert([{ member_id: member.member_id, receive_date, amount, note }]);
-
-      if (error) { alert("เกิดข้อผิดพลาดในการบันทึกข้อมูล"); console.error(error); }
-      else { alert("✅ บันทึกข้อมูลเรียบร้อยแล้ว"); tr.querySelector(".receiveDate").value = ""; tr.querySelector(".amount").value = ""; tr.querySelector(".note").value = ""; }
-    });
-  });
-
-  // ปุ่มดูประวัติ + พิมพ์รายงาน
-  document.querySelectorAll(".view-btn").forEach((btn, index) => {
-    btn.addEventListener("click", async () => {
-      const historyRow = btn.closest("tr").nextElementSibling;
-      const historyDiv = historyRow.querySelector(".history");
-      const member = data[index];
-      historyRow.style.display = historyRow.style.display === "table-row" ? "none" : "table-row";
-
-      const { data: welfare, error } = await db
-        .from("welfare")
-        .select("id, receive_date, amount, note, created_at")
-        .eq("member_id", member.member_id)
-        .order("receive_date", { ascending: false });
-
-      if (error) { console.error(error); return; }
-      if (!welfare.length) { historyDiv.innerHTML = `<p style="color:gray;">ยังไม่มีประวัติการรับสวัสดิการ</p>`; return; }
-
-      let html = `
-        <button class="print-history">🖨️ พิมพ์รายงาน</button>
-        <table class="history-table">
-          <thead><tr><th>วันที่รับเงิน</th><th>จำนวนเงิน</th><th>หมายเหตุ</th><th>วันที่บันทึก</th></tr></thead>
-          <tbody>
-            ${welfare.map(w => `
-              <tr>
-                <td>${w.receive_date}</td>
-                <td>${w.amount}</td>
-                <td>${w.note}</td>
-                <td>${new Date(w.created_at).toLocaleString("th-TH")}</td>
-              </tr>`).join('')}
-          </tbody>
-        </table>
-      `;
-      historyDiv.innerHTML = html;
-
-      // ✅ ปุ่มพิมพ์รายงาน (มีตัวกรอง)
-      historyDiv.querySelector(".print-history").addEventListener("click", () => {
-        const groupFilter = prompt("กรอกชื่อกลุ่มที่ต้องการพิมพ์ (เว้นว่าง = ทุกกลุ่ม):", "");
-        const startDate = prompt("กรอกวันที่เริ่มต้น (YYYY-MM-DD):", "");
-        const endDate = prompt("กรอกวันที่สิ้นสุด (YYYY-MM-DD):", "");
-
-        // กรองข้อมูลก่อนพิมพ์
-        const filtered = welfare.filter(w => {
-          const inGroup = !groupFilter || (member.group === groupFilter);
-          const inDate =
-            (!startDate || w.receive_date >= startDate) &&
-            (!endDate || w.receive_date <= endDate);
-          return inGroup && inDate;
-        });
-
-        if (!filtered.length) { alert("ไม่พบข้อมูลตามเงื่อนไขที่กรอง"); return; }
-
-        const printWindow = window.open('', '_blank');
-        printWindow.document.write(`
-          <html><head><title>รายงานสวัสดิการสมาชิก</title>
-          <style>
-            body { font-family: "Prompt", sans-serif; margin: 40px; }
-            h2 { text-align: center; margin-bottom: 6px; }
-            table { width: 100%; border-collapse: collapse; }
-            th, td { border: 1px solid #ccc; padding: 8px; text-align: center; font-size: 14px; }
-            th { background: #f1f5f9; }
-          </style></head><body>
-            <h2>รายงานสวัสดิการสมาชิก</h2>
-            <p><b>เลขสมาชิก:</b> ${member.member_id} | <b>ชื่อ:</b> ${member.title}${member.first_name} ${member.last_name} | <b>กลุ่ม:</b> ${member.group || '-'}</p>
-            <p><b>ช่วงวันที่:</b> ${startDate || '-'} ถึง ${endDate || '-'}</p>
-            <table>
-              <thead><tr><th>วันที่รับเงิน</th><th>จำนวนเงิน</th><th>หมายเหตุ</th></tr></thead>
-              <tbody>
-                ${filtered.map(w => `
-                  <tr>
-                    <td>${w.receive_date}</td>
-                    <td>${w.amount}</td>
-                    <td>${w.note}</td>
-                  </tr>`).join('')}
-              </tbody>
-            </table>
-          </body></html>
-        `);
-        printWindow.document.close();
-        printWindow.print();
-      });
-    });
   });
 }
 
-document.getElementById("searchMemberId").addEventListener("input", filterTable);
-document.getElementById("searchName").addEventListener("input", filterTable);
-function filterTable() {
-  const idVal = document.getElementById("searchMemberId").value.toLowerCase();
-  const nameVal = document.getElementById("searchName").value.toLowerCase();
-  const rows = document.querySelectorAll("#memberBody tr:not(.history-row)");
-  rows.forEach(row => {
-    const idText = row.cells[0].innerText.toLowerCase();
-    const nameText = row.cells[1].innerText.toLowerCase();
-    row.style.display = (idText.includes(idVal) && nameText.includes(nameVal)) ? "" : "none";
-  });
-}
+// 🔹 ปุ่มกรองข้อมูล
+document.getElementById("applyFilter").addEventListener("click", () => {
+  const group = document.getElementById("filterGroup").value;
+  const start = document.getElementById("filterStartDate").value;
+  const end = document.getElementById("filterEndDate").value;
 
-loadMembers();
+  const filtered = allData.filter(row => {
+    const inGroup = !group || row.members.group === group;
+    const inDate =
+      (!start || row.receive_date >= start) &&
+      (!end || row.receive_date <= end);
+    return inGroup && inDate;
+  });
+
+  renderTable(filtered);
+});
+
+// 🔹 ปุ่มพิมพ์รายงาน
+document.getElementById("printReport").addEventListener("click", () => {
+  const tableHTML = document.getElementById("reportTable").outerHTML;
+  const group = document.getElementById("filterGroup").value || "ทุกกลุ่ม";
+  const start = document.getElementById("filterStartDate").value || "-";
+  const end = document.getElementById("filterEndDate").value || "-";
+
+  const printWin = window.open("", "_blank");
+  printWin.document.write(`
+    <html><head><title>รายงานสวัสดิการสมาชิก</title>
+    <style>
+      body { font-family: "Prompt", sans-serif; margin: 40px; }
+      h2 { text-align: center; margin-bottom: 5px; }
+      p { text-align: center; margin-bottom: 20px; }
+      table { width: 100%; border-collapse: collapse; }
+      th, td { border: 1px solid #ccc; padding: 8px; text-align: center; font-size: 14px; }
+      th { background: #f1f5f9; }
+    </style>
+    </head><body>
+      <h2>รายงานสวัสดิการสมาชิก</h2>
+      <p><b>กลุ่ม:</b> ${group} | <b>ช่วงวันที่:</b> ${start} ถึง ${end}</p>
+      ${tableHTML}
+    </body></html>
+  `);
+  printWin.document.close();
+  printWin.print();
+});
+
+// เริ่มต้นโหลดข้อมูล
+loadGroups();
+loadData();
 </script>
 </body>
 </html>
