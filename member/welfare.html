@@ -15,7 +15,7 @@
   }
   h2 { color: #1e40af; text-align: center; margin-bottom: 20px; }
 
-  /* 🔹 ส่วนค้นหาและปุ่มพิมพ์ */
+  /* ส่วนค้นหาและปุ่มพิมพ์ */
   .filter-bar {
     display: flex; flex-wrap: wrap; gap: 10px;
     margin-bottom: 15px; align-items: center; justify-content: space-between;
@@ -28,30 +28,22 @@
     font-size: 14px;
   }
   .print-btn {
-    background: #0ea5e9;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    padding: 8px 16px;
-    cursor: pointer;
-    font-size: 14px;
-    transition: 0.2s;
+    background: #0ea5e9; color: white; border: none;
+    border-radius: 8px; padding: 8px 16px;
+    cursor: pointer; font-size: 14px; transition: 0.2s;
   }
   .print-btn:hover { background: #0284c7; }
 
-  /* 🔹 ตารางหลัก */
+  /* ตารางหลัก */
   table { width: 100%; border-collapse: collapse; margin-top: 15px; table-layout: fixed; }
   th, td {
-    padding: 10px 8px;
-    border: 1px solid #ddd;
-    text-align: center;
-    word-wrap: break-word;
-    white-space: nowrap;
+    padding: 10px 8px; border: 1px solid #ddd; text-align: center;
+    word-wrap: break-word; white-space: nowrap;
   }
   th { background: #e0e7ff; font-weight: 600; }
   td input, td select { width: 100%; box-sizing: border-box; }
 
-  /* 🔹 ปุ่ม */
+  /* ปุ่ม */
   .saveBtn { background: #2563eb; color: white; border: none; border-radius: 8px; padding: 8px 14px; margin-right: 6px; cursor: pointer; }
   .saveBtn:hover { background: #1e40af; }
   .view-btn { background: #6b7280; color: white; border: none; border-radius: 8px; padding: 8px 14px; cursor: pointer; }
@@ -62,9 +54,10 @@
   .delete-history:hover { background: #dc2626; }
   .action-buttons { display: flex; gap: 6px; justify-content: center; }
 
+  /* ตารางประวัติ */
   .history-row { background: #f9fafb; display: none; }
-  .history-table { width: 100%; border-collapse: collapse; margin-top: 10px; table-layout: fixed; }
-  .history-table th, .history-table td { border: 1px solid #ddd; padding: 6px 8px; text-align: center; white-space: nowrap; }
+  .history-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+  .history-table th, .history-table td { border: 1px solid #ddd; padding: 6px 8px; text-align: center; }
   .history-table th { background: #f1f5f9; }
 </style>
 </head>
@@ -72,7 +65,7 @@
 <div class="container">
   <h2>บันทึกและดูประวัติสวัสดิการสมาชิก</h2>
 
-  <!-- 🔹 ค้นหา + ปุ่มพิมพ์ -->
+  <!-- ค้นหา + ปุ่มพิมพ์ -->
   <div class="filter-bar">
     <div class="filter-inputs">
       <input type="text" id="searchMemberId" placeholder="ค้นหาเลขสมาชิก...">
@@ -83,7 +76,6 @@
     <button class="print-btn" id="printReport">🖨️ พิมพ์รายงาน</button>
   </div>
 
-  <!-- 🔹 ตารางบันทึก -->
   <table id="memberTable">
     <thead>
       <tr>
@@ -100,7 +92,6 @@
   </table>
 </div>
 
-<!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 const { createClient } = supabase;
@@ -111,10 +102,11 @@ const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 // โหลดข้อมูลสมาชิก
 async function loadMembers() {
   const { data, error } = await db.from("members").select("member_id, title, first_name, last_name, group");
-  if (error) return alert("โหลดข้อมูลสมาชิกไม่สำเร็จ");
+  if (error) { alert("โหลดข้อมูลสมาชิกไม่สำเร็จ"); return; }
   renderTable(data);
 }
 
+// แสดงตารางหลัก
 function renderTable(data) {
   const tbody = document.getElementById("memberBody");
   tbody.innerHTML = "";
@@ -142,15 +134,88 @@ function renderTable(data) {
       </td>`;
     tbody.appendChild(tr);
 
-    // แถวแสดงประวัติ
+    // แถวประวัติ
     const historyTr = document.createElement("tr");
     historyTr.classList.add("history-row");
     historyTr.innerHTML = `<td colspan="7"><div class="history"></div></td>`;
     tbody.appendChild(historyTr);
   });
+
+  addEventListeners(data);
 }
 
-// 🔍 ค้นหาอัตโนมัติ
+// ผูก event กับปุ่มต่างๆ
+function addEventListeners(data) {
+  document.querySelectorAll(".saveBtn").forEach((btn, i) => {
+    btn.addEventListener("click", async () => {
+      const tr = btn.closest("tr");
+      const member = data[i];
+      const receive_date = tr.querySelector(".receiveDate").value;
+      const amount = tr.querySelector(".amount").value;
+      const note = tr.querySelector(".note").value;
+      if (!receive_date || !amount || !note) return alert("กรุณากรอกข้อมูลให้ครบ");
+
+      const { error } = await db.from("welfare").insert([{ member_id: member.member_id, receive_date, amount, note }]);
+      if (error) alert("❌ บันทึกไม่สำเร็จ");
+      else alert("✅ บันทึกเรียบร้อยแล้ว");
+    });
+  });
+
+  document.querySelectorAll(".view-btn").forEach((btn, i) => {
+    btn.addEventListener("click", async () => {
+      const historyRow = btn.closest("tr").nextElementSibling;
+      const historyDiv = historyRow.querySelector(".history");
+      const member = data[i];
+      historyRow.style.display = historyRow.style.display === "table-row" ? "none" : "table-row";
+
+      const { data: welfare, error } = await db.from("welfare").select("*").eq("member_id", member.member_id).order("receive_date", { ascending: false });
+      if (error) { console.error(error); return; }
+      if (!welfare.length) { historyDiv.innerHTML = `<p style="color:gray;">ไม่มีประวัติ</p>`; return; }
+
+      historyDiv.innerHTML = `
+        <table class="history-table">
+          <thead><tr><th>วันที่รับเงิน</th><th>จำนวนเงิน</th><th>หมายเหตุ</th><th>วันที่บันทึก</th><th>จัดการ</th></tr></thead>
+          <tbody>
+            ${welfare.map(w => `
+              <tr>
+                <td>${w.receive_date}</td>
+                <td>${Number(w.amount).toLocaleString()}</td>
+                <td>${w.note}</td>
+                <td>${new Date(w.created_at).toLocaleString("th-TH")}</td>
+                <td>
+                  <button class="edit-history" data-id="${w.id}">แก้ไข</button>
+                  <button class="delete-history" data-id="${w.id}">ลบ</button>
+                </td>
+              </tr>`).join("")}
+          </tbody>
+        </table>`;
+
+      // ปุ่มแก้ไข / ลบ
+      historyDiv.querySelectorAll(".edit-history").forEach(edit => {
+        edit.addEventListener("click", async () => {
+          const record = welfare.find(r => r.id == edit.dataset.id);
+          const trMain = btn.closest("tr");
+          trMain.querySelector(".receiveDate").value = record.receive_date;
+          trMain.querySelector(".amount").value = record.amount;
+          trMain.querySelector(".note").value = record.note;
+          await db.from("welfare").delete().eq("id", record.id);
+          alert("📝 แก้ไขข้อมูลได้แล้ว กดบันทึกเพื่ออัปเดต");
+        });
+      });
+
+      historyDiv.querySelectorAll(".delete-history").forEach(del => {
+        del.addEventListener("click", async () => {
+          if (!confirm("ยืนยันการลบข้อมูลนี้?")) return;
+          await db.from("welfare").delete().eq("id", del.dataset.id);
+          alert("✅ ลบข้อมูลสำเร็จ");
+          btn.click(); // reload history
+        });
+      });
+    });
+  });
+}
+
+// 🔍 ฟังก์ชันค้นหา
 ["searchMemberId", "searchName", "searchGroup", "searchDate"].forEach(id => {
   document.getElementById(id).addEventListener("input", filterTable);
 });
@@ -166,18 +231,16 @@ function filterTable() {
   });
 }
 
-// 🖨️ ปุ่มพิมพ์รายงาน (ปรับช่องชื่อให้ยืดหยุ่น)
+// 🖨️ พิมพ์รายงาน (ช่องชื่อยืดหยุ่น)
 document.getElementById("printReport").addEventListener("click", async () => {
-  const { data, error } = await db
-    .from("welfare")
-    .select("*, members:member_id(member_id, title, first_name, last_name, group)");
+  const { data, error } = await db.from("welfare").select("*, members:member_id(member_id, title, first_name, last_name, group)");
   if (error || !data.length) return alert("ไม่มีข้อมูล");
 
   const totalAmount = data.reduce((sum, r) => sum + Number(r.amount || 0), 0).toFixed(2);
   const totalPeople = new Set(data.map(r => r.member_id)).size;
 
-  const printWindow = window.open("", "_blank");
-  printWindow.document.write(`
+  const win = window.open("", "_blank");
+  win.document.write(`
   <html><head><title>รายงานสวัสดิการ</title>
   <style>
     body{font-family:"Prompt",sans-serif;margin:40px;}
@@ -187,13 +250,7 @@ document.getElementById("printReport").addEventListener("click", async () => {
     table{width:100%;border-collapse:collapse;margin-top:10px;}
     th,td{border:1px solid #ccc;padding:8px;text-align:center;vertical-align:middle;}
     th{background:#f1f5f9;}
-    td.name-cell{
-      text-align:left;
-      white-space:normal;
-      word-wrap:break-word;
-      padding-left:10px;
-      max-width:260px;
-    }
+    td.name-cell{text-align:left;white-space:normal;word-wrap:break-word;max-width:260px;padding-left:10px;}
     tfoot td{font-weight:bold;background:#f9fafb;}
   </style></head><body>
   <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/Thailand_emblem_gold.svg/1200px-Thailand_emblem_gold.svg.png" class="logo">
@@ -201,35 +258,26 @@ document.getElementById("printReport").addEventListener("click", async () => {
   <p><b>รายงานสวัสดิการสมาชิก</b></p>
   <p>วันที่พิมพ์รายงาน: ${new Date().toLocaleDateString("th-TH")}</p>
   <table>
-    <thead>
-      <tr>
-        <th style="width:12%;">วันที่รับเงิน</th>
-        <th style="width:10%;">เลขสมาชิก</th>
-        <th style="width:30%;">ชื่อ-นามสกุล</th>
-        <th style="width:12%;">กลุ่ม</th>
-        <th style="width:12%;">จำนวนเงิน</th>
-        <th style="width:14%;">หมายเหตุ</th>
-      </tr>
-    </thead>
+    <thead><tr><th>วันที่รับเงิน</th><th>เลขสมาชิก</th><th>ชื่อ-นามสกุล</th><th>กลุ่ม</th><th>จำนวนเงิน</th><th>หมายเหตุ</th></tr></thead>
     <tbody>
     ${data.map(r => `
       <tr>
         <td>${r.receive_date}</td>
         <td>${r.members.member_id}</td>
         <td class="name-cell">${r.members.title}${r.members.first_name} ${r.members.last_name}</td>
-        <td>${r.members.group || '-'}</td>
+        <td>${r.members.group}</td>
         <td>${Number(r.amount).toLocaleString()}</td>
         <td>${r.note}</td>
       </tr>`).join("")}
     </tbody>
     <tfoot>
-      <tr><td colspan="4">รวมจำนวนสมาชิกทั้งหมด</td><td colspan="2">${totalPeople.toLocaleString()} คน</td></tr>
+      <tr><td colspan="4">รวมจำนวนสมาชิกทั้งหมด</td><td colspan="2">${totalPeople} คน</td></tr>
       <tr><td colspan="4">รวมจำนวนเงินทั้งหมด</td><td colspan="2">${Number(totalAmount).toLocaleString()} บาท</td></tr>
     </tfoot>
   </table>
   </body></html>`);
-  printWindow.document.close();
-  printWindow.print();
+  win.document.close();
+  win.print();
 });
 
 loadMembers();
