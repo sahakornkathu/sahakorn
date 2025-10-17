@@ -29,6 +29,14 @@
   <div class="form-group">
     <input type="text" id="searchMemberId" placeholder="ค้นหาเลขสมาชิก...">
     <input type="text" id="searchName" placeholder="ค้นหาชื่อหรือนามสกุล...">
+    
+    <!-- เพิ่มฟิลเตอร์วันที่และกลุ่ม -->
+    <input type="date" id="filterDateStart">
+    <input type="date" id="filterDateEnd">
+    <input type="text" id="filterGroup" placeholder="กรอกชื่อกลุ่ม...">
+    
+    <!-- เพิ่มปุ่มพิมพ์รายงาน -->
+    <button id="printReportBtn" style="background:#059669;">🖨️ พิมพ์รายงาน</button>
   </div>
 
   <table id="memberTable">
@@ -155,7 +163,6 @@ async function loadMembers() {
           tr.querySelector(".amount").value = record.amount;
           tr.querySelector(".note").value = record.note;
 
-          // ลบเรคคอร์ดเก่า
           await db.from("welfare").delete().eq("id", record.id);
           alert("คุณสามารถแก้ไขข้อมูลแล้วกดบันทึกเพื่ออัปเดต");
         });
@@ -181,6 +188,61 @@ function filterTable() {
 }
 
 loadMembers();
+
+
+// === ส่วนพิมพ์รายงาน ===
+document.getElementById("printReportBtn").addEventListener("click", async () => {
+  const start = document.getElementById("filterDateStart").value;
+  const end = document.getElementById("filterDateEnd").value;
+  const group = document.getElementById("filterGroup").value.trim();
+
+  if (!start || !end) {
+    alert("กรุณาเลือกช่วงวันที่ก่อนพิมพ์รายงาน");
+    return;
+  }
+
+  let query = db.from("welfare")
+    .select("member_id, receive_date, amount, note, members(title, first_name, last_name, group)")
+    .gte("receive_date", start)
+    .lte("receive_date", end);
+
+  if (group) query = query.eq("members.group", group);
+
+  const { data, error } = await query;
+  if (error) { console.error(error); alert("ไม่สามารถดึงข้อมูลได้"); return; }
+
+  let reportWindow = window.open("", "_blank");
+  let html = `
+    <html><head><title>รายงานสวัสดิการสมาชิก</title>
+    <style>
+      body { font-family: "Prompt", sans-serif; margin: 40px; }
+      h2 { text-align: center; }
+      table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+      th, td { border: 1px solid #ccc; padding: 6px; font-size: 14px; }
+      th { background: #e0e7ff; }
+    </style></head><body>
+    <h2>รายงานสวัสดิการสมาชิก</h2>
+    <p>ช่วงวันที่ ${start} ถึง ${end}</p>
+    ${group ? `<p>กลุ่ม: ${group}</p>` : ""}
+    <table>
+      <thead><tr><th>วันที่รับเงิน</th><th>เลขสมาชิก</th><th>ชื่อ-นามสกุล</th><th>กลุ่ม</th><th>จำนวนเงิน</th><th>หมายเหตุ</th></tr></thead>
+      <tbody>
+      ${data.map(r => `
+        <tr>
+          <td>${r.receive_date}</td>
+          <td>${r.member_id}</td>
+          <td>${r.members?.title || ''}${r.members?.first_name || ''} ${r.members?.last_name || ''}</td>
+          <td>${r.members?.group || '-'}</td>
+          <td>${r.amount}</td>
+          <td>${r.note}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+    </body></html>
+  `;
+  reportWindow.document.write(html);
+  reportWindow.print();
+});
 </script>
 </body>
 </html>
