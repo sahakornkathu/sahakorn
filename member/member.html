@@ -7,174 +7,47 @@
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap');
 *{ box-sizing:border-box; }
-
-body {
-  font-family:"Prompt",sans-serif;
-  background:#f0f4f8;
-  margin:20px;
-  color:#333;
-  line-height:1.5;
-}
-
-h2 { text-align:center; color:#1e40af; margin-bottom:15px; }
-
-form { max-width:950px; margin:auto; }
-
-.form-step {
-  display:none;
-  background:#fff;
-  padding:20px 25px;
-  border-radius:12px;
-  box-shadow:0 5px 20px rgba(0,0,0,0.08);
-  margin-bottom:20px;
-}
-.form-step.active { display:block; }
-
-input, select {
-  display:block;
-  width:48%;
-  margin:5px 1% 10px 1%;
-  padding:8px 10px;
-  border:1px solid #ccc;
-  border-radius:6px;
-  font-size:14px;
-  background:#f9fafb;
-  transition:0.2s;
-}
-input:focus, select:focus {
-  outline:none;
-  border-color:#4a90e2;
-  box-shadow:0 0 5px rgba(74,144,226,0.3);
-  background:#fff;
-}
-
-label{ font-size:13px; margin-right:8px; display:inline-block; }
-small{ font-size:12px; color:#555; }
-
-.form-navigation {
-  text-align:center;
-  margin-top:15px;
-}
-.form-navigation button {
-  padding:8px 14px;
-  margin:3px;
-  border:none;
-  border-radius:6px;
-  cursor:pointer;
-  background:#4a90e2;
-  color:#fff;
-  transition:0.2s;
-}
-.form-navigation button:hover { background:#357abd; }
-
-table {
-  border-collapse: collapse;
-  width:100%;
-  max-width:1000px;
-  margin:auto;
-  font-size:13px;
-  background:#fff;
-  border-radius:10px;
-  overflow:hidden;
-  box-shadow:0 4px 12px rgba(0,0,0,0.08);
-}
-th, td { border:1px solid #e2e8f0; padding:6px 8px; text-align:center; white-space:nowrap; }
-th { background:#4a90e2; color:#fff; cursor:pointer; position:relative; font-weight:500; }
-th span.sort-icon { position:absolute; right:6px; font-size:12px; }
-tr:nth-child(even){ background:#f9fafb; }
-tr:hover{ background:#edf2f7; }
-
-button.edit, button.delete {
-  padding:4px 8px;
-  border-radius:4px;
-  font-size:12px;
-  color:#fff;
-  border:none;
-  cursor:pointer;
-}
-button.edit{ background:#4a90e2; }
-button.edit:hover{ background:#357abd; }
-button.delete{ background:#f56565; }
-button.delete:hover{ background:#c53030; }
-
-.pagination {
-  text-align:center;
-  margin:15px auto;
-  display:flex;
-  flex-wrap:wrap;
-  justify-content:center;
-  gap:6px;
-}
-.pagination button {
-  padding:6px 12px;
-  border:none;
-  border-radius:5px;
-  background:#4a90e2;
-  color:#fff;
-  cursor:pointer;
-  font-size:13px;
-}
-.pagination button:hover{ background:#357abd; }
-
-.progress-container {
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  max-width:950px;
-  margin:0 auto 20px auto;
-  position:relative;
-}
-.progress-step {
-  position:relative;
-  background:#f9fafb;
-  color:#4a5568;
-  border:2px solid #cbd5e0;
-  border-radius:50px;
-  padding:8px 15px;
-  font-size:13px;
-  flex:1;
-  text-align:center;
-  margin:0 4px;
-  transition:all 0.3s;
-}
-.progress-step.active {
-  background:#4a90e2;
-  color:#fff;
-  border-color:#4a90e2;
-}
-
-/* ✅ Dashboard Summary */
-.summary-container {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 15px;
-  max-width: 950px;
-  margin: 20px auto;
-}
-.summary-card {
-  background: #ffffff;
-  flex: 1 1 160px;
-  padding: 15px;
-  border-radius: 12px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
-  text-align: center;
-  transition: 0.2s;
-}
-.summary-card:hover { transform: translateY(-3px); }
-.summary-card h3 { margin: 0; font-size: 16px; color: #334155; }
-.summary-card p { margin: 5px 0 0 0; font-size: 22px; font-weight: 600; color: #1e3a8a; }
-.summary-card.total { border-top: 4px solid #2563eb; }
-.summary-card.male { border-top: 4px solid #0ea5e9; }
-.summary-card.female { border-top: 4px solid #f472b6; }
-.summary-card.exit { border-top: 4px solid #f59e0b; }
-.summary-card.death { border-top: 4px solid #ef4444; }
-
-/* ✅ มือถือ */
-@media (max-width: 768px) {
-  .summary-container { flex-direction: column; align-items: stretch; gap: 10px; }
-  input, select { width:100%!important; }
-}
+body{font-family:"Prompt",sans-serif;background:#f0f4f8;margin:20px;color:#333;line-height:1.5;}
+h2{text-align:center;color:#1e40af;margin-bottom:15px;}
+form{max-width:950px;margin:auto;}
+.form-step{display:none;background:#fff;padding:20px 25px;border-radius:12px;box-shadow:0 5px 20px rgba(0,0,0,0.08);margin-bottom:20px;}
+.form-step.active{display:block;}
+input,select{display:block;width:48%;margin:5px 1% 10px 1%;padding:8px 10px;border:1px solid #ccc;border-radius:6px;font-size:14px;background:#f9fafb;transition:0.2s;}
+input:focus,select:focus{outline:none;border-color:#4a90e2;box-shadow:0 0 5px rgba(74,144,226,0.3);background:#fff;}
+.form-navigation{text-align:center;margin-top:15px;}
+.form-navigation button{padding:8px 14px;margin:3px;border:none;border-radius:6px;cursor:pointer;background:#4a90e2;color:#fff;transition:0.2s;}
+.form-navigation button:hover{background:#357abd;}
+table{border-collapse:collapse;width:100%;max-width:1000px;margin:auto;font-size:13px;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.08);}
+th,td{border:1px solid #e2e8f0;padding:6px 8px;text-align:center;white-space:nowrap;}
+th{background:#4a90e2;color:#fff;cursor:pointer;position:relative;font-weight:500;}
+tr:nth-child(even){background:#f9fafb;}
+tr:hover{background:#edf2f7;}
+button.edit,button.delete{padding:4px 8px;border-radius:4px;font-size:12px;color:#fff;border:none;cursor:pointer;}
+button.edit{background:#4a90e2;}
+button.edit:hover{background:#357abd;}
+button.delete{background:#f56565;}
+button.delete:hover{background:#c53030;}
+.pagination{text-align:center;margin:15px auto;display:flex;flex-wrap:wrap;justify-content:center;gap:6px;}
+.pagination button{padding:6px 12px;border:none;border-radius:5px;background:#4a90e2;color:#fff;cursor:pointer;font-size:13px;}
+.pagination button:hover{background:#357abd;}
+.progress-container{display:flex;justify-content:space-between;align-items:center;max-width:950px;margin:0 auto 20px auto;}
+.progress-step{position:relative;background:#f9fafb;color:#4a5568;border:2px solid #cbd5e0;border-radius:50px;padding:8px 15px;font-size:13px;flex:1;text-align:center;margin:0 4px;}
+.progress-step.active{background:#4a90e2;color:#fff;border-color:#4a90e2;}
+.summary-container{display:flex;flex-wrap:wrap;justify-content:center;gap:15px;max-width:950px;margin:20px auto;}
+.summary-card{background:#fff;flex:1 1 160px;padding:15px;border-radius:12px;box-shadow:0 4px 10px rgba(0,0,0,0.08);text-align:center;}
+.summary-card h3{margin:0;font-size:16px;color:#334155;}
+.summary-card p{margin:5px 0 0 0;font-size:22px;font-weight:600;color:#1e3a8a;}
+.summary-card.total{border-top:4px solid #2563eb;}
+.summary-card.male{border-top:4px solid #0ea5e9;}
+.summary-card.female{border-top:4px solid #f472b6;}
+.summary-card.exit{border-top:4px solid #f59e0b;}
+.summary-card.death{border-top:4px solid #ef4444;}
+#filterDiv{background:#fff;padding:15px 20px;border-radius:12px;max-width:950px;margin:25px auto;box-shadow:0 4px 10px rgba(0,0,0,0.08);display:flex;flex-wrap:wrap;gap:10px;}
+#filterDiv input,#filterDiv select{padding:6px 10px;border:1px solid #ccc;border-radius:6px;font-size:14px;background:#f9fafb;flex:1 1 180px;}
+#filterDiv button{background:#4a90e2;color:#fff;border:none;border-radius:6px;padding:8px 14px;cursor:pointer;font-size:14px;}
+#filterDiv button:hover{background:#357abd;}
+#resultCount{font-size:14px;font-weight:500;color:#2d3748;width:100%;text-align:right;}
+@media(max-width:768px){input,select{width:100%!important;}#filterDiv{flex-direction:column;}}
 </style>
 </head>
 <body>
@@ -188,41 +61,32 @@ button.delete:hover{ background:#c53030; }
 
 <form id="memberForm">
   <div class="form-step active">
-    <h3>Step 1: ข้อมูลพื้นฐาน</h3>
     <input placeholder="เลขสมาชิก" name="member_id" required>
     <input type="date" name="join_date" required>
-    <input placeholder="คำนำหน้า" name="title" required>
     <input placeholder="ชื่อ" name="first_name" required>
     <input placeholder="นามสกุล" name="last_name" required>
-    <input placeholder="เลขบัตรประชาชน (x-xxxx-xxxxx-xx-x)" name="id_card" maxlength="17" required>
-    <input type="date" name="birthday" id="birthday" required>
-    <input placeholder="อายุ" name="age" id="age" readonly>
-    <select name="gender" required>
-      <option value="">--เลือกเพศ--</option><option>ชาย</option><option>หญิง</option>
-    </select>
-    <select name="group" required>
-      <option value="">--เลือกกลุ่ม--</option><option>1</option><option>2</option><option>3</option>
-    </select>
+    <input placeholder="จังหวัด" name="province" required>
   </div>
 
   <div class="form-step">
-    <h3>Step 2: ที่อยู่ / เบอร์โทรศัพท์</h3>
     <input placeholder="บ้านเลขที่" name="house_no" required>
     <input placeholder="ตำบล" name="subdistrict" required>
     <input placeholder="อำเภอ" name="district" required>
-    <input placeholder="จังหวัด" name="province" required>
     <input placeholder="เบอร์โทรศัพท์" name="phone">
   </div>
 
   <div class="form-step">
-    <h3>Step 3: ข้อมูลเพิ่มเติม / สถานะ</h3>
     <select name="member_status" required>
       <option value="">--สถานะสมาชิก--</option>
-      <option>สมาชิก</option>
-      <option>ลาออก</option>
-      <option>เสียชีวิต</option>
+      <option value="สมาชิก">สมาชิก</option>
+      <option value="ลาออก">ลาออก</option>
+      <option value="เสียชีวิต">เสียชีวิต</option>
     </select>
-    <input placeholder="ชื่อคู่สมรส" name="spouse_name">
+    <select name="gender" required>
+      <option value="">--เพศ--</option>
+      <option value="ชาย">ชาย</option>
+      <option value="หญิง">หญิง</option>
+    </select>
   </div>
 
   <div class="form-navigation">
@@ -232,7 +96,6 @@ button.delete:hover{ background:#c53030; }
   </div>
 </form>
 
-<!-- ✅ Dashboard -->
 <div class="summary-container">
   <div class="summary-card total"><h3>ทั้งหมด</h3><p id="sumTotal">0</p></div>
   <div class="summary-card male"><h3>ชาย</h3><p id="sumMale">0</p></div>
@@ -241,22 +104,26 @@ button.delete:hover{ background:#c53030; }
   <div class="summary-card death"><h3>เสียชีวิต</h3><p id="sumDeath">0</p></div>
 </div>
 
-<h2>รายการสมาชิก</h2>
+<h2>ค้นหา / กรองสมาชิก</h2>
+<div id="filterDiv">
+  <input id="searchMemberId" placeholder="เลขสมาชิก">
+  <input id="searchName" placeholder="ชื่อ / นามสกุล">
+  <input id="searchProvince" placeholder="จังหวัด">
+  <select id="searchStatus">
+    <option value="">--สถานะสมาชิก--</option>
+    <option value="สมาชิก">สมาชิก</option>
+    <option value="ลาออก">ลาออก</option>
+    <option value="เสียชีวิต">เสียชีวิต</option>
+  </select>
+  <button id="printReport">🖨️ ปริ้นรายงาน</button>
+  <button id="clearFilter">🧹 ล้างตัวกรอง</button>
+  <span id="resultCount">จำนวนทั้งหมด: 0 รายการ</span>
+</div>
+
 <table id="memberTable">
-  <thead>
-    <tr>
-      <th>เลขสมาชิก</th><th>ชื่อ</th><th>นามสกุล</th><th>กลุ่ม</th><th>จังหวัด</th><th>สถานะ</th>
-      <th>แก้ไข</th><th>ลบ</th>
-    </tr>
-  </thead>
+  <thead><tr><th>เลขสมาชิก</th><th>ชื่อ</th><th>จังหวัด</th><th>สถานะ</th><th>แก้ไข</th><th>ลบ</th></tr></thead>
   <tbody></tbody>
 </table>
-
-<div class="pagination">
-  <button id="prevPage">ก่อนหน้า</button>
-  <span id="pageInfo">หน้า 1</span>
-  <button id="nextPage">ถัดไป</button>
-</div>
 
 <script>
 const API_URL='https://ttottijljxoinptmhgtu.supabase.co/functions/v1/members';
@@ -264,8 +131,9 @@ const form=document.getElementById('memberForm');
 const formSteps=document.querySelectorAll('.form-step');
 const progressSteps=document.querySelectorAll('.progress-step');
 let formStepIndex=0;
-let allMembers=[], currentPage=1, rowsPerPage=10;
+let allMembers=[];
 
+/* ขั้นตอน */
 function showStep(n){
   formSteps.forEach((s,i)=>s.classList.toggle('active',i===n));
   progressSteps.forEach((p,i)=>p.classList.toggle('active',i<=n));
@@ -273,61 +141,46 @@ function showStep(n){
   document.getElementById('nextBtn').style.display=n===formSteps.length-1?'none':'inline-block';
   document.getElementById('submitBtn').style.display=n===formSteps.length-1?'inline-block':'none';
 }
-
 document.getElementById('nextBtn').onclick=()=>{ if(validateStep(formStepIndex)) showStep(++formStepIndex); };
 document.getElementById('prevBtn').onclick=()=>{ showStep(--formStepIndex); };
-
 function validateStep(n){
   const inputs=formSteps[n].querySelectorAll('input,select');
-  for(let inp of inputs){ if(inp.required && !inp.value){ alert('กรอกข้อมูลให้ครบ'); return false; } }
+  for(let i of inputs){ if(i.required&&!i.value){alert('กรอกข้อมูลให้ครบ');return false;} }
   return true;
 }
 
-/* ✅ อายุ */
-document.getElementById('birthday').onchange=function(){
-  if(this.value){
-    const b=new Date(this.value),t=new Date();
-    let a=t.getFullYear()-b.getFullYear();
-    if(t.getMonth()<b.getMonth()||(t.getMonth()==b.getMonth()&&t.getDate()<b.getDate()))a--;
-    document.getElementById('age').value=a;
-  }
-};
-
-/* ✅ บันทึก */
-form.onsubmit=async e=>{
-  e.preventDefault();
-  const data=Object.fromEntries(new FormData(form));
-  try{
-    await fetch(API_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
-    alert('✅ บันทึกข้อมูลสำเร็จ');
-    form.reset(); formStepIndex=0; showStep(0); loadMembers();
-  }catch(err){alert(err);}
-};
-
-/* ✅ โหลดข้อมูล */
+/* โหลดข้อมูล */
 async function loadMembers(){
-  try{
-    const res=await fetch(API_URL);
-    const r=await res.json();
-    allMembers=Array.isArray(r)?r:(r.data||[]);
-    renderTable(); updateSummary();
-  }catch(e){alert(e);}
+  const res=await fetch(API_URL);
+  const data=await res.json();
+  allMembers=Array.isArray(data)?data:(data.data||[]);
+  renderTable();
+  updateSummary();
 }
-
-/* ✅ แสดงตาราง */
 function renderTable(){
-  const tbody=document.querySelector('#memberTable tbody');
-  tbody.innerHTML='';
-  allMembers.forEach(m=>{
+  const body=document.querySelector('#memberTable tbody');
+  body.innerHTML='';
+  const id=document.getElementById('searchMemberId').value.trim();
+  const name=document.getElementById('searchName').value.trim().toLowerCase();
+  const prov=document.getElementById('searchProvince').value.trim().toLowerCase();
+  const status=document.getElementById('searchStatus').value;
+  const rows=allMembers.filter(m=>
+    (!id||m.member_id?.includes(id))&&
+    (!name||`${m.first_name||''}${m.last_name||''}`.toLowerCase().includes(name))&&
+    (!prov||(m.province||'').toLowerCase().includes(prov))&&
+    (!status||m.member_status===status)
+  );
+  rows.forEach(m=>{
     const tr=document.createElement('tr');
-    tr.innerHTML=`<td>${m.member_id||''}</td><td>${m.first_name||''}</td><td>${m.last_name||''}</td><td>${m.group||''}</td><td>${m.province||''}</td><td>${m.member_status||''}</td>
+    tr.innerHTML=`<td>${m.member_id||''}</td><td>${m.first_name||''}</td><td>${m.province||''}</td><td>${m.member_status||''}</td>
     <td><button class="edit" onclick="editMember('${m.member_id}')">แก้ไข</button></td>
     <td><button class="delete" onclick="deleteMember('${m.member_id}')">ลบ</button></td>`;
-    tbody.appendChild(tr);
+    body.appendChild(tr);
   });
+  document.getElementById('resultCount').textContent=`จำนวนทั้งหมด: ${rows.length} รายการ`;
 }
 
-/* ✅ Dashboard */
+/* Dashboard */
 function updateSummary(){
   document.getElementById('sumTotal').textContent=allMembers.length;
   document.getElementById('sumMale').textContent=allMembers.filter(x=>x.gender==='ชาย').length;
@@ -336,12 +189,19 @@ function updateSummary(){
   document.getElementById('sumDeath').textContent=allMembers.filter(x=>x.member_status==='เสียชีวิต').length;
 }
 
-/* ✅ แก้ไข / ลบ */
+/* Save / Edit / Delete */
+form.onsubmit=async e=>{
+  e.preventDefault();
+  const data=Object.fromEntries(new FormData(form));
+  await fetch(API_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+  alert('✅ บันทึกข้อมูลสำเร็จ');
+  form.reset();formStepIndex=0;showStep(0);loadMembers();
+};
 window.editMember=id=>{
   const m=allMembers.find(x=>x.member_id===id);
   if(!m)return;
-  for(let k in m){ if(form.elements[k]) form.elements[k].value=m[k]; }
-  formStepIndex=0; showStep(0);
+  for(let k in m){if(form.elements[k])form.elements[k].value=m[k];}
+  formStepIndex=0;showStep(0);
 };
 window.deleteMember=async id=>{
   if(!confirm('ลบข้อมูลนี้?'))return;
@@ -349,8 +209,21 @@ window.deleteMember=async id=>{
   loadMembers();
 };
 
-loadMembers(); showStep(0);
-</script>
+/* Filter + Print */
+['searchMemberId','searchName','searchProvince','searchStatus'].forEach(i=>{
+  document.getElementById(i).addEventListener('input',renderTable);
+});
+document.getElementById('clearFilter').onclick=()=>{
+  ['searchMemberId','searchName','searchProvince','searchStatus'].forEach(i=>document.getElementById(i).value='');
+  renderTable();
+};
+document.getElementById('printReport').onclick=()=>{
+  const win=window.open('','', 'width=900,height=600');
+  win.document.write('<h2>รายงานสมาชิก</h2>'+document.getElementById('memberTable').outerHTML);
+  win.print();
+};
 
+showStep(0);loadMembers();
+</script>
 </body>
 </html>
