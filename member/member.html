@@ -473,7 +473,15 @@ function renderTable(){
   document.getElementById('pageInfo').textContent=`หน้า ${currentPage}`;
   document.getElementById('resultCount').textContent=`จำนวนทั้งหมด: ${rows.length} รายการ`;
 }
-
+  // === อัปเดต Dashboard ===
+  const total = allMembers.length;
+  const active = allMembers.filter(m => m.member_status === 'สมาชิก').length;
+  const exit = allMembers.filter(m => m.member_status === 'ลาออก').length;
+  const dead = allMembers.filter(m => m.member_status === 'เสียชีวิต').length;
+  document.getElementById('totalMembers').textContent = total;
+  document.getElementById('activeMembers').textContent = active;
+  document.getElementById('exitMembers').textContent = exit;
+  document.getElementById('deadMembers').textContent = dead;
 // --- Sorting ---
 document.querySelectorAll('#memberTable th[data-column]').forEach(th=>{
   th.addEventListener('click',()=>{
@@ -491,15 +499,7 @@ document.getElementById('nextPage').addEventListener('click',()=>{ currentPage++
 ['searchMemberId','searchName','searchGroup','searchProvince','searchStatus','searchGender','searchJoinDateStart','searchJoinDateEnd']
 .forEach(id=>document.getElementById(id).addEventListener('input',()=>{ currentPage=1; renderTable(); }));
 
-  // === อัปเดต Dashboard ===
-  const total = allMembers.length;
-  const active = allMembers.filter(m => m.member_status === 'สมาชิก').length;
-  const exit = allMembers.filter(m => m.member_status === 'ลาออก').length;
-  const dead = allMembers.filter(m => m.member_status === 'เสียชีวิต').length;
-  document.getElementById('totalMembers').textContent = total;
-  document.getElementById('activeMembers').textContent = active;
-  document.getElementById('exitMembers').textContent = exit;
-  document.getElementById('deadMembers').textContent = dead;
+
 }
 
 // --- ตรวจสอบเลขบัตรซ้ำ ---
