@@ -426,6 +426,7 @@ async function loadMembers(){
 }
 
 
+
 // --- แสดงตาราง + ฟิลเตอร์ ---
 function renderTable(){
   let rows = allMembers.slice();
@@ -439,6 +440,7 @@ function renderTable(){
   const status=document.getElementById('searchStatus').value;
   const gender=document.getElementById('searchGender').value;
 
+  // ✅ ฟิลเตอร์ข้อมูล
   rows=rows.filter(m=>{
     if(memberId && !(m.member_id || '').includes(memberId)) return false;
     if(name && !(((m.first_name||'') + (m.last_name||'')).toLowerCase().includes(name))) return false;
@@ -451,6 +453,7 @@ function renderTable(){
     return true;
   });
 
+  // ✅ เรียงลำดับ
   if(sortColumn) rows.sort((a,b)=>{
     const aa = (a[sortColumn] || '').toString().toLowerCase();
     const bb = (b[sortColumn] || '').toString().toLowerCase();
@@ -458,23 +461,33 @@ function renderTable(){
     return sortAsc ? (aa>bb?1:-1) : (aa<bb?1:-1);
   });
 
+  // ✅ แบ่งหน้า
   const start=(currentPage-1)*rowsPerPage;
   const end=start+rowsPerPage;
   const pageRows=rows.slice(start,end);
 
+  // ✅ แสดงผลในตาราง
   tableBody.innerHTML='';
   pageRows.forEach(m=>{
     const tr=document.createElement('tr');
-    tr.innerHTML=`<td>${m.member_id||''}</td><td>${m.first_name||''}</td><td>${m.last_name||''}</td><td>${m.group||''}</td><td>${m.province||''}</td><td>${m.member_status||''}</td>
-    <td><button class="edit" onclick="editMember('${m.member_id}')">แก้ไข</button></td>
-    <td><button class="delete" onclick="deleteMember('${m.member_id}')">ลบ</button></td>`;
+    tr.innerHTML=`
+      <td>${m.member_id||''}</td>
+      <td>${m.first_name||''}</td>
+      <td>${m.last_name||''}</td>
+      <td>${m.group||''}</td>
+      <td>${m.province||''}</td>
+      <td>${m.member_status||''}</td>
+      <td><button class="edit" onclick="editMember('${m.member_id}')">แก้ไข</button></td>
+      <td><button class="delete" onclick="deleteMember('${m.member_id}')">ลบ</button></td>
+    `;
     tableBody.appendChild(tr);
   });
 
+  // ✅ อัปเดตข้อมูลหน้าปัจจุบัน
   document.getElementById('pageInfo').textContent=`หน้า ${currentPage}`;
   document.getElementById('resultCount').textContent=`จำนวนทั้งหมด: ${rows.length} รายการ`;
 
-  // ✅ อัปเดต Dashboard อยู่ "ภายในฟังก์ชัน" ตรงนี้เท่านั้น
+  // ✅ อัปเดต Dashboard (อยู่ภายในฟังก์ชัน)
   const total = allMembers.length;
   const active = allMembers.filter(m => m.member_status === 'สมาชิก').length;
   const exit = allMembers.filter(m => m.member_status === 'ลาออก').length;
@@ -483,7 +496,8 @@ function renderTable(){
   document.getElementById('activeMembers').textContent = active;
   document.getElementById('exitMembers').textContent = exit;
   document.getElementById('deadMembers').textContent = dead;
-} // 👈 ปิดฟังก์ชันตรงนี้
+} // ✅ ปิดฟังก์ชันตรงนี้ (อย่าใส่โค้ดอื่นต่อในนี้)
+
 
 // --- Sorting ---
 document.querySelectorAll('#memberTable th[data-column]').forEach(th=>{
