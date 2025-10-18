@@ -144,6 +144,31 @@ button.delete:hover { background:#c53030; }
 </head>
 <body>
 
+<!-- Dashboard Summary -->
+<div id="dashboardContainer" style="display:flex;flex-wrap:wrap;justify-content:center;gap:15px;max-width:950px;margin:20px auto;">
+  <div class="dashboard-card" style="flex:1 1 160px;background:#fff;padding:15px;border-radius:12px;box-shadow:0 4px 10px rgba(0,0,0,0.08);text-align:center;border-top:4px solid #2563eb;">
+    <h3 style="margin:0;font-size:16px;color:#334155;">สมาชิกทั้งหมด</h3>
+    <p id="totalMembers" style="margin:5px 0 0;font-size:22px;font-weight:600;color:#1e3a8a;">0</p>
+  </div>
+  <div class="dashboard-card" style="flex:1 1 160px;background:#fff;padding:15px;border-radius:12px;box-shadow:0 4px 10px rgba(0,0,0,0.08);text-align:center;border-top:4px solid #0ea5e9;">
+    <h3 style="margin:0;font-size:16px;color:#334155;">เพศชาย</h3>
+    <p id="maleMembers" style="margin:5px 0 0;font-size:22px;font-weight:600;color:#0369a1;">0</p>
+  </div>
+  <div class="dashboard-card" style="flex:1 1 160px;background:#fff;padding:15px;border-radius:12px;box-shadow:0 4px 10px rgba(0,0,0,0.08);text-align:center;border-top:4px solid #f472b6;">
+    <h3 style="margin:0;font-size:16px;color:#334155;">เพศหญิง</h3>
+    <p id="femaleMembers" style="margin:5px 0 0;font-size:22px;font-weight:600;color:#be185d;">0</p>
+  </div>
+  <div class="dashboard-card" style="flex:1 1 160px;background:#fff;padding:15px;border-radius:12px;box-shadow:0 4px 10px rgba(0,0,0,0.08);text-align:center;border-top:4px solid #f59e0b;">
+    <h3 style="margin:0;font-size:16px;color:#334155;">ลาออก</h3>
+    <p id="exitMembers" style="margin:5px 0 0;font-size:22px;font-weight:600;color:#b45309;">0</p>
+  </div>
+  <div class="dashboard-card" style="flex:1 1 160px;background:#fff;padding:15px;border-radius:12px;box-shadow:0 4px 10px rgba(0,0,0,0.08);text-align:center;border-top:4px solid #ef4444;">
+    <h3 style="margin:0;font-size:16px;color:#334155;">เสียชีวิต</h3>
+    <p id="deathMembers" style="margin:5px 0 0;font-size:22px;font-weight:600;color:#991b1b;">0</p>
+  </div>
+</div>
+
+  
 <h2>ฟอร์มบันทึกสมาชิก</h2>
 <div class="progress-container">
   <div class="progress-step active" data-step="1">① ข้อมูลพื้นฐาน</div>
@@ -541,8 +566,21 @@ document.getElementById('printReport').addEventListener('click', () => {
   w.print();
 });
 
+function updateDashboard() {
+  document.getElementById('totalMembers').textContent = allMembers.length;
+  document.getElementById('maleMembers').textContent = allMembers.filter(m => m.gender === 'ชาย').length;
+  document.getElementById('femaleMembers').textContent = allMembers.filter(m => m.gender === 'หญิง').length;
+  document.getElementById('exitMembers').textContent = allMembers.filter(m => m.member_status === 'ลาออก').length;
+  document.getElementById('deathMembers').textContent = allMembers.filter(m => m.member_status === 'เสียชีวิต').length;
+}
+
+
+
+  
 // โหลดข้อมูลเริ่มต้น
 loadMembers();
+updateDashboard();
+
 </script>
 
 
