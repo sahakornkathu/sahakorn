@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>ระบบจัดการสมาชิก</title>
 <style>
+/* (สไตล์ยาวเหมือนต้นฉบับ) */
 @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap');
 body {
   font-family: "Prompt", sans-serif;
@@ -274,7 +275,6 @@ button.delete {
   th, td { white-space: nowrap; padding: 10px; }
 }
 </style>
-</style>
 </head>
 <body>
 
@@ -286,54 +286,111 @@ button.delete {
 </div>
 
 <form id="memberForm">
-  <!-- ✅ ฟอร์มของคุณตามต้นฉบับ -->
+  <div class="form-step active">
+    <h3>Step 1: ข้อมูลพื้นฐาน</h3>
+    <input placeholder="เลขสมาชิก" name="member_id" required="">
+    <small>📅 วันที่เข้าร่วมสมาชิก</small>
+    <input type="date" name="join_date" required="">
+    <input placeholder="คำนำหน้า" name="title" required="">
+    <input placeholder="ชื่อ" name="first_name" required="">
+    <input placeholder="นามสกุล" name="last_name" required="">
+    <input placeholder="เลขบัตรประชาชน (x-xxxx-xxxxx-xx-x)" name="id_card" required="" maxlength="17">
+    <small>📅 วันเกิด</small>
+    <input type="date" name="birthday" id="birthday" required="">
+    <input placeholder="อายุ" name="age" id="age" readonly="">
+    <select name="gender" required="">
+      <option value="">--เลือกเพศ--</option>
+      <option value="ชาย">ชาย</option>
+      <option value="หญิง">หญิง</option>
+      <option value="อื่นๆ">อื่นๆ</option>
+    </select>
+    <select name="group" required="">
+      <option value="">--เลือกกลุ่ม--</option>
+      <option value="1">กลุ่มที่ 1</option>
+      <option value="2">กลุ่มที่ 2</option>
+      <option value="3">กลุ่มที่ 3</option>
+      <option value="4">กลุ่มที่ 4</option>
+      <option value="5">กลุ่มที่ 5</option>
+      <option value="6">กลุ่มที่ 6</option>
+      <option value="7">กลุ่มที่ 7</option>
+      <option value="8">กลุ่มที่ 8</option>
+      <option value="9">กลุ่มที่ 9</option>
+    </select>
+  </div>
+
+  <div class="form-step">
+    <h3>Step 2: ที่อยู่ / เบอร์โทรศัพท์</h3>
+    <input placeholder="บ้านเลขที่" name="house_no" required="">
+    <input placeholder="หมู่" name="moo">
+    <input placeholder="ถนน" name="street" required="">
+    <input placeholder="หมู่บ้าน" name="village">
+    <input placeholder="ตำบล" name="subdistrict" required="">
+    <input placeholder="อำเภอ" name="district" required="">
+    <input placeholder="จังหวัด" name="province" required="">
+    <input placeholder="เลขไปรษณีย์" name="postal_code" required="">
+    <input placeholder="เบอร์โทรศัพท์" name="phone">
+    <input placeholder="เบอร์โทรศัพท์สำรอง" name="phone_alt">
+  </div>
+
+  <div class="form-step">
+    <h3>Step 3: ข้อมูลเพิ่มเติม / สถานะ</h3>
+    <select name="member_status" required="">
+      <option value="">--สถานะสมาชิก--</option>
+      <option value="สมาชิก">สมาชิก</option>
+      <option value="ลาออก">ลาออก</option>
+      <option value="เสียชีวิต">เสียชีวิต</option>
+    </select>
+    <select name="marital_status" required="">
+      <option value="">--สถานะสมรส--</option>
+      <option value="โสด">โสด</option>
+      <option value="สมรส">สมรส</option>
+      <option value="หม้าย">หม้าย</option>
+      <option value="หย่า">หย่า</option>
+    </select>
+    <input placeholder="ชื่อคู่สมรส" name="spouse_name">
+    <label style="display:block;margin:8px 0;"><input type="checkbox" name="kyot_member"> สมาชิก กยท</label>
+    <input placeholder="เลขสมาชิก กยท" name="kyot_member_id">
+    <input placeholder="ชื่อบิดา" name="father_name">
+    <input placeholder="ชื่อมารดา" name="mother_name">
+  </div>
+
+  <div class="form-navigation">
+    <button type="button" id="prevBtn" style="display: none;">ก่อนหน้า</button>
+    <button type="button" id="nextBtn" style="display: inline-block;">ถัดไป</button>
+    <button type="submit" id="submitBtn" style="display:none;">💾 บันทึก</button>
+  </div>
 </form>
 
 <h2>ค้นหา / กรองสมาชิก</h2>
 <div id="filterDiv">
-  <div class="filters-grid">
-    <div><label>เลขสมาชิก</label><input id="searchMemberId" placeholder="เลขสมาชิก"></div>
-    <div><label>ชื่อ / นามสกุล</label><input id="searchName" placeholder="ชื่อ / นามสกุล"></div>
-    <div><label>กลุ่ม</label><input id="searchGroup" placeholder="กลุ่ม"></div>
-    <div><label>จังหวัด</label><input id="searchProvince" placeholder="จังหวัด"></div>
-  </div>
-
+  <input id="searchMemberId" placeholder="เลขสมาชิก">
+  <input id="searchName" placeholder="ชื่อ / นามสกุล">
+  <input id="searchGroup" placeholder="กลุ่ม">
+  <input id="searchProvince" placeholder="จังหวัด">
   <div class="date-filter">
-    <label>📅 จากวันที่</label>
+    <label>จากวันที่</label>
     <input type="date" id="searchJoinDateStart">
     <label>ถึงวันที่</label>
     <input type="date" id="searchJoinDateEnd">
   </div>
-
   <div class="bottom-filters">
-    <div style="display:flex; flex-wrap:wrap; gap:12px; flex:1;">
-      <div style="flex:1;">
-        <label>สถานะสมาชิก</label>
-        <select id="searchStatus">
-          <option value="">--สถานะสมาชิก--</option>
-          <option value="สมาชิก">สมาชิก</option>
-          <option value="ลาออก">ลาออก</option>
-          <option value="เสียชีวิต">เสียชีวิต</option>
-        </select>
-      </div>
-
-      <div style="flex:1;">
-        <label>เพศ</label>
-        <select id="searchGender">
-          <option value="">--เพศ--</option>
-          <option value="ชาย">ชาย</option>
-          <option value="หญิง">หญิง</option>
-          <option value="อื่นๆ">อื่นๆ</option>
-        </select>
-      </div>
-    </div>
-
+  <select id="searchStatus">
+    <option value="">--สถานะสมาชิก--</option>
+    <option value="สมาชิก">สมาชิก</option>
+    <option value="ลาออก">ลาออก</option>
+    <option value="เสียชีวิต">เสียชีวิต</option>
+  </select>
+  <select id="searchGender">
+    <option value="">--เพศ--</option>
+    <option value="ชาย">ชาย</option>
+    <option value="หญิง">หญิง</option>
+    <option value="อื่นๆ">อื่นๆ</option>
+  </select>
     <div class="buttons-group">
       <button id="printReport">🖨️ ปริ้นรายงานสมาชิก</button>
       <button id="clearFilter">🧹 ล้างตัวกรอง</button>
     </div>
   </div>
-
   <span id="resultCount">จำนวนทั้งหมด: 0 รายการ</span>
 </div>
 
@@ -351,7 +408,9 @@ button.delete {
       <th>ลบ</th>
     </tr>
   </thead>
-  <tbody></tbody>
+  <tbody>
+    <!-- จะถูกเติมด้วย JS -->
+  </tbody>
 </table>
 
 <div class="pagination">
@@ -619,6 +678,9 @@ document.getElementById('printReport').addEventListener('click', () => {
 // โหลดข้อมูลเริ่มต้น
 loadMembers();
 </script>
+
+
+
 
 </body>
 </html>
