@@ -7,7 +7,7 @@
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap');
 *{box-sizing:border-box;}
-body{font-family:"Prompt",sans-serif;background:#f0f4f8;margin:20px;color:#333;line-height:1.5;}
+body{font-family:"Prompt",sans-serif;background:#f0f4f8;margin:20px;color:#333;line-height:1.6;}
 h2{text-align:center;color:#1e40af;margin-bottom:15px;}
 form{max-width:950px;margin:auto;}
 .form-step{display:none;background:#fff;padding:20px 25px;border-radius:12px;box-shadow:0 5px 20px rgba(0,0,0,0.08);margin-bottom:20px;}
@@ -19,7 +19,7 @@ input:focus,select:focus{outline:none;border-color:#4a90e2;box-shadow:0 0 5px rg
 .form-navigation button:hover{background:#357abd;}
 table{border-collapse:collapse;width:100%;max-width:1000px;margin:auto;font-size:13px;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.08);}
 th,td{border:1px solid #e2e8f0;padding:6px 8px;text-align:center;white-space:nowrap;}
-th{background:#4a90e2;color:#fff;cursor:pointer;position:relative;font-weight:500;}
+th{background:#4a90e2;color:#fff;font-weight:500;}
 tr:nth-child(even){background:#f9fafb;}
 tr:hover{background:#edf2f7;}
 button.edit,button.delete{padding:4px 8px;border-radius:4px;font-size:12px;color:#fff;border:none;cursor:pointer;}
@@ -92,7 +92,6 @@ button.delete:hover{background:#c53030;}
     <button type="submit" id="submitBtn" style="display:none;">💾 บันทึก</button>
   </div>
 </form>
-
 <div class="summary-container">
   <div class="summary-card total"><h3>ทั้งหมด</h3><p id="sumTotal">0</p></div>
   <div class="summary-card male"><h3>ชาย</h3><p id="sumMale">0</p></div>
@@ -117,8 +116,18 @@ button.delete:hover{background:#c53030;}
   <span id="resultCount">จำนวนทั้งหมด: 0 รายการ</span>
 </div>
 
+<h2>รายการสมาชิก</h2>
 <table id="memberTable">
-  <thead><tr><th>เลขสมาชิก</th><th>ชื่อ</th><th>จังหวัด</th><th>สถานะ</th><th>แก้ไข</th><th>ลบ</th></tr></thead>
+  <thead>
+    <tr>
+      <th>เลขสมาชิก</th>
+      <th>ชื่อ</th>
+      <th>จังหวัด</th>
+      <th>สถานะ</th>
+      <th>แก้ไข</th>
+      <th>ลบ</th>
+    </tr>
+  </thead>
   <tbody></tbody>
 </table>
 
@@ -127,7 +136,6 @@ button.delete:hover{background:#c53030;}
   <span id="pageInfo">หน้า 1</span>
   <button id="nextPage">ถัดไป</button>
 </div>
-
 <script>
 const API_URL='https://ttottijljxoinptmhgtu.supabase.co/functions/v1/members';
 const form=document.getElementById('memberForm');
@@ -135,6 +143,9 @@ const formSteps=document.querySelectorAll('.form-step');
 const progressSteps=document.querySelectorAll('.progress-step');
 let formStepIndex=0,allMembers=[],currentPage=1,rowsPerPage=10,editId=null;
 
+/* ------------------------
+   Multi-step navigation
+------------------------ */
 function showStep(n){
   formSteps.forEach((s,i)=>s.classList.toggle('active',i===n));
   progressSteps.forEach((p,i)=>p.classList.toggle('active',i<=n));
@@ -144,47 +155,77 @@ function showStep(n){
 }
 document.getElementById('nextBtn').onclick=()=>{ if(validateStep(formStepIndex)) showStep(++formStepIndex); };
 document.getElementById('prevBtn').onclick=()=>{ showStep(--formStepIndex); };
-function validateStep(n){for(let i of formSteps[n].querySelectorAll('input,select')){if(i.required&&!i.value){alert('กรอกข้อมูลให้ครบ');return false;}}return true;}
 
-async function loadMembers(){
-  const res=await fetch(API_URL);
-  const data=await res.json();
-  allMembers=Array.isArray(data)?data:(data.data||[]);
-  renderTable();
-  updateSummary();
+function validateStep(n){
+  for(let i of formSteps[n].querySelectorAll('input,select')){
+    if(i.required && !i.value){
+      alert('กรุณากรอกข้อมูลให้ครบ');
+      i.focus();
+      return false;
+    }
+  }
+  return true;
 }
 
+/* ------------------------
+   Load Members
+------------------------ */
+async function loadMembers(){
+  try {
+    const res=await fetch(API_URL);
+    const data=await res.json();
+    allMembers=Array.isArray(data)?data:(data.data||[]);
+    renderTable();
+    updateSummary();
+  } catch(err){
+    alert("⚠️ โหลดข้อมูลไม่สำเร็จ: "+err);
+  }
+}
+
+/* ------------------------
+   Render Table
+------------------------ */
 function renderTable(){
   const id=document.getElementById('searchMemberId').value.trim();
   const name=document.getElementById('searchName').value.trim().toLowerCase();
   const prov=document.getElementById('searchProvince').value.trim().toLowerCase();
   const status=document.getElementById('searchStatus').value;
   let rows=allMembers.filter(m=>
-    (!id||m.member_id?.includes(id))&&
-    (!name||`${m.first_name||''}${m.last_name||''}`.toLowerCase().includes(name))&&
-    (!prov||(m.province||'').toLowerCase().includes(prov))&&
+    (!id||m.member_id?.includes(id)) &&
+    (!name||`${m.first_name||''}${m.last_name||''}`.toLowerCase().includes(name)) &&
+    (!prov||(m.province||'').toLowerCase().includes(prov)) &&
     (!status||m.member_status===status)
   );
+
   const totalPages=Math.ceil(rows.length/rowsPerPage);
-  if(currentPage>totalPages)currentPage=totalPages||1;
+  if(currentPage>totalPages) currentPage=totalPages||1;
   const start=(currentPage-1)*rowsPerPage;
   const end=start+rowsPerPage;
   const pageRows=rows.slice(start,end);
+
   const body=document.querySelector('#memberTable tbody');
   body.innerHTML='';
   pageRows.forEach(m=>{
     const tr=document.createElement('tr');
-    tr.innerHTML=`<td>${m.member_id||''}</td><td>${m.first_name||''}</td><td>${m.province||''}</td><td>${m.member_status||''}</td>
-    <td><button class="edit" onclick="editMember('${m.member_id}')">แก้ไข</button></td>
-    <td><button class="delete" onclick="deleteMember('${m.member_id}')">ลบ</button></td>`;
+    tr.innerHTML=`
+      <td>${m.member_id||''}</td>
+      <td>${m.first_name||''} ${m.last_name||''}</td>
+      <td>${m.province||''}</td>
+      <td>${m.member_status||''}</td>
+      <td><button class="edit" onclick="editMember('${m.member_id}')">แก้ไข</button></td>
+      <td><button class="delete" onclick="deleteMember('${m.member_id}')">ลบ</button></td>`;
     body.appendChild(tr);
   });
-  document.getElementById('pageInfo').textContent=`หน้า ${currentPage} / ${totalPages||1}`;
+
+  document.getElementById('pageInfo').textContent=`หน้า ${currentPage}/${totalPages||1}`;
   document.getElementById('resultCount').textContent=`จำนวนทั้งหมด: ${rows.length} รายการ`;
 }
 document.getElementById('prevPage').onclick=()=>{if(currentPage>1){currentPage--;renderTable();}};
 document.getElementById('nextPage').onclick=()=>{currentPage++;renderTable();};
 
+/* ------------------------
+   Summary Dashboard
+------------------------ */
 function updateSummary(){
   document.getElementById('sumTotal').textContent=allMembers.length;
   document.getElementById('sumMale').textContent=allMembers.filter(x=>x.gender==='ชาย').length;
@@ -193,6 +234,9 @@ function updateSummary(){
   document.getElementById('sumDeath').textContent=allMembers.filter(x=>x.member_status==='เสียชีวิต').length;
 }
 
+/* ------------------------
+   Save / Update / Fallback
+------------------------ */
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
   const data = Object.fromEntries(new FormData(form));
@@ -226,30 +270,44 @@ form.addEventListener('submit', async (e) => {
     }
 
     alert(editId ? '✅ อัปเดตข้อมูลสำเร็จ' : '✅ บันทึกข้อมูลสำเร็จ');
-    form.reset(); editId=null; formStepIndex=0; showStep(0); loadMembers();
+    form.reset();
+    editId=null;
+    formStepIndex=0;
+    showStep(0);
+    loadMembers();
   } catch (err) {
     alert("❌ เกิดข้อผิดพลาด: " + err);
   }
 });
 
+/* ------------------------
+   Edit / Delete
+------------------------ */
 window.editMember=id=>{
   const m=allMembers.find(x=>x.member_id===id);
-  if(!m)return;
+  if(!m) return;
   editId=id;
-  for(let k in m){if(form.elements[k])form.elements[k].value=m[k];}
-  formStepIndex=0;showStep(0);
+  for(let k in m){ if(form.elements[k]) form.elements[k].value=m[k]; }
+  formStepIndex=0;
+  showStep(0);
 };
 window.deleteMember=async id=>{
-  if(!confirm('ลบข้อมูลนี้?'))return;
-  await fetch(API_URL+'/'+id,{method:'DELETE'});
-  loadMembers();
+  if(!confirm('ลบข้อมูลนี้?')) return;
+  try{
+    await fetch(API_URL+'/'+id,{method:'DELETE'});
+    loadMembers();
+  }catch(err){ alert("❌ ลบไม่สำเร็จ: "+err); }
 };
 
+/* ------------------------
+   Filter + Print
+------------------------ */
 ['searchMemberId','searchName','searchProvince','searchStatus'].forEach(i=>{
   document.getElementById(i).addEventListener('input',()=>{currentPage=1;renderTable();});
 });
 document.getElementById('clearFilter').onclick=()=>{
-  ['searchMemberId','searchName','searchProvince','searchStatus'].forEach(i=>document.getElementById(i).value='');
+  ['searchMemberId','searchName','searchProvince','searchStatus']
+  .forEach(i=>document.getElementById(i).value='');
   renderTable();
 };
 document.getElementById('printReport').onclick=()=>{
@@ -258,7 +316,11 @@ document.getElementById('printReport').onclick=()=>{
   win.print();
 };
 
-showStep(0);loadMembers();
+/* ------------------------
+   Start
+------------------------ */
+showStep(0);
+loadMembers();
 </script>
 </body>
 </html>
