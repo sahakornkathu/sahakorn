@@ -123,40 +123,24 @@ button.delete:hover{ background:#c53030; }
   max-width:950px;
   margin:0 auto 20px auto;
   position:relative;
-  counter-reset: step;
-}
-.progress-container::before {
-  content:"";
-  position:absolute;
-  top:50%;
-  left:0;
-  width:100%;
-  height:3px;
-  background-color:#e2e8f0;
-  transform:translateY(-50%);
-  z-index:0;
 }
 .progress-step {
   position:relative;
-  z-index:1;
   background:#f9fafb;
   color:#4a5568;
   border:2px solid #cbd5e0;
   border-radius:50px;
   padding:8px 15px;
   font-size:13px;
-  font-weight:500;
   flex:1;
   text-align:center;
   margin:0 4px;
   transition:all 0.3s;
-  white-space:nowrap;
 }
 .progress-step.active {
   background:#4a90e2;
   color:#fff;
   border-color:#4a90e2;
-  box-shadow:0 0 8px rgba(74,144,226,0.5);
 }
 
 /* ✅ Dashboard Summary */
@@ -186,100 +170,10 @@ button.delete:hover{ background:#c53030; }
 .summary-card.exit { border-top: 4px solid #f59e0b; }
 .summary-card.death { border-top: 4px solid #ef4444; }
 
-/* ✅ ส่วนกรอง */
-#filterDiv {
-  background: #ffffff;
-  border-radius: 12px;
-  padding: 20px 25px;
-  max-width: 950px;
-  margin: 25px auto;
-  box-shadow: 0 6px 16px rgba(0,0,0,0.07);
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-
-#filterDiv .filters-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 15px 20px;
-}
-#filterDiv label {
-  font-size: 14px;
-  font-weight: 500;
-  color: #1e3a8a;
-  margin-bottom: 4px;
-  display: block;
-}
-#filterDiv input,
-#filterDiv select {
-  width: 100%;
-  padding: 9px 12px;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  font-size: 15px;
-  background: #f9fafb;
-  transition: all 0.2s ease-in-out;
-}
-#filterDiv input:focus,
-#filterDiv select:focus {
-  outline: none;
-  border-color: #4a90e2;
-  box-shadow: 0 0 0 3px rgba(74,144,226,0.2);
-  background: #ffffff;
-}
-
-.date-filter {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  align-items: center;
-  background: #f8fafc;
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
-  padding: 10px 12px;
-}
-.date-filter label { font-size: 13px; color: #334155; }
-
-.bottom-filters {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 15px;
-  border-top: 1px dashed #cbd5e1;
-  padding-top: 15px;
-}
-#filterDiv button {
-  border: none;
-  border-radius: 8px;
-  padding: 10px 18px;
-  cursor: pointer;
-  font-size: 15px;
-  font-weight: 500;
-  transition: all 0.25s ease-in-out;
-}
-#filterDiv button#printReport { background: #2563eb; color: white; }
-#filterDiv button#printReport:hover { background: #1e40af; transform: translateY(-1px); }
-#filterDiv button#clearFilter {
-  background: #f1f5f9;
-  color: #1e3a8a;
-  border: 1px solid #d1d5db;
-}
-#filterDiv button#clearFilter:hover { background: #e2e8f0; }
-
-#resultCount {
-  display: block;
-  font-size: 14px;
-  font-weight: 500;
-  color: #475569;
-  margin-top: 8px;
-  text-align: right;
-}
-
 /* ✅ มือถือ */
 @media (max-width: 768px) {
   .summary-container { flex-direction: column; align-items: stretch; gap: 10px; }
+  input, select { width:100%!important; }
 }
 </style>
 </head>
@@ -296,144 +190,63 @@ button.delete:hover{ background:#c53030; }
   <div class="form-step active">
     <h3>Step 1: ข้อมูลพื้นฐาน</h3>
     <input placeholder="เลขสมาชิก" name="member_id" required>
-    <small>📅 วันที่เข้าร่วมสมาชิก</small>
     <input type="date" name="join_date" required>
     <input placeholder="คำนำหน้า" name="title" required>
     <input placeholder="ชื่อ" name="first_name" required>
     <input placeholder="นามสกุล" name="last_name" required>
-    <input placeholder="เลขบัตรประชาชน (x-xxxx-xxxxx-xx-x)" name="id_card" required maxlength="17">
-    <small>📅 วันเกิด</small>
+    <input placeholder="เลขบัตรประชาชน (x-xxxx-xxxxx-xx-x)" name="id_card" maxlength="17" required>
     <input type="date" name="birthday" id="birthday" required>
     <input placeholder="อายุ" name="age" id="age" readonly>
     <select name="gender" required>
-      <option value="">--เลือกเพศ--</option>
-      <option value="ชาย">ชาย</option>
-      <option value="หญิง">หญิง</option>
-      <option value="อื่นๆ">อื่นๆ</option>
+      <option value="">--เลือกเพศ--</option><option>ชาย</option><option>หญิง</option>
     </select>
     <select name="group" required>
-      <option value="">--เลือกกลุ่ม--</option>
-      <option value="1">กลุ่มที่ 1</option>
-      <option value="2">กลุ่มที่ 2</option>
-      <option value="3">กลุ่มที่ 3</option>
-      <option value="4">กลุ่มที่ 4</option>
-      <option value="5">กลุ่มที่ 5</option>
-      <option value="6">กลุ่มที่ 6</option>
-      <option value="7">กลุ่มที่ 7</option>
-      <option value="8">กลุ่มที่ 8</option>
-      <option value="9">กลุ่มที่ 9</option>
+      <option value="">--เลือกกลุ่ม--</option><option>1</option><option>2</option><option>3</option>
     </select>
   </div>
 
   <div class="form-step">
     <h3>Step 2: ที่อยู่ / เบอร์โทรศัพท์</h3>
     <input placeholder="บ้านเลขที่" name="house_no" required>
-    <input placeholder="หมู่" name="moo">
-    <input placeholder="ถนน" name="street" required>
-    <input placeholder="หมู่บ้าน" name="village">
     <input placeholder="ตำบล" name="subdistrict" required>
     <input placeholder="อำเภอ" name="district" required>
     <input placeholder="จังหวัด" name="province" required>
-    <input placeholder="เลขไปรษณีย์" name="postal_code" required>
     <input placeholder="เบอร์โทรศัพท์" name="phone">
-    <input placeholder="เบอร์โทรศัพท์สำรอง" name="phone_alt">
   </div>
 
   <div class="form-step">
     <h3>Step 3: ข้อมูลเพิ่มเติม / สถานะ</h3>
     <select name="member_status" required>
       <option value="">--สถานะสมาชิก--</option>
-      <option value="สมาชิก">สมาชิก</option>
-      <option value="ลาออก">ลาออก</option>
-      <option value="เสียชีวิต">เสียชีวิต</option>
-    </select>
-    <select name="marital_status" required>
-      <option value="">--สถานะสมรส--</option>
-      <option value="โสด">โสด</option>
-      <option value="สมรส">สมรส</option>
-      <option value="หม้าย">หม้าย</option>
-      <option value="หย่า">หย่า</option>
+      <option>สมาชิก</option>
+      <option>ลาออก</option>
+      <option>เสียชีวิต</option>
     </select>
     <input placeholder="ชื่อคู่สมรส" name="spouse_name">
-    <label style="display:block;margin:8px 0;"><input type="checkbox" name="kyot_member"> สมาชิก กยท</label>
-    <input placeholder="เลขสมาชิก กยท" name="kyot_member_id">
-    <input placeholder="ชื่อบิดา" name="father_name">
-    <input placeholder="ชื่อมารดา" name="mother_name">
   </div>
 
   <div class="form-navigation">
-    <button type="button" id="prevBtn" style="display: none;">ก่อนหน้า</button>
-    <button type="button" id="nextBtn" style="display: inline-block;">ถัดไป</button>
+    <button type="button" id="prevBtn">ก่อนหน้า</button>
+    <button type="button" id="nextBtn">ถัดไป</button>
     <button type="submit" id="submitBtn" style="display:none;">💾 บันทึก</button>
   </div>
 </form>
 
-<!-- ✅ Dashboard Summary -->
+<!-- ✅ Dashboard -->
 <div class="summary-container">
-  <div class="summary-card total"><h3>สมาชิกทั้งหมด</h3><p id="sumTotal">0</p></div>
+  <div class="summary-card total"><h3>ทั้งหมด</h3><p id="sumTotal">0</p></div>
   <div class="summary-card male"><h3>ชาย</h3><p id="sumMale">0</p></div>
   <div class="summary-card female"><h3>หญิง</h3><p id="sumFemale">0</p></div>
   <div class="summary-card exit"><h3>ลาออก</h3><p id="sumExit">0</p></div>
   <div class="summary-card death"><h3>เสียชีวิต</h3><p id="sumDeath">0</p></div>
 </div>
 
-<!-- ✅ ส่วนกรอง -->
-<h2>ค้นหา / กรองสมาชิก</h2>
-<div id="filterDiv">
-  <div class="filters-grid">
-    <div><label>เลขสมาชิก</label><input id="searchMemberId" placeholder="เลขสมาชิก"></div>
-    <div><label>ชื่อ / นามสกุล</label><input id="searchName" placeholder="ชื่อ / นามสกุล"></div>
-    <div><label>กลุ่ม</label><input id="searchGroup" placeholder="กลุ่ม"></div>
-    <div><label>จังหวัด</label><input id="searchProvince" placeholder="จังหวัด"></div>
-  </div>
-  <div class="date-filter">
-    <label>📅 จากวันที่</label>
-    <input type="date" id="searchJoinDateStart">
-    <label>ถึงวันที่</label>
-    <input type="date" id="searchJoinDateEnd">
-  </div>
-  <div class="bottom-filters">
-    <div style="display:flex; flex-wrap:wrap; gap:12px; flex:1;">
-      <div style="flex:1;">
-        <label>สถานะสมาชิก</label>
-        <select id="searchStatus">
-          <option value="">--สถานะสมาชิก--</option>
-          <option value="สมาชิก">สมาชิก</option>
-          <option value="ลาออก">ลาออก</option>
-          <option value="เสียชีวิต">เสียชีวิต</option>
-        </select>
-      </div>
-      <div style="flex:1;">
-        <label>เพศ</label>
-        <select id="searchGender">
-          <option value="">--เพศ--</option>
-          <option value="ชาย">ชาย</option>
-          <option value="หญิง">หญิง</option>
-          <option value="อื่นๆ">อื่นๆ</option>
-        </select>
-      </div>
-    </div>
-    <div class="buttons-group">
-      <button id="printReport">🖨️ ปริ้นรายงานสมาชิก</button>
-      <button id="clearFilter">🧹 ล้างตัวกรอง</button>
-    </div>
-  </div>
-  <span id="resultCount">จำนวนทั้งหมด: 0 รายการ</span>
-</div>
-
-<!-- ✅ ตาราง -->
 <h2>รายการสมาชิก</h2>
 <table id="memberTable">
   <thead>
     <tr>
-      <th data-column="member_id">เลขสมาชิก</th>
-      <th data-column="first_name">ชื่อ</th>
-      <th data-column="last_name">นามสกุล</th>
-      <th data-column="group">กลุ่ม</th>
-      <th data-column="province">จังหวัด</th>
-      <th data-column="member_status">สถานะ</th>
-      <th>แก้ไข</th>
-      <th>ลบ</th>
+      <th>เลขสมาชิก</th><th>ชื่อ</th><th>นามสกุล</th><th>กลุ่ม</th><th>จังหวัด</th><th>สถานะ</th>
+      <th>แก้ไข</th><th>ลบ</th>
     </tr>
   </thead>
   <tbody></tbody>
@@ -448,66 +261,95 @@ button.delete:hover{ background:#c53030; }
 <script>
 const API_URL='https://ttottijljxoinptmhgtu.supabase.co/functions/v1/members';
 const form=document.getElementById('memberForm');
-const tableBody=document.querySelector('#memberTable tbody');
-let allMembers=[];
-let currentPage=1, rowsPerPage=10;
+const formSteps=document.querySelectorAll('.form-step');
+const progressSteps=document.querySelectorAll('.progress-step');
+let formStepIndex=0;
+let allMembers=[], currentPage=1, rowsPerPage=10;
 
-/* ✅ ฟังก์ชันอัปเดต Dashboard */
-function updateSummary() {
-  const total = allMembers.length;
-  const male = allMembers.filter(m => m.gender === "ชาย").length;
-  const female = allMembers.filter(m => m.gender === "หญิง").length;
-  const exit = allMembers.filter(m => m.member_status === "ลาออก").length;
-  const death = allMembers.filter(m => m.member_status === "เสียชีวิต").length;
-  document.getElementById('sumTotal').textContent = total;
-  document.getElementById('sumMale').textContent = male;
-  document.getElementById('sumFemale').textContent = female;
-  document.getElementById('sumExit').textContent = exit;
-  document.getElementById('sumDeath').textContent = death;
+function showStep(n){
+  formSteps.forEach((s,i)=>s.classList.toggle('active',i===n));
+  progressSteps.forEach((p,i)=>p.classList.toggle('active',i<=n));
+  document.getElementById('prevBtn').style.display=n===0?'none':'inline-block';
+  document.getElementById('nextBtn').style.display=n===formSteps.length-1?'none':'inline-block';
+  document.getElementById('submitBtn').style.display=n===formSteps.length-1?'inline-block':'none';
 }
+
+document.getElementById('nextBtn').onclick=()=>{ if(validateStep(formStepIndex)) showStep(++formStepIndex); };
+document.getElementById('prevBtn').onclick=()=>{ showStep(--formStepIndex); };
+
+function validateStep(n){
+  const inputs=formSteps[n].querySelectorAll('input,select');
+  for(let inp of inputs){ if(inp.required && !inp.value){ alert('กรอกข้อมูลให้ครบ'); return false; } }
+  return true;
+}
+
+/* ✅ อายุ */
+document.getElementById('birthday').onchange=function(){
+  if(this.value){
+    const b=new Date(this.value),t=new Date();
+    let a=t.getFullYear()-b.getFullYear();
+    if(t.getMonth()<b.getMonth()||(t.getMonth()==b.getMonth()&&t.getDate()<b.getDate()))a--;
+    document.getElementById('age').value=a;
+  }
+};
+
+/* ✅ บันทึก */
+form.onsubmit=async e=>{
+  e.preventDefault();
+  const data=Object.fromEntries(new FormData(form));
+  try{
+    await fetch(API_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+    alert('✅ บันทึกข้อมูลสำเร็จ');
+    form.reset(); formStepIndex=0; showStep(0); loadMembers();
+  }catch(err){alert(err);}
+};
 
 /* ✅ โหลดข้อมูล */
 async function loadMembers(){
   try{
     const res=await fetch(API_URL);
-    const result=await res.json();
-    allMembers=Array.isArray(result)?result:(result.data||[]);
-    renderTable();
-    updateSummary();
-  }catch(err){alert("เกิดข้อผิดพลาด: "+err);}
+    const r=await res.json();
+    allMembers=Array.isArray(r)?r:(r.data||[]);
+    renderTable(); updateSummary();
+  }catch(e){alert(e);}
 }
 
-/* ✅ แสดงข้อมูลตาราง */
+/* ✅ แสดงตาราง */
 function renderTable(){
-  tableBody.innerHTML='';
+  const tbody=document.querySelector('#memberTable tbody');
+  tbody.innerHTML='';
   allMembers.forEach(m=>{
     const tr=document.createElement('tr');
-    tr.innerHTML=`<td>${m.member_id||''}</td>
-<td>${m.first_name||''}</td>
-<td>${m.last_name||''}</td>
-<td>${m.group||''}</td>
-<td>${m.province||''}</td>
-<td>${m.member_status||''}</td>
-<td><button class="edit" onclick="editMember('${m.member_id}')">แก้ไข</button></td>
-<td><button class="delete" onclick="deleteMember('${m.member_id}')">ลบ</button></td>`;
-    tableBody.appendChild(tr);
+    tr.innerHTML=`<td>${m.member_id||''}</td><td>${m.first_name||''}</td><td>${m.last_name||''}</td><td>${m.group||''}</td><td>${m.province||''}</td><td>${m.member_status||''}</td>
+    <td><button class="edit" onclick="editMember('${m.member_id}')">แก้ไข</button></td>
+    <td><button class="delete" onclick="deleteMember('${m.member_id}')">ลบ</button></td>`;
+    tbody.appendChild(tr);
   });
 }
 
-/* ✅ บันทึกข้อมูล */
-form.addEventListener('submit',async(e)=>{
-  e.preventDefault();
-  const data=Object.fromEntries(new FormData(form));
-  try{
-    await fetch(API_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
-    alert("✅ บันทึกข้อมูลสำเร็จ");
-    form.reset();
-    loadMembers();
-  }catch(err){alert("❌ บันทึกไม่สำเร็จ: "+err);}
-});
+/* ✅ Dashboard */
+function updateSummary(){
+  document.getElementById('sumTotal').textContent=allMembers.length;
+  document.getElementById('sumMale').textContent=allMembers.filter(x=>x.gender==='ชาย').length;
+  document.getElementById('sumFemale').textContent=allMembers.filter(x=>x.gender==='หญิง').length;
+  document.getElementById('sumExit').textContent=allMembers.filter(x=>x.member_status==='ลาออก').length;
+  document.getElementById('sumDeath').textContent=allMembers.filter(x=>x.member_status==='เสียชีวิต').length;
+}
 
-/* ✅ เริ่มต้นโหลด */
-loadMembers();
+/* ✅ แก้ไข / ลบ */
+window.editMember=id=>{
+  const m=allMembers.find(x=>x.member_id===id);
+  if(!m)return;
+  for(let k in m){ if(form.elements[k]) form.elements[k].value=m[k]; }
+  formStepIndex=0; showStep(0);
+};
+window.deleteMember=async id=>{
+  if(!confirm('ลบข้อมูลนี้?'))return;
+  await fetch(API_URL+'/'+id,{method:'DELETE'});
+  loadMembers();
+};
+
+loadMembers(); showStep(0);
 </script>
 
 </body>
