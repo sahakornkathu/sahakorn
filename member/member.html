@@ -140,32 +140,60 @@ button.delete:hover { background:#c53030; }
     .buttons-group{ width: 100%; justify-content: flex-start; }
     .bottom-filters select{ width:100%; }
 }
+
+
+  /* ✅ Dashboard Style */
+#dashboard {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 15px;
+  max-width: 950px;
+  margin: 25px auto;
+}
+#dashboard .card {
+  flex: 1 1 200px;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  padding: 20px;
+  text-align: center;
+  font-size: 15px;
+  font-weight: 500;
+  color: #1e3a8a;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+#dashboard .card span {
+  display: block;
+  font-size: 26px;
+  font-weight: 700;
+  color: #111827;
+  margin-top: 5px;
+}
+#dashboard .card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+}
+#dashboard .total { border-top: 4px solid #4a90e2; }
+#dashboard .active { border-top: 4px solid #10b981; }
+#dashboard .exit { border-top: 4px solid #f59e0b; }
+#dashboard .dead { border-top: 4px solid #ef4444; }
+
+@media (max-width:768px){
+  #dashboard { flex-direction: column; align-items: stretch; gap: 12px; }
+  #dashboard .card { font-size: 16px; padding: 16px; }
+  #dashboard .card span { font-size: 28px; }
+}
 </style>
 </head>
 <body>
 
-<!-- Dashboard Summary -->
-<div id="dashboardContainer" style="display:flex;flex-wrap:wrap;justify-content:center;gap:15px;max-width:950px;margin:20px auto;">
-  <div class="dashboard-card" style="flex:1 1 160px;background:#fff;padding:15px;border-radius:12px;box-shadow:0 4px 10px rgba(0,0,0,0.08);text-align:center;border-top:4px solid #2563eb;">
-    <h3 style="margin:0;font-size:16px;color:#334155;">สมาชิกทั้งหมด</h3>
-    <p id="totalMembers" style="margin:5px 0 0;font-size:22px;font-weight:600;color:#1e3a8a;">0</p>
-  </div>
-  <div class="dashboard-card" style="flex:1 1 160px;background:#fff;padding:15px;border-radius:12px;box-shadow:0 4px 10px rgba(0,0,0,0.08);text-align:center;border-top:4px solid #0ea5e9;">
-    <h3 style="margin:0;font-size:16px;color:#334155;">เพศชาย</h3>
-    <p id="maleMembers" style="margin:5px 0 0;font-size:22px;font-weight:600;color:#0369a1;">0</p>
-  </div>
-  <div class="dashboard-card" style="flex:1 1 160px;background:#fff;padding:15px;border-radius:12px;box-shadow:0 4px 10px rgba(0,0,0,0.08);text-align:center;border-top:4px solid #f472b6;">
-    <h3 style="margin:0;font-size:16px;color:#334155;">เพศหญิง</h3>
-    <p id="femaleMembers" style="margin:5px 0 0;font-size:22px;font-weight:600;color:#be185d;">0</p>
-  </div>
-  <div class="dashboard-card" style="flex:1 1 160px;background:#fff;padding:15px;border-radius:12px;box-shadow:0 4px 10px rgba(0,0,0,0.08);text-align:center;border-top:4px solid #f59e0b;">
-    <h3 style="margin:0;font-size:16px;color:#334155;">ลาออก</h3>
-    <p id="exitMembers" style="margin:5px 0 0;font-size:22px;font-weight:600;color:#b45309;">0</p>
-  </div>
-  <div class="dashboard-card" style="flex:1 1 160px;background:#fff;padding:15px;border-radius:12px;box-shadow:0 4px 10px rgba(0,0,0,0.08);text-align:center;border-top:4px solid #ef4444;">
-    <h3 style="margin:0;font-size:16px;color:#334155;">เสียชีวิต</h3>
-    <p id="deathMembers" style="margin:5px 0 0;font-size:22px;font-weight:600;color:#991b1b;">0</p>
-  </div>
+<!-- ✅ Dashboard Section -->
+<div id="dashboard">
+  <div class="card total">👥 สมาชิกทั้งหมด<br><span id="totalMembers">0</span></div>
+  <div class="card active">✅ สถานะสมาชิก<br><span id="activeMembers">0</span></div>
+  <div class="card exit">📄 ลาออก<br><span id="exitMembers">0</span></div>
+  <div class="card dead">⚰️ เสียชีวิต<br><span id="deadMembers">0</span></div>
 </div>
 
   
@@ -566,21 +594,23 @@ document.getElementById('printReport').addEventListener('click', () => {
   w.print();
 });
 
-function updateDashboard() {
-  document.getElementById('totalMembers').textContent = allMembers.length;
-  document.getElementById('maleMembers').textContent = allMembers.filter(m => m.gender === 'ชาย').length;
-  document.getElementById('femaleMembers').textContent = allMembers.filter(m => m.gender === 'หญิง').length;
-  document.getElementById('exitMembers').textContent = allMembers.filter(m => m.member_status === 'ลาออก').length;
-  document.getElementById('deathMembers').textContent = allMembers.filter(m => m.member_status === 'เสียชีวิต').length;
+/* เพิ่มต่อท้าย renderTable() เท่านั้น */
+function renderTable(){
+  /* เนื้อหา renderTable เดิมของคุณทั้งหมด */
+
+  // === อัปเดต Dashboard ===
+  const total = allMembers.length;
+  const active = allMembers.filter(m => m.member_status === 'สมาชิก').length;
+  const exit = allMembers.filter(m => m.member_status === 'ลาออก').length;
+  const dead = allMembers.filter(m => m.member_status === 'เสียชีวิต').length;
+  document.getElementById('totalMembers').textContent = total;
+  document.getElementById('activeMembers').textContent = active;
+  document.getElementById('exitMembers').textContent = exit;
+  document.getElementById('deadMembers').textContent = dead;
 }
-
-
-
   
 // โหลดข้อมูลเริ่มต้น
 loadMembers();
-updateDashboard();
-
 </script>
 
 
