@@ -491,6 +491,17 @@ document.getElementById('nextPage').addEventListener('click',()=>{ currentPage++
 ['searchMemberId','searchName','searchGroup','searchProvince','searchStatus','searchGender','searchJoinDateStart','searchJoinDateEnd']
 .forEach(id=>document.getElementById(id).addEventListener('input',()=>{ currentPage=1; renderTable(); }));
 
+  // === อัปเดต Dashboard ===
+  const total = allMembers.length;
+  const active = allMembers.filter(m => m.member_status === 'สมาชิก').length;
+  const exit = allMembers.filter(m => m.member_status === 'ลาออก').length;
+  const dead = allMembers.filter(m => m.member_status === 'เสียชีวิต').length;
+  document.getElementById('totalMembers').textContent = total;
+  document.getElementById('activeMembers').textContent = active;
+  document.getElementById('exitMembers').textContent = exit;
+  document.getElementById('deadMembers').textContent = dead;
+}
+
 // --- ตรวจสอบเลขบัตรซ้ำ ---
 function isDuplicateIDCard(id){
   const raw = id.replace(/\D/g, '');
@@ -593,28 +604,10 @@ document.getElementById('printReport').addEventListener('click', () => {
   w.document.close();
   w.print();
 });
-
-/* เพิ่มต่อท้าย renderTable() เท่านั้น */
-function renderTable(){
-  /* เนื้อหา renderTable เดิมของคุณทั้งหมด */
-
-  // === อัปเดต Dashboard ===
-  const total = allMembers.length;
-  const active = allMembers.filter(m => m.member_status === 'สมาชิก').length;
-  const exit = allMembers.filter(m => m.member_status === 'ลาออก').length;
-  const dead = allMembers.filter(m => m.member_status === 'เสียชีวิต').length;
-  document.getElementById('totalMembers').textContent = total;
-  document.getElementById('activeMembers').textContent = active;
-  document.getElementById('exitMembers').textContent = exit;
-  document.getElementById('deadMembers').textContent = dead;
-}
+  
   
 // โหลดข้อมูลเริ่มต้น
 loadMembers();
 </script>
-
-
-
-
 </body>
 </html>
