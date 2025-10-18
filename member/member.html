@@ -1,11 +1,11 @@
 <!doctype html>
 <html lang="th">
->
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>ระบบจัดการสมาชิก</title>
 <style>
+/* (สไตล์ยาวเหมือนต้นฉบับ) */
 @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap');
 body { font-family:"Prompt",sans-serif; background:#f0f4f8; margin:20px; color:#333; }
 h2 { text-align:center; color:#1e40af; margin-bottom:15px; }
@@ -35,6 +35,7 @@ button.delete:hover { background:#c53030; }
 .pagination { text-align:center; margin:12px auto; display:flex; flex-wrap:wrap; justify-content:center; gap:6px; }
 .pagination button { padding:5px 10px; margin:3px; border:none; border-radius:5px; background:#4a90e2; color:#fff; cursor:pointer; font-size:13px; }
 .pagination button:hover{ background:#357abd; }
+#pageInfo, #resultCount{ font-weight:500; color:#2d3748; font-size:13px; }
 .progress-container { display:flex; justify-content:space-between; align-items:center; max-width:950px; margin:0 auto 20px auto; position:relative; counter-reset: step; }
 .progress-container::before { content:""; position:absolute; top:50%; left:0; width:100%; height:3px; background-color:#e2e8f0; transform:translateY(-50%); z-index:0; }
 .progress-step { position:relative; z-index:1; background:#f9fafb; color:#4a5568; border:2px solid #cbd5e0; border-radius:50px; padding:8px 15px; font-size:13px; font-weight:500; flex:1; text-align:center; margin:0 4px; transition:all 0.3s; white-space:nowrap; }
@@ -45,6 +46,7 @@ button.delete:hover { background:#c53030; }
   .form-step{ padding:10px; }
   input, select{ width:100% !important; margin:6px 0 12px 0; font-size:15px; }
   label{ margin-top:10px; font-size:14px; }
+  small{ font-size:12px; }
   .form-navigation{ display:flex; flex-direction:column; gap:10px; }
   .form-navigation button{ width:100%; padding:12px; font-size:15px; }
   table{ display:block; width:100%; overflow-x:auto; font-size:13px; }
@@ -52,6 +54,91 @@ button.delete:hover { background:#c53030; }
   .progress-container{ flex-direction:column; align-items:flex-start; gap:8px; }
   .progress-container::before{ display:none; }
   .progress-step{ width:100%; text-align:left; padding:10px 15px; border-radius:10px; font-size:14px; }
+}
+
+/* Filter Section */
+#filterDiv {
+    background: #ffffff;
+    padding: 15px 20px;
+    border-radius: 10px;
+    max-width: 950px;
+    margin: 20px auto;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    justify-content: flex-start;
+}
+#filterDiv label {
+    font-size: 14px;
+    color: #1e40af;
+    font-weight: 500;
+    margin-right: 5px;
+}
+#filterDiv input,
+#filterDiv select {
+    padding: 6px 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 14px;
+    background: #f9fafb;
+    flex: 1 1 180px;
+    transition: 0.2s;
+}
+#filterDiv input:focus,
+#filterDiv select:focus {
+    border-color: #4a90e2;
+    box-shadow: 0 0 5px rgba(74,144,226,0.3);
+    background: #fff;
+}
+#filterDiv button {
+    background: #4a90e2;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 14px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: 0.2s;
+}
+#filterDiv button:hover {
+    background: #357abd;
+}
+#resultCount {
+    font-size: 14px;
+    font-weight: 500;
+    color: #2d3748;
+    margin-left: 10px;
+}
+.date-filter {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex: 1 1 280px;
+}
+.bottom-filters {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  margin-top: 10px;
+  width: 100%;
+}
+.bottom-filters select {
+  flex: 1 1 200px;
+}
+.buttons-group {
+  display: flex;
+  gap: 10px;
+}
+@media (max-width:768px){
+    #filterDiv{ flex-direction: column; align-items:flex-start; }
+    .date-filter{ flex-direction: column; align-items:flex-start; gap:5px; }
+    .bottom-filters{ flex-direction: column; align-items:flex-start; gap:8px; }
+    .buttons-group{ width: 100%; justify-content: flex-start; }
+    .bottom-filters select{ width:100%; }
 }
 </style>
 </head>
@@ -66,6 +153,7 @@ button.delete:hover { background:#c53030; }
 
 <form id="memberForm">
   <div class="form-step active">
+    <h3>Step 1: ข้อมูลพื้นฐาน</h3>
     <input placeholder="เลขสมาชิก" name="member_id" required="">
     <small>📅 วันที่เข้าร่วมสมาชิก</small>
     <input type="date" name="join_date" required="">
@@ -97,6 +185,7 @@ button.delete:hover { background:#c53030; }
   </div>
 
   <div class="form-step">
+    <h3>Step 2: ที่อยู่ / เบอร์โทรศัพท์</h3>
     <input placeholder="บ้านเลขที่" name="house_no" required="">
     <input placeholder="หมู่" name="moo">
     <input placeholder="ถนน" name="street" required="">
@@ -110,6 +199,7 @@ button.delete:hover { background:#c53030; }
   </div>
 
   <div class="form-step">
+    <h3>Step 3: ข้อมูลเพิ่มเติม / สถานะ</h3>
     <select name="member_status" required="">
       <option value="">--สถานะสมาชิก--</option>
       <option value="สมาชิก">สมาชิก</option>
@@ -137,13 +227,19 @@ button.delete:hover { background:#c53030; }
   </div>
 </form>
 
-<!-- FILTER + TABLE -->
 <h2>ค้นหา / กรองสมาชิก</h2>
 <div id="filterDiv">
   <input id="searchMemberId" placeholder="เลขสมาชิก">
   <input id="searchName" placeholder="ชื่อ / นามสกุล">
   <input id="searchGroup" placeholder="กลุ่ม">
   <input id="searchProvince" placeholder="จังหวัด">
+  <div class="date-filter">
+    <label>จากวันที่</label>
+    <input type="date" id="searchJoinDateStart">
+    <label>ถึงวันที่</label>
+    <input type="date" id="searchJoinDateEnd">
+  </div>
+  <div class="bottom-filters">
   <select id="searchStatus">
     <option value="">--สถานะสมาชิก--</option>
     <option value="สมาชิก">สมาชิก</option>
@@ -156,25 +252,31 @@ button.delete:hover { background:#c53030; }
     <option value="หญิง">หญิง</option>
     <option value="อื่นๆ">อื่นๆ</option>
   </select>
-  <button id="printReport">🖨️ ปริ้นรายงานสมาชิก</button>
-  <button id="clearFilter">🧹 ล้างตัวกรอง</button>
+    <div class="buttons-group">
+      <button id="printReport">🖨️ ปริ้นรายงานสมาชิก</button>
+      <button id="clearFilter">🧹 ล้างตัวกรอง</button>
+    </div>
+  </div>
   <span id="resultCount">จำนวนทั้งหมด: 0 รายการ</span>
 </div>
 
+<h2>รายการสมาชิก</h2>
 <table id="memberTable">
   <thead>
     <tr>
-      <th data-column="member_id">เลขสมาชิก</th>
-      <th data-column="first_name">ชื่อ</th>
-      <th data-column="last_name">นามสกุล</th>
-      <th data-column="group">กลุ่ม</th>
-      <th data-column="province">จังหวัด</th>
-      <th data-column="member_status">สถานะ</th>
+      <th data-column="member_id">เลขสมาชิก <span class="sort-icon"></span></th>
+      <th data-column="first_name">ชื่อ <span class="sort-icon"></span></th>
+      <th data-column="last_name">นามสกุล <span class="sort-icon"></span></th>
+      <th data-column="group">กลุ่ม <span class="sort-icon"></span></th>
+      <th data-column="province">จังหวัด <span class="sort-icon"></span></th>
+      <th data-column="member_status">สถานะ <span class="sort-icon"></span></th>
       <th>แก้ไข</th>
       <th>ลบ</th>
     </tr>
   </thead>
-  <tbody></tbody>
+  <tbody>
+    <!-- จะถูกเติมด้วย JS -->
+  </tbody>
 </table>
 
 <div class="pagination">
@@ -442,5 +544,9 @@ document.getElementById('printReport').addEventListener('click', () => {
 // โหลดข้อมูลเริ่มต้น
 loadMembers();
 </script>
+
+
+
+
 </body>
 </html>
