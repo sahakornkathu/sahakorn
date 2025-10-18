@@ -425,6 +425,7 @@ async function loadMembers(){
   }catch(err){ alert("เกิดข้อผิดพลาด: "+err); }
 }
 
+
 // --- แสดงตาราง + ฟิลเตอร์ ---
 function renderTable(){
   let rows = allMembers.slice();
@@ -472,8 +473,8 @@ function renderTable(){
 
   document.getElementById('pageInfo').textContent=`หน้า ${currentPage}`;
   document.getElementById('resultCount').textContent=`จำนวนทั้งหมด: ${rows.length} รายการ`;
-}
-  // === อัปเดต Dashboard ===
+
+  // ✅ อัปเดต Dashboard อยู่ "ภายในฟังก์ชัน" ตรงนี้เท่านั้น
   const total = allMembers.length;
   const active = allMembers.filter(m => m.member_status === 'สมาชิก').length;
   const exit = allMembers.filter(m => m.member_status === 'ลาออก').length;
@@ -482,6 +483,8 @@ function renderTable(){
   document.getElementById('activeMembers').textContent = active;
   document.getElementById('exitMembers').textContent = exit;
   document.getElementById('deadMembers').textContent = dead;
+} // 👈 ปิดฟังก์ชันตรงนี้
+
 // --- Sorting ---
 document.querySelectorAll('#memberTable th[data-column]').forEach(th=>{
   th.addEventListener('click',()=>{
