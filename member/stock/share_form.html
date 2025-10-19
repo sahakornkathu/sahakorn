@@ -6,65 +6,16 @@
 <title>บันทึกการซื้อหุ้น</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap');
-body {
-  font-family: "Prompt", sans-serif;
-  background: #f0f4f8;
-  margin: 0;
-  padding: 20px;
-  color: #333;
-}
-.container {
-  max-width: 600px;
-  margin: 0 auto;
-  background: #fff;
-  padding: 25px;
-  border-radius: 12px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-}
-h2 {
-  text-align: center;
-  color: #1e40af;
-}
-label {
-  display: block;
-  margin-top: 10px;
-  font-weight: 500;
-}
-input {
-  width: 100%;
-  padding: 8px 10px;
-  margin-top: 4px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-}
-button {
-  margin-top: 20px;
-  width: 100%;
-  background: #4a90e2;
-  color: #fff;
-  padding: 10px;
-  font-size: 16px;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-}
-button:hover {
-  background: #357abd;
-}
-.summary-box {
-  background: #f9fafb;
-  padding: 12px;
-  border-radius: 10px;
-  margin-top: 20px;
-  border: 1px solid #e2e8f0;
-}
-.summary-box h3 {
-  margin: 0 0 8px 0;
-  color: #2563eb;
-}
-.summary-box div {
-  margin: 3px 0;
-}
+body { font-family: "Prompt", sans-serif; background:#f0f4f8; margin:0; padding:20px; color:#333; }
+.container { max-width:600px; margin:auto; background:#fff; padding:25px; border-radius:12px; box-shadow:0 4px 15px rgba(0,0,0,0.1); }
+h2 { text-align:center; color:#1e40af; }
+label { display:block; margin-top:10px; font-weight:500; }
+input { width:100%; padding:8px 10px; margin-top:4px; border:1px solid #ccc; border-radius:8px; }
+button { margin-top:20px; width:100%; background:#4a90e2; color:#fff; padding:10px; font-size:16px; border:none; border-radius:8px; cursor:pointer; }
+button:hover { background:#357abd; }
+.summary-box { background:#f9fafb; padding:12px; border-radius:10px; margin-top:20px; border:1px solid #e2e8f0; }
+.summary-box h3 { margin:0 0 8px 0; color:#2563eb; }
+.summary-box div { margin:3px 0; }
 </style>
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
@@ -79,7 +30,8 @@ button:hover {
     <div>เลขสมาชิก: <span id="m_id"></span></div>
     <div>ชื่อ-นามสกุล: <span id="m_name"></span></div>
     <div>กลุ่ม: <span id="m_group"></span></div>
-    <div>ยอดหุ้นคงเหลือ: <span id="m_balance"></span> หุ้น</div>
+    <div>สถานะ: <span id="m_status"></span></div>
+    <div>หุ้นคงเหลือ: <span id="m_balance"></span> หุ้น</div>
     <div>มูลค่ารวม: <span id="m_total"></span> บาท</div>
   </div>
 
@@ -109,37 +61,43 @@ const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 // ✅ เริ่มต้น LIFF
 // ===============================
 async function initApp() {
-  await liff.init({ liffId: "1660910795-D247n9mr" });
+  await liff.init({ liffId: "https://liff.line.me/1660910795-D247n9mr" });
   const profile = await liff.getProfile();
   const userId = profile.userId;
-
   loadMemberData(userId);
 }
 
 // ===============================
-// ✅ ดึงข้อมูลสมาชิก
+// ✅ ดึงข้อมูลจาก members และ v_member_share_overview
 // ===============================
 async function loadMemberData(lineUserId) {
-  const { data, error } = await supabase
-    .from('v_member_share_overview')
-    .select('*')
-    .eq('line_user_id', lineUserId);
+  const { data: memberData, error: memberErr } = await supabase
+    .from('members')
+    .select('member_id, title, first_name, last_name, "group", member_status, line_user_id')
+    .eq('line_user_id', lineUserId)
+    .single();
 
-  if (error || !data || data.length === 0) {
-    alert("ไม่พบข้อมูลสมาชิกของคุณในระบบ");
+  if (memberErr || !memberData) {
+    alert("ไม่พบข้อมูลสมาชิกในระบบ");
     return;
   }
 
-  const member = data[0];
-  document.getElementById("memberInfo").style.display = "block";
-  document.getElementById("m_id").textContent = member.member_id;
-  document.getElementById("m_name").textContent = member.fullname;
-  document.getElementById("m_group").textContent = member.group;
-  document.getElementById("m_balance").textContent = member.balance_shares || 0;
-  document.getElementById("m_total").textContent = member.total_amount || 0;
+  // ดึงข้อมูลหุ้นเพิ่มเติม
+  const { data: shareInfo } = await supabase
+    .from('v_member_share_overview')
+    .select('balance_shares, total_amount')
+    .eq('line_user_id', lineUserId)
+    .maybeSingle();
 
-  // เก็บค่าไว้ใช้ตอนบันทึก
-  window.memberData = member;
+  document.getElementById("memberInfo").style.display = "block";
+  document.getElementById("m_id").textContent = memberData.member_id;
+  document.getElementById("m_name").textContent = `${memberData.title}${memberData.first_name} ${memberData.last_name}`;
+  document.getElementById("m_group").textContent = memberData.group;
+  document.getElementById("m_status").textContent = memberData.member_status;
+  document.getElementById("m_balance").textContent = shareInfo?.balance_shares || 0;
+  document.getElementById("m_total").textContent = shareInfo?.total_amount || 0;
+
+  window.memberData = memberData;
 }
 
 // ===============================
@@ -164,7 +122,6 @@ document.getElementById("shareForm").addEventListener("submit", async (e) => {
     return;
   }
 
-  // บันทึกลง Supabase
   const { error } = await supabase.from("shares").insert({
     member_id: member.member_id,
     date: date,
@@ -176,11 +133,8 @@ document.getElementById("shareForm").addEventListener("submit", async (e) => {
     return;
   }
 
-  // ล้างฟอร์ม
   document.getElementById("shareForm").reset();
   document.getElementById("total_price").value = "";
-
-  // ส่ง Flex Message แจ้งสำเร็จ
   await sendFlexMessage(member, shareAmount);
 
   alert("✅ บันทึกการซื้อหุ้นสำเร็จ!");
@@ -188,20 +142,19 @@ document.getElementById("shareForm").addEventListener("submit", async (e) => {
 });
 
 // ===============================
-// ✅ ส่ง Flex Message ผ่าน LINE
+// ✅ ส่ง Flex Message
 // ===============================
 async function sendFlexMessage(member, amount) {
   const total = (amount * 10).toLocaleString();
   const message = {
     type: "flex",
-    altText: "บันทึกการซื้อหุ้นสำเร็จ",
+    altText: "ซื้อหุ้นสำเร็จ",
     contents: {
       type: "bubble",
       hero: {
         type: "image",
         url: "https://cdn-icons-png.flaticon.com/512/625/625952.png",
         size: "full",
-        aspectRatio: "1:1",
         aspectMode: "cover",
       },
       body: {
@@ -209,7 +162,7 @@ async function sendFlexMessage(member, amount) {
         layout: "vertical",
         contents: [
           { type: "text", text: "✅ ซื้อหุ้นสำเร็จ", weight: "bold", size: "lg", color: "#16a34a" },
-          { type: "text", text: `สมาชิก: ${member.fullname}`, size: "sm", color: "#374151" },
+          { type: "text", text: `สมาชิก: ${member.title}${member.first_name} ${member.last_name}`, size: "sm", color: "#374151" },
           { type: "text", text: `จำนวน: ${amount} หุ้น`, size: "sm", color: "#374151" },
           { type: "text", text: `รวมเป็นเงิน: ${total} บาท`, size: "sm", color: "#374151" },
           { type: "separator", margin: "sm" },
