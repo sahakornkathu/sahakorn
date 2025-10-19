@@ -315,7 +315,7 @@ async function printReport(){
   <p style="text-align:center;">ช่วงวันที่: ${startDate||'ทั้งหมด'} ถึง ${endDate||'ทั้งหมด'} | สถานะ: ${status||'ทั้งหมด'}</p>
   <table>
   <thead><tr>
-    <th>รหัส</th><th>ชื่อ</th><th>นามสกุล</th><th>กลุ่ม</th>
+    <th>รหัส</th><th>ชื่อ-นามสกุล</th><th>กลุ่ม</th>
     <th>สถานะ</th><th>วันที่ประชุม</th><th>จำนวนเงิน</th><th>วันที่รับเงิน</th>
   </tr></thead><tbody>`;
 
@@ -339,6 +339,7 @@ async function printReport(){
   w.focus();
   w.print();
 }
+
 
 // ==================== INIT ====================
 loadMembers(currentPageMembers);
