@@ -322,8 +322,7 @@ async function printReport(){
   data.forEach(item=>{
     html+=`<tr>
       <td>${item.member_id}</td>
-      <td>${item.first_name}</td>
-      <td>${item.last_name}</td>
+      <td>${item.title || ''}${item.first_name} ${item.last_name}</td>
       <td>${item.group}</td>
       <td>${item.member_status}</td>
       <td>${item.meeting_date}</td>
