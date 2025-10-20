@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Coffee Orders - Admin</title>
+  <meta name="description" content="Coffee Corner Admin for MINI App" />
+  <meta name="author" content="iton5" />
+  <meta property="og:title" content="Coffee Corner Admin-iton5-thailand" />
+  <meta property="og:description" content="Coffee Corner Admin for MINI App" />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="https://lh3.googleusercontent.com/d/1Ck_OCfEW4dEp3A1k9yfQplYmW7qmwzFF" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+ 
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@400;  500;600;700&display=swap');
+    body { font-family: 'Prompt', sans-serif; background-color: #f8dda4; }
+    .main-bg { background: linear-gradient(180deg, #f8dda4 0%, #ddf9c1 100%); }
+    .text-brand-dark { color: #813405; }
+    .bg-brand-primary { background-color: #d45113; }
+    .shadow-strong { box-shadow: 0 10px 25px -5px rgba(129, 52, 5, 0.2), 0 8px 10px -6px rgba(129, 52, 5, 0.2); }
+
+    .btn-complete { background: linear-gradient(45deg, #10b981, #34d399); }
+
+    @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+    .fade-in { animation: fadeIn 0.5s ease-out forwards; }
+    #loading-overlay { 
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+      background-color: rgba(248, 221, 164, 0.8); backdrop-filter: blur(5px); 
+      display: none; justify-content: center; align-items: center; 
+      z-index: 9999; flex-direction: column; gap: 1rem; 
+    }
+  </style>
+</head>
+<body class="main-bg min-h-screen">
+    <div id="loading-overlay">
+        <img src="https://developers.line.biz/media/line-mini-app/LINE_spinner_light.svg" alt="Loading..." class="w-16 h-16">
+        <p id="loading-text" class="text-lg text-brand-dark font-semibold">กำลังโหลด...</p>
+    </div>
+
+    <div class="container mx-auto max-w-2xl p-4">
+        <header class="text-center my-8">
+            <h1 class="text-4xl font-bold text-brand-dark">Order Management</h1>
+            <p class="text-gray-600">รายการสั่งซื้อและสรุปยอดขาย</p>
+        </header>
+
+        
+        <section class="mb-8 grid grid-cols-1 sm:grid-cols-3 gap-4 fade-in">
+            <div class="bg-white/80 backdrop-blur-sm p-4 rounded-2xl shadow-strong text-center">
+                <h3 class="font-semibold text-gray-600">ยอดขายวันนี้</h3>
+                <p id="today-sales" class="text-3xl font-bold text-brand-dark mt-2">0 บ.</p>
+            </div>
+            <div class="bg-white/80 backdrop-blur-sm p-4 rounded-2xl shadow-strong text-center">
+                <h3 class="font-semibold text-gray-600">ยอดขายเดือนนี้</h3>
+                <p id="month-sales" class="text-3xl font-bold text-brand-dark mt-2">0 บ.</p>
+            </div>
+            <div class="bg-white/80 backdrop-blur-sm p-4 rounded-2xl shadow-strong text-center">
+                <h3 class="font-semibold text-gray-600">ยอดขายปีนี้</h3>
+                <p id="year-sales" class="text-3xl font-bold text-brand-dark mt-2">0 บ.</p>
+            </div>
+        </section>
+
+        <main id="orders-list" class="space-y-4">
+            <!-- Orders -->
+        </main>
+    </div>
+
+    <script type="module">
+        const LIFF_ID = "1661506692-bnqOL2aX";
+        const SUPABASE_URL = "https://ttottijljxoinptmhgtu.supabase.co";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y";
+
+        const { createClient } = supabase;
+        const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const ordersList = document.getElementById('orders-list');
+        const todaySalesEl = document.getElementById('today-sales');
+        const monthSalesEl = document.getElementById('month-sales');
+        const yearSalesEl = document.getElementById('year-sales');
+
+        const showLoading = (text = 'กำลังโหลด...') => {
+            const loadingText = document.getElementById('loading-text');
+            if (loadingText) loadingText.textContent = text;
+            loadingOverlay.style.display = 'flex';
+        };
+        const hideLoading = () => {
+            loadingOverlay.style.display = 'none';
+        };
+        
+        async function loadSalesSummary() {
+            try {
+                const now = new Date();
+                const yearStart = new Date(now.getFullYear(), 0, 1).toISOString();
+
+                const { data, error } = await supabaseClient
+                    .from('historycart')
+                    .select('total_price, created_at')
+                    .eq('status', 'completed')
+                    .gte('created_at', yearStart);
+                
+                if (error) throw error;
+                
+                const today = now.toLocaleDateString('en-CA'); // เวลาสากล
+                const thisMonth = now.getMonth();
+                const thisYear = now.getFullYear();
+
+                let todaySales = 0;
+                let monthSales = 0;
+                let yearSales = 0;
+
+                for (const order of data) {
+                    const orderDate = new Date(order.created_at);
+                    
+                    yearSales += order.total_price;
+
+                    if (orderDate.getFullYear() === thisYear && orderDate.getMonth() === thisMonth) {
+                        monthSales += order.total_price;
+                    }
+
+                    if (orderDate.toLocaleDateString('en-CA') === today) {
+                        todaySales += order.total_price;
+                    }
+                }
+                
+                const formatter = new Intl.NumberFormat('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                todaySalesEl.textContent = `${formatter.format(todaySales)} บ.`;
+                monthSalesEl.textContent = `${formatter.format(monthSales)} บ.`;
+                yearSalesEl.textContent = `${formatter.format(yearSales)} บ.`;
+
+            } catch(err) {
+                console.error("Failed to load sales summary:", err);
+                todaySalesEl.textContent = '- บ.';
+                monthSalesEl.textContent = '- บ.';
+                yearSalesEl.textContent = '- บ.';
+                if (err.message.includes('security violation')) {
+                    Swal.fire('โหลดข้อมูลสรุปไม่ได้', 'กรุณาตรวจสอบสิทธิ์การเข้าถึง (RLS Policy) ของตาราง historycart สำหรับแอดมิน', 'error');
+                }
+            }
+        }
+
+        function renderOrder(order) {
+            const orderEl = document.createElement('div');
+            orderEl.id = `order-${order.id}`;
+            orderEl.className = 'bg-white/80 backdrop-blur-sm p-4 rounded-2xl shadow-strong fade-in';
+            
+            const itemsHtml = order.items.map(item => `
+                <div class="flex justify-between text-sm">
+                    <span>${item.name} x ${item.quantity}</span>
+                    <span class="font-mono">${(item.price * item.quantity).toFixed(2)} บ.</span>
+                </div>
+            `).join('');
+
+            orderEl.innerHTML = `
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h3 class="font-bold text-lg text-brand-dark">ออเดอร์ #${order.id}</h3>
+                        <p class="text-sm text-gray-600">โดย: ${order.user_display_name || '-'}</p>
+                        <p class="text-xs text-gray-400">${new Date(order.created_at).toLocaleString('th-TH',{day: 'numeric',
+                month: 'short',year: 'numeric',hour: '2-digit',minute: '2-digit',hour12: false})} น.</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="font-bold text-xl text-brand-primary">${order.total_price.toFixed(2)} บ.</p>
+                    </div>
+                </div>
+                <div class="my-3 p-3 bg-white rounded-lg space-y-2">
+                    ${itemsHtml}
+                </div>
+                <button class="complete-btn w-full py-2 rounded-lg text-white font-bold btn-complete shadow-lg" data-id="${order.id}">
+                    ทำรายการเสร็จสิ้น
+                </button>
+            `;
+            
+            orderEl.querySelector('.complete-btn').addEventListener('click', async () => {
+                const { value: receiptNumber } = await Swal.fire({
+                    title: 'ยืนยันการทำรายการ',
+                    input: 'text',
+                    inputLabel: 'กรอกเลขที่ใบเสร็จ (ถ้ามี)',
+                    inputPlaceholder: 'เช่น R-12345',
+                    showCancelButton: true,
+                    confirmButtonText: 'ยืนยัน',
+                    cancelButtonText: 'ยกเลิก'
+                });
+
+                if (receiptNumber !== undefined) {
+                    showLoading('กำลังอัปเดตและส่งใบเสร็จ...');
+                    try {
+                        const { data, error } = await supabaseClient.functions.invoke('manage-orders', {
+                            body: { 
+                                action: 'complete',
+                                orderId: order.id,
+                                receiptNumber: receiptNumber 
+                            }
+                        });
+
+                        if (error) throw error;
+                        
+                        Swal.fire('สำเร็จ!', 'อัปเดตสถานะและส่งใบเสร็จให้ลูกค้าแล้ว', 'success');
+                        orderEl.remove();
+                        await loadSalesSummary(); 
+                    } catch(err) {
+                        console.error("Update failed:", err);
+                        Swal.fire('เกิดข้อผิดพลาด', `ไม่สามารถอัปเดตสถานะได้: ${err.message}`, 'error');
+                    } finally {
+                        hideLoading();
+                    }
+                }
+            });
+
+            return orderEl;
+        }
+
+        async function loadInitialOrders() {
+            showLoading('กำลังโหลดออเดอร์...');
+            ordersList.innerHTML = '';
+            try {
+                const { data, error } = await supabaseClient.functions.invoke('manage-orders', {
+                    body: { action: 'list' }
+                });
+                
+                if (error) throw error;
+                const orders = data.orders;
+
+                if (orders.length === 0) {
+                    ordersList.innerHTML = '<p class="text-center text-gray-500">ไม่มีออเดอร์ที่กำลังดำเนินการ</p>';
+                } else {
+                    orders.forEach(order => {
+                        ordersList.appendChild(renderOrder(order));
+                    });
+                }
+            } catch(err) {
+                console.error("Failed to load orders:", err);
+                throw err;
+            } finally {
+                hideLoading();
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                showLoading('กำลังเริ่มต้น...');
+                await liff.init({ liffId: LIFF_ID, withLoginOnExternalBrowser: true });
+                if (!liff.isLoggedIn()) {
+                    liff.login({ redirectUri: window.location.href });
+                    return;
+                }
+                
+                const idToken = liff.getIDToken();
+                await supabaseClient.auth.signInWithIdToken({ provider: 'line', token: idToken });
+
+                await loadInitialOrders();
+                await loadSalesSummary();
+
+                supabaseClient
+                    .channel('public:historycart')
+                    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'historycart', filter: 'status=eq.processing' }, (payload) => {
+                        console.log('New order received!', payload);
+                        const newOrder = payload.new;
+                        const noOrdersMsg = ordersList.querySelector('p');
+                        if (noOrdersMsg) noOrdersMsg.remove();
+                        ordersList.prepend(renderOrder(newOrder));
+                    })
+                    .subscribe();
+
+            } catch(err) {
+                 console.error("Initialization error:", err);
+                 document.body.innerHTML = `<div class="p-8 text-center text-red-600">เกิดข้อผิดพลาดร้ายแรง: ${err.message}<br><br>กรุณาตรวจสอบการตั้งค่า LINE Provider ใน Supabase Auth ของคุณ</div>`;
+            } finally {
+                hideLoading();
+            }
+        });
+    </script>
+</body>
+</html>
