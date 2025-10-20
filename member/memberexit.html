@@ -129,9 +129,9 @@ async function loadMembers(page = 1){
   const to = page*pageSizeMembers-1;
 
   const { data, error, count } = await client.from('members')
-    .select('member_id, first_name, last_name, group, member_status', {count:'exact'})
-    .in('member_status', ['ลาออก','เสียชีวิต'])
-    .range(from,to);
+  .select('member_id, title, first_name, last_name, group, member_status', {count:'exact'})
+  .in('member_status', ['ลาออก','เสียชีวิต'])
+  .range(from,to);
   if(error){console.error(error); return;}
   memberData = data;
   renderMemberTable(data, exitedIds);
@@ -255,7 +255,7 @@ async function deleteHistory(member_id){
 async function loadDashboard(){
   const startDate = document.getElementById('startDate').value;
   const endDate = document.getElementById('endDate').value;
-  let query = client.from('member_exit').select('member_id, member_status, receive_date');
+  let query = client.from('member_exit').select('member_id, title, first_name, last_name, group, member_status, meeting_date, share_amount, receive_date').order('receive_date',{ascending:false});
   if(startDate) query = query.gte('receive_date',startDate);
   if(endDate) query = query.lte('receive_date',endDate);
   const {data,error} = await query;
