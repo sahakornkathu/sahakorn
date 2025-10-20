@@ -35,15 +35,8 @@
     </div>
   </div>
 
-  <!-- ค้นหา สมาชิก -->
-  <div class="mb-4">
-    <input type="text" id="searchInput" placeholder="ค้นหาชื่อหรือรหัสสมาชิก..." 
-      onkeyup="filterMembers()" 
-      class="w-full p-2 border rounded shadow focus:outline-none focus:ring-2 focus:ring-indigo-400" />
-  </div>
-
   <!-- ตารางสมาชิก -->
-  <div class="overflow-x-auto mb-2">
+  <div class="overflow-x-auto mb-6">
     <table class="min-w-full bg-white shadow rounded">
       <thead class="bg-indigo-600 text-white">
         <tr>
@@ -63,25 +56,23 @@
     </table>
   </div>
 
-  <!-- Pagination สมาชิก -->
-  <div class="flex justify-between my-4">
-    <button id="prevPageMembers" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">◀ ก่อนหน้า</button>
-    <span id="pageInfoMembers" class="font-semibold"></span>
-    <button id="nextPageMembers" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">ถัดไป ▶</button>
-  </div>
-
   <!-- ประวัติ -->
   <h2 class="text-xl font-semibold mb-2">📋 ประวัติการบันทึก</h2>
 
-  <!-- ตัวเลือกวันที่พิมพ์ + สถานะ -->
+  <!-- ตัวเลือกฟิลเตอร์ -->
   <div class="flex flex-col sm:flex-row gap-2 sm:gap-4 mb-2">
     <input type="date" id="printStartDate" class="border rounded p-2 flex-1">
     <input type="date" id="printEndDate" class="border rounded p-2 flex-1">
     <select id="printStatus" class="border rounded p-2 flex-1">
-      <option value="">ทั้งหมด</option>
+      <option value="">สถานะทั้งหมด</option>
       <option value="ลาออก">ลาออก</option>
       <option value="เสียชีวิต">เสียชีวิต</option>
     </select>
+    <!-- ✅ ฟิลเตอร์กลุ่มใหม่ -->
+    <select id="printGroup" class="border rounded p-2 flex-1">
+      <option value="">กลุ่มทั้งหมด</option>
+    </select>
+    <button onclick="loadHistory()" class="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded w-full sm:w-auto">🔍 กรองข้อมูล</button>
     <button onclick="printReport()" class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded w-full sm:w-auto">🖨️ พิมพ์ HTML</button>
   </div>
 
@@ -106,53 +97,35 @@
 </div>
 
 <script>
-const SUPABASE_URL = "https://ttottijljxoinptmhgtu.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y";
-const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const SUPABASE_URL="https://ttottijljxoinptmhgtu.supabase.co";
+const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y";
+const client=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
 let chart=null;
-let currentPageMembers=1,pageSizeMembers=10,memberData=[];
-let currentPageHistory=1,pageSizeHistory=10,historyData=[];
 
-// ==================== LOAD MEMBERS ====================
-async function loadMembers(page=1){
-  const { data: exitedData } = await client.from('member_exit').select('member_id');
-  const exitedIds = exitedData.map(e=>e.member_id);
-  const from=(page-1)*pageSizeMembers,to=page*pageSizeMembers-1;
-
-  const { data, error, count } = await client.from('members')
-    .select('member_id, title, first_name, last_name, group, member_status',{count:'exact'})
-    .in('member_status',['ลาออก','เสียชีวิต'])
-    .range(from,to);
-  if(error){console.error(error);return;}
-  memberData=data;
-  renderMemberTable(data,exitedIds);
-
-  const totalPages=Math.ceil(count/pageSizeMembers);
-  document.getElementById('pageInfoMembers').innerText=`หน้า ${page} / ${totalPages}`;
-}
-
-function renderMemberTable(data,exitedIds){
+// ========== LOAD MEMBERS ==========
+async function loadMembers(){
+  const { data } = await client.from('members')
+    .select('member_id, title, first_name, last_name, group, member_status')
+    .in('member_status',['ลาออก','เสียชีวิต']);
   const tbody=document.getElementById('memberBody');
   tbody.innerHTML='';
   data.forEach(m=>{
-    const isExited=exitedIds.includes(m.member_id);
     tbody.innerHTML+=`
-    <tr class="${isExited?'bg-gray-200':'hover:bg-gray-100'}">
+    <tr class="hover:bg-gray-100">
       <td class="p-2">${m.member_id}</td>
       <td class="p-2">${m.title||''}</td>
       <td class="p-2">${m.first_name}</td>
       <td class="p-2">${m.last_name}</td>
       <td class="p-2">${m.group}</td>
       <td class="p-2">${m.member_status}</td>
-      <td class="p-2"><input type="date" id="meeting_date_${m.member_id}" class="border rounded p-1 w-full" ${isExited?'disabled':''}></td>
-      <td class="p-2"><input type="number" id="share_amount_${m.member_id}" class="border rounded p-1 w-full" ${isExited?'disabled':''}></td>
-      <td class="p-2"><input type="date" id="receive_date_${m.member_id}" class="border rounded p-1 w-full" ${isExited?'disabled':''}></td>
-      <td class="p-2">
-        <button onclick="saveMemberExit('${m.member_id}','${m.first_name}','${m.last_name}','${m.group}','${m.member_status}','${m.title||''}')" class="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded" ${isExited?'disabled':''}>💾 บันทึก</button>
-      </td>
+      <td class="p-2"><input type="date" id="meeting_date_${m.member_id}" class="border rounded p-1 w-full"></td>
+      <td class="p-2"><input type="number" id="share_amount_${m.member_id}" class="border rounded p-1 w-full"></td>
+      <td class="p-2"><input type="date" id="receive_date_${m.member_id}" class="border rounded p-1 w-full"></td>
+      <td class="p-2"><button onclick="saveMemberExit('${m.member_id}','${m.first_name}','${m.last_name}','${m.group}','${m.member_status}','${m.title||''}')" class="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded">💾 บันทึก</button></td>
     </tr>`;
   });
+  populateGroupFilter(data);
 }
 
 async function saveMemberExit(member_id,first_name,last_name,group,member_status,title){
@@ -160,70 +133,76 @@ async function saveMemberExit(member_id,first_name,last_name,group,member_status
   const share_amount=document.getElementById(`share_amount_${member_id}`).value;
   const receive_date=document.getElementById(`receive_date_${member_id}`).value;
   if(!meeting_date||!share_amount||!receive_date){alert('กรุณากรอกข้อมูลให้ครบ');return;}
-
   const {error}=await client.from('member_exit').insert([{member_id,title,first_name,last_name,group,member_status,meeting_date,share_amount,receive_date}]);
   if(error){alert(error.message);return;}
   alert(`บันทึก ${title}${first_name} ${last_name} สำเร็จ`);
-  loadMembers(currentPageMembers);
-  loadHistory(currentPageHistory);
+  loadHistory();
 }
 
-// ==================== HISTORY ====================
+// ========== HISTORY ==========
 async function loadHistory(){
-  const {data,error}=await client.from('member_exit').select('*').order('receive_date',{ascending:false});
+  const start=document.getElementById('printStartDate').value;
+  const end=document.getElementById('printEndDate').value;
+  const status=document.getElementById('printStatus').value;
+  const group=document.getElementById('printGroup').value;
+
+  let query=client.from('member_exit').select('*').order('receive_date',{ascending:false});
+  if(start)query=query.gte('receive_date',start);
+  if(end)query=query.lte('receive_date',end);
+  if(status)query=query.eq('member_status',status);
+  if(group)query=query.eq('group',group);
+
+  const {data,error}=await query;
   if(error){console.error(error);return;}
+
   const tbody=document.getElementById('historyBody');
   tbody.innerHTML='';
-  data.forEach(item=>{
+  data.forEach(i=>{
     tbody.innerHTML+=`
-      <tr class="hover:bg-gray-100">
-        <td class="p-2">${item.member_id}</td>
-        <td class="p-2">${item.title||''}</td>
-        <td class="p-2">${item.first_name}</td>
-        <td class="p-2">${item.last_name}</td>
-        <td class="p-2">${item.group}</td>
-        <td class="p-2">${item.member_status}</td>
-        <td class="p-2">${item.meeting_date||''}</td>
-        <td class="p-2">${item.share_amount||''}</td>
-        <td class="p-2">${item.receive_date||''}</td>
-      </tr>`;
+    <tr class="hover:bg-gray-100">
+      <td class="p-2">${i.member_id}</td>
+      <td class="p-2">${i.title||''}</td>
+      <td class="p-2">${i.first_name}</td>
+      <td class="p-2">${i.last_name}</td>
+      <td class="p-2">${i.group}</td>
+      <td class="p-2">${i.member_status}</td>
+      <td class="p-2">${i.meeting_date||''}</td>
+      <td class="p-2">${i.share_amount||''}</td>
+      <td class="p-2">${i.receive_date||''}</td>
+    </tr>`;
   });
 }
 
-// ==================== DASHBOARD ====================
+// ========== DASHBOARD ==========
 async function loadDashboard(){
-  const startDate=document.getElementById('startDate').value;
-  const endDate=document.getElementById('endDate').value;
-  let query=client.from('member_exit').select('member_id,member_status,receive_date');
-  if(startDate)query=query.gte('receive_date',startDate);
-  if(endDate)query=query.lte('receive_date',endDate);
+  const start=document.getElementById('startDate').value;
+  const end=document.getElementById('endDate').value;
+  let query=client.from('member_exit').select('member_status,receive_date');
+  if(start)query=query.gte('receive_date',start);
+  if(end)query=query.lte('receive_date',end);
   const {data,error}=await query;
   if(error){alert(error.message);return;}
-
-  const countResign=data.filter(d=>d.member_status==='ลาออก').length;
-  const countDeceased=data.filter(d=>d.member_status==='เสียชีวิต').length;
-  document.getElementById('countResign').innerText=countResign;
-  document.getElementById('countDeceased').innerText=countDeceased;
-
+  const resign=data.filter(d=>d.member_status==='ลาออก').length;
+  const dead=data.filter(d=>d.member_status==='เสียชีวิต').length;
+  document.getElementById('countResign').innerText=resign;
+  document.getElementById('countDeceased').innerText=dead;
   const ctx=document.getElementById('statusChart').getContext('2d');
   if(chart)chart.destroy();
-  chart=new Chart(ctx,{type:'bar',data:{
-    labels:['ลาออก','เสียชีวิต'],
-    datasets:[{label:'จำนวนสมาชิก',data:[countResign,countDeceased]}]
-  }});
+  chart=new Chart(ctx,{type:'bar',data:{labels:['ลาออก','เสียชีวิต'],datasets:[{data:[resign,dead],backgroundColor:['#3B82F6','#EF4444']}]},options:{plugins:{legend:{display:false}}}});
 }
 
-// ==================== PRINT HTML ====================
+// ========== PRINT ==========
 async function printReport(){
-  const startDate=document.getElementById('printStartDate').value;
-  const endDate=document.getElementById('printEndDate').value;
+  const start=document.getElementById('printStartDate').value;
+  const end=document.getElementById('printEndDate').value;
   const status=document.getElementById('printStatus').value;
+  const group=document.getElementById('printGroup').value;
   const logoUrl='https://lh5.googleusercontent.com/d/1B0sZdUz54kO4zAv0oJgoN4Aipy3UyCyR';
-
   let query=client.from('member_exit').select('*').order('receive_date',{ascending:false});
-  if(startDate)query=query.gte('receive_date',startDate);
-  if(endDate)query=query.lte('receive_date',endDate);
+  if(start)query=query.gte('receive_date',start);
+  if(end)query=query.lte('receive_date',end);
   if(status)query=query.eq('member_status',status);
+  if(group)query=query.eq('group',group);
   const {data,error}=await query;
   if(error){alert(error.message);return;}
 
@@ -231,20 +210,29 @@ async function printReport(){
   <style>body{font-family:Arial;padding:20px;}table{width:100%;border-collapse:collapse;}th,td{border:1px solid #000;padding:8px;}th{background:#eee;}</style>
   </head><body>
   <img src="${logoUrl}" width="70"><h1 style="text-align:center;">รายงานสมาชิกลาออก/เสียชีวิต</h1>
-  <p style="text-align:center;">ช่วงวันที่: ${startDate||'ทั้งหมด'} ถึง ${endDate||'ทั้งหมด'} | สถานะ: ${status||'ทั้งหมด'}</p>
+  <p style="text-align:center;">ช่วงวันที่: ${start||'ทั้งหมด'} ถึง ${end||'ทั้งหมด'} | สถานะ: ${status||'ทั้งหมด'} | กลุ่ม: ${group||'ทั้งหมด'}</p>
   <table><thead><tr><th>รหัส</th><th>ชื่อ-นามสกุล</th><th>กลุ่ม</th><th>สถานะ</th><th>วันที่ประชุม</th><th>จำนวนเงิน</th><th>วันที่รับเงิน</th></tr></thead><tbody>`;
   data.forEach(i=>{
     html+=`<tr><td>${i.member_id}</td><td>${i.title||''}${i.first_name} ${i.last_name}</td><td>${i.group}</td><td>${i.member_status}</td><td>${i.meeting_date}</td><td>${i.share_amount}</td><td>${i.receive_date}</td></tr>`;
   });
   html+=`</tbody></table></body></html>`;
-  const w=window.open('','_blank');
-  w.document.write(html);w.document.close();w.print();
+  const w=window.open('','_blank');w.document.write(html);w.document.close();w.print();
 }
 
-// ==================== INIT ====================
+// ========== เติม Dropdown กลุ่ม ==========
+function populateGroupFilter(data){
+  const groupSelect=document.getElementById('printGroup');
+  const groups=[...new Set(data.map(i=>i.group).filter(Boolean))];
+  groups.forEach(g=>{
+    const opt=document.createElement('option');
+    opt.value=g; opt.textContent=g;
+    groupSelect.appendChild(opt);
+  });
+}
+
+// ========== INIT ==========
 loadMembers();
 loadHistory();
 </script>
-
 </body>
 </html>
