@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Coffee Corner</title>
+  <meta name="description" content="Coffee Corner for MINI App" />
+  <meta name="author" content="iton5" />
+  <meta property="og:title" content="Coffee Corner-iton5-thailand" />
+  <meta property="og:description" content="Coffee Corner for MINI App" />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="https://lh3.googleusercontent.com/d/1Ck_OCfEW4dEp3A1k9yfQplYmW7qmwzFF" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+ 
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&display=swap');
+    body { font-family: 'Prompt', sans-serif; background-color: #f8dda4; }
+    .main-bg { background: linear-gradient(180deg, #f8dda4 0%, #ddf9c1 100%); }
+    .text-brand-dark { color: #813405; }
+    .text-brand-primary { color: #d45113; }
+    .bg-brand-primary { background-color: #d45113; }
+    .bg-brand-accent { background-color: #f9a03f; }
+    .shadow-strong { box-shadow: 0 10px 25px -5px rgba(129, 52, 5, 0.2), 0 8px 10px -6px rgba(129, 52, 5, 0.2); }
+    .cart-item-shadow { box-shadow: 0 4px 15px rgba(0,0,0,0.08); }
+    .btn-add { background: linear-gradient(45deg, #d45113, #f9a03f); }
+    .btn-place-order { background: linear-gradient(45deg, #813405, #d45113); }
+
+    .swal2-popup { background-color: #f8dda4 !important; color: #813405 !important; border-radius: 1.5rem !important; }
+    .swal2-title { color: #813405 !important; }
+    .swal2-confirm { background-color: #d45113 !important; }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .fade-in { animation: fadeIn 0.5s ease-out forwards; }
+    #loading-overlay { 
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+      background-color: rgba(248, 221, 164, 0.8); backdrop-filter: blur(5px); 
+      display: none; justify-content: center; align-items: center; 
+      z-index: 9999; flex-direction: column; gap: 1rem; 
+    }
+  </style>
+</head>
+<body class="main-bg min-h-screen">
+
+  <div id="loading-overlay">
+    <img src="https://developers.line.biz/media/line-mini-app/LINE_spinner_light.svg" alt="Loading..." class="w-16 h-16">
+    <p id="loading-text" class="text-lg text-brand-dark font-semibold">กำลังโหลด...</p>
+  </div>
+  
+  <div class="container mx-auto max-w-2xl p-4 pb-32">
+    <header class="text-center my-8 fade-in">
+        <h1 class="text-4xl font-bold text-brand-dark">Coffee Corner</h1>
+        <p class="text-brand-primary">สั่งเครื่องดื่มแก้วโปรดของคุณ</p>
+    </header>
+
+    <div class="mb-6 w-full fade-in">
+        <input type="text" id="search-input" class="w-full p-3 rounded-xl border border-yellow-700/20 bg-white/50 text-brand-dark placeholder-yellow-800/60 focus:outline-none focus:ring-2 focus:ring-brand-primary" placeholder="🔍 ค้นหากาแฟ...">
+    </div>
+
+    <div id="order-status-container" class="mb-6"></div>
+
+    <main id="menu-container" class="space-y-4">
+        
+    </main>
+    
+    <div id="load-more-container" class="text-center mt-8" style="display: none;">
+        <button id="load-more-btn" class="bg-brand-accent text-white font-bold py-2 px-6 rounded-lg shadow-md">
+            โหลดเพิ่มเติม
+        </button>
+    </div>
+    
+   
+    <section id="cart-section" class="fixed bottom-0 left-0 right-0 bg-white p-4 rounded-t-3xl shadow-strong transform translate-y-full transition-transform duration-500 ease-in-out">
+        <div id="cart-header" class="flex justify-between items-center cursor-pointer pb-2">
+            <h2 class="text-xl font-bold text-brand-dark">ตะกร้าของคุณ (<span id="cart-count">0</span>)</h2>
+            <div class="flex items-center gap-2">
+                <span id="cart-total-preview" class="font-semibold text-brand-primary">0 บ.</span>
+                <svg id="cart-arrow" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-brand-dark transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" /></svg>
+            </div>
+        </div>
+        <div id="cart-content" class="hidden mt-4">
+            <div id="cart-items" class="space-y-3 max-h-48 overflow-y-auto pr-2">
+                
+            </div>
+            <div class="mt-4 pt-4 border-t border-gray-200">
+                <div class="flex justify-between items-center text-lg font-bold text-brand-dark">
+                    <span>ยอดรวม</span>
+                    <span id="cart-total-main">0 บ.</span>
+                </div>
+                <button id="place-order-btn" class="w-full mt-4 py-3 rounded-xl text-white font-bold btn-place-order shadow-lg disabled:opacity-50" disabled>
+                    สั่งซื้อ
+                </button>
+            </div>
+        </div>
+    </section>
+  </div>
+
+  <script type="module">
+    const LIFF_ID = "1661506692-Pa21zE5v";
+    const SUPABASE_URL = "https://ttottijljxoinptmhgtu.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y";
+
+    const { createClient } = supabase;
+    const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    
+    const loadingOverlay = document.getElementById('loading-overlay');
+    const menuContainer = document.getElementById('menu-container');
+    const cartSection = document.getElementById('cart-section');
+    const cartHeader = document.getElementById('cart-header');
+    const cartContent = document.getElementById('cart-content');
+    const cartArrow = document.getElementById('cart-arrow');
+    const cartItemsContainer = document.getElementById('cart-items');
+    const cartCount = document.getElementById('cart-count');
+    const cartTotalPreview = document.getElementById('cart-total-preview');
+    const cartTotalMain = document.getElementById('cart-total-main');
+    const placeOrderBtn = document.getElementById('place-order-btn');
+    const orderStatusContainer = document.getElementById('order-status-container');
+    const searchInput = document.getElementById('search-input');
+    const loadMoreContainer = document.getElementById('load-more-container');
+    const loadMoreBtn = document.getElementById('load-more-btn');
+
+    
+    let cart = [];
+    let menu = [];
+    let userProfile = null;
+    let isCartOpen = false;
+    let menuOffset = 0;
+    const PAGE_SIZE = 50;
+    let isLoadingMenu = false;
+    let hasMoreMenu = true;
+    let searchDebounce;
+
+    const showLoading = (text = 'กำลังโหลด...') => {
+        document.getElementById('loading-text').textContent = text;
+        loadingOverlay.style.display = 'flex';
+    };
+    const hideLoading = () => {
+        loadingOverlay.style.display = 'none';
+    };
+
+    
+    function saveCart() {
+        localStorage.setItem('coffeeCart', JSON.stringify(cart));
+    }
+
+    function loadCart() {
+        const savedCart = localStorage.getItem('coffeeCart');
+        cart = savedCart ? JSON.parse(savedCart) : [];
+        updateCartUI();
+    }
+
+    function addToCart(itemId) {
+        const itemInCart = cart.find(item => item.id === itemId);
+        if (itemInCart) {
+            itemInCart.quantity++;
+        } else {
+            const menuItem = menu.find(item => item.id === itemId);
+            if(menuItem) cart.push({ ...menuItem, quantity: 1 });
+        }
+        saveCart();
+        updateCartUI();
+    }
+    
+    function updateQuantity(itemId, change) {
+        const itemInCart = cart.find(item => item.id === itemId);
+        if (itemInCart) {
+            itemInCart.quantity += change;
+            if (itemInCart.quantity <= 0) {
+                cart = cart.filter(item => item.id !== itemId);
+            }
+        }
+        saveCart();
+        updateCartUI();
+    }
+
+    
+    function updateCartUI() {
+        cartItemsContainer.innerHTML = '';
+        if (cart.length === 0) {
+            cartItemsContainer.innerHTML = '<p class="text-center text-gray-500">ตะกร้าของคุณว่างเปล่า</p>';
+            if (isCartOpen) toggleCart();
+        } else {
+            cart.forEach(item => {
+                const itemEl = document.createElement('div');
+                itemEl.className = 'flex items-center gap-4 cart-item-shadow bg-white p-2 rounded-xl';
+                itemEl.innerHTML = `
+                    <img src="${item.image_url}" class="w-16 h-16 rounded-lg object-cover">
+                    <div class="flex-grow">
+                        <p class="font-semibold text-brand-dark">${item.name}</p>
+                        <p class="text-sm text-gray-500">${item.price} บ.</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button class="quantity-btn w-8 h-8 rounded-full bg-gray-200 text-brand-dark font-bold" data-id="${item.id}" data-change="-1">-</button>
+                        <span>${item.quantity}</span>
+                        <button class="quantity-btn w-8 h-8 rounded-full bg-gray-200 text-brand-dark font-bold" data-id="${item.id}" data-change="1">+</button>
+                    </div>
+                `;
+                cartItemsContainer.appendChild(itemEl);
+            });
+        }
+        
+        const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+        const totalPrice = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        
+        cartCount.textContent = totalItems;
+        cartTotalPreview.textContent = `${totalPrice.toFixed(2)} บ.`;
+        cartTotalMain.textContent = `${totalPrice.toFixed(2)} บ.`;
+        placeOrderBtn.disabled = cart.length === 0;
+        
+        if(cart.length > 0) {
+            cartSection.style.transform = `translateY(calc(100% - ${cartHeader.offsetHeight}px))`;
+        } else {
+            cartSection.style.transform = 'translateY(100%)';
+        }
+    }
+
+    function toggleCart() {
+        isCartOpen = !isCartOpen;
+        if (isCartOpen && cart.length > 0) {
+            cartSection.style.transform = 'translateY(0)';
+            cartContent.classList.remove('hidden');
+            cartArrow.style.transform = 'rotate(180deg)';
+        } else {
+            cartSection.style.transform = `translateY(calc(100% - ${cartHeader.offsetHeight}px))`;
+            cartContent.classList.add('hidden');
+            cartArrow.style.transform = 'rotate(0deg)';
+            if (cart.length === 0) {
+                 cartSection.style.transform = 'translateY(100%)';
+            }
+        }
+    }
+
+    function renderMenuItems(items) {
+        items.forEach(item => {
+            const itemEl = document.createElement('div');
+            itemEl.className = 'bg-white rounded-2xl p-4 flex gap-4 items-center cart-item-shadow fade-in';
+            itemEl.innerHTML = `
+                <img src="${item.image_url}" alt="${item.name}" class="w-24 h-24 rounded-xl object-cover">
+                <div class="flex-grow">
+                    <h3 class="text-lg font-bold text-brand-dark">${item.name}</h3>
+                    <p class="text-brand-primary font-semibold">${item.price.toFixed(2)} บ.</p>
+                </div>
+                <button class="add-to-cart-btn w-12 h-12 rounded-full text-white font-bold text-2xl btn-add shadow-lg" data-id="${item.id}">+</button>
+            `;
+            menuContainer.appendChild(itemEl);
+        });
+    }
+    
+    function renderOrderStatus(orders) {
+        orderStatusContainer.innerHTML = '';
+        if (!orders || orders.length === 0) return;
+
+        const sortedOrders = orders.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        const recentOrders = sortedOrders.slice(0, 5);
+
+        if (recentOrders.length === 0) return;
+
+        const statusEl = document.createElement('div');
+        statusEl.className = 'bg-white/80 backdrop-blur-sm p-4 rounded-2xl cart-item-shadow fade-in space-y-2';
+        
+        let contentHTML = '<h3 class="text-lg font-bold text-brand-dark mb-2">สถานะ 5 ออเดอร์ล่าสุด</h3>';
+
+        recentOrders.forEach(order => {
+            const isProcessing = order.status === 'processing';
+            const statusClass = isProcessing ? 'bg-brand-accent text-white' : 'bg-green-500 text-white';
+            const statusText = isProcessing ? 'กำลังดำเนินการ' : 'เสร็จสิ้นแล้ว';
+            const titleClass = isProcessing ? 'text-brand-primary' : 'text-gray-500';
+            const receiptInfo = !isProcessing && order.receipt_info ? `<p class="text-xs text-gray-400 mt-1">เลขที่ใบเสร็จ: ${order.receipt_info.receipt_number || 'N/A'}</p>` : '';
+            
+            contentHTML += `
+                <div class="p-2 border-t border-gray-200 first:border-t-0">
+                    <div class="flex justify-between items-center">
+                        <p class="font-semibold ${titleClass}">ออเดอร์ #${order.id}</p>
+                        <p class="text-sm font-semibold ${statusClass} px-2 py-1 rounded-full">${statusText}</p>
+                    </div>
+                    ${receiptInfo}
+                </div>
+            `;
+        });
+
+        statusEl.innerHTML = contentHTML;
+        orderStatusContainer.appendChild(statusEl);
+    }
+    
+    async function fetchMenu(isNewSearch = false) {
+        if (isLoadingMenu) return;
+        isLoadingMenu = true;
+        loadMoreBtn.disabled = true;
+
+        if (isNewSearch) {
+            menuOffset = 0;
+            hasMoreMenu = true;
+            menuContainer.innerHTML = '';
+            menu = [];
+        }
+
+        const searchTerm = searchInput.value.trim();
+
+        let query = supabaseClient.from('menu_items').select('*');
+        if (searchTerm) {
+            query = query.ilike('name', `%${searchTerm}%`);
+        }
+        
+        const { data, error } = await query
+            .order('id', { ascending: true })
+            .range(menuOffset, menuOffset + PAGE_SIZE - 1);
+        
+        if (error) {
+            console.error('Error fetching menu:', error);
+        } else if (data) {
+            menu.push(...data);
+            renderMenuItems(data);
+            menuOffset += data.length;
+
+            if (data.length < PAGE_SIZE) {
+                hasMoreMenu = false;
+                loadMoreContainer.style.display = 'none';
+            } else {
+                loadMoreContainer.style.display = 'block';
+            }
+        }
+        
+        isLoadingMenu = false;
+        loadMoreBtn.disabled = false;
+    }
+    
+    cartHeader.addEventListener('click', toggleCart);
+    loadMoreBtn.addEventListener('click', () => fetchMenu(false));
+
+    menuContainer.addEventListener('click', (e) => {
+        if (e.target.classList.contains('add-to-cart-btn')) {
+            addToCart(Number(e.target.dataset.id));
+        }
+    });
+
+    cartItemsContainer.addEventListener('click', (e) => {
+        if (e.target.classList.contains('quantity-btn')) {
+            updateQuantity(Number(e.target.dataset.id), Number(e.target.dataset.change));
+        }
+    });
+    
+    placeOrderBtn.addEventListener('click', async () => {
+        showLoading('กำลังส่งออเดอร์...');
+        try {
+            const { data, error } = await supabaseClient.functions.invoke('place-order', {
+                body: { cart, userProfile },
+            });
+            if (error) throw error;
+
+            cart = [];
+            saveCart();
+            updateCartUI();
+            
+            Swal.fire('สั่งซื้อสำเร็จ!', 'กรุณาตรวจสอบข้อความใน LINE เพื่อชำระเงิน', 'success');
+        } catch (err) {
+            console.error('Order placement error:', err);
+            Swal.fire('เกิดข้อผิดพลาด', 'ไม่สามารถส่งออเดอร์ได้', 'error');
+        } finally {
+            hideLoading();
+        }
+    });
+    
+    searchInput.addEventListener('input', () => {
+        clearTimeout(searchDebounce);
+        searchDebounce = setTimeout(() => {
+            fetchMenu(true);
+        }, 500); 
+    });
+    
+   
+    document.addEventListener('DOMContentLoaded', async () => {
+        showLoading('กำลังเริ่มต้น...');
+        try {
+            await liff.init({ liffId: LIFF_ID, withLoginOnExternalBrowser: true });
+            if (!liff.isLoggedIn()) {
+                liff.login({ redirectUri: window.location.href });
+                return;
+            }
+
+            const idToken = liff.getIDToken();
+            await supabaseClient.auth.signInWithIdToken({ provider: 'line', token: idToken });
+            userProfile = await liff.getProfile();
+
+            await fetchMenu(true); 
+            
+            loadCart();
+
+            const { data: orders, error: ordersError } = await supabaseClient
+                .from('historycart')
+                .select('*')
+                .eq('user_id', userProfile.userId);
+            if (ordersError) throw ordersError;
+            renderOrderStatus(orders);
+            
+            supabaseClient
+              .channel('public:historycart')
+              .on('postgres_changes', { event: '*', schema: 'public', table: 'historycart', filter: `user_id=eq.${userProfile.userId}` }, (payload) => {
+                window.location.reload();
+              })
+              .subscribe();
+
+        } catch(err) {
+            console.error('Initialization error:', err);
+            document.body.innerHTML = `<div class="p-8 text-center text-red-600">เกิดข้อผิดพลาดร้ายแรง: ${err.message}</div>`;
+        } finally {
+            hideLoading();
+        }
+    });
+
+  </script>
+</body>
+</html>
