@@ -68,12 +68,17 @@
       <option value="ลาออก">ลาออก</option>
       <option value="เสียชีวิต">เสียชีวิต</option>
     </select>
-    <!-- ✅ ฟิลเตอร์กลุ่มใหม่ -->
     <select id="printGroup" class="border rounded p-2 flex-1">
       <option value="">กลุ่มทั้งหมด</option>
     </select>
     <button onclick="loadHistory()" class="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded w-full sm:w-auto">🔍 กรองข้อมูล</button>
     <button onclick="printReport()" class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded w-full sm:w-auto">🖨️ พิมพ์ HTML</button>
+  </div>
+
+  <!-- ✅ ตัวนับจำนวนรายการ -->
+  <div class="flex flex-col sm:flex-row justify-between items-center mb-2 text-gray-700">
+    <p id="recordCount" class="font-semibold">พบข้อมูลทั้งหมด 0 รายการ</p>
+    <p id="totalAmount" class="font-semibold text-green-700">💰 รวมจำนวนเงินทั้งหมด 0 บาท</p>
   </div>
 
   <div class="overflow-x-auto">
@@ -125,9 +130,10 @@ async function loadMembers(){
       <td class="p-2"><button onclick="saveMemberExit('${m.member_id}','${m.first_name}','${m.last_name}','${m.group}','${m.member_status}','${m.title||''}')" class="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded">💾 บันทึก</button></td>
     </tr>`;
   });
-  populateGroupFilter(data);
+  populateGroupFilter(); // โหลดรายชื่อกลุ่มทั้งหมด
 }
 
+// ========== SAVE MEMBER EXIT ==========
 async function saveMemberExit(member_id,first_name,last_name,group,member_status,title){
   const meeting_date=document.getElementById(`meeting_date_${member_id}`).value;
   const share_amount=document.getElementById(`share_amount_${member_id}`).value;
@@ -155,6 +161,13 @@ async function loadHistory(){
   const {data,error}=await query;
   if(error){console.error(error);return;}
 
+  // ✅ อัปเดตจำนวนรายการ
+  document.getElementById('recordCount').innerText = `พบข้อมูลทั้งหมด ${data.length} รายการ`;
+
+  // ✅ คำนวณยอดรวมจำนวนเงิน
+  const total = data.reduce((sum, i) => sum + (parseFloat(i.share_amount) || 0), 0);
+  document.getElementById('totalAmount').innerText = `💰 รวมจำนวนเงินทั้งหมด ${total.toLocaleString()} บาท`;
+
   const tbody=document.getElementById('historyBody');
   tbody.innerHTML='';
   data.forEach(i=>{
@@ -167,7 +180,7 @@ async function loadHistory(){
       <td class="p-2">${i.group}</td>
       <td class="p-2">${i.member_status}</td>
       <td class="p-2">${i.meeting_date||''}</td>
-      <td class="p-2">${i.share_amount||''}</td>
+      <td class="p-2 text-right">${i.share_amount?Number(i.share_amount).toLocaleString():""}</td>
       <td class="p-2">${i.receive_date||''}</td>
     </tr>`;
   });
@@ -206,23 +219,29 @@ async function printReport(){
   const {data,error}=await query;
   if(error){alert(error.message);return;}
 
+  const total = data.reduce((sum, i) => sum + (parseFloat(i.share_amount) || 0), 0);
+
   let html=`<html><head><title>รายงานสมาชิกลาออก/เสียชีวิต</title>
   <style>body{font-family:Arial;padding:20px;}table{width:100%;border-collapse:collapse;}th,td{border:1px solid #000;padding:8px;}th{background:#eee;}</style>
   </head><body>
   <img src="${logoUrl}" width="70"><h1 style="text-align:center;">รายงานสมาชิกลาออก/เสียชีวิต</h1>
   <p style="text-align:center;">ช่วงวันที่: ${start||'ทั้งหมด'} ถึง ${end||'ทั้งหมด'} | สถานะ: ${status||'ทั้งหมด'} | กลุ่ม: ${group||'ทั้งหมด'}</p>
+  <p style="text-align:right;">รวมทั้งหมด ${data.length} รายการ | 💰 รวมจำนวนเงิน ${total.toLocaleString()} บาท</p>
   <table><thead><tr><th>รหัส</th><th>ชื่อ-นามสกุล</th><th>กลุ่ม</th><th>สถานะ</th><th>วันที่ประชุม</th><th>จำนวนเงิน</th><th>วันที่รับเงิน</th></tr></thead><tbody>`;
   data.forEach(i=>{
-    html+=`<tr><td>${i.member_id}</td><td>${i.title||''}${i.first_name} ${i.last_name}</td><td>${i.group}</td><td>${i.member_status}</td><td>${i.meeting_date}</td><td>${i.share_amount}</td><td>${i.receive_date}</td></tr>`;
+    html+=`<tr><td>${i.member_id}</td><td>${i.title||''}${i.first_name} ${i.last_name}</td><td>${i.group}</td><td>${i.member_status}</td><td>${i.meeting_date}</td><td>${Number(i.share_amount||0).toLocaleString()}</td><td>${i.receive_date}</td></tr>`;
   });
   html+=`</tbody></table></body></html>`;
   const w=window.open('','_blank');w.document.write(html);w.document.close();w.print();
 }
 
-// ========== เติม Dropdown กลุ่ม ==========
-function populateGroupFilter(data){
+// ========== เติม Dropdown กลุ่มทั้งหมด ==========
+async function populateGroupFilter(){
   const groupSelect=document.getElementById('printGroup');
+  const { data, error } = await client.from('members').select('group');
+  if(error){console.error(error);return;}
   const groups=[...new Set(data.map(i=>i.group).filter(Boolean))];
+  groupSelect.innerHTML='<option value="">กลุ่มทั้งหมด</option>';
   groups.forEach(g=>{
     const opt=document.createElement('option');
     opt.value=g; opt.textContent=g;
