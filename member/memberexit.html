@@ -114,7 +114,7 @@
 
 <script>
 const SUPABASE_URL = "https://ttottijljxoinptmhgtu.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y"; // ใส่ key ของคุณ
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y";
 const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let chart = null;
@@ -128,10 +128,11 @@ async function loadMembers(page = 1){
   const from = (page-1)*pageSizeMembers;
   const to = page*pageSizeMembers-1;
 
+  // ✅ เพิ่ม title ในการดึงข้อมูล
   const { data, error, count } = await client.from('members')
-  .select('member_id, title, first_name, last_name, group, member_status', {count:'exact'})
-  .in('member_status', ['ลาออก','เสียชีวิต'])
-  .range(from,to);
+    .select('member_id, title, first_name, last_name, group, member_status', {count:'exact'})
+    .in('member_status', ['ลาออก','เสียชีวิต'])
+    .range(from,to);
   if(error){console.error(error); return;}
   memberData = data;
   renderMemberTable(data, exitedIds);
@@ -180,9 +181,14 @@ async function saveMemberExit(member_id, first_name, last_name, group, member_st
   const share_amount = document.getElementById(`share_amount_${member_id}`).value;
   const receive_date = document.getElementById(`receive_date_${member_id}`).value;
   if(!meeting_date || !share_amount || !receive_date){ alert('กรุณากรอกข้อมูลให้ครบ'); return;}
-  const {error} = await client.from('member_exit').insert([{member_id, first_name, last_name, group, member_status, meeting_date, share_amount, receive_date}]);
+
+  // ✅ ดึงคำนำหน้า
+  const member = memberData.find(m => m.member_id === member_id);
+  const title = member ? member.title : '';
+
+  const {error} = await client.from('member_exit').insert([{member_id, title, first_name, last_name, group, member_status, meeting_date, share_amount, receive_date}]);
   if(error){ alert(error.message); return;}
-  alert(`บันทึก ${first_name} ${last_name} สำเร็จ`);
+  alert(`บันทึก ${title}${first_name} ${last_name} สำเร็จ`);
   loadMembers(currentPageMembers);
   loadHistory(currentPageHistory);
 }
@@ -255,7 +261,7 @@ async function deleteHistory(member_id){
 async function loadDashboard(){
   const startDate = document.getElementById('startDate').value;
   const endDate = document.getElementById('endDate').value;
-  let query = client.from('member_exit').select('member_id, title, first_name, last_name, group, member_status, meeting_date, share_amount, receive_date').order('receive_date',{ascending:false});
+  let query = client.from('member_exit').select('member_id, member_status, receive_date');
   if(startDate) query = query.gte('receive_date',startDate);
   if(endDate) query = query.lte('receive_date',endDate);
   const {data,error} = await query;
@@ -284,9 +290,10 @@ async function printReport(){
   const startDate = document.getElementById('printStartDate').value;
   const endDate = document.getElementById('printEndDate').value;
   const status = document.getElementById('printStatus').value;
-  const logoUrl = 'https://lh5.googleusercontent.com/d/1B0sZdUz54kO4zAv0oJgoN4Aipy3UyCyR'; // เปลี่ยนเป็นโลโก้คุณ
+  const logoUrl = 'https://lh5.googleusercontent.com/d/1B0sZdUz54kO4zAv0oJgoN4Aipy3UyCyR';
 
-  let query = client.from('member_exit').select('*').order('receive_date',{ascending:false});
+  // ✅ เพิ่ม title ในการดึงข้อมูล
+  let query = client.from('member_exit').select('member_id, title, first_name, last_name, group, member_status, meeting_date, share_amount, receive_date').order('receive_date',{ascending:false});
   if(startDate) query = query.gte('receive_date',startDate);
   if(endDate) query = query.lte('receive_date',endDate);
   if(status) query = query.eq('member_status',status);
@@ -339,7 +346,6 @@ async function printReport(){
   w.focus();
   w.print();
 }
-
 
 // ==================== INIT ====================
 loadMembers(currentPageMembers);
