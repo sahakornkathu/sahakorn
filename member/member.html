@@ -338,7 +338,28 @@ button.delete:hover { background:#c53030; }
   <button id="nextPage">ถัดไป</button>
 </div>
 
-...
+  <!-- 🔒 Modal ใส่รหัสผ่านก่อนแก้ไข -->
+<div id="passwordModal" 
+     style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); 
+            justify-content:center; align-items:center; z-index:9999;">
+  <div style="background:white; padding:25px 30px; border-radius:12px; box-shadow:0 5px 20px rgba(0,0,0,0.3); text-align:center; max-width:320px;">
+    <h3 style="margin-top:0; color:#1e3a8a;">🔒 กรุณาใส่รหัสผ่าน</h3>
+    <input type="password" id="adminPasswordInput" 
+           placeholder="รหัสผ่านผู้ดูแล" 
+           style="padding:8px 10px; width:90%; margin:10px auto; border:1px solid #ccc; border-radius:6px;">
+    <div style="margin-top:15px; display:flex; justify-content:center; gap:10px;">
+      <button id="confirmPasswordBtn" 
+              style="background:#4a90e2; color:white; border:none; padding:6px 14px; border-radius:6px; cursor:pointer;">
+        ยืนยัน
+      </button>
+      <button id="cancelPasswordBtn" 
+              style="background:#ccc; color:#333; border:none; padding:6px 14px; border-radius:6px; cursor:pointer;">
+        ยกเลิก
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- ✅ ย้ายสคริปต์มาวาง "หลังสุดของ <body>" -->
 <script>
 window.addEventListener("DOMContentLoaded", function() {
@@ -449,36 +470,6 @@ window.addEventListener("DOMContentLoaded", function() {
 
 }); // END DOMContentLoaded
 </script>
-<!-- 🔒 Modal ใส่รหัสผ่านก่อนแก้ไข -->
-<div id="passwordModal" 
-     style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); 
-            justify-content:center; align-items:center; z-index:9999;">
-  <div style="background:white; padding:25px 30px; border-radius:12px; box-shadow:0 5px 20px rgba(0,0,0,0.3); text-align:center; max-width:320px;">
-    <h3 style="margin-top:0; color:#1e3a8a;">🔒 กรุณาใส่รหัสผ่าน</h3>
-    <input type="password" id="adminPasswordInput" 
-           placeholder="รหัสผ่านผู้ดูแล" 
-           style="padding:8px 10px; width:90%; margin:10px auto; border:1px solid #ccc; border-radius:6px;">
-    <div style="margin-top:15px; display:flex; justify-content:center; gap:10px;">
-      <button id="confirmPasswordBtn" 
-              style="background:#4a90e2; color:white; border:none; padding:6px 14px; border-radius:6px; cursor:pointer;">
-        ยืนยัน
-      </button>
-      <button id="cancelPasswordBtn" 
-              style="background:#ccc; color:#333; border:none; padding:6px 14px; border-radius:6px; cursor:pointer;">
-        ยกเลิก
-      </button>
-    </div>
-  </div>
-</div>
-
-<!-- 🔓 ปุ่มล็อกออก -->
-<div style="position:fixed; top:15px; right:20px; z-index:10000;">
-  <button id="logoutBtn" 
-          style="background:#ef4444; color:#fff; border:none; border-radius:8px; padding:6px 12px; cursor:pointer;">
-    🔓 ออกจากโหมดผู้ดูแล
-  </button>
-</div>
-
 </body>
 </html>
 
