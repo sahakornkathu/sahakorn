@@ -1,11 +1,11 @@
 <!doctype html>
 <html lang="th">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>ระบบจัดการสมาชิก</title>
 <style>
-/* ย่อสไตล์ไว้ แต่คงโครงหลักจากต้นฉบับไว้ */
+/* (สไตล์ยาวเหมือนต้นฉบับ) */
 @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap');
 body { font-family:"Prompt",sans-serif; background:#f0f4f8; margin:20px; color:#333; }
 h2 { text-align:center; color:#1e40af; margin-bottom:15px; }
@@ -36,30 +36,159 @@ button.delete:hover { background:#c53030; }
 .pagination button { padding:5px 10px; margin:3px; border:none; border-radius:5px; background:#4a90e2; color:#fff; cursor:pointer; font-size:13px; }
 .pagination button:hover{ background:#357abd; }
 #pageInfo, #resultCount{ font-weight:500; color:#2d3748; font-size:13px; }
-
 .progress-container { display:flex; justify-content:space-between; align-items:center; max-width:950px; margin:0 auto 20px auto; position:relative; counter-reset: step; }
 .progress-container::before { content:""; position:absolute; top:50%; left:0; width:100%; height:3px; background-color:#e2e8f0; transform:translateY(-50%); z-index:0; }
 .progress-step { position:relative; z-index:1; background:#f9fafb; color:#4a5568; border:2px solid #cbd5e0; border-radius:50px; padding:8px 15px; font-size:13px; font-weight:500; flex:1; text-align:center; margin:0 4px; transition:all 0.3s; white-space:nowrap; }
 .progress-step.active { background:#4a90e2; color:#fff; border-color:#4a90e2; box-shadow:0 0 8px rgba(74,144,226,0.5); }
-
-#dashboard { display:flex; justify-content:center; flex-wrap:wrap; gap:15px; max-width:950px; margin:25px auto; }
-#dashboard .card { flex:1 1 200px; background:#fff; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.08); padding:20px; text-align:center; font-size:15px; font-weight:500; color:#1e3a8a; }
-#dashboard .card span { display:block; font-size:26px; font-weight:700; color:#111827; margin-top:5px; }
-#dashboard .total { border-top:4px solid #4a90e2; }
-#dashboard .active { border-top:4px solid #10b981; }
-#dashboard .exit { border-top:4px solid #f59e0b; }
-#dashboard .dead { border-top:4px solid #ef4444; }
-
-/* responsive tweaks */
 @media (max-width:768px){
-  input, select{ width:100% !important; margin:6px 0 12px 0; }
-  table{ display:block; overflow-x:auto; }
+  body{ margin:10px; font-size:14px; }
+  form{ width:100%; padding:10px; }
+  .form-step{ padding:10px; }
+  input, select{ width:100% !important; margin:6px 0 12px 0; font-size:15px; }
+  label{ margin-top:10px; font-size:14px; }
+  small{ font-size:12px; }
+  .form-navigation{ display:flex; flex-direction:column; gap:10px; }
+  .form-navigation button{ width:100%; padding:12px; font-size:15px; }
+  table{ display:block; width:100%; overflow-x:auto; font-size:13px; }
+  th, td{ white-space:nowrap; padding:8px 10px; }
+  .progress-container{ flex-direction:column; align-items:flex-start; gap:8px; }
+  .progress-container::before{ display:none; }
+  .progress-step{ width:100%; text-align:left; padding:10px 15px; border-radius:10px; font-size:14px; }
+}
+
+/* Filter Section */
+#filterDiv {
+    background: #ffffff;
+    padding: 15px 20px;
+    border-radius: 10px;
+    max-width: 950px;
+    margin: 20px auto;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    justify-content: flex-start;
+}
+#filterDiv label {
+    font-size: 14px;
+    color: #1e40af;
+    font-weight: 500;
+    margin-right: 5px;
+}
+#filterDiv input,
+#filterDiv select {
+    padding: 6px 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 14px;
+    background: #f9fafb;
+    flex: 1 1 180px;
+    transition: 0.2s;
+}
+#filterDiv input:focus,
+#filterDiv select:focus {
+    border-color: #4a90e2;
+    box-shadow: 0 0 5px rgba(74,144,226,0.3);
+    background: #fff;
+}
+#filterDiv button {
+    background: #4a90e2;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 14px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: 0.2s;
+}
+#filterDiv button:hover {
+    background: #357abd;
+}
+#resultCount {
+    font-size: 14px;
+    font-weight: 500;
+    color: #2d3748;
+    margin-left: 10px;
+}
+.date-filter {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex: 1 1 280px;
+}
+.bottom-filters {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  margin-top: 10px;
+  width: 100%;
+}
+.bottom-filters select {
+  flex: 1 1 200px;
+}
+.buttons-group {
+  display: flex;
+  gap: 10px;
+}
+@media (max-width:768px){
+    #filterDiv{ flex-direction: column; align-items:flex-start; }
+    .date-filter{ flex-direction: column; align-items:flex-start; gap:5px; }
+    .bottom-filters{ flex-direction: column; align-items:flex-start; gap:8px; }
+    .buttons-group{ width: 100%; justify-content: flex-start; }
+    .bottom-filters select{ width:100%; }
+}
+
+
+  /* ✅ Dashboard Style */
+#dashboard {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 15px;
+  max-width: 950px;
+  margin: 25px auto;
+}
+#dashboard .card {
+  flex: 1 1 200px;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  padding: 20px;
+  text-align: center;
+  font-size: 15px;
+  font-weight: 500;
+  color: #1e3a8a;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+#dashboard .card span {
+  display: block;
+  font-size: 26px;
+  font-weight: 700;
+  color: #111827;
+  margin-top: 5px;
+}
+#dashboard .card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+}
+#dashboard .total { border-top: 4px solid #4a90e2; }
+#dashboard .active { border-top: 4px solid #10b981; }
+#dashboard .exit { border-top: 4px solid #f59e0b; }
+#dashboard .dead { border-top: 4px solid #ef4444; }
+
+@media (max-width:768px){
+  #dashboard { flex-direction: column; align-items: stretch; gap: 12px; }
+  #dashboard .card { font-size: 16px; padding: 16px; }
+  #dashboard .card span { font-size: 28px; }
 }
 </style>
 </head>
 <body>
 
-<!-- Dashboard -->
+<!-- ✅ Dashboard Section -->
 <div id="dashboard">
   <div class="card total">👥 สมาชิกทั้งหมด<br><span id="totalMembers">0</span></div>
   <div class="card active">✅ สถานะสมาชิก<br><span id="activeMembers">0</span></div>
@@ -67,6 +196,7 @@ button.delete:hover { background:#c53030; }
   <div class="card dead">⚰️ เสียชีวิต<br><span id="deadMembers">0</span></div>
 </div>
 
+  
 <h2>ฟอร์มบันทึกสมาชิก</h2>
 <div class="progress-container">
   <div class="progress-step active" data-step="1">① ข้อมูลพื้นฐาน</div>
@@ -77,23 +207,23 @@ button.delete:hover { background:#c53030; }
 <form id="memberForm">
   <div class="form-step active">
     <h3>Step 1: ข้อมูลพื้นฐาน</h3>
-    <input placeholder="เลขสมาชิก" name="member_id" required>
+    <input placeholder="เลขสมาชิก" name="member_id" required="">
     <small>📅 วันที่เข้าร่วมสมาชิก</small>
-    <input type="date" name="join_date" required>
-    <input placeholder="คำนำหน้า" name="title" required>
-    <input placeholder="ชื่อ" name="first_name" required>
-    <input placeholder="นามสกุล" name="last_name" required>
-    <input placeholder="เลขบัตรประชาชน (x-xxxx-xxxxx-xx-x)" name="id_card" maxlength="17">
+    <input type="date" name="join_date" required="">
+    <input placeholder="คำนำหน้า" name="title" required="">
+    <input placeholder="ชื่อ" name="first_name" required="">
+    <input placeholder="นามสกุล" name="last_name" required="">
+    <input placeholder="เลขบัตรประชาชน (x-xxxx-xxxxx-xx-x)" name="id_card" required="" maxlength="17">
     <small>📅 วันเกิด</small>
-    <input type="date" name="birthday" id="birthday">
-    <input placeholder="อายุ" name="age" id="age" readonly>
-    <select name="gender">
+    <input type="date" name="birthday" id="birthday" required="">
+    <input placeholder="อายุ" name="age" id="age" readonly="">
+    <select name="gender" required="">
       <option value="">--เลือกเพศ--</option>
       <option value="ชาย">ชาย</option>
       <option value="หญิง">หญิง</option>
       <option value="อื่นๆ">อื่นๆ</option>
     </select>
-    <select name="group">
+    <select name="group" required="">
       <option value="">--เลือกกลุ่ม--</option>
       <option value="1">กลุ่มที่ 1</option>
       <option value="2">กลุ่มที่ 2</option>
@@ -109,27 +239,27 @@ button.delete:hover { background:#c53030; }
 
   <div class="form-step">
     <h3>Step 2: ที่อยู่ / เบอร์โทรศัพท์</h3>
-    <input placeholder="บ้านเลขที่" name="house_no">
+    <input placeholder="บ้านเลขที่" name="house_no" required="">
     <input placeholder="หมู่" name="moo">
-    <input placeholder="ถนน" name="street">
+    <input placeholder="ถนน" name="street" required="">
     <input placeholder="หมู่บ้าน" name="village">
-    <input placeholder="ตำบล" name="subdistrict">
-    <input placeholder="อำเภอ" name="district">
-    <input placeholder="จังหวัด" name="province">
-    <input placeholder="เลขไปรษณีย์" name="postal_code">
+    <input placeholder="ตำบล" name="subdistrict" required="">
+    <input placeholder="อำเภอ" name="district" required="">
+    <input placeholder="จังหวัด" name="province" required="">
+    <input placeholder="เลขไปรษณีย์" name="postal_code" required="">
     <input placeholder="เบอร์โทรศัพท์" name="phone">
     <input placeholder="เบอร์โทรศัพท์สำรอง" name="phone_alt">
   </div>
 
   <div class="form-step">
     <h3>Step 3: ข้อมูลเพิ่มเติม / สถานะ</h3>
-    <select name="member_status">
+    <select name="member_status" required="">
       <option value="">--สถานะสมาชิก--</option>
       <option value="สมาชิก">สมาชิก</option>
       <option value="ลาออก">ลาออก</option>
       <option value="เสียชีวิต">เสียชีวิต</option>
     </select>
-    <select name="marital_status">
+    <select name="marital_status" required="">
       <option value="">--สถานะสมรส--</option>
       <option value="โสด">โสด</option>
       <option value="สมรส">สมรส</option>
@@ -144,8 +274,8 @@ button.delete:hover { background:#c53030; }
   </div>
 
   <div class="form-navigation">
-    <button type="button" id="prevBtn" style="display:none;">ก่อนหน้า</button>
-    <button type="button" id="nextBtn">ถัดไป</button>
+    <button type="button" id="prevBtn" style="display: none;">ก่อนหน้า</button>
+    <button type="button" id="nextBtn" style="display: inline-block;">ถัดไป</button>
     <button type="submit" id="submitBtn" style="display:none;">💾 บันทึก</button>
   </div>
 </form>
@@ -156,26 +286,26 @@ button.delete:hover { background:#c53030; }
   <input id="searchName" placeholder="ชื่อ / นามสกุล">
   <input id="searchGroup" placeholder="กลุ่ม">
   <input id="searchProvince" placeholder="จังหวัด">
-  <div class="date-filter" style="display:flex;gap:6px;align-items:center;">
+  <div class="date-filter">
     <label>จากวันที่</label>
     <input type="date" id="searchJoinDateStart">
     <label>ถึงวันที่</label>
     <input type="date" id="searchJoinDateEnd">
   </div>
-  <div class="bottom-filters" style="display:flex;gap:10px;align-items:center;">
-    <select id="searchStatus">
-      <option value="">--สถานะสมาชิก--</option>
-      <option value="สมาชิก">สมาชิก</option>
-      <option value="ลาออก">ลาออก</option>
-      <option value="เสียชีวิต">เสียชีวิต</option>
-    </select>
-    <select id="searchGender">
-      <option value="">--เพศ--</option>
-      <option value="ชาย">ชาย</option>
-      <option value="หญิง">หญิง</option>
-      <option value="อื่นๆ">อื่นๆ</option>
-    </select>
-    <div class="buttons-group" style="display:flex;gap:8px;">
+  <div class="bottom-filters">
+  <select id="searchStatus">
+    <option value="">--สถานะสมาชิก--</option>
+    <option value="สมาชิก">สมาชิก</option>
+    <option value="ลาออก">ลาออก</option>
+    <option value="เสียชีวิต">เสียชีวิต</option>
+  </select>
+  <select id="searchGender">
+    <option value="">--เพศ--</option>
+    <option value="ชาย">ชาย</option>
+    <option value="หญิง">หญิง</option>
+    <option value="อื่นๆ">อื่นๆ</option>
+  </select>
+    <div class="buttons-group">
       <button id="printReport">🖨️ ปริ้นรายงานสมาชิก</button>
       <button id="clearFilter">🧹 ล้างตัวกรอง</button>
     </div>
@@ -197,7 +327,9 @@ button.delete:hover { background:#c53030; }
       <th>ลบ</th>
     </tr>
   </thead>
-  <tbody></tbody>
+  <tbody>
+    <!-- จะถูกเติมด้วย JS -->
+  </tbody>
 </table>
 
 <div class="pagination">
@@ -206,38 +338,20 @@ button.delete:hover { background:#c53030; }
   <button id="nextPage">ถัดไป</button>
 </div>
 
-<!-- Modal รหัสผ่าน -->
-<div id="passwordModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); justify-content:center; align-items:center; z-index:9999;">
-  <div style="background:white; padding:25px 30px; border-radius:12px; text-align:center; max-width:320px;">
-    <h3 style="margin-top:0; color:#1e3a8a;">🔒 กรุณาใส่รหัสผ่าน</h3>
-    <input type="password" id="adminPasswordInput" placeholder="รหัสผ่านผู้ดูแล" style="padding:8px 10px; width:90%; margin:10px auto; border:1px solid #ccc; border-radius:6px;">
-    <div style="margin-top:15px; display:flex; justify-content:center; gap:10px;">
-      <button id="confirmPasswordBtn" style="background:#4a90e2; color:white; border:none; padding:6px 14px; border-radius:6px; cursor:pointer;">ยืนยัน</button>
-      <button id="cancelPasswordBtn" style="background:#ccc; color:#333; border:none; padding:6px 14px; border-radius:6px; cursor:pointer;">ยกเลิก</button>
-    </div>
-  </div>
-</div>
-
-<!-- ปุ่มล็อกออก -->
-<div style="position:fixed; top:15px; right:20px; z-index:10000;">
-  <button id="logoutBtn" style="background:#ef4444; color:#fff; border:none; border-radius:8px; padding:6px 12px; cursor:pointer;">🔓 ออกจากโหมดผู้ดูแล</button>
-</div>
-
 <script>
 /* ====== CONFIG ====== */
-const API_URL = 'https://ttottijljxoinptmhgtu.supabase.co/functions/v1/members'; // ของคุณ
-const CHUNK_SIZE = 1000; // จำนวนแถวต่อรอบ (backend ต้องรองรับ ?range_start=)
-const rowsPerPage = 10;
+const API_URL = 'https://ttottijljxoinptmhgtu.supabase.co/functions/v1/members';
+const CHUNK_SIZE = 1000; // จำนวนแถวต่อรอบที่ดึงจาก backend
 
-/* ====== STATE & ELEMENTS ====== */
+/* ====== ELEMENTS + STATE ====== */
 const form = document.getElementById('memberForm');
 const tableBody = document.querySelector('#memberTable tbody');
-let allMembers = [];
 let editId = null;
+let allMembers = [];
 let sortColumn = null, sortAsc = true;
-let currentPage = 1;
+let currentPage = 1, rowsPerPage = 10;
 
-/* Multi-step */
+/* Progress / multi-step (ถ้ามี) */
 const formSteps = document.querySelectorAll('.form-step');
 const progressSteps = document.querySelectorAll('.progress-step');
 let formStepIndex = 0;
@@ -264,131 +378,80 @@ function validateStep(n){
   return true;
 }
 
-/* ====== Utility: animate count ====== */
-function animateCount(elem, start, end, duration = 700) {
+/* ====== Utility: Count-up animation ====== */
+function animateCount(elem, start, end, duration = 800) {
   start = Number(start) || 0;
   end = Number(end) || 0;
   const diff = end - start;
-  if (diff === 0) { elem.textContent = String(end); return; }
-  const t0 = performance.now();
-  function frame(t) {
-    const p = Math.min(1, (t - t0) / duration);
-    const eased = p < 0.5 ? 2*p*p : -1 + (4 - 2*p)*p;
-    const cur = Math.round(start + diff * eased);
-    elem.textContent = cur.toLocaleString();
-    if (p < 1) requestAnimationFrame(frame);
+  if (diff === 0) {
+    elem.textContent = String(end);
+    return;
+  }
+  const startTime = performance.now();
+  function frame(now) {
+    const t = Math.min(1, (now - startTime) / duration);
+    const eased = t < 0.5 ? 2*t*t : -1 + (4 - 2*t)*t; // simple ease
+    const current = Math.round(start + diff * eased);
+    elem.textContent = current.toLocaleString();
+    if (t < 1) requestAnimationFrame(frame);
     else elem.textContent = end.toLocaleString();
   }
   requestAnimationFrame(frame);
 }
 
-/* ====== Dashboard update ====== */
+/* ====== Update Dashboard (call AFTER allMembers ถูกโหลดครบ) ====== */
 function updateDashboard() {
   const total = allMembers.length;
-  const active = allMembers.filter(m => (m.member_status||'') === 'สมาชิก').length;
-  const exit = allMembers.filter(m => (m.member_status||'') === 'ลาออก').length;
-  const dead = allMembers.filter(m => (m.member_status||'') === 'เสียชีวิต').length;
+  const active = allMembers.filter(m => (m.member_status || '') === 'สมาชิก').length;
+  const exit = allMembers.filter(m => (m.member_status || '') === 'ลาออก').length;
+  const dead = allMembers.filter(m => (m.member_status || '') === 'เสียชีวิต').length;
 
-  animateCount(document.getElementById('totalMembers'), parseInt(document.getElementById('totalMembers').textContent.replace(/,/g,'')) || 0, total);
-  animateCount(document.getElementById('activeMembers'), parseInt(document.getElementById('activeMembers').textContent.replace(/,/g,'')) || 0, active);
-  animateCount(document.getElementById('exitMembers'), parseInt(document.getElementById('exitMembers').textContent.replace(/,/g,'')) || 0, exit);
-  animateCount(document.getElementById('deadMembers'), parseInt(document.getElementById('deadMembers').textContent.replace(/,/g,'')) || 0, dead);
+  // แสดงด้วย animation (เอาค่าปัจจุบันจาก DOM เป็น start)
+  const elTotal = document.getElementById('totalMembers');
+  const elActive = document.getElementById('activeMembers');
+  const elExit = document.getElementById('exitMembers');
+  const elDead = document.getElementById('deadMembers');
+
+  animateCount(elTotal, parseInt(elTotal.textContent?.replace(/,/g,'')) || 0, total);
+  animateCount(elActive, parseInt(elActive.textContent?.replace(/,/g,'')) || 0, active);
+  animateCount(elExit, parseInt(elExit.textContent?.replace(/,/g,'')) || 0, exit);
+  animateCount(elDead, parseInt(elDead.textContent?.replace(/,/g,'')) || 0, dead);
 }
 
-/* ====== Helper date normalization ====== */
-// Accept DB date like "2005/02/18" or ISO "2005-02-18T..." etc -> return YYYY-MM-DD
-function normalizeDateForInput(raw) {
-  if (!raw) return '';
-  if (typeof raw !== 'string') raw = String(raw);
-  // case: YYYY/MM/DD
-  if (/^\d{4}\/\d{2}\/\d{2}$/.test(raw)) return raw.replace(/\//g, '-');
-  // case: YYYY-MM-DD or ISO
-  if (/^\d{4}-\d{2}-\d{2}/.test(raw)) return raw.split('T')[0];
-  // try Date parse fallback
-  const d = new Date(raw);
-  if (!isNaN(d)) {
-    const mm = String(d.getMonth()+1).padStart(2,'0');
-    const dd = String(d.getDate()).padStart(2,'0');
-    return `${d.getFullYear()}-${mm}-${dd}`;
-  }
-  return '';
-}
-
-/* compute age from YYYY-MM-DD string */
-function computeAgeFromDate(yyyyMMdd) {
-  if (!yyyyMMdd) return null;
-  const d = new Date(yyyyMMdd);
-  if (isNaN(d)) return null;
-  const today = new Date();
-  let a = today.getFullYear() - d.getFullYear();
-  const md = today.getMonth() - d.getMonth();
-  if (md < 0 || (md === 0 && today.getDate() < d.getDate())) a--;
-  return a >= 0 ? a : null;
-}
-
-/* ====== Load members chunked ====== */
-async function loadMembers() {
-  try {
-    allMembers = [];
+/* ====== Load members (chunked) ======
+  - Backend must support ?range_start=...
+  - This function repeatedly fetches until a chunk smaller than CHUNK_SIZE returned
+*/
+async function loadMembers(){
+  try{
+    allMembers = []; // reset
     let from = 0;
-    while (true) {
+    while(true){
       const res = await fetch(`${API_URL}?range_start=${from}`);
-      if (!res.ok) throw new Error('HTTP error ' + res.status);
       const result = await res.json();
-      // result might be array or { success, data }
-      const data = Array.isArray(result) ? result : (result.data || []);
+      // backend may return { success:true, data: [...] } or just [...]
+      const data = (result && (result.data || result)) || [];
       if (!Array.isArray(data)) break;
       if (data.length === 0) break;
       allMembers = allMembers.concat(data);
+      // stop condition
       if (data.length < CHUNK_SIZE) break;
       from += CHUNK_SIZE;
     }
 
-    // Normalize some fields (dates) and compute age if empty or stale
-    const updates = [];
-    for (let m of allMembers) {
-      // normalize join_date and birthday for JS usage
-      if (m.join_date) m.join_date_norm = normalizeDateForInput(m.join_date);
-      if (m.birthday) m.birthday_norm = normalizeDateForInput(m.birthday);
-      // compute age and if differs from stored, prepare update
-      const computedAge = computeAgeFromDate(m.birthday_norm);
-      const storedAge = (m.age === null || m.age === undefined) ? null : Number(m.age);
-      if (computedAge !== null && computedAge !== storedAge) {
-        // update DB for this member (deferred: batch updates or individual one-by-one)
-        updates.push({ member_id: m.member_id, age: computedAge });
-        // update local copy to reflect new age immediately
-        m.age = computedAge;
-      }
-    }
-
-    // if there are updates, send them to backend in sequence (one by one to keep simple)
-    if (updates.length > 0) {
-      console.log(`Updating ages for ${updates.length} members...`);
-      for (let u of updates) {
-        try {
-          await fetch(`${API_URL}?member_id=${encodeURIComponent(u.member_id)}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ age: u.age })
-          });
-        } catch (e) {
-          console.warn('Failed updating age for', u.member_id, e);
-        }
-      }
-      // optionally reload to reflect server data consistency - but we'll keep local changes
-    }
-
+    // หลังโหลดครบทั้งหมด -> อัปเดต Dashboard + render
     updateDashboard();
     renderTable();
-    console.log('Loaded members:', allMembers.length);
-  } catch (err) {
-    console.error('loadMembers error', err);
-    alert('เกิดข้อผิดพลาดขณะโหลดข้อมูล: ' + err);
+
+    console.log('✅ Loaded members:', allMembers.length);
+  } catch(err){
+    console.error('Error loadMembers:', err);
+    alert('เกิดข้อผิดพลาดขณะโหลดข้อมูล: '+err);
   }
 }
 
-/* ====== Render table (filter/sort/pagination) ====== */
-function renderTable() {
+/* ====== Render table (use allMembers) ====== */
+function renderTable(){
   let rows = allMembers.slice();
 
   // filters
@@ -401,277 +464,168 @@ function renderTable() {
   const status = document.getElementById('searchStatus').value;
   const gender = document.getElementById('searchGender').value;
 
-  rows = rows.filter(m => {
-    if (memberId && !((m.member_id||'')+'').includes(memberId)) return false;
-    if (name && !((((m.first_name||'')+' '+(m.last_name||''))).toLowerCase().includes(name))) return false;
-    if (group && ((m.group||'')+'') !== group) return false;
-    if (province && !((m.province||'').toLowerCase().includes(province))) return false;
-    if (status && (m.member_status||'') !== status) return false;
-    if (gender && (m.gender||'') !== gender) return false;
-    if (startDate && m.join_date && new Date(normalizeDateForInput(m.join_date)) < startDate) return false;
-    if (endDate && m.join_date && new Date(normalizeDateForInput(m.join_date)) > endDate) return false;
+  rows = rows.filter(m=>{
+    if(memberId && !((m.member_id||'')+'').includes(memberId)) return false;
+    if(name && !(((m.first_name||'') + (m.last_name||'')).toLowerCase().includes(name))) return false;
+    if(group && (m.group||'')+'' !== group) return false;
+    if(province && !((m.province||'').toLowerCase().includes(province))) return false;
+    if(status && (m.member_status||'') !== status) return false;
+    if(gender && (m.gender||'') !== gender) return false;
+    if(startDate && m.join_date && new Date((m.join_date+'').replace(/\//g,'-')) < startDate) return false;
+    if(endDate && m.join_date && new Date((m.join_date+'').replace(/\//g,'-')) > endDate) return false;
     return true;
   });
 
-  // sorting (by column) - if column is member_id, sort numerically
-  if (sortColumn) {
-    rows.sort((a,b) => {
-      const va = a[sortColumn] ?? '';
-      const vb = b[sortColumn] ?? '';
-      if (sortColumn === 'member_id') {
-        const na = parseInt(va) || 0;
-        const nb = parseInt(vb) || 0;
-        return sortAsc ? na - nb : nb - na;
-      } else {
-        const aa = (va+'').toString().toLowerCase();
-        const bb = (vb+'').toString().toLowerCase();
-        if (aa === bb) return 0;
-        return sortAsc ? (aa > bb ? 1 : -1) : (aa < bb ? 1 : -1);
-      }
+  // sorting
+  if(sortColumn){
+    rows.sort((a,b)=>{
+      const aa = (a[sortColumn] || '').toString().toLowerCase();
+      const bb = (b[sortColumn] || '').toString().toLowerCase();
+      if(aa===bb) return 0;
+      return sortAsc ? (aa>bb?1:-1) : (aa<bb?1:-1);
     });
   }
 
   // pagination
-  const start = (currentPage - 1) * rowsPerPage;
+  const start = (currentPage-1) * rowsPerPage;
   const pageRows = rows.slice(start, start + rowsPerPage);
 
-  // render
   tableBody.innerHTML = '';
-  for (let m of pageRows) {
+  pageRows.forEach(m=>{
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td>${m.member_id ?? ''}</td>
-      <td>${m.first_name ?? ''}</td>
-      <td>${m.last_name ?? ''}</td>
-      <td>${m.group ?? ''}</td>
-      <td>${m.province ?? ''}</td>
-      <td>${m.member_status ?? ''}</td>
+      <td>${m.member_id || ''}</td>
+      <td>${m.first_name || ''}</td>
+      <td>${m.last_name || ''}</td>
+      <td>${m.group || ''}</td>
+      <td>${m.province || ''}</td>
+      <td>${m.member_status || ''}</td>
       <td><button class="edit" onclick="editMember('${m.member_id}')">แก้ไข</button></td>
       <td><button class="delete" onclick="deleteMember('${m.member_id}')">ลบ</button></td>
     `;
     tableBody.appendChild(tr);
-  }
+  });
 
   document.getElementById('pageInfo').textContent = `หน้า ${currentPage}`;
   document.getElementById('resultCount').textContent = `จำนวนทั้งหมด: ${rows.length} รายการ`;
 }
 
-/* ====== Sorting / Pagination wiring ====== */
-document.querySelectorAll('#memberTable th[data-column]').forEach(th => {
-  th.addEventListener('click', () => {
-    const col = th.getAttribute('data-column');
-    if (sortColumn === col) sortAsc = !sortAsc;
-    else { sortColumn = col; sortAsc = true; }
-    renderTable();
-  });
-});
-document.getElementById('prevPage').addEventListener('click', ()=>{ if (currentPage>1) { currentPage--; renderTable(); }});
-document.getElementById('nextPage').addEventListener('click', ()=>{ currentPage++; renderTable(); });
-
-['searchMemberId','searchName','searchGroup','searchProvince','searchStatus','searchGender','searchJoinDateStart','searchJoinDateEnd']
-.forEach(id => {
-  const el = document.getElementById(id);
-  if (el) el.addEventListener('input', ()=>{ currentPage = 1; renderTable(); });
-});
-
-/* ====== Edit/Delete handlers ====== */
-/* Password-protect edit: modal logic below */
-let pendingEditId = null;
-let verified = false;
-
-const passwordModal = document.getElementById("passwordModal");
-const passwordInput = document.getElementById("adminPasswordInput");
-const confirmBtn = document.getElementById("confirmPasswordBtn");
-const cancelBtn = document.getElementById("cancelPasswordBtn");
-const logoutBtn = document.getElementById("logoutBtn");
-
-// confirmBtn/cancelBtn should exist
-confirmBtn.addEventListener('click', () => {
-  const ADMIN_PASSWORD = "1234"; // เปลี่ยนได้ตรงนี้
-  const pw = passwordInput.value.trim();
-  if (!pw) { alert('กรุณาใส่รหัสผ่าน'); return; }
-  if (pw !== ADMIN_PASSWORD) { alert('รหัสผ่านไม่ถูกต้อง'); passwordInput.value=''; passwordInput.focus(); return; }
-  verified = true;
-  closePasswordModal();
-  if (pendingEditId) doEditMember(pendingEditId);
-});
-cancelBtn.addEventListener('click', closePasswordModal);
-passwordModal.addEventListener('click', e => { if (e.target === passwordModal) closePasswordModal(); });
-
-logoutBtn.addEventListener('click', () => {
-  if (!verified) { alert('คุณยังไม่ได้เข้าสู่โหมดผู้ดูแล'); return; }
-  if (confirm('ออกจากโหมดผู้ดูแลใช่หรือไม่?')) { verified = false; alert('ออกจากโหมดผู้ดูแลแล้ว'); }
-});
-
-function openPasswordModal(memberId) {
-  pendingEditId = memberId;
-  passwordInput.value = '';
-  passwordModal.style.display = 'flex';
-  passwordInput.focus();
-}
-function closePasswordModal() {
-  passwordModal.style.display = 'none';
-  pendingEditId = null;
-}
-
-// export editMember to global scope for buttons
+/* ====== Edit member (fill form) ====== */
 window.editMember = (id) => {
-  if (!verified) { openPasswordModal(id); return; }
-  doEditMember(id);
-};
-
-function doEditMember(id) {
   const m = allMembers.find(x => (x.member_id+'') === (id+''));
-  if (!m) return alert('ไม่พบสมาชิก');
+  if(!m) return;
   editId = id;
-  // fill form fields
-  for (let k in m) {
-    if (!form.elements[k]) continue;
+
+  for(let k in m){
+    if(!form.elements[k]) continue;
     let val = m[k];
-    if (typeof val === 'string' && /^\d{4}\/\d{2}\/\d{2}$/.test(val)) val = val.replace(/\//g,'-');
-    if (typeof val === 'string' && val.includes('T')) val = val.split('T')[0];
+
+    // normalize date formats
+    if(typeof val === 'string' && /^\d{4}\/\d{2}\/\d{2}$/.test(val)) val = val.replaceAll('/','-');
+    if(typeof val === 'string' && val.includes('T')) val = val.split('T')[0];
+
     form.elements[k].value = val ?? '';
   }
-  // compute age and fill
-  const bdInput = form.elements['birthday'];
-  const ageInput = form.elements['age'];
-  if (bdInput && bdInput.value) {
-    ageInput.value = computeAgeFromDate(bdInput.value) ?? '';
-  } else if (ageInput) ageInput.value = '';
-  formStepIndex = 0; showStep(0);
-}
 
+  // calculate age from birthday and fill age input
+  const birthdayInput = form.elements['birthday'];
+  const ageInput = form.elements['age'];
+  if(birthdayInput && birthdayInput.value){
+    const bd = new Date(birthdayInput.value);
+    const today = new Date();
+    let a = today.getFullYear() - bd.getFullYear();
+    const md = today.getMonth() - bd.getMonth();
+    if(md < 0 || (md === 0 && today.getDate() < bd.getDate())) a--;
+    ageInput.value = a >= 0 ? a : '';
+  } else {
+    if(ageInput) ageInput.value = '';
+  }
+
+  formStepIndex = 0; showStep(0);
+};
+
+/* ====== Delete member ====== */
 window.deleteMember = async (id) => {
-  if (!confirm('ลบสมาชิกนี้?')) return;
-  try {
-    const res = await fetch(`${API_URL}?member_id=${encodeURIComponent(id)}`, { method:'DELETE' });
-    const json = await res.json();
-    if (json.error) { alert(json.error); return; }
+  if(!confirm('ลบสมาชิกนี้?')) return;
+  try{
+    const res = await fetch(`${API_URL}?member_id=${encodeURIComponent(id)}`, { method: 'DELETE' });
+    const result = await res.json();
+    if(result.error) { alert(result.error); return; }
+    // remove locally and rerender
     allMembers = allMembers.filter(m => (m.member_id+'') !== (id+''));
     updateDashboard();
     renderTable();
-  } catch (e) {
-    console.error('delete error', e);
-    alert('เกิดข้อผิดพลาดขณะลบ: '+e);
-  }
+  } catch(err){ alert(err); }
 };
 
-/* ====== Form submit (create/update) ====== */
+/* ====== Form submit (insert/update) ====== */
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
   const data = Object.fromEntries(new FormData(form));
 
-  // normalize dates
-  if (data.join_date) data.join_date = data.join_date.replace(/\//g,'-');
-  if (data.birthday) data.birthday = data.birthday.replace(/\//g,'-');
-  // compute age
-  if (data.birthday) data.age = computeAgeFromDate(data.birthday);
-  else data.age = null;
-  // sanitize id_card
-  if (data.id_card) data.id_card = data.id_card.replace(/\D/g,'');
+  // normalize dates (YYYY/MM/DD -> YYYY-MM-DD)
+  if (data.join_date) data.join_date = data.join_date.replaceAll('/', '-');
+  if (data.birthday) data.birthday = data.birthday.replaceAll('/', '-');
 
-  try {
+  // calculate age from birthday
+  if (data.birthday) {
+    const bd = new Date(data.birthday);
+    const today = new Date();
+    let a = today.getFullYear() - bd.getFullYear();
+    const md = today.getMonth() - bd.getMonth();
+    if(md < 0 || (md === 0 && today.getDate() < bd.getDate())) a--;
+    data.age = a >= 0 ? a : null;
+  } else {
+    data.age = null;
+  }
+
+  // sanitize id_card
+  if(data.id_card) data.id_card = data.id_card.replace(/\D/g,'');
+
+  if(editId) data.member_id = editId;
+
+  try{
     const method = editId ? 'PUT' : 'POST';
     const url = editId ? `${API_URL}?member_id=${encodeURIComponent(editId)}` : API_URL;
-    const res = await fetch(url, { method, headers:{'Content-Type':'application/json'}, body:JSON.stringify(data) });
+    const res = await fetch(url, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
     const result = await res.json();
-    if (result.error) { alert(result.error); return; }
-    alert('บันทึกสำเร็จ');
+    if(result.error) { alert(result.error); return; }
+    alert('✅ บันทึกสำเร็จ');
     form.reset();
     editId = null;
+    formStepIndex = 0; showStep(0);
     await loadMembers();
-  } catch (err) {
-    console.error('save error', err);
-    alert('เกิดข้อผิดพลาดขณะบันทึก: '+err);
+  } catch(err){
+    console.error('Save error', err);
+    alert('เกิดข้อผิดพลาดขณะบันทึก: ' + err);
   }
 });
 
-/* ====== Print Report (sorted by numeric member_id) ====== */
-document.getElementById('printReport').addEventListener('click', () => {
-  // gather current filters
-  const groupFilter = document.getElementById('searchGroup').value.toLowerCase();
-  const statusFilter = document.getElementById('searchStatus').value;
-  const genderFilter = document.getElementById('searchGender').value;
-  const joinDateStart = document.getElementById('searchJoinDateStart').value;
-  const joinDateEnd = document.getElementById('searchJoinDateEnd').value;
-
-  let filtered = allMembers.filter(m => {
-    const joinDate = m.join_date ? (normalizeDateForInput(m.join_date)) : '';
-    return (!groupFilter || (m.group && (''+m.group).toLowerCase() === groupFilter))
-      && (!statusFilter || m.member_status === statusFilter)
-      && (!genderFilter || m.gender === genderFilter)
-      && (!joinDateStart || joinDate >= joinDateStart)
-      && (!joinDateEnd || joinDate <= joinDateEnd);
+/* ====== Sorting / Pagination / Filters wiring ====== */
+document.querySelectorAll('#memberTable th[data-column]').forEach(th => {
+  th.addEventListener('click', () => {
+    const col = th.getAttribute('data-column');
+    if(sortColumn === col) sortAsc = !sortAsc;
+    else { sortColumn = col; sortAsc = true; }
+    renderTable();
   });
-
-  // sort numerically by member_id
-  filtered.sort((a,b) => {
-    const idA = parseInt(a.member_id) || 0;
-    const idB = parseInt(b.member_id) || 0;
-    return idA - idB;
-  });
-
-  // build printable HTML
-  let printContent = `
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-      <div style="flex:0 0 auto;"></div>
-      <div style="text-align:center;">
-        <h2 style="margin:0">รายงานสมาชิก</h2>
-        <div style="font-size:13px;">สถานะ: ${statusFilter||'ทั้งหมด'} | เพศ: ${genderFilter||'ทั้งหมด'}</div>
-      </div>
-      <div style="flex:0 0 100px;"></div>
-    </div>
-    <table style="width:100%;border-collapse:collapse;font-family:inherit;">
-      <thead>
-        <tr style="background:#4a90e2;color:#fff;">
-          <th>เลขสมาชิก</th>
-          <th>ชื่อ-นามสกุล</th>
-          <th>ที่อยู่</th>
-          <th>เบอร์โทร</th>
-        </tr>
-      </thead>
-      <tbody>
-  `;
-  filtered.forEach(m => {
-    const fullName = `${m.title||''} ${m.first_name||''} ${m.last_name||''}`.trim();
-    const addr = `${m.house_no||''} ${m.moo||''} ${m.street||''} ${m.village||''} ${m.subdistrict||''} ${m.district||''} ${m.province||''} ${m.postal_code||''}`.replace(/\s+/g,' ').trim();
-    printContent += `
-      <tr>
-        <td>${m.member_id||''}</td>
-        <td>${fullName}</td>
-        <td>${addr}</td>
-        <td>${m.phone||''}</td>
-      </tr>
-    `;
-  });
-  printContent += '</tbody></table>';
-  const w = window.open('','', 'width=900,height=600');
-  w.document.write(`<html><head><title>รายงานสมาชิก</title></head><body style="font-family:Prompt, sans-serif;padding:20px;">${printContent}</body></html>`);
-  w.document.close();
-  w.print();
 });
-
-/* ====== Clear filters ====== */
-document.getElementById('clearFilter').addEventListener('click', () => {
-  ['searchMemberId','searchName','searchGroup','searchProvince','searchStatus','searchGender','searchJoinDateStart','searchJoinDateEnd']
-  .forEach(id => document.getElementById(id).value = '');
-  currentPage = 1; renderTable();
+document.getElementById('prevPage').addEventListener('click', ()=>{ if(currentPage>1){ currentPage--; renderTable(); }});
+document.getElementById('nextPage').addEventListener('click', ()=>{ currentPage++; renderTable(); });
+['searchMemberId','searchName','searchGroup','searchProvince','searchStatus','searchGender','searchJoinDateStart','searchJoinDateEnd']
+.forEach(id => {
+  const el = document.getElementById(id);
+  if(el) el.addEventListener('input', ()=>{ currentPage = 1; renderTable(); });
 });
-
-/* ====== Birthday change => update age field in form ====== */
-const birthdayInput = document.getElementById('birthday');
-if (birthdayInput) {
-  birthdayInput.addEventListener('change', () => {
-    const val = birthdayInput.value;
-    const ai = document.getElementById('age');
-    const age = computeAgeFromDate(val);
-    ai.value = age === null ? '' : age;
-  });
-}
 
 /* ====== Initial load ====== */
 loadMembers();
 </script>
+
 
 </body>
 </html>
