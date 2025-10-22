@@ -611,6 +611,14 @@ let printContent = `
       <th>เบอร์โทร</th>
     </tr>`;
 
+  // ✅ เรียงข้อมูลจากเลขสมาชิกน้อยไปมาก
+filtered.sort((a, b) => {
+  // แปลงเป็นตัวเลข ถ้า member_id เป็น string
+  const idA = parseInt(a.member_id) || 0;
+  const idB = parseInt(b.member_id) || 0;
+  return idA - idB;
+});
+  
 filtered.forEach(m => {
   const fullName = `${m.title || ''} ${m.first_name || ''} ${m.last_name || ''}`.trim();
   const fullAddress = `${m.house_no || ''} ${m.moo || ''} ${m.street || ''} ${m.village || ''} ${m.subdistrict || ''} ${m.district || ''} ${m.province || ''} ${m.postal_code || ''}`
