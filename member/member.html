@@ -338,389 +338,13 @@ button.delete:hover { background:#c53030; }
   <button id="nextPage">ถัดไป</button>
 </div>
 
+...
 <script>
-/* ====== CONFIG ====== */
-const API_URL = 'https://ttottijljxoinptmhgtu.supabase.co/functions/v1/members';
-const CHUNK_SIZE = 1000; // จำนวนแถวต่อรอบที่ดึงจาก backend
+/* ====== ฟังก์ชันหลักทั้งหมดของระบบ ====== */
+// loadMembers(), renderTable(), form submit, filter, pagination ฯลฯ
+// (เหมือนของคุณเดิมได้เลย)
 
-/* ====== ELEMENTS + STATE ====== */
-const form = document.getElementById('memberForm');
-const tableBody = document.querySelector('#memberTable tbody');
-let editId = null;
-let allMembers = [];
-let sortColumn = null, sortAsc = true;
-let currentPage = 1, rowsPerPage = 10;
-
-/* Progress / multi-step (ถ้ามี) */
-const formSteps = document.querySelectorAll('.form-step');
-const progressSteps = document.querySelectorAll('.progress-step');
-let formStepIndex = 0;
-showStep(formStepIndex);
-document.getElementById('nextBtn').addEventListener('click', ()=>{ if(!validateStep(formStepIndex)) return; formStepIndex++; showStep(formStepIndex); });
-document.getElementById('prevBtn').addEventListener('click', ()=>{ formStepIndex--; showStep(formStepIndex); });
-
-function showStep(n){
-  formSteps.forEach((s,i)=>s.classList.toggle('active', i===n));
-  progressSteps.forEach((p,i)=>p.classList.toggle('active', i<=n));
-  document.getElementById('prevBtn').style.display = n===0 ? 'none' : 'inline-block';
-  document.getElementById('nextBtn').style.display = n===formSteps.length-1 ? 'none' : 'inline-block';
-  document.getElementById('submitBtn').style.display = n===formSteps.length-1 ? 'inline-block' : 'none';
-}
-function validateStep(n){
-  const inputs = formSteps[n].querySelectorAll('input,select');
-  for(let i of inputs){
-    if(i.hasAttribute('required') && !i.value){
-      alert('กรุณากรอกข้อมูล: ' + (i.placeholder || i.name));
-      i.focus();
-      return false;
-    }
-  }
-  return true;
-}
-
-/* ====== Utility: Count-up animation ====== */
-function animateCount(elem, start, end, duration = 800) {
-  start = Number(start) || 0;
-  end = Number(end) || 0;
-  const diff = end - start;
-  if (diff === 0) {
-    elem.textContent = String(end);
-    return;
-  }
-  const startTime = performance.now();
-  function frame(now) {
-    const t = Math.min(1, (now - startTime) / duration);
-    const eased = t < 0.5 ? 2*t*t : -1 + (4 - 2*t)*t; // simple ease
-    const current = Math.round(start + diff * eased);
-    elem.textContent = current.toLocaleString();
-    if (t < 1) requestAnimationFrame(frame);
-    else elem.textContent = end.toLocaleString();
-  }
-  requestAnimationFrame(frame);
-}
-
-/* ====== Update Dashboard (call AFTER allMembers ถูกโหลดครบ) ====== */
-function updateDashboard() {
-  const total = allMembers.length;
-  const active = allMembers.filter(m => (m.member_status || '') === 'สมาชิก').length;
-  const exit = allMembers.filter(m => (m.member_status || '') === 'ลาออก').length;
-  const dead = allMembers.filter(m => (m.member_status || '') === 'เสียชีวิต').length;
-
-  // แสดงด้วย animation (เอาค่าปัจจุบันจาก DOM เป็น start)
-  const elTotal = document.getElementById('totalMembers');
-  const elActive = document.getElementById('activeMembers');
-  const elExit = document.getElementById('exitMembers');
-  const elDead = document.getElementById('deadMembers');
-
-  animateCount(elTotal, parseInt(elTotal.textContent?.replace(/,/g,'')) || 0, total);
-  animateCount(elActive, parseInt(elActive.textContent?.replace(/,/g,'')) || 0, active);
-  animateCount(elExit, parseInt(elExit.textContent?.replace(/,/g,'')) || 0, exit);
-  animateCount(elDead, parseInt(elDead.textContent?.replace(/,/g,'')) || 0, dead);
-}
-
-/* ====== Load members (chunked) ======
-  - Backend must support ?range_start=...
-  - This function repeatedly fetches until a chunk smaller than CHUNK_SIZE returned
-*/
-async function loadMembers(){
-  try{
-    allMembers = []; // reset
-    let from = 0;
-    while(true){
-      const res = await fetch(`${API_URL}?range_start=${from}`);
-      const result = await res.json();
-      // backend may return { success:true, data: [...] } or just [...]
-      const data = (result && (result.data || result)) || [];
-      if (!Array.isArray(data)) break;
-      if (data.length === 0) break;
-      allMembers = allMembers.concat(data);
-      // stop condition
-      if (data.length < CHUNK_SIZE) break;
-      from += CHUNK_SIZE;
-    }
-
-    // หลังโหลดครบทั้งหมด -> อัปเดต Dashboard + render
-    updateDashboard();
-    renderTable();
-
-    console.log('✅ Loaded members:', allMembers.length);
-  } catch(err){
-    console.error('Error loadMembers:', err);
-    alert('เกิดข้อผิดพลาดขณะโหลดข้อมูล: '+err);
-  }
-}
-
-/* ====== Render table (use allMembers) ====== */
-function renderTable(){
-  let rows = allMembers.slice();
-
-  // filters
-  const startDate = document.getElementById('searchJoinDateStart').value ? new Date(document.getElementById('searchJoinDateStart').value) : null;
-  const endDate = document.getElementById('searchJoinDateEnd').value ? new Date(document.getElementById('searchJoinDateEnd').value) : null;
-  const memberId = document.getElementById('searchMemberId').value.trim();
-  const name = document.getElementById('searchName').value.trim().toLowerCase();
-  const group = document.getElementById('searchGroup').value.trim();
-  const province = document.getElementById('searchProvince').value.trim().toLowerCase();
-  const status = document.getElementById('searchStatus').value;
-  const gender = document.getElementById('searchGender').value;
-
-  rows = rows.filter(m=>{
-    if(memberId && !((m.member_id||'')+'').includes(memberId)) return false;
-    if(name && !(((m.first_name||'') + (m.last_name||'')).toLowerCase().includes(name))) return false;
-    if(group && (m.group||'')+'' !== group) return false;
-    if(province && !((m.province||'').toLowerCase().includes(province))) return false;
-    if(status && (m.member_status||'') !== status) return false;
-    if(gender && (m.gender||'') !== gender) return false;
-    if(startDate && m.join_date && new Date((m.join_date+'').replace(/\//g,'-')) < startDate) return false;
-    if(endDate && m.join_date && new Date((m.join_date+'').replace(/\//g,'-')) > endDate) return false;
-    return true;
-  });
-
-  // sorting
-  if(sortColumn){
-    rows.sort((a,b)=>{
-      const aa = (a[sortColumn] || '').toString().toLowerCase();
-      const bb = (b[sortColumn] || '').toString().toLowerCase();
-      if(aa===bb) return 0;
-      return sortAsc ? (aa>bb?1:-1) : (aa<bb?1:-1);
-    });
-  }
-
-  // pagination
-  const start = (currentPage-1) * rowsPerPage;
-  const pageRows = rows.slice(start, start + rowsPerPage);
-
-  tableBody.innerHTML = '';
-  pageRows.forEach(m=>{
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${m.member_id || ''}</td>
-      <td>${m.first_name || ''}</td>
-      <td>${m.last_name || ''}</td>
-      <td>${m.group || ''}</td>
-      <td>${m.province || ''}</td>
-      <td>${m.member_status || ''}</td>
-      <td><button class="edit" onclick="editMember('${m.member_id}')">แก้ไข</button></td>
-      <td><button class="delete" onclick="deleteMember('${m.member_id}')">ลบ</button></td>
-    `;
-    tableBody.appendChild(tr);
-  });
-
-  document.getElementById('pageInfo').textContent = `หน้า ${currentPage}`;
-  document.getElementById('resultCount').textContent = `จำนวนทั้งหมด: ${rows.length} รายการ`;
-}
-
-/* ====== Edit member (fill form) ====== */
-window.editMember = (id) => {
-  const m = allMembers.find(x => (x.member_id+'') === (id+''));
-  if(!m) return;
-  editId = id;
-
-  for(let k in m){
-    if(!form.elements[k]) continue;
-    let val = m[k];
-
-    // normalize date formats
-    if(typeof val === 'string' && /^\d{4}\/\d{2}\/\d{2}$/.test(val)) val = val.replaceAll('/','-');
-    if(typeof val === 'string' && val.includes('T')) val = val.split('T')[0];
-
-    form.elements[k].value = val ?? '';
-  }
-
-  // calculate age from birthday and fill age input
-  const birthdayInput = form.elements['birthday'];
-  const ageInput = form.elements['age'];
-  if(birthdayInput && birthdayInput.value){
-    const bd = new Date(birthdayInput.value);
-    const today = new Date();
-    let a = today.getFullYear() - bd.getFullYear();
-    const md = today.getMonth() - bd.getMonth();
-    if(md < 0 || (md === 0 && today.getDate() < bd.getDate())) a--;
-    ageInput.value = a >= 0 ? a : '';
-  } else {
-    if(ageInput) ageInput.value = '';
-  }
-
-  formStepIndex = 0; showStep(0);
-};
-
-/* ====== Delete member ====== */
-window.deleteMember = async (id) => {
-  if(!confirm('ลบสมาชิกนี้?')) return;
-  try{
-    const res = await fetch(`${API_URL}?member_id=${encodeURIComponent(id)}`, { method: 'DELETE' });
-    const result = await res.json();
-    if(result.error) { alert(result.error); return; }
-    // remove locally and rerender
-    allMembers = allMembers.filter(m => (m.member_id+'') !== (id+''));
-    updateDashboard();
-    renderTable();
-  } catch(err){ alert(err); }
-};
-
-/* ====== Form submit (insert/update) ====== */
-form.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const data = Object.fromEntries(new FormData(form));
-
-  // normalize dates (YYYY/MM/DD -> YYYY-MM-DD)
-  if (data.join_date) data.join_date = data.join_date.replaceAll('/', '-');
-  if (data.birthday) data.birthday = data.birthday.replaceAll('/', '-');
-
-  // calculate age from birthday
-  if (data.birthday) {
-    const bd = new Date(data.birthday);
-    const today = new Date();
-    let a = today.getFullYear() - bd.getFullYear();
-    const md = today.getMonth() - bd.getMonth();
-    if(md < 0 || (md === 0 && today.getDate() < bd.getDate())) a--;
-    data.age = a >= 0 ? a : null;
-  } else {
-    data.age = null;
-  }
-
-  // sanitize id_card
-  if(data.id_card) data.id_card = data.id_card.replace(/\D/g,'');
-
-  if(editId) data.member_id = editId;
-
-  try{
-    const method = editId ? 'PUT' : 'POST';
-    const url = editId ? `${API_URL}?member_id=${encodeURIComponent(editId)}` : API_URL;
-    const res = await fetch(url, {
-      method,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
-    const result = await res.json();
-    if(result.error) { alert(result.error); return; }
-    alert('✅ บันทึกสำเร็จ');
-    form.reset();
-    editId = null;
-    formStepIndex = 0; showStep(0);
-    await loadMembers();
-  } catch(err){
-    console.error('Save error', err);
-    alert('เกิดข้อผิดพลาดขณะบันทึก: ' + err);
-  }
-});
-
-/* ====== Sorting / Pagination / Filters wiring ====== */
-document.querySelectorAll('#memberTable th[data-column]').forEach(th => {
-  th.addEventListener('click', () => {
-    const col = th.getAttribute('data-column');
-    if(sortColumn === col) sortAsc = !sortAsc;
-    else { sortColumn = col; sortAsc = true; }
-    renderTable();
-  });
-});
-document.getElementById('prevPage').addEventListener('click', ()=>{ if(currentPage>1){ currentPage--; renderTable(); }});
-document.getElementById('nextPage').addEventListener('click', ()=>{ currentPage++; renderTable(); });
-['searchMemberId','searchName','searchGroup','searchProvince','searchStatus','searchGender','searchJoinDateStart','searchJoinDateEnd']
-.forEach(id => {
-  const el = document.getElementById(id);
-  if(el) el.addEventListener('input', ()=>{ currentPage = 1; renderTable(); });
-});
-
-/* ====== Initial load ====== */
-loadMembers();
-
-  /* ✅ ระบบตรวจสอบรหัสผ่านก่อนแก้ไข */
-const ADMIN_PASSWORD = "1234"; // 🔐 เปลี่ยนรหัสผ่านตรงนี้
-let pendingEditId = null; // เก็บ member_id ที่รอแก้ไข
-let verified = false; // เก็บสถานะถ้าใส่รหัสผ่านแล้ว (session เดียว)
-
-const passwordModal = document.getElementById("passwordModal");
-const passwordInput = document.getElementById("adminPasswordInput");
-const confirmBtn = document.getElementById("confirmPasswordBtn");
-const cancelBtn = document.getElementById("cancelPasswordBtn");
-
-// เปิด modal
-function openPasswordModal(memberId) {
-  pendingEditId = memberId;
-  passwordInput.value = "";
-  passwordModal.style.display = "flex";
-  passwordInput.focus();
-}
-
-// ปิด modal
-function closePasswordModal() {
-  passwordModal.style.display = "none";
-  pendingEditId = null;
-}
-
-// ✅ เมื่อกด "ยืนยัน"
-confirmBtn.addEventListener("click", () => {
-  const password = passwordInput.value.trim();
-  if (!password) {
-    alert("กรุณาใส่รหัสผ่านก่อน");
-    return;
-  }
-  if (password !== ADMIN_PASSWORD) {
-    alert("❌ รหัสผ่านไม่ถูกต้อง!");
-    passwordInput.value = "";
-    passwordInput.focus();
-    return;
-  }
-
-  verified = true; // ✅ ผ่านการยืนยัน
-  closePasswordModal();
-  if (pendingEditId) {
-    // เปิดฟอร์มแก้ไขต่อ
-    doEditMember(pendingEditId);
-  }
-});
-
-// ปุ่มยกเลิก
-cancelBtn.addEventListener("click", closePasswordModal);
-
-// ปิดเมื่อคลิกพื้นหลังมืด
-passwordModal.addEventListener("click", e => {
-  if (e.target === passwordModal) closePasswordModal();
-});
-
-/* แก้ไขฟังก์ชัน window.editMember ให้เรียก modal */
-window.editMember = (id) => {
-  if (!verified) {
-    openPasswordModal(id);
-    return;
-  }
-  doEditMember(id);
-};
-
-/* ✅ แยกฟังก์ชัน doEditMember ไว้ทำงานจริงหลังใส่รหัสผ่านถูก */
-function doEditMember(id) {
-  const m = allMembers.find(x => (x.member_id+'') === (id+''));
-  if(!m) return;
-  editId = id;
-
-  for(let k in m){
-    if(!form.elements[k]) continue;
-    let val = m[k];
-    if(typeof val === 'string' && /^\d{4}\/\d{2}\/\d{2}$/.test(val)) val = val.replaceAll('/','-');
-    if(typeof val === 'string' && val.includes('T')) val = val.split('T')[0];
-    form.elements[k].value = val ?? '';
-  }
-
-  // คำนวณอายุอัตโนมัติ
-  const birthdayInput = form.elements['birthday'];
-  const ageInput = form.elements['age'];
-  if(birthdayInput && birthdayInput.value){
-    const bd = new Date(birthdayInput.value);
-    const today = new Date();
-    let a = today.getFullYear() - bd.getFullYear();
-    const md = today.getMonth() - bd.getMonth();
-    if(md < 0 || (md === 0 && today.getDate() < bd.getDate())) a--;
-    ageInput.value = a >= 0 ? a : '';
-  } else {
-    if(ageInput) ageInput.value = '';
-  }
-
-  formStepIndex = 0;
-  showStep(0);
-}
-
-  /* ✅ ระบบตรวจสอบรหัสผ่านก่อนแก้ไข */
+/* ✅ ระบบตรวจสอบรหัสผ่านก่อนแก้ไข */
 const ADMIN_PASSWORD = "1234"; // 🔐 เปลี่ยนรหัสผ่านตรงนี้
 let pendingEditId = null; // เก็บ member_id ที่รอแก้ไข
 let verified = false; // เก็บสถานะถ้าใส่รหัสผ่านแล้ว (session เดียว)
@@ -759,7 +383,7 @@ confirmBtn.addEventListener("click", () => {
     return;
   }
 
-  verified = true; // ✅ ผ่านการยืนยัน
+  verified = true;
   closePasswordModal();
   if (pendingEditId) {
     doEditMember(pendingEditId);
@@ -783,7 +407,7 @@ window.editMember = (id) => {
   doEditMember(id);
 };
 
-/* ✅ ฟังก์ชันทำงานจริงหลังใส่รหัสผ่านถูก */
+// ✅ ฟังก์ชันทำงานจริงหลังใส่รหัสผ่านถูก
 function doEditMember(id) {
   const m = allMembers.find(x => (x.member_id+'') === (id+''));
   if (!m) return;
@@ -797,11 +421,11 @@ function doEditMember(id) {
     form.elements[k].value = val ?? '';
   }
 
-  // คำนวณอายุอัตโนมัติ
-  const birthdayInput = form.elements['birthday'];
+  // คำนวณอายุ
+  const bdInput = form.elements['birthday'];
   const ageInput = form.elements['age'];
-  if (birthdayInput && birthdayInput.value) {
-    const bd = new Date(birthdayInput.value);
+  if (bdInput && bdInput.value) {
+    const bd = new Date(bdInput.value);
     const today = new Date();
     let a = today.getFullYear() - bd.getFullYear();
     const md = today.getMonth() - bd.getMonth();
@@ -826,8 +450,18 @@ logoutBtn.addEventListener("click", () => {
     alert("🔓 ออกจากโหมดผู้ดูแลเรียบร้อยแล้ว");
   }
 });
-
 </script>
+
+<!-- 🔒 Modal -->
+<div id="passwordModal" ...> ... </div>
+
+<!-- 🔓 ปุ่มล็อกออก -->
+<div style="position:fixed; top:15px; right:20px;">
+  <button id="logoutBtn">🔓 ออกจากโหมดผู้ดูแล</button>
+</div>
+</body>
+</html>
+
 
 <!-- 🔒 Modal ใส่รหัสผ่านก่อนแก้ไข -->
 <div id="passwordModal" 
