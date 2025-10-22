@@ -624,8 +624,125 @@ document.getElementById('nextPage').addEventListener('click', ()=>{ currentPage+
 
 /* ====== Initial load ====== */
 loadMembers();
+
+  /* ✅ ระบบตรวจสอบรหัสผ่านก่อนแก้ไข */
+const ADMIN_PASSWORD = "1234"; // 🔐 เปลี่ยนรหัสผ่านตรงนี้
+let pendingEditId = null; // เก็บ member_id ที่รอแก้ไข
+let verified = false; // เก็บสถานะถ้าใส่รหัสผ่านแล้ว (session เดียว)
+
+const passwordModal = document.getElementById("passwordModal");
+const passwordInput = document.getElementById("adminPasswordInput");
+const confirmBtn = document.getElementById("confirmPasswordBtn");
+const cancelBtn = document.getElementById("cancelPasswordBtn");
+
+// เปิด modal
+function openPasswordModal(memberId) {
+  pendingEditId = memberId;
+  passwordInput.value = "";
+  passwordModal.style.display = "flex";
+  passwordInput.focus();
+}
+
+// ปิด modal
+function closePasswordModal() {
+  passwordModal.style.display = "none";
+  pendingEditId = null;
+}
+
+// ✅ เมื่อกด "ยืนยัน"
+confirmBtn.addEventListener("click", () => {
+  const password = passwordInput.value.trim();
+  if (!password) {
+    alert("กรุณาใส่รหัสผ่านก่อน");
+    return;
+  }
+  if (password !== ADMIN_PASSWORD) {
+    alert("❌ รหัสผ่านไม่ถูกต้อง!");
+    passwordInput.value = "";
+    passwordInput.focus();
+    return;
+  }
+
+  verified = true; // ✅ ผ่านการยืนยัน
+  closePasswordModal();
+  if (pendingEditId) {
+    // เปิดฟอร์มแก้ไขต่อ
+    doEditMember(pendingEditId);
+  }
+});
+
+// ปุ่มยกเลิก
+cancelBtn.addEventListener("click", closePasswordModal);
+
+// ปิดเมื่อคลิกพื้นหลังมืด
+passwordModal.addEventListener("click", e => {
+  if (e.target === passwordModal) closePasswordModal();
+});
+
+/* แก้ไขฟังก์ชัน window.editMember ให้เรียก modal */
+window.editMember = (id) => {
+  if (!verified) {
+    openPasswordModal(id);
+    return;
+  }
+  doEditMember(id);
+};
+
+/* ✅ แยกฟังก์ชัน doEditMember ไว้ทำงานจริงหลังใส่รหัสผ่านถูก */
+function doEditMember(id) {
+  const m = allMembers.find(x => (x.member_id+'') === (id+''));
+  if(!m) return;
+  editId = id;
+
+  for(let k in m){
+    if(!form.elements[k]) continue;
+    let val = m[k];
+    if(typeof val === 'string' && /^\d{4}\/\d{2}\/\d{2}$/.test(val)) val = val.replaceAll('/','-');
+    if(typeof val === 'string' && val.includes('T')) val = val.split('T')[0];
+    form.elements[k].value = val ?? '';
+  }
+
+  // คำนวณอายุอัตโนมัติ
+  const birthdayInput = form.elements['birthday'];
+  const ageInput = form.elements['age'];
+  if(birthdayInput && birthdayInput.value){
+    const bd = new Date(birthdayInput.value);
+    const today = new Date();
+    let a = today.getFullYear() - bd.getFullYear();
+    const md = today.getMonth() - bd.getMonth();
+    if(md < 0 || (md === 0 && today.getDate() < bd.getDate())) a--;
+    ageInput.value = a >= 0 ? a : '';
+  } else {
+    if(ageInput) ageInput.value = '';
+  }
+
+  formStepIndex = 0;
+  showStep(0);
+}
+
 </script>
 
+<!-- 🔒 Modal รหัสผ่าน -->
+<div id="passwordModal" 
+     style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); 
+            justify-content:center; align-items:center; z-index:9999;">
+  <div style="background:white; padding:25px 30px; border-radius:12px; box-shadow:0 5px 20px rgba(0,0,0,0.3); text-align:center; max-width:320px;">
+    <h3 style="margin-top:0; color:#1e3a8a;">🔒 กรุณาใส่รหัสผ่าน</h3>
+    <input type="password" id="adminPasswordInput" 
+           placeholder="รหัสผ่านผู้ดูแล" 
+           style="padding:8px 10px; width:90%; margin:10px auto; border:1px solid #ccc; border-radius:6px;">
+    <div style="margin-top:15px; display:flex; justify-content:center; gap:10px;">
+      <button id="confirmPasswordBtn" 
+              style="background:#4a90e2; color:white; border:none; padding:6px 14px; border-radius:6px; cursor:pointer;">
+        ยืนยัน
+      </button>
+      <button id="cancelPasswordBtn" 
+              style="background:#ccc; color:#333; border:none; padding:6px 14px; border-radius:6px; cursor:pointer;">
+        ยกเลิก
+      </button>
+    </div>
+  </div>
+</div>
 
 </body>
 </html>
