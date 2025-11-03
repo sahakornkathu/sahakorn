@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ซื้อหุ้นสหกรณ์</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.3.2/dist/tailwind.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+    body { font-family: 'Prompt', sans-serif; background: #f9fafb; }
+    .card { background: white; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .spinner {
+      border: 3px solid #eee; border-top: 3px solid #4caf50;
+      border-radius: 50%; width: 24px; height: 24px;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body class="flex flex-col justify-center items-center min-h-screen p-4">
+
+  <div class="card w-full max-w-md p-6 text-center">
+    <h1 class="text-xl font-semibold text-green-700 mb-2">ซื้อหุ้นสหกรณ์</h1>
+    <p class="text-gray-500 mb-4">ยืนยันการซื้อหุ้นของคุณผ่านระบบออนไลน์</p>
+
+    <div id="profile" class="hidden mb-4">
+      <img id="linePic" class="w-16 h-16 rounded-full mx-auto border-2 border-green-600" />
+      <p id="lineName" class="mt-2 text-green-700 font-medium"></p>
+    </div>
+
+    <div id="summary" class="hidden mb-4 text-sm text-gray-700">
+      <div class="flex justify-between"><span>ยอดยกมา</span><span id="carryOver">-</span></div>
+      <div class="flex justify-between"><span>ซื้อระหว่างปี</span><span id="purchased">-</span></div>
+      <div class="flex justify-between font-semibold border-t mt-1 pt-1 text-green-700">
+        <span>ยอดคงเหลือ</span><span id="total">-</span>
+      </div>
+    </div>
+
+    <form id="buyForm" class="space-y-4">
+      <div>
+        <label class="block text-left text-gray-700 text-sm mb-1">จำนวนเงินที่ต้องการซื้อ (บาท)</label>
+        <input id="amount" type="number" min="1"
+          class="w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-green-400 focus:border-green-400"
+          placeholder="กรอกจำนวนเงิน เช่น 1000" required />
+      </div>
+
+      <div>
+        <label class="block text-left text-gray-700 text-sm mb-1">แนบสลิปชำระเงิน</label>
+        <input id="slip" type="file" accept="image/*"
+          class="w-full text-sm text-gray-600 border border-gray-300 rounded-md p-2" required />
+      </div>
+
+      <div class="bg-gray-50 p-3 rounded-md mb-3">
+        <p class="text-sm text-gray-700 mb-2">ชำระเงินผ่านบัญชีธนาคาร / QR Code</p>
+        <img src="https://your-static-qr-image-url.jpg" alt="QR Code" class="w-40 mx-auto border rounded-md shadow-sm" />
+      </div>
+
+      <button id="submitBtn" type="submit"
+        class="w-full bg-green-600 text-white py-2 rounded-md font-medium hover:bg-green-700 transition">
+        ยืนยันการซื้อหุ้น
+      </button>
+    </form>
+  </div>
+
+  <script>
+    const LIFF_ID = "1660910795-pQaXrYbm"; // ✅ เปลี่ยนเป็นของคุณ
+    const SUPABASE_URL = "https://ttottijljxoinptmhgtu.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y";
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const BUY_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/buy-stock`;
+
+    async function main() {
+      await liff.init({ liffId: LIFF_ID });
+      if (!liff.isLoggedIn()) return liff.login();
+
+      const profile = await liff.getProfile();
+      document.getElementById("linePic").src = profile.pictureUrl;
+      document.getElementById("lineName").textContent = profile.displayName;
+      document.getElementById("profile").classList.remove("hidden");
+
+      // ✅ ดึงยอดหุ้นสะสม
+      const { data } = await supabase.from("stock_summary").select("*").eq("member_id", profile.userId).single();
+      if (data) {
+        document.getElementById("carryOver").textContent = parseFloat(data.carry_over || 0).toLocaleString();
+        document.getElementById("purchased").textContent = parseFloat(data.purchased_this_year || 0).toLocaleString();
+        document.getElementById("total").textContent = parseFloat(data.total_stock || 0).toLocaleString();
+        document.getElementById("summary").classList.remove("hidden");
+      }
+
+      const form = document.getElementById("buyForm");
+      const btn = document.getElementById("submitBtn");
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        btn.disabled = true;
+        btn.innerHTML = `<div class="spinner mx-auto"></div>`;
+
+        const file = document.getElementById("slip").files[0];
+        if (!file) return Swal.fire("กรุณาแนบสลิป", "", "warning");
+
+        // ✅ อัปโหลดสลิปไป Supabase Storage
+        const fileName = `${profile.userId}_${Date.now()}.jpg`;
+        const { data: upload, error: uploadErr } = await supabase.storage
+          .from("slips")
+          .upload(fileName, file);
+
+        if (uploadErr) {
+          Swal.fire("อัปโหลดสลิปไม่สำเร็จ", uploadErr.message, "error");
+          btn.disabled = false;
+          btn.textContent = "ยืนยันการซื้อหุ้น";
+          return;
+        }
+
+        const slip_url = `${SUPABASE_URL}/storage/v1/object/public/slips/${fileName}`;
+
+        // ✅ ส่งข้อมูลไป Function buy-stock
+        const body = {
+          member_id: profile.userId, // ⚠️ ถ้า member_id ในตารางไม่ตรงกับ userId ต้องแก้
+          line_user_id: profile.userId,
+          display_name: profile.displayName,
+          amount: parseFloat(document.getElementById("amount").value),
+          slip_url
+        };
+
+        const res = await fetch(BUY_FUNCTION_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body)
+        });
+        const result = await res.json();
+
+        if (result.status === "success") {
+          Swal.fire({
+            icon: "success",
+            title: "ส่งคำสั่งซื้อสำเร็จ!",
+            text: "รอการตรวจสอบจากเจ้าหน้าที่",
+            confirmButtonColor: "#16a34a"
+          }).then(() => window.location.reload());
+        } else {
+          Swal.fire("เกิดข้อผิดพลาด", result.error || "ไม่สามารถส่งคำสั่งซื้อได้", "error");
+        }
+
+        btn.disabled = false;
+        btn.textContent = "ยืนยันการซื้อหุ้น";
+      });
+    }
+
+    main();
+  </script>
+</body>
+</html>
