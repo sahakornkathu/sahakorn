@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ยอดหุ้นสะสมของฉัน</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.3.2/dist/tailwind.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js" defer></script>
+
+  <style>
+    body {
+      font-family: 'Prompt', sans-serif;
+      background: #f9fafb;
+    }
+    .card {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+    .status-pending {
+      background: #fff3cd;
+      color: #856404;
+    }
+    .status-approved {
+      background: #d4edda;
+      color: #155724;
+    }
+  </style>
+</head>
+
+<body class="flex flex-col justify-center items-center min-h-screen p-4">
+
+  <div class="card w-full max-w-md p-6">
+    <div class="text-center mb-4">
+      <img id="linePic" class="w-16 h-16 rounded-full mx-auto border-2 border-green-600 hidden" />
+      <p id="lineName" class="text-green-700 font-medium mt-2"></p>
+      <h1 class="text-xl font-semibold text-green-700 mt-3">ยอดหุ้นสะสม</h1>
+      <p class="text-gray-500 text-sm">แสดงยอดล่าสุดและประวัติการซื้อหุ้น</p>
+    </div>
+
+    <div id="summary" class="hidden bg-gray-50 rounded-lg p-4 mb-6">
+      <div class="flex justify-between text-gray-700 mb-2">
+        <span>ยอดยกมา</span>
+        <span id="carryOver">-</span>
+      </div>
+      <div class="flex justify-between text-gray-700 mb-2">
+        <span>ซื้อระหว่างปี</span>
+        <span id="purchased">-</span>
+      </div>
+      <div class="flex justify-between font-semibold text-green-700 border-t pt-2">
+        <span>ยอดคงเหลือ</span>
+        <span id="total">-</span>
+      </div>
+    </div>
+
+    <div>
+      <h2 class="text-lg font-semibold mb-2 text-gray-800">ประวัติการซื้อหุ้น</h2>
+      <div id="transactions" class="space-y-2 text-sm"></div>
+    </div>
+  </div>
+
+  <script defer>
+    const LIFF_ID = "1660910795-bGj0eYQK";
+    const SUPABASE_URL = "https://ttottijljxoinptmhgtu.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y";
+    let supabase;
+
+    document.addEventListener("DOMContentLoaded", async () => {
+      supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+      await main();
+    });
+
+    async function main() {
+      try {
+        await liff.init({ liffId: LIFF_ID });
+        if (!liff.isLoggedIn()) return liff.login();
+
+        const profile = await liff.getProfile();
+        document.getElementById("linePic").src = profile.pictureUrl;
+        document.getElementById("lineName").textContent = profile.displayName;
+        document.getElementById("linePic").classList.remove("hidden");
+
+        // ✅ ดึงยอดหุ้นสะสม
+        const { data: summary } = await supabase
+          .from("stock_summary")
+          .select("*")
+          .eq("member_id", profile.userId)
+          .maybeSingle();
+
+        if (summary) {
+          document.getElementById("carryOver").textContent = parseFloat(summary.carry_over).toLocaleString();
+          document.getElementById("purchased").textContent = parseFloat(summary.purchased_this_year).toLocaleString();
+          document.getElementById("total").textContent = parseFloat(summary.total_stock).toLocaleString();
+          document.getElementById("summary").classList.remove("hidden");
+        }
+
+        // ✅ ดึงประวัติการซื้อ
+        const { data: transactions } = await supabase
+          .from("stock_transactions")
+          .select("id, amount, status, created_at, slip_url")
+          .eq("line_user_id", profile.userId)
+          .order("created_at", { ascending: false });
+
+        const container = document.getElementById("transactions");
+        container.innerHTML = "";
+
+        if (!transactions || transactions.length === 0) {
+          container.innerHTML = `<p class="text-gray-400 text-center">ยังไม่มีรายการซื้อหุ้น</p>`;
+          return;
+        }
+
+        transactions.forEach(tx => {
+          const statusClass = tx.status === "approved" ? "status-approved" : "status-pending";
+          const statusText = tx.status === "approved" ? "อนุมัติแล้ว ✅" : "รออนุมัติ ⏳";
+          const date = new Date(tx.created_at).toLocaleString("th-TH", {
+            dateStyle: "short",
+            timeStyle: "short"
+          });
+
+          const item = `
+            <div class="border rounded-lg p-3 ${statusClass}">
+              <div class="flex justify-between">
+                <span class="font-medium text-gray-800">฿ ${parseFloat(tx.amount).toLocaleString()}</span>
+                <span class="text-xs">${date}</span>
+              </div>
+              <div class="text-xs mt-1">${statusText}</div>
+              <a href="${tx.slip_url}" target="_blank" class="text-xs text-blue-600 underline">ดูสลิป</a>
+            </div>
+          `;
+          container.insertAdjacentHTML("beforeend", item);
+        });
+      } catch (err) {
+        console.error(err);
+        alert("กรุณาเปิดจากในแอป LINE เท่านั้น");
+      }
+    }
+  </script>
+</body>
+</html>
