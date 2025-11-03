@@ -277,6 +277,7 @@ button:disabled {
 const LIFF_ID = "1660910795-pVE6RZB3";
 const SUPABASE_REGISTER_URL = "https://ttottijljxoinptmhgtu.supabase.co/functions/v1/register-member";
 const SUPABASE_CHECK_URL = "https://ttottijljxoinptmhgtu.supabase.co/functions/v1/check-member";
+const BUY_PAGE_URL = "https://sahakornkathu.github.io/sahakorn/member/stock/buy.html"; // 🔹 หน้า "ซื้อหุ้น" (เปลี่ยนได้ภายหลัง)
 
 async function main() {
   try {
@@ -304,24 +305,21 @@ async function main() {
     });
     const checkData = await checkRes.json();
 
-    // 🟢 ถ้าลงทะเบียนแล้ว
+    // 🔒 ถ้าลงทะเบียนแล้ว ซ่อนฟอร์ม
     if (checkData.status === "registered") {
       statusDiv.classList.add("text-green-700", "font-medium");
       statusDiv.textContent = `✅ คุณ ${checkData.name || profile.displayName} ได้ลงทะเบียนแล้ว`;
-
-      // 🔒 ซ่อนฟอร์มทุกอย่างแน่นอน
-      form.style.display = "none"; // ซ่อนทั้ง form (input + ปุ่ม)
-      submitBtn.style.display = "none";
+      form.style.display = "none";
       result.classList.add("text-green-600", "font-medium");
       result.textContent = "คุณได้ลงทะเบียนเรียบร้อยแล้ว 🎉";
       return;
     }
 
-    // ⚪ ถ้ายังไม่ลงทะเบียน
+    // ⚪ ถ้ายังไม่ได้ลงทะเบียน
     statusDiv.textContent = "กรุณากรอกข้อมูลเพื่อยืนยันตัวตน";
     form.style.display = "block";
 
-    // 🧾 ฟังการกดปุ่ม
+    // 🧾 เมื่อกดปุ่มลงทะเบียน
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
       result.textContent = "";
@@ -345,13 +343,12 @@ async function main() {
         const data = await res.json();
 
         if (data.status === "success") {
-          result.classList.add("text-green-600", "font-medium");
-          result.textContent = data.message || "ลงทะเบียนสำเร็จ ✅";
-
           // ✅ ซ่อนฟอร์มหลังลงทะเบียนสำเร็จ
           form.style.display = "none";
-          submitBtn.style.display = "none";
           statusDiv.textContent = `คุณ ${profile.displayName} ได้ลงทะเบียนแล้ว ✅`;
+
+          // 🟢 แสดง Popup แจ้งเตือนสวยงาม
+          showSuccessPopup();
         } else {
           result.classList.add("text-red-600");
           result.textContent = data.message || "ไม่สามารถลงทะเบียนได้ ❌";
@@ -368,9 +365,78 @@ async function main() {
     alert("กรุณาเปิดจากในแอป LINE เท่านั้น");
   }
 }
+
+// ✅ Popup function
+function showSuccessPopup() {
+  const overlay = document.createElement("div");
+  overlay.style.position = "fixed";
+  overlay.style.top = 0;
+  overlay.style.left = 0;
+  overlay.style.width = "100vw";
+  overlay.style.height = "100vh";
+  overlay.style.background = "rgba(0, 0, 0, 0.5)";
+  overlay.style.display = "flex";
+  overlay.style.justifyContent = "center";
+  overlay.style.alignItems = "center";
+  overlay.style.zIndex = "9999";
+  overlay.style.animation = "fadeIn 0.3s ease";
+
+  const modal = document.createElement("div");
+  modal.style.background = "#fff";
+  modal.style.borderRadius = "16px";
+  modal.style.padding = "1.8rem 1.5rem";
+  modal.style.textAlign = "center";
+  modal.style.width = "85%";
+  modal.style.maxWidth = "360px";
+  modal.style.boxShadow = "0 8px 20px rgba(0,0,0,0.15)";
+  modal.style.animation = "popUp 0.3s ease";
+
+  const checkIcon = document.createElement("div");
+  checkIcon.innerHTML = "✅";
+  checkIcon.style.fontSize = "2.5rem";
+  checkIcon.style.marginBottom = "0.5rem";
+
+  const title = document.createElement("h2");
+  title.textContent = "ลงทะเบียนสำเร็จ!";
+  title.style.fontSize = "1.25rem";
+  title.style.fontWeight = "600";
+  title.style.color = "#2e7d32";
+  title.style.marginBottom = "0.25rem";
+
+  const message = document.createElement("p");
+  message.textContent = "ระบบได้บันทึกข้อมูลของคุณเรียบร้อยแล้ว";
+  message.style.fontSize = "0.9rem";
+  message.style.color = "#555";
+  message.style.marginBottom = "1.2rem";
+
+  const button = document.createElement("button");
+  button.textContent = "ไปยังหน้าซื้อหุ้น ➜";
+  button.style.background = "linear-gradient(135deg, #43a047, #2e7d32)";
+  button.style.color = "white";
+  button.style.border = "none";
+  button.style.padding = "0.7rem 1.2rem";
+  button.style.borderRadius = "10px";
+  button.style.cursor = "pointer";
+  button.style.fontWeight = "600";
+  button.style.fontSize = "1rem";
+  button.style.transition = "all 0.3s ease";
+  button.onmouseenter = () => (button.style.opacity = "0.9");
+  button.onmouseleave = () => (button.style.opacity = "1");
+  button.onclick = () => {
+    overlay.remove();
+    window.location.href = BUY_PAGE_URL; // 🔹 ไปหน้าเว็บซื้อหุ้น
+  };
+
+  modal.appendChild(checkIcon);
+  modal.appendChild(title);
+  modal.appendChild(message);
+  modal.appendChild(button);
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
+}
+
 main();
 </script>
-
 
 </body>
 </html>
