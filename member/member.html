@@ -571,95 +571,121 @@ document.getElementById('clearFilter').addEventListener('click', () => {
   renderTable();
 });
 
-/* ====== ปุ่มปริ้นรายงานสมาชิก (เวอร์ชันใหม่) ====== */
+/* ====== ปุ่มปริ้นรายงานสมาชิก (เวอร์ชันจัดบรรทัดใหม่ + footer ไม่ซ้อน) ====== */
 document.getElementById('printReport').addEventListener('click', () => {
-  if (allMembers.length === 0) { alert('ไม่มีข้อมูลสมาชิกให้พิมพ์รายงาน'); return; }
+  if (allMembers.length === 0) {
+    alert('ไม่มีข้อมูลสมาชิกให้พิมพ์รายงาน');
+    return;
+  }
+
   const now = new Date();
-  const dateStr = now.toLocaleDateString('th-TH', {year:'numeric',month:'long',day:'numeric'});
-  const timeStr = now.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+  const dateStr = now.toLocaleDateString('th-TH', { year:'numeric', month:'long', day:'numeric' });
+  const timeStr = now.toLocaleTimeString('th-TH', { hour:'2-digit', minute:'2-digit' });
   const logoURL = 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9b/Coop_logo.svg/120px-Coop_logo.svg.png';
-let html = `
-<html><head><title>รายงานสมาชิก</title>
-<style>
-  body {
-    font-family: "Prompt", sans-serif;
-    margin: 20px;
-    color: #111827;
-    font-size: 11px;
-  }
-  header {
-    display: flex;
-    align-items: center;
-    flex-direction: column;
-    margin-bottom: 5px;
-  }
-  header img {
-    width: 60px;
-    margin-bottom: 4px;
-  }
-  h2 {
-    text-align: center;
-    color: #1e40af;
-    margin: 4px 0 2px 0;
-    font-size: 16px;
-  }
-  h4 {
-    text-align: center;
-    color: #374151;
-    margin: 2px 0 6px 0;
-    font-weight: 400;
-    font-size: 11px;
-  }
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 10px;
-    font-size: 10px;
-  }
-  th, td {
-    border: 1px solid #ccc;
-    padding: 4px 6px;
-    text-align: left;
-    vertical-align: top;
-  }
-  th {
-    background: #4a90e2;
-    color: #fff;
-    text-align: center;
-    font-size: 11px;
-  }
-  tr:nth-child(even) {
-    background: #f9fafb;
-  }
-  td:nth-child(1), td:nth-child(2) {
-    text-align: center;
-  }
-  footer {
-    margin-top: 20px;
-    text-align: right;
-    font-size: 10px;
-    color: #6b7280;
-  }
-  @media print {
-    body { margin: 10mm; }
-    footer { position: fixed; bottom: 5mm; left: 0; right: 0; }
-  }
-</style>
-</head><body>
-<header>
-  <img src="${logoURL}" alt="logo">
-  <h2>รายงานข้อมูลสมาชิกสหกรณ์</h2>
-  <h4>พิมพ์เมื่อวันที่ ${dateStr} เวลา ${timeStr} น.</h4>
-</header>
-<table>
-  <thead><tr>
-    <th>เลขทะเบียนสมาชิก</th>
-    <th>กลุ่ม</th>
-    <th>ชื่อ - นามสกุล</th>
-    <th>ที่อยู่</th>
-    <th>เบอร์โทรศัพท์</th>
-  </tr></thead>
-  <tbody>`;
+
+  let html = `
+  <html>
+  <head>
+    <title>รายงานสมาชิก</title>
+    <style>
+      body {
+        font-family: "Prompt", sans-serif;
+        margin: 20px 25px;
+        color: #111827;
+        font-size: 11px;
+      }
+      header {
+        display: flex;
+        align-items: center;
+        flex-direction: column;
+        margin-bottom: 10px;
+      }
+      header img {
+        width: 60px;
+        margin-bottom: 6px;
+      }
+      h2 {
+        text-align: center;
+        color: #1e40af;
+        margin: 2px 0;
+        font-size: 16px;
+      }
+      h4 {
+        text-align: center;
+        color: #374151;
+        margin: 4px 0 10px 0;
+        font-weight: 400;
+        font-size: 11px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+        font-size: 10px;
+        page-break-inside: auto;
+      }
+      thead {
+        display: table-header-group;
+      }
+      tr {
+        page-break-inside: avoid;
+        page-break-after: auto;
+      }
+      th, td {
+        border: 1px solid #ccc;
+        padding: 4px 6px;
+        text-align: left;
+        vertical-align: top;
+      }
+      th {
+        background: #4a90e2;
+        color: #fff;
+        text-align: center;
+        font-size: 11px;
+      }
+      tr:nth-child(even) {
+        background: #f9fafb;
+      }
+      td:nth-child(1), td:nth-child(2) {
+        text-align: center;
+      }
+      footer {
+        margin-top: 40px;
+        text-align: center;
+        font-size: 11px;
+        color: #374151;
+      }
+      .sign {
+        margin-top: 50px;
+        text-align: center;
+        font-size: 11px;
+        line-height: 1.8;
+      }
+      @media print {
+        body { margin: 10mm 12mm; }
+        footer { position: relative; bottom: 0; }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <img src="${logoURL}" alt="logo">
+      <h2>รายงานข้อมูลสมาชิกสหกรณ์</h2>
+      <h4>พิมพ์เมื่อวันที่ ${dateStr} เวลา ${timeStr} น.</h4>
+    </header>
+
+    <table>
+      <thead>
+        <tr>
+          <th style="width:10%">เลขทะเบียนสมาชิก</th>
+          <th style="width:8%">กลุ่ม</th>
+          <th style="width:20%">ชื่อ - นามสกุล</th>
+          <th style="width:42%">ที่อยู่</th>
+          <th style="width:15%">เบอร์โทรศัพท์</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
 
   allMembers.forEach(m => {
     const fullName = `${m.title || ''}${m.first_name || ''} ${m.last_name || ''}`.trim();
@@ -674,18 +700,36 @@ let html = `
       m.postal_code ? `${m.postal_code}` : ''
     ].filter(Boolean).join(' ');
     const phone = m.phone || m.phone_alt || '-';
-    html += `<tr>
-      <td>${m.member_id || ''}</td>
-      <td>${m.group || ''}</td>
-      <td>${fullName}</td>
-      <td>${addressParts}</td>
-      <td>${phone}</td>
-    </tr>`;
+
+    html += `
+      <tr>
+        <td>${m.member_id || ''}</td>
+        <td>${m.group || ''}</td>
+        <td>${fullName}</td>
+        <td>${addressParts}</td>
+        <td>${phone}</td>
+      </tr>
+    `;
   });
 
-  // html += `</tbody></table>
-  // <footer>ระบบจัดการสมาชิก © ${now.getFullYear()} | พัฒนาโดย สหกรณ์connect</footer>
-  // </body></html>`;
+  html += `
+      </tbody>
+    </table>
+
+    <div class="sign">
+      <p>ลงชื่อ ____________________________</p>
+      <p>(.................................................)</p>
+      <p>ตำแหน่ง __________________________</p>
+      <p>วันที่ ____ / ____ / ____</p>
+    </div>
+
+    <footer>
+      ระบบจัดการสมาชิก © ${now.getFullYear()} | พัฒนาโดย สหกรณ์connect
+    </footer>
+  </body>
+  </html>
+  `;
+
   const win = window.open('', '_blank');
   win.document.write(html);
   win.document.close();
@@ -697,6 +741,7 @@ let html = `
 /* ====== Initial Load ====== */
 loadMembers();
 </script>
+
 
 
 </body>
