@@ -273,7 +273,7 @@ button:disabled {
   </div>
 
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
- <script>
+<script>
 const LIFF_ID = "1660910795-pVE6RZB3";
 const SUPABASE_REGISTER_URL = "https://ttottijljxoinptmhgtu.supabase.co/functions/v1/register-member";
 const SUPABASE_CHECK_URL = "https://ttottijljxoinptmhgtu.supabase.co/functions/v1/check-member";
@@ -304,24 +304,24 @@ async function main() {
     });
     const checkData = await checkRes.json();
 
+    // 🟢 ถ้าลงทะเบียนแล้ว
     if (checkData.status === "registered") {
-      // ✅ แสดงสถานะ พร้อมซ่อนฟอร์ม
       statusDiv.classList.add("text-green-700", "font-medium");
       statusDiv.textContent = `✅ คุณ ${checkData.name || profile.displayName} ได้ลงทะเบียนแล้ว`;
-      
-      // 🔒 ซ่อนฟอร์มทั้งหมด
-      form.classList.add("hidden");
 
-      // ถ้าต้องการให้ขึ้นข้อความเพิ่มเติม
+      // 🔒 ซ่อนฟอร์มทุกอย่างแน่นอน
+      form.style.display = "none"; // ซ่อนทั้ง form (input + ปุ่ม)
+      submitBtn.style.display = "none";
       result.classList.add("text-green-600", "font-medium");
       result.textContent = "คุณได้ลงทะเบียนเรียบร้อยแล้ว 🎉";
       return;
     }
 
-    // ✅ ถ้ายังไม่ได้ลงทะเบียน ให้เปิดฟอร์ม
+    // ⚪ ถ้ายังไม่ลงทะเบียน
     statusDiv.textContent = "กรุณากรอกข้อมูลเพื่อยืนยันตัวตน";
-    form.classList.remove("hidden");
+    form.style.display = "block";
 
+    // 🧾 ฟังการกดปุ่ม
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
       result.textContent = "";
@@ -349,7 +349,8 @@ async function main() {
           result.textContent = data.message || "ลงทะเบียนสำเร็จ ✅";
 
           // ✅ ซ่อนฟอร์มหลังลงทะเบียนสำเร็จ
-          form.classList.add("hidden");
+          form.style.display = "none";
+          submitBtn.style.display = "none";
           statusDiv.textContent = `คุณ ${profile.displayName} ได้ลงทะเบียนแล้ว ✅`;
         } else {
           result.classList.add("text-red-600");
@@ -369,6 +370,7 @@ async function main() {
 }
 main();
 </script>
+
 
 </body>
 </html>
