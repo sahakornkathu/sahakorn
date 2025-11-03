@@ -578,34 +578,88 @@ document.getElementById('printReport').addEventListener('click', () => {
   const dateStr = now.toLocaleDateString('th-TH', {year:'numeric',month:'long',day:'numeric'});
   const timeStr = now.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
   const logoURL = 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9b/Coop_logo.svg/120px-Coop_logo.svg.png';
-  let html = `
-  <html><head><title>รายงานสมาชิก</title>
-  <style>
-    body{font-family:"Prompt",sans-serif;margin:30px;color:#111827;}
-    header{display:flex;align-items:center;flex-direction:column;margin-bottom:10px;}
-    header img{width:80px;margin-bottom:8px;}
-    h2{text-align:center;color:#1e40af;margin:8px 0 4px 0;}
-    h4{text-align:center;color:#374151;margin:4px 0;font-weight:400;}
-    table{width:100%;border-collapse:collapse;margin-top:20px;}
-    th,td{border:1px solid #ccc;padding:8px;text-align:left;font-size:13px;vertical-align:top;}
-    th{background:#4a90e2;color:#fff;text-align:center;}
-    tr:nth-child(even){background:#f9fafb;}
-    td:nth-child(1),td:nth-child(2){text-align:center;}
-    footer{margin-top:30px;text-align:right;font-size:12px;color:#6b7280;}
-  </style></head><body>
-  <header>
-    <img src="${logoURL}" alt="logo">
-    <h2>รายงานข้อมูลสมาชิกสหกรณ์</h2>
-    <h4>พิมพ์เมื่อวันที่ ${dateStr} เวลา ${timeStr} น.</h4>
-  </header>
-  <table>
-    <thead><tr>
-      <th>เลขทะเบียนสมาชิก</th>
-      <th>กลุ่ม</th>
-      <th>ชื่อ - นามสกุล</th>
-      <th>ที่อยู่</th>
-      <th>เบอร์โทรศัพท์</th>
-    </tr></thead><tbody>`;
+  let html = let html = `
+<html><head><title>รายงานสมาชิก</title>
+<style>
+  body {
+    font-family: "Prompt", sans-serif;
+    margin: 20px;
+    color: #111827;
+    font-size: 11px;
+  }
+  header {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    margin-bottom: 5px;
+  }
+  header img {
+    width: 60px;
+    margin-bottom: 4px;
+  }
+  h2 {
+    text-align: center;
+    color: #1e40af;
+    margin: 4px 0 2px 0;
+    font-size: 16px;
+  }
+  h4 {
+    text-align: center;
+    color: #374151;
+    margin: 2px 0 6px 0;
+    font-weight: 400;
+    font-size: 11px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    font-size: 10px;
+  }
+  th, td {
+    border: 1px solid #ccc;
+    padding: 4px 6px;
+    text-align: left;
+    vertical-align: top;
+  }
+  th {
+    background: #4a90e2;
+    color: #fff;
+    text-align: center;
+    font-size: 11px;
+  }
+  tr:nth-child(even) {
+    background: #f9fafb;
+  }
+  td:nth-child(1), td:nth-child(2) {
+    text-align: center;
+  }
+  footer {
+    margin-top: 20px;
+    text-align: right;
+    font-size: 10px;
+    color: #6b7280;
+  }
+  @media print {
+    body { margin: 10mm; }
+    footer { position: fixed; bottom: 5mm; left: 0; right: 0; }
+  }
+</style>
+</head><body>
+<header>
+  <img src="${logoURL}" alt="logo">
+  <h2>รายงานข้อมูลสมาชิกสหกรณ์</h2>
+  <h4>พิมพ์เมื่อวันที่ ${dateStr} เวลา ${timeStr} น.</h4>
+</header>
+<table>
+  <thead><tr>
+    <th>เลขทะเบียนสมาชิก</th>
+    <th>กลุ่ม</th>
+    <th>ชื่อ - นามสกุล</th>
+    <th>ที่อยู่</th>
+    <th>เบอร์โทรศัพท์</th>
+  </tr></thead>
+  <tbody>`;
 
   allMembers.forEach(m => {
     const fullName = `${m.title || ''}${m.first_name || ''} ${m.last_name || ''}`.trim();
