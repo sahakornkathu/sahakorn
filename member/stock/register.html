@@ -6,53 +6,107 @@
 <title>ลงทะเบียนสมาชิกสหกรณ์</title>
 <link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.3.2/dist/tailwind.min.css" rel="stylesheet">
 </head>
+
 <body class="bg-gray-100 flex items-center justify-center min-h-screen">
+  <div class="bg-white shadow-xl rounded-2xl p-6 w-full max-w-md">
+    <h1 class="text-2xl font-bold text-center mb-6 text-green-700">ลงทะเบียนสมาชิกสหกรณ์</h1>
 
-<div class="bg-white shadow-lg rounded-2xl p-6 w-full max-w-md">
-  <h1 class="text-2xl font-bold text-center mb-4">ลงทะเบียนสมาชิก</h1>
-  <form id="registerForm" class="space-y-4">
-    <div>
-      <label class="block text-sm font-medium">รหัสสมาชิก</label>
-      <input id="member_id" class="w-full border rounded-md p-2" required />
+    <form id="registerForm" class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium mb-1">รหัสสมาชิก</label>
+        <input id="member_id" class="w-full border rounded-md p-2 focus:ring-2 focus:ring-green-400" required />
+      </div>
+      <div>
+        <label class="block text-sm font-medium mb-1">4 ตัวท้ายเลขบัตรประชาชน</label>
+        <input id="id_card" class="w-full border rounded-md p-2 focus:ring-2 focus:ring-green-400" maxlength="4" required />
+      </div>
+
+      <button type="submit" class="w-full bg-green-600 text-white py-2 rounded-md hover:bg-green-700 transition">
+        ลงทะเบียน
+      </button>
+    </form>
+
+    <p id="result" class="text-center mt-4 text-gray-700"></p>
+
+    <div id="loading" class="hidden text-center mt-4 text-green-500">
+      <svg class="animate-spin h-6 w-6 inline-block text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+      </svg>
+      <span>กำลังตรวจสอบข้อมูล...</span>
     </div>
-    <div>
-      <label class="block text-sm font-medium">4 ตัวท้ายเลขบัตรประชาชน</label>
-      <input id="id_card" class="w-full border rounded-md p-2" maxlength="4" required />
-    </div>
-    <button type="submit" class="w-full bg-green-600 text-white py-2 rounded-md hover:bg-green-700">
-      ลงทะเบียน
-    </button>
-  </form>
-  <p id="result" class="text-center mt-4 text-gray-700"></p>
-</div>
+  </div>
 
-<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-<script>
-const LIFF_ID = "1660910795-pVE6RZB3";
-liff.init({ liffId: LIFF_ID }).then(async () => {
-  const profile = await liff.getProfile();
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <script>
+  const LIFF_ID = "1660910795-pVE6RZB3"; // 🔹 เปลี่ยนเป็น LIFF ID ของคุณ
+  const SUPABASE_FUNCTION_URL = "https://ttottijljxoinptmhgtu.supabase.co/functions/v1/register-member"; // 🔹 เปลี่ยนเป็น Function URL ของคุณ
 
-  document.getElementById("registerForm").addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const body = {
-      member_id: document.getElementById("member_id").value,
-      id_card_last4: document.getElementById("id_card").value,
-      line_user_id: profile.userId,
-      display_name: profile.displayName,
-      picture_url: profile.pictureUrl
-    };
+  async function main() {
+    try {
+      await liff.init({ liffId: LIFF_ID });
 
-    const res = await fetch("https://ttottijljxoinptmhgtu.supabase.co/functions/v1/register-member", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body)
-    });
+      // ตรวจสอบว่า login แล้วหรือยัง
+      if (!liff.isLoggedIn()) {
+        liff.login();
+        return;
+      }
 
-    const data = await res.json();
-    document.getElementById("result").textContent = data.message || "เกิดข้อผิดพลาด";
-  });
-});
-</script>
+      // ดึงข้อมูลโปรไฟล์ LINE
+      const profile = await liff.getProfile();
+      console.log("LINE Profile:", profile);
 
+      const form = document.getElementById("registerForm");
+      const result = document.getElementById("result");
+      const loading = document.getElementById("loading");
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        result.textContent = "";
+        loading.classList.remove("hidden");
+
+        const body = {
+          member_id: document.getElementById("member_id").value.trim(),
+          id_card_last4: document.getElementById("id_card").value.trim(),
+          line_user_id: profile.userId,
+          display_name: profile.displayName,
+          picture_url: profile.pictureUrl
+        };
+
+        try {
+          const res = await fetch(SUPABASE_FUNCTION_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body)
+          });
+
+          const data = await res.json();
+          loading.classList.add("hidden");
+
+          if (data.status === "success") {
+            result.classList.remove("text-red-500");
+            result.classList.add("text-green-600");
+            result.textContent = data.message || "ลงทะเบียนสำเร็จ ✅";
+          } else {
+            result.classList.remove("text-green-600");
+            result.classList.add("text-red-500");
+            result.textContent = data.message || "ไม่สามารถลงทะเบียนได้ ❌";
+          }
+        } catch (err) {
+          loading.classList.add("hidden");
+          result.classList.add("text-red-500");
+          result.textContent = "เกิดข้อผิดพลาดในการเชื่อมต่อกับเซิร์ฟเวอร์ ❌";
+          console.error(err);
+        }
+      });
+    } catch (err) {
+      console.error("LIFF init error:", err);
+      alert("ไม่สามารถเชื่อมต่อกับ LINE LIFF ได้ กรุณาเปิดจากใน LINE App");
+    }
+  }
+
+  main();
+  </script>
 </body>
 </html>
