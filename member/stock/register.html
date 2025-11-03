@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>ลงทะเบียนสมาชิกสหกรณ์</title>
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.3.2/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+
+<div class="bg-white shadow-lg rounded-2xl p-6 w-full max-w-md">
+  <h1 class="text-2xl font-bold text-center mb-4">ลงทะเบียนสมาชิก</h1>
+  <form id="registerForm" class="space-y-4">
+    <div>
+      <label class="block text-sm font-medium">รหัสสมาชิก</label>
+      <input id="member_id" class="w-full border rounded-md p-2" required />
+    </div>
+    <div>
+      <label class="block text-sm font-medium">4 ตัวท้ายเลขบัตรประชาชน</label>
+      <input id="id_card" class="w-full border rounded-md p-2" maxlength="4" required />
+    </div>
+    <button type="submit" class="w-full bg-green-600 text-white py-2 rounded-md hover:bg-green-700">
+      ลงทะเบียน
+    </button>
+  </form>
+  <p id="result" class="text-center mt-4 text-gray-700"></p>
+</div>
+
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<script>
+const LIFF_ID = "1660910795-pVE6RZB3";
+liff.init({ liffId: LIFF_ID }).then(async () => {
+  const profile = await liff.getProfile();
+
+  document.getElementById("registerForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const body = {
+      member_id: document.getElementById("member_id").value,
+      id_card_last4: document.getElementById("id_card").value,
+      line_user_id: profile.userId,
+      display_name: profile.displayName,
+      picture_url: profile.pictureUrl
+    };
+
+    const res = await fetch("https://ttottijljxoinptmhgtu.supabase.co/functions/v1/register-member", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
+
+    const data = await res.json();
+    document.getElementById("result").textContent = data.message || "เกิดข้อผิดพลาด";
+  });
+});
+</script>
+
+</body>
+</html>
