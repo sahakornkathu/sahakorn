@@ -351,13 +351,21 @@ let allMembers = [];
 let sortColumn = null, sortAsc = true;
 let currentPage = 1, rowsPerPage = 10;
 
-/* Progress / multi-step (ถ้ามี) */
+/* ====== Progress Step Form ====== */
 const formSteps = document.querySelectorAll('.form-step');
 const progressSteps = document.querySelectorAll('.progress-step');
 let formStepIndex = 0;
 showStep(formStepIndex);
-document.getElementById('nextBtn').addEventListener('click', ()=>{ if(!validateStep(formStepIndex)) return; formStepIndex++; showStep(formStepIndex); });
-document.getElementById('prevBtn').addEventListener('click', ()=>{ formStepIndex--; showStep(formStepIndex); });
+
+document.getElementById('nextBtn').addEventListener('click', ()=>{
+  if(!validateStep(formStepIndex)) return;
+  formStepIndex++;
+  showStep(formStepIndex);
+});
+document.getElementById('prevBtn').addEventListener('click', ()=>{
+  formStepIndex--;
+  showStep(formStepIndex);
+});
 
 function showStep(n){
   formSteps.forEach((s,i)=>s.classList.toggle('active', i===n));
@@ -390,7 +398,7 @@ function animateCount(elem, start, end, duration = 800) {
   const startTime = performance.now();
   function frame(now) {
     const t = Math.min(1, (now - startTime) / duration);
-    const eased = t < 0.5 ? 2*t*t : -1 + (4 - 2*t)*t; // simple ease
+    const eased = t < 0.5 ? 2*t*t : -1 + (4 - 2*t)*t;
     const current = Math.round(start + diff * eased);
     elem.textContent = current.toLocaleString();
     if (t < 1) requestAnimationFrame(frame);
@@ -399,14 +407,13 @@ function animateCount(elem, start, end, duration = 800) {
   requestAnimationFrame(frame);
 }
 
-/* ====== Update Dashboard (call AFTER allMembers ถูกโหลดครบ) ====== */
+/* ====== Update Dashboard ====== */
 function updateDashboard() {
   const total = allMembers.length;
   const active = allMembers.filter(m => (m.member_status || '') === 'สมาชิก').length;
   const exit = allMembers.filter(m => (m.member_status || '') === 'ลาออก').length;
   const dead = allMembers.filter(m => (m.member_status || '') === 'เสียชีวิต').length;
 
-  // แสดงด้วย animation (เอาค่าปัจจุบันจาก DOM เป็น start)
   const elTotal = document.getElementById('totalMembers');
   const elActive = document.getElementById('activeMembers');
   const elExit = document.getElementById('exitMembers');
@@ -418,31 +425,22 @@ function updateDashboard() {
   animateCount(elDead, parseInt(elDead.textContent?.replace(/,/g,'')) || 0, dead);
 }
 
-/* ====== Load members (chunked) ======
-  - Backend must support ?range_start=...
-  - This function repeatedly fetches until a chunk smaller than CHUNK_SIZE returned
-*/
+/* ====== Load Members (chunked) ====== */
 async function loadMembers(){
   try{
-    allMembers = []; // reset
+    allMembers = [];
     let from = 0;
     while(true){
       const res = await fetch(`${API_URL}?range_start=${from}`);
       const result = await res.json();
-      // backend may return { success:true, data: [...] } or just [...]
       const data = (result && (result.data || result)) || [];
-      if (!Array.isArray(data)) break;
-      if (data.length === 0) break;
+      if (!Array.isArray(data) || data.length === 0) break;
       allMembers = allMembers.concat(data);
-      // stop condition
       if (data.length < CHUNK_SIZE) break;
       from += CHUNK_SIZE;
     }
-
-    // หลังโหลดครบทั้งหมด -> อัปเดต Dashboard + render
     updateDashboard();
     renderTable();
-
     console.log('✅ Loaded members:', allMembers.length);
   } catch(err){
     console.error('Error loadMembers:', err);
@@ -450,7 +448,7 @@ async function loadMembers(){
   }
 }
 
-/* ====== Render table (use allMembers) ====== */
+/* ====== Render Table ====== */
 function renderTable(){
   let rows = allMembers.slice();
 
@@ -510,24 +508,18 @@ function renderTable(){
   document.getElementById('resultCount').textContent = `จำนวนทั้งหมด: ${rows.length} รายการ`;
 }
 
-/* ====== Edit member (fill form) ====== */
+/* ====== Edit Member ====== */
 window.editMember = (id) => {
   const m = allMembers.find(x => (x.member_id+'') === (id+''));
   if(!m) return;
   editId = id;
-
   for(let k in m){
     if(!form.elements[k]) continue;
     let val = m[k];
-
-    // normalize date formats
     if(typeof val === 'string' && /^\d{4}\/\d{2}\/\d{2}$/.test(val)) val = val.replaceAll('/','-');
     if(typeof val === 'string' && val.includes('T')) val = val.split('T')[0];
-
     form.elements[k].value = val ?? '';
   }
-
-  // calculate age from birthday and fill age input
   const birthdayInput = form.elements['birthday'];
   const ageInput = form.elements['age'];
   if(birthdayInput && birthdayInput.value){
@@ -537,37 +529,29 @@ window.editMember = (id) => {
     const md = today.getMonth() - bd.getMonth();
     if(md < 0 || (md === 0 && today.getDate() < bd.getDate())) a--;
     ageInput.value = a >= 0 ? a : '';
-  } else {
-    if(ageInput) ageInput.value = '';
-  }
-
+  } else if(ageInput) ageInput.value = '';
   formStepIndex = 0; showStep(0);
 };
 
-/* ====== Delete member ====== */
+/* ====== Delete Member ====== */
 window.deleteMember = async (id) => {
   if(!confirm('ลบสมาชิกนี้?')) return;
   try{
     const res = await fetch(`${API_URL}?member_id=${encodeURIComponent(id)}`, { method: 'DELETE' });
     const result = await res.json();
     if(result.error) { alert(result.error); return; }
-    // remove locally and rerender
     allMembers = allMembers.filter(m => (m.member_id+'') !== (id+''));
     updateDashboard();
     renderTable();
   } catch(err){ alert(err); }
 };
 
-/* ====== Form submit (insert/update) ====== */
+/* ====== Form Submit ====== */
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
   const data = Object.fromEntries(new FormData(form));
-
-  // normalize dates (YYYY/MM/DD -> YYYY-MM-DD)
   if (data.join_date) data.join_date = data.join_date.replaceAll('/', '-');
   if (data.birthday) data.birthday = data.birthday.replaceAll('/', '-');
-
-  // calculate age from birthday
   if (data.birthday) {
     const bd = new Date(data.birthday);
     const today = new Date();
@@ -575,13 +559,8 @@ form.addEventListener('submit', async (e) => {
     const md = today.getMonth() - bd.getMonth();
     if(md < 0 || (md === 0 && today.getDate() < bd.getDate())) a--;
     data.age = a >= 0 ? a : null;
-  } else {
-    data.age = null;
-  }
-
-  // sanitize id_card
+  } else data.age = null;
   if(data.id_card) data.id_card = data.id_card.replace(/\D/g,'');
-
   if(editId) data.member_id = editId;
 
   try{
@@ -605,7 +584,7 @@ form.addEventListener('submit', async (e) => {
   }
 });
 
-/* ====== Sorting / Pagination / Filters wiring ====== */
+/* ====== Sorting / Pagination / Filters ====== */
 document.querySelectorAll('#memberTable th[data-column]').forEach(th => {
   th.addEventListener('click', () => {
     const col = th.getAttribute('data-column');
@@ -622,9 +601,62 @@ document.getElementById('nextPage').addEventListener('click', ()=>{ currentPage+
   if(el) el.addEventListener('input', ()=>{ currentPage = 1; renderTable(); });
 });
 
-/* ====== Initial load ====== */
+/* ====== ปุ่มล้างตัวกรอง ====== */
+document.getElementById('clearFilter').addEventListener('click', () => {
+  ['searchMemberId','searchName','searchGroup','searchProvince','searchJoinDateStart','searchJoinDateEnd','searchStatus','searchGender']
+  .forEach(id => document.getElementById(id).value = '');
+  currentPage = 1;
+  renderTable();
+});
+
+/* ====== ปุ่มปริ้นรายงาน (โลโก้ + วันที่) ====== */
+document.getElementById('printReport').addEventListener('click', () => {
+  const rows = document.querySelectorAll('#memberTable tbody tr');
+  if (rows.length === 0) {
+    alert('ไม่มีข้อมูลสำหรับปริ้นรายงาน');
+    return;
+  }
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('th-TH', {year:'numeric',month:'long',day:'numeric'});
+  const timeStr = now.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+  const logoURL = 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9b/Coop_logo.svg/120px-Coop_logo.svg.png';
+
+  let html = `
+  <html><head><title>รายงานสมาชิก</title>
+  <style>
+    body{font-family:"Prompt",sans-serif;margin:30px;color:#111827;}
+    header{display:flex;align-items:center;flex-direction:column;margin-bottom:10px;}
+    header img{width:80px;margin-bottom:8px;}
+    h2{text-align:center;color:#1e40af;margin:8px 0 4px 0;}
+    h4{text-align:center;color:#374151;margin:4px 0;font-weight:400;}
+    table{width:100%;border-collapse:collapse;margin-top:20px;}
+    th,td{border:1px solid #ccc;padding:8px;text-align:center;font-size:13px;}
+    th{background:#4a90e2;color:#fff;}
+    tr:nth-child(even){background:#f9fafb;}
+    footer{margin-top:30px;text-align:right;font-size:12px;color:#6b7280;}
+    @media print{body{margin:15mm;}footer{position:fixed;bottom:10mm;left:0;right:0;}}
+  </style></head><body>
+  <header><img src="${logoURL}" alt="logo">
+  <h2>รายงานรายชื่อสมาชิกสหกรณ์</h2>
+  <h4>พิมพ์เมื่อวันที่ ${dateStr} เวลา ${timeStr} น.</h4></header>
+  <table><thead><tr>
+    <th>เลขสมาชิก</th><th>ชื่อ</th><th>นามสกุล</th><th>กลุ่ม</th><th>จังหวัด</th><th>สถานะ</th>
+  </tr></thead><tbody>`;
+  rows.forEach(tr => html += `<tr>${tr.innerHTML.replace(/<button.*?<\/button>/g, '')}</tr>`);
+  html += `</tbody></table><footer>ระบบจัดการสมาชิก © ${now.getFullYear()} | พัฒนาโดย สหกรณ์connect</footer></body></html>`;
+
+  const win = window.open('', '_blank');
+  win.document.write(html);
+  win.document.close();
+  win.focus();
+  win.print();
+  win.close();
+});
+
+/* ====== Initial Load ====== */
 loadMembers();
 </script>
+
 
 
 </body>
