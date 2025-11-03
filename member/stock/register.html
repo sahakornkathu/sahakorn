@@ -5,99 +5,118 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>ลงทะเบียนสมาชิกสหกรณ์</title>
 <link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.3.2/dist/tailwind.min.css" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600&display=swap" rel="stylesheet">
 
 <style>
   body {
     font-family: 'Prompt', sans-serif;
-    background: linear-gradient(145deg, #004d40 0%, #2e7d32 50%, #66bb6a 100%);
+    background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
     min-height: 100vh;
     display: flex;
-    align-items: center;
     justify-content: center;
+    align-items: center;
   }
+
   .card {
-    background: rgba(255, 255, 255, 0.97);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-    border-radius: 1.5rem;
-    padding: 2rem;
+    background: #fff;
+    border-radius: 1.25rem;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
     width: 100%;
     max-width: 420px;
-    animation: fadeIn 0.8s ease;
+    padding: 2rem;
+    animation: fadeIn 0.5s ease-in-out;
   }
+
   @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(20px); }
+    from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
   }
+
+  .profile-img {
+    width: 70px;
+    height: 70px;
+    border-radius: 9999px;
+    border: 3px solid #4caf50;
+    box-shadow: 0 0 8px rgba(76, 175, 80, 0.2);
+  }
+
   .btn {
     transition: all 0.3s ease;
   }
+
   .btn:hover {
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
   }
-  input {
-    border-radius: 10px;
+
+  .spinner {
+    border: 3px solid #eee;
+    border-top: 3px solid #4caf50;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    animation: spin 1s linear infinite;
+    display: inline-block;
+    vertical-align: middle;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .hidden {
+    display: none;
   }
 </style>
 </head>
 
 <body>
-  <div class="card text-center">
-    <!-- Logo -->
-    <div class="mb-5">
-      <img src="https://cdn-icons-png.flaticon.com/512/219/219970.png" class="w-20 h-20 mx-auto mb-2">
-      <h1 class="text-2xl font-bold text-green-800">ระบบลงทะเบียนสมาชิก</h1>
-      <p class="text-gray-500 text-sm">สหกรณ์ออมทรัพย์ — LINE Official</p>
+  <div class="card">
+    <!-- Header -->
+    <div class="text-center mb-5">
+      <img src="https://cdn-icons-png.flaticon.com/512/219/219970.png" alt="logo" class="w-14 h-14 mx-auto mb-2 opacity-90">
+      <h1 class="text-xl font-semibold text-green-700">ลงทะเบียนสมาชิกสหกรณ์</h1>
+      <p class="text-gray-500 text-sm">ยืนยันตัวตนผ่านบัญชี LINE</p>
     </div>
 
-    <!-- LINE Profile -->
-    <div id="profile" class="hidden mb-4">
-      <img id="linePic" class="w-20 h-20 rounded-full mx-auto border-4 border-green-500 shadow-md" alt="LINE Profile" />
-      <p id="lineName" class="mt-2 text-lg font-semibold text-green-800"></p>
+    <!-- Profile -->
+    <div id="profile" class="hidden text-center mb-4">
+      <img id="linePic" class="profile-img mx-auto mb-2" alt="LINE Profile" />
+      <p id="lineName" class="text-base font-medium text-green-700"></p>
     </div>
 
-    <!-- สถานะ -->
-    <div id="status" class="text-gray-600 mb-4">กำลังตรวจสอบสถานะ...</div>
+    <!-- Status -->
+    <div id="status" class="text-center text-gray-600 mb-4">กำลังตรวจสอบสถานะ...</div>
 
     <!-- Form -->
-    <form id="registerForm" class="hidden space-y-4 text-left">
+    <form id="registerForm" class="hidden space-y-4">
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-1">รหัสสมาชิก</label>
-        <input id="member_id" type="text" class="w-full border border-gray-300 p-2.5 focus:ring-2 focus:ring-green-500 focus:border-green-500" placeholder="กรอกรหัสสมาชิก" required />
+        <input id="member_id" type="text" class="w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-green-400 focus:border-green-400" placeholder="กรอกรหัสสมาชิก" required />
       </div>
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-1">4 ตัวท้ายเลขบัตรประชาชน</label>
-        <input id="id_card" maxlength="4" class="w-full border border-gray-300 p-2.5 focus:ring-2 focus:ring-green-500 focus:border-green-500" placeholder="เช่น 1234" required />
+        <input id="id_card" maxlength="4" class="w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-green-400 focus:border-green-400" placeholder="เช่น 1234" required />
       </div>
-      <button type="submit" class="btn w-full bg-green-600 text-white py-2.5 rounded-lg font-medium hover:bg-green-700">
-        ลงทะเบียนสมาชิก
+      <button type="submit" id="submitBtn" class="btn w-full bg-green-600 text-white py-2 rounded-md font-medium hover:bg-green-700">
+        ลงทะเบียน
       </button>
     </form>
-
-    <!-- Loading -->
-    <div id="loading" class="hidden text-green-600 mt-4 text-sm font-medium">
-      <svg class="animate-spin h-5 w-5 inline-block mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
-      </svg>
-      กำลังตรวจสอบข้อมูลสมาชิก...
-    </div>
 
     <!-- Result -->
     <p id="result" class="text-center mt-4 text-sm text-gray-700"></p>
 
     <!-- Footer -->
-    <p class="text-xs text-gray-400 mt-8">
-      © 2025 Sahakorn System | Powered by Supabase + LINE LIFF
+    <p class="text-xs text-gray-400 text-center mt-6">
+      © 2025 Sahakorn System — Powered by Supabase & LINE LIFF
     </p>
   </div>
 
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <script>
   const LIFF_ID = "1660910795-pVE6RZB3"; // 🔹 ใส่ LIFF ID ของคุณ
-  const SUPABASE_FUNCTION_URL = "https://ttottijljxoinptmhgtu.supabase.co/functions/v1/register-member"; 
-  const SUPABASE_CHECK_URL = "https://ttottijljxoinptmhgtu.supabase.co/functions/v1/check-member"; 
+  const SUPABASE_REGISTER_URL = "https://ttottijljxoinptmhgtu.supabase.co/functions/v1/register-member";
+  const SUPABASE_CHECK_URL = "https://ttottijljxoinptmhgtu.supabase.co/functions/v1/check-member";
 
   async function main() {
     try {
@@ -115,9 +134,9 @@
       const statusDiv = document.getElementById("status");
       const form = document.getElementById("registerForm");
       const result = document.getElementById("result");
-      const loading = document.getElementById("loading");
+      const submitBtn = document.getElementById("submitBtn");
 
-      // ตรวจสอบสถานะการลงทะเบียน
+      // ตรวจสอบสถานะ
       const checkRes = await fetch(SUPABASE_CHECK_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -126,19 +145,21 @@
       const checkData = await checkRes.json();
 
       if (checkData.status === "registered") {
-        statusDiv.classList.add("text-green-700", "font-semibold");
+        statusDiv.classList.add("text-green-700", "font-medium");
         statusDiv.textContent = `✅ คุณ ${checkData.name} ได้ลงทะเบียนแล้ว`;
         return;
-      } else {
-        statusDiv.textContent = "กรุณากรอกข้อมูลเพื่อยืนยันตัวตน";
-        form.classList.remove("hidden");
       }
 
-      // เมื่อกดปุ่มลงทะเบียน
+      // ถ้ายังไม่ลงทะเบียน
+      statusDiv.textContent = "กรุณากรอกข้อมูลเพื่อยืนยันตัวตน";
+      form.classList.remove("hidden");
+
+      // เมื่อกดลงทะเบียน
       form.addEventListener("submit", async (e) => {
         e.preventDefault();
         result.textContent = "";
-        loading.classList.remove("hidden");
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = `<span class="spinner"></span> <span class="ml-2">กำลังบันทึก...</span>`;
 
         const body = {
           member_id: document.getElementById("member_id").value.trim(),
@@ -149,16 +170,15 @@
         };
 
         try {
-          const res = await fetch(SUPABASE_FUNCTION_URL, {
+          const res = await fetch(SUPABASE_REGISTER_URL, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(body)
           });
-
           const data = await res.json();
-          loading.classList.add("hidden");
 
           if (data.status === "success") {
+            result.classList.remove("text-red-500");
             result.classList.add("text-green-600", "font-medium");
             result.textContent = data.message || "ลงทะเบียนสำเร็จ ✅";
             form.classList.add("hidden");
@@ -168,14 +188,16 @@
             result.textContent = data.message || "ไม่สามารถลงทะเบียนได้ ❌";
           }
         } catch (err) {
-          loading.classList.add("hidden");
+          console.error(err);
           result.classList.add("text-red-500");
           result.textContent = "ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้ ❌";
-          console.error(err);
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = "ลงทะเบียน";
         }
       });
     } catch (err) {
-      console.error("LIFF init error:", err);
+      console.error(err);
       alert("กรุณาเปิดจากในแอป LINE เท่านั้น");
     }
   }
