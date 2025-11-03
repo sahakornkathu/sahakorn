@@ -7,23 +7,27 @@
 <link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.3.2/dist/tailwind.min.css" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
- body {
+/* ========= GLOBAL ========= */
+body {
   font-family: 'Prompt', sans-serif;
   background: linear-gradient(145deg, #e8f5e9, #c8e6c9);
   min-height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 20px;
+  padding: 16px;
+  color: #333;
 }
 
+/* ========= CARD ========= */
 .card {
   background: #fff;
   border-radius: 1.25rem;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
   width: 100%;
   max-width: 420px;
-  padding: 2rem 1.75rem;
+  padding: 2rem 2rem 1.75rem 2rem;
+  box-sizing: border-box;
   animation: fadeIn 0.5s ease-in-out;
 }
 
@@ -35,7 +39,7 @@
   opacity: 0.9;
 }
 
-/* Header */
+/* ========= HEADER ========= */
 h1 {
   font-size: 1.35rem;
   font-weight: 600;
@@ -47,7 +51,7 @@ p.text-gray-500 {
   color: #6b7280;
 }
 
-/* โปรไฟล์ */
+/* ========= PROFILE ========= */
 .profile-img {
   width: 68px;
   height: 68px;
@@ -59,41 +63,55 @@ p.text-gray-500 {
 }
 #profile p {
   font-weight: 500;
+  color: #2e7d32;
+  font-size: 0.95rem;
 }
 
-/* ฟอร์ม */
+/* ========= STATUS ========= */
+#status {
+  color: #555;
+  font-size: 0.95rem;
+  margin-bottom: 1.2rem;
+  text-align: center;
+}
+
+/* ========= FORM ========= */
 form {
   text-align: left;
+  padding: 0 0.25rem;
 }
 form label {
   margin-left: 2px;
   font-size: 0.9rem;
   font-weight: 500;
   color: #374151;
+  display: block;
+  margin-bottom: 0.3rem;
 }
 form div {
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 1rem;
+  margin-bottom: 1.1rem;
 }
 input {
   width: 100%;
-  padding: 0.6rem 0.8rem;
+  padding: 0.65rem 0.9rem;
   border-radius: 10px;
   border: 1px solid #d1d5db;
   font-size: 0.95rem;
   transition: all 0.25s ease;
+  box-sizing: border-box;
+  background-color: #fafafa;
 }
 input:focus {
   border-color: #43a047;
   box-shadow: 0 0 0 3px rgba(67, 160, 71, 0.15);
+  background-color: #fff;
   outline: none;
 }
 
-/* ปุ่มลงทะเบียน */
+/* ========= BUTTON ========= */
 button {
   width: 100%;
-  padding: 0.8rem;
+  padding: 0.85rem;
   border: none;
   border-radius: 12px;
   background: linear-gradient(135deg, #43a047, #2e7d32);
@@ -103,18 +121,23 @@ button {
   letter-spacing: 0.3px;
   transition: all 0.3s ease;
   box-shadow: 0 3px 8px rgba(67, 160, 71, 0.25);
+  margin-top: 0.5rem;
 }
 button:hover:not(:disabled) {
   transform: translateY(-1px);
   box-shadow: 0 5px 14px rgba(67, 160, 71, 0.35);
   background: linear-gradient(135deg, #4caf50, #2e7d32);
 }
+button:active:not(:disabled) {
+  transform: scale(0.98);
+  box-shadow: 0 2px 6px rgba(67, 160, 71, 0.2);
+}
 button:disabled {
   opacity: 0.7;
   cursor: not-allowed;
 }
 
-/* Spinner */
+/* ========= SPINNER ========= */
 .spinner {
   border: 2px solid #eee;
   border-top: 2px solid #4caf50;
@@ -124,33 +147,31 @@ button:disabled {
   animation: spin 1s linear infinite;
   display: inline-block;
   vertical-align: middle;
+  margin-right: 6px;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* Fade in */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* Status + Result */
-#status {
-  color: #555;
-  font-size: 0.95rem;
-  margin-bottom: 1rem;
-}
+/* ========= RESULT ========= */
 #result {
   font-size: 0.9rem;
   line-height: 1.4;
+  text-align: center;
+  margin-top: 1rem;
 }
 
-/* Footer */
+/* ========= FOOTER ========= */
 .card p.text-xs {
   margin-top: 2rem;
+  text-align: center;
   color: #9ca3af;
   font-size: 0.72rem;
 }
 
+/* ========= ANIMATION ========= */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 
 </style>
 </head>
