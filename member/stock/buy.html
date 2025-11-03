@@ -9,6 +9,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
   <style>
     body { font-family: 'Prompt', sans-serif; background: #f9fafb; }
     .card { background: white; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
@@ -31,14 +32,6 @@
       <p id="lineName" class="mt-2 text-green-700 font-medium"></p>
     </div>
 
-    <div id="summary" class="hidden mb-4 text-sm text-gray-700">
-      <div class="flex justify-between"><span>ยอดยกมา</span><span id="carryOver">-</span></div>
-      <div class="flex justify-between"><span>ซื้อระหว่างปี</span><span id="purchased">-</span></div>
-      <div class="flex justify-between font-semibold border-t mt-1 pt-1 text-green-700">
-        <span>ยอดคงเหลือ</span><span id="total">-</span>
-      </div>
-    </div>
-
     <form id="buyForm" class="space-y-4">
       <div>
         <label class="block text-left text-gray-700 text-sm mb-1">จำนวนเงินที่ต้องการซื้อ (บาท)</label>
@@ -47,15 +40,16 @@
           placeholder="กรอกจำนวนเงิน เช่น 1000" required />
       </div>
 
+      <div class="bg-gray-50 p-3 rounded-md mb-3">
+        <p class="text-sm text-gray-700 mb-2">ชำระเงินผ่าน PromptPay</p>
+        <div id="qrCanvas" class="mx-auto"></div>
+        <p class="text-xs text-gray-500 mt-2">ระบุจำนวนเงินแล้วสแกนจ่ายได้ทันที</p>
+      </div>
+
       <div>
         <label class="block text-left text-gray-700 text-sm mb-1">แนบสลิปชำระเงิน</label>
         <input id="slip" type="file" accept="image/*"
           class="w-full text-sm text-gray-600 border border-gray-300 rounded-md p-2" required />
-      </div>
-
-      <div class="bg-gray-50 p-3 rounded-md mb-3">
-        <p class="text-sm text-gray-700 mb-2">ชำระเงินผ่านบัญชีธนาคาร / QR Code</p>
-        <img src="https://your-static-qr-image-url.jpg" alt="QR Code" class="w-40 mx-auto border rounded-md shadow-sm" />
       </div>
 
       <button id="submitBtn" type="submit"
@@ -66,11 +60,62 @@
   </div>
 
   <script>
-    const LIFF_ID = "1660910795-pQaXrYbm"; // ✅ เปลี่ยนเป็นของคุณ
+    const LIFF_ID = "1660910795-pQaXrYbm"; // ✅ เปลี่ยนเป็น LIFF ID ของคุณ
     const SUPABASE_URL = "https://ttottijljxoinptmhgtu.supabase.co";
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y";
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     const BUY_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/buy-stock`;
+
+    // ✅ ฟังก์ชันสร้าง PromptPay QR
+    function generatePromptPayQR(promptPayId, amount) {
+      const qrCanvas = document.getElementById("qrCanvas");
+      qrCanvas.innerHTML = "";
+      if (!amount || amount <= 0) return;
+
+      const cleaned = promptPayId.replace(/[^0-9]/g, "");
+      const idType = cleaned.length === 13 ? "AID" : "TEL";
+      const formatted = idType === "TEL" && cleaned.startsWith("0")
+        ? "66" + cleaned.substring(1)
+        : cleaned;
+
+      function format(id, value) {
+        const length = value.length.toString().padStart(2, "0");
+        return id + length + value;
+      }
+
+      const payload =
+        "000201" +
+        "010212" +
+        "29370016A000000677010111" +
+        format("01", formatted) +
+        "5303764" +
+        format("54", parseFloat(amount).toFixed(2)) +
+        "5802TH" +
+        "6304";
+
+      function crc16(str) {
+        const crcTable = [];
+        for (let i = 0; i < 256; i++) {
+          let c = i << 8;
+          for (let j = 0; j < 8; j++) {
+            c = (c & 0x8000) ? ((c << 1) ^ 0x1021) : (c << 1);
+          }
+          crcTable[i] = c & 0xffff;
+        }
+        let crc = 0xffff;
+        for (let i = 0; i < str.length; i++) {
+          const c = str.charCodeAt(i);
+          crc = ((crc << 8) ^ crcTable[((crc >> 8) ^ c) & 0xff]) & 0xffff;
+        }
+        return (crc ^ 0).toString(16).toUpperCase().padStart(4, "0");
+      }
+
+      const fullPayload = payload + crc16(payload);
+
+      QRCode.toCanvas(qrCanvas, fullPayload, { width: 200 }, (err) => {
+        if (err) console.error(err);
+      });
+    }
 
     async function main() {
       await liff.init({ liffId: LIFF_ID });
@@ -81,17 +126,14 @@
       document.getElementById("lineName").textContent = profile.displayName;
       document.getElementById("profile").classList.remove("hidden");
 
-      // ✅ ดึงยอดหุ้นสะสม
-      const { data } = await supabase.from("stock_summary").select("*").eq("member_id", profile.userId).single();
-      if (data) {
-        document.getElementById("carryOver").textContent = parseFloat(data.carry_over || 0).toLocaleString();
-        document.getElementById("purchased").textContent = parseFloat(data.purchased_this_year || 0).toLocaleString();
-        document.getElementById("total").textContent = parseFloat(data.total_stock || 0).toLocaleString();
-        document.getElementById("summary").classList.remove("hidden");
-      }
-
       const form = document.getElementById("buyForm");
       const btn = document.getElementById("submitBtn");
+
+      // ✅ เมื่อพิมพ์จำนวนเงิน -> สร้าง QR Code
+      document.getElementById("amount").addEventListener("input", (e) => {
+        const value = parseFloat(e.target.value);
+        generatePromptPayQR("0936494961", value); // ✅ PromptPay ของคุณ
+      });
 
       form.addEventListener("submit", async (e) => {
         e.preventDefault();
@@ -99,7 +141,12 @@
         btn.innerHTML = `<div class="spinner mx-auto"></div>`;
 
         const file = document.getElementById("slip").files[0];
-        if (!file) return Swal.fire("กรุณาแนบสลิป", "", "warning");
+        if (!file) {
+          Swal.fire("กรุณาแนบสลิป", "", "warning");
+          btn.disabled = false;
+          btn.textContent = "ยืนยันการซื้อหุ้น";
+          return;
+        }
 
         // ✅ อัปโหลดสลิปไป Supabase Storage
         const fileName = `${profile.userId}_${Date.now()}.jpg`;
@@ -118,7 +165,7 @@
 
         // ✅ ส่งข้อมูลไป Function buy-stock
         const body = {
-          member_id: profile.userId, // ⚠️ ถ้า member_id ในตารางไม่ตรงกับ userId ต้องแก้
+          member_id: profile.userId, // ถ้ามี mapping จริง แก้ให้เป็น member_id ของ user นี้
           line_user_id: profile.userId,
           display_name: profile.displayName,
           amount: parseFloat(document.getElementById("amount").value),
