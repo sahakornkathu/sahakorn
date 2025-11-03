@@ -307,11 +307,9 @@ async function main() {
 
     // 🔒 ถ้าลงทะเบียนแล้ว
     if (checkData.status === "registered") {
-      statusDiv.classList.add("text-green-700", "font-medium");
-      statusDiv.textContent = `✅ คุณ ${checkData.name || profile.displayName} ได้ลงทะเบียนแล้ว`;
       form.style.display = "none";
-      result.classList.add("text-green-600", "font-medium");
-      result.textContent = "คุณได้ลงทะเบียนเรียบร้อยแล้ว 🎉";
+      statusDiv.textContent = `คุณ ${checkData.name || profile.displayName} ได้ลงทะเบียนแล้ว ✅`;
+      showSuccessPopup("คุณได้ลงทะเบียนแล้ว!", "ไปยังหน้าซื้อหุ้น...");
       return;
     }
 
@@ -345,7 +343,7 @@ async function main() {
         if (data.status === "success") {
           form.style.display = "none";
           statusDiv.textContent = `คุณ ${profile.displayName} ได้ลงทะเบียนแล้ว ✅`;
-          showSuccessPopup();
+          showSuccessPopup("ลงทะเบียนสำเร็จ!", "กำลังไปยังหน้าซื้อหุ้น...");
         } else {
           result.classList.add("text-red-600");
           result.textContent = data.message || "ไม่สามารถลงทะเบียนได้ ❌";
@@ -363,8 +361,8 @@ async function main() {
   }
 }
 
-// ✅ Popup function + Countdown + Bounce animation
-function showSuccessPopup() {
+// ✅ Popup function (ใช้ได้ทั้งตอนลงทะเบียนใหม่และตอนเคยลงทะเบียนแล้ว)
+function showSuccessPopup(titleText = "ลงทะเบียนสำเร็จ!", msgText = "กำลังไปยังหน้าซื้อหุ้น...") {
   const overlay = document.createElement("div");
   Object.assign(overlay.style, {
     position: "fixed",
@@ -401,7 +399,7 @@ function showSuccessPopup() {
   });
 
   const title = document.createElement("h2");
-  title.textContent = "ลงทะเบียนสำเร็จ!";
+  title.textContent = titleText;
   Object.assign(title.style, {
     fontSize: "1.25rem",
     fontWeight: "600",
@@ -451,11 +449,10 @@ function showSuccessPopup() {
   });
   countdownText.textContent = "3";
 
-  progressContainer.appendChild(progressCircle);
-  progressContainer.appendChild(countdownText);
+  progressContainer.append(progressCircle, countdownText);
 
   const redirectMsg = document.createElement("p");
-  redirectMsg.textContent = "กำลังไปยังหน้าซื้อหุ้น...";
+  redirectMsg.textContent = msgText;
   Object.assign(redirectMsg.style, {
     fontSize: "0.85rem",
     color: "#777",
@@ -494,7 +491,7 @@ function showSuccessPopup() {
     }
   }, 1000);
 
-  // ✅ เพิ่ม animation keyframes
+  // ✅ Animation Keyframes
   const style = document.createElement("style");
   style.textContent = `
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
