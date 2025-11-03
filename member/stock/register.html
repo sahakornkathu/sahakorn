@@ -72,12 +72,60 @@ p.text-gray-500 {
   border: 2px solid #43a047;
   object-fit: cover;
   box-shadow: 0 0 5px rgba(67, 160, 71, 0.25);
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.4rem;
+  position: relative;
 }
+
+/* 🌈 Gradient + Glow + Sparkle Animation */
 #profile p {
-  font-weight: 600;
-  color: #2e7d32;
-  font-size: 0.95rem;
+  position: relative;
+  font-weight: 700;
+  font-size: 1rem;
+  background: linear-gradient(90deg, #43a047, #2e7d32, #43a047);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: gradientFlow 3s linear infinite;
+  transition: text-shadow 0.3s ease;
+}
+
+/* 🪄 Glow เมื่อ Hover */
+#profile p:hover {
+  text-shadow: 0 0 10px rgba(76, 175, 80, 0.8), 0 0 15px rgba(67, 160, 71, 0.4);
+}
+
+/* ✨ Sparkle Effect */
+#profile p::after {
+  content: "✨";
+  position: absolute;
+  top: 0;
+  left: -10%;
+  opacity: 0;
+  font-size: 1.1rem;
+  animation: sparkle 4s infinite linear;
+}
+@keyframes sparkle {
+  0% {
+    opacity: 0;
+    left: -10%;
+    transform: rotate(0deg) scale(0.8);
+  }
+  10% {
+    opacity: 1;
+    transform: rotate(15deg) scale(1);
+  }
+  40% {
+    left: 110%;
+    opacity: 0.9;
+    transform: rotate(25deg) scale(1.2);
+  }
+  60% {
+    opacity: 0;
+  }
+  100% {
+    left: 120%;
+    opacity: 0;
+  }
 }
 
 /* ========= STATUS ========= */
@@ -188,26 +236,26 @@ button:disabled {
 @keyframes fadeUp {
   to { opacity: 1; transform: translateY(0); }
 }
+@keyframes gradientFlow {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
 </style>
 </head>
 
 <body>
   <div class="card">
-    <!-- Header -->
     <img src="https://lh5.googleusercontent.com/d/1h0cRr_Yj6xynWjXTGYNbhhtb7MC3-4Rl" alt="logo">
     <h1>ลงทะเบียนซื้อหุ้น</h1>
     <p class="text-gray-500">ยืนยันตัวตนผ่านบัญชี LINE</p>
 
-    <!-- Profile -->
     <div id="profile" class="hidden">
       <img id="linePic" class="profile-img" alt="LINE Profile" />
       <p id="lineName"></p>
     </div>
 
-    <!-- Status -->
     <div id="status">กำลังตรวจสอบสถานะ...</div>
 
-    <!-- Form -->
     <form id="registerForm" class="hidden">
       <div>
         <label>รหัสสมาชิก</label>
@@ -220,10 +268,7 @@ button:disabled {
       <button type="submit" id="submitBtn">ลงทะเบียน</button>
     </form>
 
-    <!-- Result -->
     <p id="result"></p>
-
-    <!-- Footer -->
     <p class="text-xs">© 2025 Sahakorn System — Powered by Supabase + LINE LIFF</p>
   </div>
 
@@ -242,20 +287,15 @@ button:disabled {
       }
 
       const profile = await liff.getProfile();
-      const profileDiv = document.getElementById("profile");
-      const linePic = document.getElementById("linePic");
-      const lineName = document.getElementById("lineName");
-
-      linePic.src = profile.pictureUrl;
-      lineName.textContent = profile.displayName;
-      profileDiv.classList.remove("hidden");
+      document.getElementById("linePic").src = profile.pictureUrl;
+      document.getElementById("lineName").textContent = profile.displayName;
+      document.getElementById("profile").classList.remove("hidden");
 
       const statusDiv = document.getElementById("status");
       const form = document.getElementById("registerForm");
       const result = document.getElementById("result");
       const submitBtn = document.getElementById("submitBtn");
 
-      // ตรวจสอบสถานะ
       const checkRes = await fetch(SUPABASE_CHECK_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
