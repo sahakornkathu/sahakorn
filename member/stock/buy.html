@@ -4,34 +4,45 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ซื้อหุ้นสหกรณ์</title>
+
+  <!-- ✅ Tailwind + Font -->
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.3.2/dist/tailwind.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+
+  <!-- ✅ CSS -->
   <style>
     body { font-family: 'Prompt', sans-serif; background: #f9fafb; }
     .card { background: white; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
     .spinner {
-      border: 3px solid #eee; border-top: 3px solid #4caf50;
-      border-radius: 50%; width: 24px; height: 24px;
+      border: 3px solid #eee;
+      border-top: 3px solid #4caf50;
+      border-radius: 50%;
+      width: 24px; height: 24px;
       animation: spin 1s linear infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
   </style>
+
+  <!-- ✅ External Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11" defer></script>
+  <script src="https://unpkg.com/qrcode/build/qrcode.min.js" defer></script>
 </head>
+
 <body class="flex flex-col justify-center items-center min-h-screen p-4">
 
   <div class="card w-full max-w-md p-6 text-center">
     <h1 class="text-xl font-semibold text-green-700 mb-2">ซื้อหุ้นสหกรณ์</h1>
     <p class="text-gray-500 mb-4">ยืนยันการซื้อหุ้นของคุณผ่านระบบออนไลน์</p>
 
+    <!-- ✅ LINE Profile -->
     <div id="profile" class="hidden mb-4">
       <img id="linePic" class="w-16 h-16 rounded-full mx-auto border-2 border-green-600" />
       <p id="lineName" class="mt-2 text-green-700 font-medium"></p>
     </div>
 
+    <!-- ✅ Form -->
     <form id="buyForm" class="space-y-4">
       <div>
         <label class="block text-left text-gray-700 text-sm mb-1">จำนวนเงินที่ต้องการซื้อ (บาท)</label>
@@ -59,24 +70,28 @@
     </form>
   </div>
 
-  <script>
-    const LIFF_ID = "1660910795-pQaXrYbm"; // ✅ เปลี่ยนเป็น LIFF ID ของคุณ
+  <!-- ✅ Main Script -->
+  <script defer>
+    const LIFF_ID = "1660910795-pQaXrYbm"; // ✅ ใส่ LIFF ID ของคุณ
     const SUPABASE_URL = "https://ttottijljxoinptmhgtu.supabase.co";
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y";
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     const BUY_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/buy-stock`;
 
-    // ✅ ฟังก์ชันสร้าง PromptPay QR
+    // ✅ สร้าง Supabase client
+    let supabase;
+    document.addEventListener("DOMContentLoaded", () => {
+      supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+      main();
+    });
+
+    // ✅ ฟังก์ชันสร้าง QR พร้อมเพย์
     function generatePromptPayQR(promptPayId, amount) {
       const qrCanvas = document.getElementById("qrCanvas");
       qrCanvas.innerHTML = "";
       if (!amount || amount <= 0) return;
 
       const cleaned = promptPayId.replace(/[^0-9]/g, "");
-      const idType = cleaned.length === 13 ? "AID" : "TEL";
-      const formatted = idType === "TEL" && cleaned.startsWith("0")
-        ? "66" + cleaned.substring(1)
-        : cleaned;
+      const formatted = cleaned.startsWith("0") ? "66" + cleaned.substring(1) : cleaned;
 
       function format(id, value) {
         const length = value.length.toString().padStart(2, "0");
@@ -111,12 +126,12 @@
       }
 
       const fullPayload = payload + crc16(payload);
-
       QRCode.toCanvas(qrCanvas, fullPayload, { width: 200 }, (err) => {
         if (err) console.error(err);
       });
     }
 
+    // ✅ MAIN
     async function main() {
       await liff.init({ liffId: LIFF_ID });
       if (!liff.isLoggedIn()) return liff.login();
@@ -126,14 +141,14 @@
       document.getElementById("lineName").textContent = profile.displayName;
       document.getElementById("profile").classList.remove("hidden");
 
+      const amountInput = document.getElementById("amount");
+      amountInput.addEventListener("input", (e) => {
+        const value = parseFloat(e.target.value);
+        generatePromptPayQR("0936494961", value);
+      });
+
       const form = document.getElementById("buyForm");
       const btn = document.getElementById("submitBtn");
-
-      // ✅ เมื่อพิมพ์จำนวนเงิน -> สร้าง QR Code
-      document.getElementById("amount").addEventListener("input", (e) => {
-        const value = parseFloat(e.target.value);
-        generatePromptPayQR("0936494961", value); // ✅ PromptPay ของคุณ
-      });
 
       form.addEventListener("submit", async (e) => {
         e.preventDefault();
@@ -165,37 +180,39 @@
 
         // ✅ ส่งข้อมูลไป Function buy-stock
         const body = {
-          member_id: profile.userId, // ถ้ามี mapping จริง แก้ให้เป็น member_id ของ user นี้
+          member_id: profile.userId,
           line_user_id: profile.userId,
           display_name: profile.displayName,
           amount: parseFloat(document.getElementById("amount").value),
           slip_url
         };
 
-        const res = await fetch(BUY_FUNCTION_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body)
-        });
-        const result = await res.json();
+        try {
+          const res = await fetch(BUY_FUNCTION_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body)
+          });
+          const result = await res.json();
 
-        if (result.status === "success") {
-          Swal.fire({
-            icon: "success",
-            title: "ส่งคำสั่งซื้อสำเร็จ!",
-            text: "รอการตรวจสอบจากเจ้าหน้าที่",
-            confirmButtonColor: "#16a34a"
-          }).then(() => window.location.reload());
-        } else {
-          Swal.fire("เกิดข้อผิดพลาด", result.error || "ไม่สามารถส่งคำสั่งซื้อได้", "error");
+          if (result.status === "success") {
+            Swal.fire({
+              icon: "success",
+              title: "ส่งคำสั่งซื้อสำเร็จ!",
+              text: "รอการตรวจสอบจากเจ้าหน้าที่",
+              confirmButtonColor: "#16a34a"
+            }).then(() => window.location.reload());
+          } else {
+            Swal.fire("เกิดข้อผิดพลาด", result.error || "ไม่สามารถส่งคำสั่งซื้อได้", "error");
+          }
+        } catch (err) {
+          Swal.fire("การเชื่อมต่อล้มเหลว", err.message, "error");
         }
 
         btn.disabled = false;
         btn.textContent = "ยืนยันการซื้อหุ้น";
       });
     }
-
-    main();
   </script>
 </body>
 </html>
