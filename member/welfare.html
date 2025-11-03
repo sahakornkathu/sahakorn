@@ -59,9 +59,74 @@
   .history-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
   .history-table th, .history-table td { border: 1px solid #ddd; padding: 6px 8px; text-align: center; }
   .history-table th { background: #f1f5f9; }
+
+  /* ✅ Navbar Style */
+#navbar {
+  background: #4a90e2;
+  color: white;
+  padding: 10px 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+.nav-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.nav-logo {
+  font-weight: 600;
+  font-size: 18px;
+  letter-spacing: 0.5px;
+}
+.nav-links {
+  list-style: none;
+  display: flex;
+  gap: 15px;
+  margin: 0;
+  padding: 0;
+}
+.nav-links li a {
+  color: white;
+  text-decoration: none;
+  font-weight: 400;
+  padding: 6px 12px;
+  border-radius: 6px;
+  transition: background 0.2s;
+}
+.nav-links li a:hover {
+  background: rgba(255,255,255,0.2);
+}
+.nav-links li a.active {
+  background: white;
+  color: #4a90e2;
+  font-weight: 500;
+}
+@media (max-width:768px) {
+  .nav-container { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .nav-links { flex-direction: column; width: 100%; }
+  .nav-links li a { display: block; width: 100%; }
+}
+
 </style>
 </head>
 <body>
+  <!-- ✅ Navbar -->
+<nav id="navbar">
+  <div class="nav-container">
+    <div class="nav-logo">ระบบจัดการสมาชิก</div>
+    <ul class="nav-links">
+      <li><a href="member.html">ข้อมูลสมาชิก</a></li>
+      <li><a href="memberexit.html">สมาชิกลาออก</a></li>
+      <li><a href="welfare.html" class="active">สวัสดิการสมาชิก</a></li>
+    </ul>
+  </div>
+</nav>
+
 <div class="container">
   <h2>บันทึกและดูประวัติสวัสดิการสมาชิก</h2>
 
