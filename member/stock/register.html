@@ -273,89 +273,102 @@ button:disabled {
   </div>
 
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-  <script>
-  const LIFF_ID = "1660910795-pVE6RZB3";
-  const SUPABASE_REGISTER_URL = "https://ttottijljxoinptmhgtu.supabase.co/functions/v1/register-member";
-  const SUPABASE_CHECK_URL = "https://ttottijljxoinptmhgtu.supabase.co/functions/v1/check-member";
+ <script>
+const LIFF_ID = "1660910795-pVE6RZB3";
+const SUPABASE_REGISTER_URL = "https://ttottijljxoinptmhgtu.supabase.co/functions/v1/register-member";
+const SUPABASE_CHECK_URL = "https://ttottijljxoinptmhgtu.supabase.co/functions/v1/check-member";
 
-  async function main() {
-    try {
-      await liff.init({ liffId: LIFF_ID });
-      if (!liff.isLoggedIn()) {
-        liff.login();
-        return;
-      }
-
-      const profile = await liff.getProfile();
-      document.getElementById("linePic").src = profile.pictureUrl;
-      document.getElementById("lineName").textContent = profile.displayName;
-      document.getElementById("profile").classList.remove("hidden");
-
-      const statusDiv = document.getElementById("status");
-      const form = document.getElementById("registerForm");
-      const result = document.getElementById("result");
-      const submitBtn = document.getElementById("submitBtn");
-
-      const checkRes = await fetch(SUPABASE_CHECK_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ line_user_id: profile.userId })
-      });
-      const checkData = await checkRes.json();
-
-      if (checkData.status === "registered") {
-        statusDiv.classList.add("text-green-700", "font-medium");
-        statusDiv.textContent = `✅ คุณ ${checkData.name} ได้ลงทะเบียนแล้ว`;
-        return;
-      }
-
-      statusDiv.textContent = "กรุณากรอกข้อมูลเพื่อยืนยันตัวตน";
-      form.classList.remove("hidden");
-
-      form.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        result.textContent = "";
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = `<span class="spinner"></span> กำลังบันทึก...`;
-
-        const body = {
-          member_id: document.getElementById("member_id").value.trim(),
-          id_card_last4: document.getElementById("id_card").value.trim(),
-          line_user_id: profile.userId,
-          display_name: profile.displayName,
-          picture_url: profile.pictureUrl
-        };
-
-        try {
-          const res = await fetch(SUPABASE_REGISTER_URL, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(body)
-          });
-          const data = await res.json();
-
-          if (data.status === "success") {
-            result.classList.add("text-green-600", "font-medium");
-            result.textContent = data.message || "ลงทะเบียนสำเร็จ ✅";
-            form.classList.add("hidden");
-            statusDiv.textContent = `คุณ ${profile.displayName} ได้ลงทะเบียนแล้ว ✅`;
-          } else {
-            result.classList.add("text-red-600");
-            result.textContent = data.message || "ไม่สามารถลงทะเบียนได้ ❌";
-          }
-        } catch {
-          result.classList.add("text-red-500");
-          result.textContent = "ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้ ❌";
-        } finally {
-          submitBtn.disabled = false;
-          submitBtn.innerHTML = "ลงทะเบียน";
-        }
-      });
-    } catch {
-      alert("กรุณาเปิดจากในแอป LINE เท่านั้น");
+async function main() {
+  try {
+    await liff.init({ liffId: LIFF_ID });
+    if (!liff.isLoggedIn()) {
+      liff.login();
+      return;
     }
+
+    const profile = await liff.getProfile();
+    document.getElementById("linePic").src = profile.pictureUrl;
+    document.getElementById("lineName").textContent = profile.displayName;
+    document.getElementById("profile").classList.remove("hidden");
+
+    const statusDiv = document.getElementById("status");
+    const form = document.getElementById("registerForm");
+    const result = document.getElementById("result");
+    const submitBtn = document.getElementById("submitBtn");
+
+    // ✅ ตรวจสอบสถานะสมาชิก
+    const checkRes = await fetch(SUPABASE_CHECK_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ line_user_id: profile.userId })
+    });
+    const checkData = await checkRes.json();
+
+    if (checkData.status === "registered") {
+      // ✅ แสดงสถานะ พร้อมซ่อนฟอร์ม
+      statusDiv.classList.add("text-green-700", "font-medium");
+      statusDiv.textContent = `✅ คุณ ${checkData.name || profile.displayName} ได้ลงทะเบียนแล้ว`;
+      
+      // 🔒 ซ่อนฟอร์มทั้งหมด
+      form.classList.add("hidden");
+
+      // ถ้าต้องการให้ขึ้นข้อความเพิ่มเติม
+      result.classList.add("text-green-600", "font-medium");
+      result.textContent = "คุณได้ลงทะเบียนเรียบร้อยแล้ว 🎉";
+      return;
+    }
+
+    // ✅ ถ้ายังไม่ได้ลงทะเบียน ให้เปิดฟอร์ม
+    statusDiv.textContent = "กรุณากรอกข้อมูลเพื่อยืนยันตัวตน";
+    form.classList.remove("hidden");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      result.textContent = "";
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = `<span class="spinner"></span> กำลังบันทึก...`;
+
+      const body = {
+        member_id: document.getElementById("member_id").value.trim(),
+        id_card_last4: document.getElementById("id_card").value.trim(),
+        line_user_id: profile.userId,
+        display_name: profile.displayName,
+        picture_url: profile.pictureUrl
+      };
+
+      try {
+        const res = await fetch(SUPABASE_REGISTER_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body)
+        });
+        const data = await res.json();
+
+        if (data.status === "success") {
+          result.classList.add("text-green-600", "font-medium");
+          result.textContent = data.message || "ลงทะเบียนสำเร็จ ✅";
+
+          // ✅ ซ่อนฟอร์มหลังลงทะเบียนสำเร็จ
+          form.classList.add("hidden");
+          statusDiv.textContent = `คุณ ${profile.displayName} ได้ลงทะเบียนแล้ว ✅`;
+        } else {
+          result.classList.add("text-red-600");
+          result.textContent = data.message || "ไม่สามารถลงทะเบียนได้ ❌";
+        }
+      } catch {
+        result.classList.add("text-red-500");
+        result.textContent = "ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้ ❌";
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = "ลงทะเบียน";
+      }
+    });
+  } catch {
+    alert("กรุณาเปิดจากในแอป LINE เท่านั้น");
   }
-  main();
-  </script>
+}
+main();
+</script>
+
 </body>
 </html>
