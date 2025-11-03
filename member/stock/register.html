@@ -277,7 +277,7 @@ button:disabled {
 const LIFF_ID = "1660910795-pVE6RZB3";
 const SUPABASE_REGISTER_URL = "https://ttottijljxoinptmhgtu.supabase.co/functions/v1/register-member";
 const SUPABASE_CHECK_URL = "https://ttottijljxoinptmhgtu.supabase.co/functions/v1/check-member";
-const BUY_PAGE_URL = "https://sahakornkathu.github.io/sahakorn/member/stock/buy.html"; // 🔹 หน้า "ซื้อหุ้น" (เปลี่ยนได้ภายหลัง)
+const BUY_PAGE_URL = "https://sahakornkathu.github.io/sahakorn/member/stock/buy.html"; // 🔹 หน้าซื้อหุ้น
 
 async function main() {
   try {
@@ -305,7 +305,7 @@ async function main() {
     });
     const checkData = await checkRes.json();
 
-    // 🔒 ถ้าลงทะเบียนแล้ว ซ่อนฟอร์ม
+    // 🔒 ถ้าลงทะเบียนแล้ว
     if (checkData.status === "registered") {
       statusDiv.classList.add("text-green-700", "font-medium");
       statusDiv.textContent = `✅ คุณ ${checkData.name || profile.displayName} ได้ลงทะเบียนแล้ว`;
@@ -315,7 +315,7 @@ async function main() {
       return;
     }
 
-    // ⚪ ถ้ายังไม่ได้ลงทะเบียน
+    // ⚪ ถ้ายังไม่ลงทะเบียน
     statusDiv.textContent = "กรุณากรอกข้อมูลเพื่อยืนยันตัวตน";
     form.style.display = "block";
 
@@ -343,11 +343,8 @@ async function main() {
         const data = await res.json();
 
         if (data.status === "success") {
-          // ✅ ซ่อนฟอร์มหลังลงทะเบียนสำเร็จ
           form.style.display = "none";
           statusDiv.textContent = `คุณ ${profile.displayName} ได้ลงทะเบียนแล้ว ✅`;
-
-          // 🟢 แสดง Popup แจ้งเตือนสวยงาม
           showSuccessPopup();
         } else {
           result.classList.add("text-red-600");
@@ -366,7 +363,7 @@ async function main() {
   }
 }
 
-// ✅ Popup function
+// ✅ Popup function + Progress Countdown + Auto Redirect
 function showSuccessPopup() {
   const overlay = document.createElement("div");
   overlay.style.position = "fixed";
@@ -409,6 +406,43 @@ function showSuccessPopup() {
   message.style.color = "#555";
   message.style.marginBottom = "1.2rem";
 
+  // 🟢 Progress Circle
+  const progressContainer = document.createElement("div");
+  progressContainer.style.position = "relative";
+  progressContainer.style.width = "60px";
+  progressContainer.style.height = "60px";
+  progressContainer.style.margin = "0 auto 1rem";
+
+  const progressCircle = document.createElement("div");
+  progressCircle.style.width = "60px";
+  progressCircle.style.height = "60px";
+  progressCircle.style.borderRadius = "50%";
+  progressCircle.style.border = "4px solid #c8e6c9";
+  progressCircle.style.borderTop = "4px solid #4caf50";
+  progressCircle.style.animation = "spin 3s linear infinite";
+  progressCircle.style.position = "absolute";
+  progressCircle.style.top = 0;
+  progressCircle.style.left = 0;
+
+  const countdownText = document.createElement("div");
+  countdownText.style.position = "absolute";
+  countdownText.style.top = "50%";
+  countdownText.style.left = "50%";
+  countdownText.style.transform = "translate(-50%, -50%)";
+  countdownText.style.fontSize = "1.1rem";
+  countdownText.style.fontWeight = "600";
+  countdownText.style.color = "#2e7d32";
+  countdownText.textContent = "3";
+
+  progressContainer.appendChild(progressCircle);
+  progressContainer.appendChild(countdownText);
+
+  const redirectMsg = document.createElement("p");
+  redirectMsg.textContent = "กำลังไปยังหน้าซื้อหุ้น...";
+  redirectMsg.style.fontSize = "0.85rem";
+  redirectMsg.style.color = "#777";
+  redirectMsg.style.marginBottom = "1rem";
+
   const button = document.createElement("button");
   button.textContent = "ไปยังหน้าซื้อหุ้น ➜";
   button.style.background = "linear-gradient(135deg, #43a047, #2e7d32)";
@@ -420,19 +454,29 @@ function showSuccessPopup() {
   button.style.fontWeight = "600";
   button.style.fontSize = "1rem";
   button.style.transition = "all 0.3s ease";
-  button.onmouseenter = () => (button.style.opacity = "0.9");
-  button.onmouseleave = () => (button.style.opacity = "1");
   button.onclick = () => {
-    overlay.remove();
-    window.location.href = BUY_PAGE_URL; // 🔹 ไปหน้าเว็บซื้อหุ้น
+    window.location.href = BUY_PAGE_URL;
   };
 
   modal.appendChild(checkIcon);
   modal.appendChild(title);
   modal.appendChild(message);
+  modal.appendChild(progressContainer);
+  modal.appendChild(redirectMsg);
   modal.appendChild(button);
   overlay.appendChild(modal);
   document.body.appendChild(overlay);
+
+  // ⏱️ Countdown 3 → 0
+  let countdown = 3;
+  const timer = setInterval(() => {
+    countdown--;
+    countdownText.textContent = countdown;
+    if (countdown <= 0) {
+      clearInterval(timer);
+      window.location.href = BUY_PAGE_URL;
+    }
+  }, 1000);
 }
 
 main();
