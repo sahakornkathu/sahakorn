@@ -6,8 +6,73 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    /* ✅ Navbar Style */
+#navbar {
+  background: #4a90e2;
+  color: white;
+  padding: 10px 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+.nav-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.nav-logo {
+  font-weight: 600;
+  font-size: 18px;
+  letter-spacing: 0.5px;
+}
+.nav-links {
+  list-style: none;
+  display: flex;
+  gap: 15px;
+  margin: 0;
+  padding: 0;
+}
+.nav-links li a {
+  color: white;
+  text-decoration: none;
+  font-weight: 400;
+  padding: 6px 12px;
+  border-radius: 6px;
+  transition: background 0.2s;
+}
+.nav-links li a:hover {
+  background: rgba(255,255,255,0.2);
+}
+.nav-links li a.active {
+  background: white;
+  color: #4a90e2;
+  font-weight: 500;
+}
+@media (max-width:768px) {
+  .nav-container { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .nav-links { flex-direction: column; width: 100%; }
+  .nav-links li a { display: block; width: 100%; }
+}
+
+  </style>
 </head>
 <body class="bg-gray-100 font-sans">
+<!-- ✅ Navbar -->
+<nav id="navbar">
+  <div class="nav-container">
+    <div class="nav-logo">ระบบจัดการสมาชิก</div>
+    <ul class="nav-links">
+      <li><a href="member.html" class="active">ข้อมูลสมาชิก</a></li>
+      <li><a href="memberexit.html">สมาชิกลาออก</a></li>
+      <li><a href="welfare.html">สวัสดิการสมาชิก</a></li>
+    </ul>
+  </div>
+</nav>
 
 <div class="container mx-auto p-6">
   <h1 class="text-2xl font-bold mb-6">📌 ระบบสมาชิกลาออก/เสียชีวิต + Dashboard + รายงาน</h1>
