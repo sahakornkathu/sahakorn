@@ -6,7 +6,6 @@
 <title>ลงทะเบียนสมาชิกสหกรณ์</title>
 <link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.3.2/dist/tailwind.min.css" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600&display=swap" rel="stylesheet">
-
 <style>
   body {
     font-family: 'Prompt', sans-serif;
@@ -33,20 +32,11 @@
   }
 
   .profile-img {
-    width: 70px;
-    height: 70px;
+    width: 72px;
+    height: 72px;
     border-radius: 9999px;
     border: 3px solid #4caf50;
-    box-shadow: 0 0 8px rgba(76, 175, 80, 0.2);
-  }
-
-  .btn {
-    transition: all 0.3s ease;
-  }
-
-  .btn:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+    box-shadow: 0 0 6px rgba(76, 175, 80, 0.2);
   }
 
   .spinner {
@@ -59,37 +49,31 @@
     display: inline-block;
     vertical-align: middle;
   }
-
-  @keyframes spin {
-    to { transform: rotate(360deg); }
-  }
-
-  .hidden {
-    display: none;
-  }
+  @keyframes spin { to { transform: rotate(360deg); } }
 </style>
 </head>
 
 <body>
-  <div class="card">
-    <!-- Header -->
-    <div class="text-center mb-5">
-      <img src="https://cdn-icons-png.flaticon.com/512/219/219970.png" alt="logo" class="w-14 h-14 mx-auto mb-2 opacity-90">
-      <h1 class="text-xl font-semibold text-green-700">ลงทะเบียนสมาชิกสหกรณ์</h1>
-      <p class="text-gray-500 text-sm">ยืนยันตัวตนผ่านบัญชี LINE</p>
+  <div class="card text-center">
+    <!-- ✅ โลโก้ขนาดเล็ก วางอยู่บนสุด ไม่ขยับ -->
+    <div class="mb-3">
+      <img src="https://cdn-icons-png.flaticon.com/512/4470/4470311.png" alt="logo" class="w-10 h-10 mx-auto opacity-80">
     </div>
 
-    <!-- Profile -->
-    <div id="profile" class="hidden text-center mb-4">
-      <img id="linePic" class="profile-img mx-auto mb-2" alt="LINE Profile" />
+    <h1 class="text-xl font-semibold text-green-700 mb-1">ลงทะเบียนสมาชิกสหกรณ์</h1>
+    <p class="text-gray-500 text-sm mb-5">ยืนยันตัวตนผ่านบัญชี LINE</p>
+
+    <!-- ✅ รูปโปรไฟล์ LINE -->
+    <div id="profile" class="hidden text-center mb-3">
+      <img id="linePic" class="profile-img mx-auto mb-1" alt="LINE Profile" />
       <p id="lineName" class="text-base font-medium text-green-700"></p>
     </div>
 
-    <!-- Status -->
-    <div id="status" class="text-center text-gray-600 mb-4">กำลังตรวจสอบสถานะ...</div>
+    <!-- ✅ สถานะ -->
+    <div id="status" class="text-gray-600 mb-4">กำลังตรวจสอบสถานะ...</div>
 
-    <!-- Form -->
-    <form id="registerForm" class="hidden space-y-4">
+    <!-- ✅ ฟอร์มลงทะเบียน -->
+    <form id="registerForm" class="hidden space-y-4 text-left">
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-1">รหัสสมาชิก</label>
         <input id="member_id" type="text" class="w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-green-400 focus:border-green-400" placeholder="กรอกรหัสสมาชิก" required />
@@ -98,23 +82,23 @@
         <label class="block text-sm font-medium text-gray-700 mb-1">4 ตัวท้ายเลขบัตรประชาชน</label>
         <input id="id_card" maxlength="4" class="w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-green-400 focus:border-green-400" placeholder="เช่น 1234" required />
       </div>
-      <button type="submit" id="submitBtn" class="btn w-full bg-green-600 text-white py-2 rounded-md font-medium hover:bg-green-700">
+      <button type="submit" id="submitBtn" class="w-full bg-green-600 text-white py-2 rounded-md font-medium hover:bg-green-700 transition">
         ลงทะเบียน
       </button>
     </form>
 
-    <!-- Result -->
+    <!-- ✅ ผลลัพธ์ -->
     <p id="result" class="text-center mt-4 text-sm text-gray-700"></p>
 
-    <!-- Footer -->
-    <p class="text-xs text-gray-400 text-center mt-6">
-      © 2025 Sahakorn System — Powered by Supabase & LINE LIFF
+    <!-- ✅ Footer -->
+    <p class="text-xs text-gray-400 mt-6">
+      © 2025 Sahakorn System — Powered by Supabase + LINE LIFF
     </p>
   </div>
 
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <script>
-  const LIFF_ID = "1660910795-pVE6RZB3"; // 🔹 ใส่ LIFF ID ของคุณ
+  const LIFF_ID = "1660910795-pVE6RZB3"; // 🔹 เปลี่ยนเป็น LIFF ID ของคุณ
   const SUPABASE_REGISTER_URL = "https://ttottijljxoinptmhgtu.supabase.co/functions/v1/register-member";
   const SUPABASE_CHECK_URL = "https://ttottijljxoinptmhgtu.supabase.co/functions/v1/check-member";
 
@@ -136,7 +120,7 @@
       const result = document.getElementById("result");
       const submitBtn = document.getElementById("submitBtn");
 
-      // ตรวจสอบสถานะ
+      // ✅ ตรวจสอบสถานะ
       const checkRes = await fetch(SUPABASE_CHECK_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -150,11 +134,9 @@
         return;
       }
 
-      // ถ้ายังไม่ลงทะเบียน
       statusDiv.textContent = "กรุณากรอกข้อมูลเพื่อยืนยันตัวตน";
       form.classList.remove("hidden");
 
-      // เมื่อกดลงทะเบียน
       form.addEventListener("submit", async (e) => {
         e.preventDefault();
         result.textContent = "";
@@ -178,7 +160,6 @@
           const data = await res.json();
 
           if (data.status === "success") {
-            result.classList.remove("text-red-500");
             result.classList.add("text-green-600", "font-medium");
             result.textContent = data.message || "ลงทะเบียนสำเร็จ ✅";
             form.classList.add("hidden");
@@ -187,8 +168,7 @@
             result.classList.add("text-red-600");
             result.textContent = data.message || "ไม่สามารถลงทะเบียนได้ ❌";
           }
-        } catch (err) {
-          console.error(err);
+        } catch {
           result.classList.add("text-red-500");
           result.textContent = "ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้ ❌";
         } finally {
@@ -196,12 +176,10 @@
           submitBtn.innerHTML = "ลงทะเบียน";
         }
       });
-    } catch (err) {
-      console.error(err);
+    } catch {
       alert("กรุณาเปิดจากในแอป LINE เท่านั้น");
     }
   }
-
   main();
   </script>
 </body>
