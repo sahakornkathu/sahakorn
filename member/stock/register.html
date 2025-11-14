@@ -63,17 +63,29 @@ button {
 
   <div class="error" id="errorBox"></div>
 
-  <button onclick="register()">ลงทะเบียน</button>
+  <button id="btnRegister">ลงทะเบียน</button>
 </div>
 
 <script>
 const FUNCTION_URL = "https://ttottijljxoinptmhgtu.supabase.co/functions/v1/register-member";
 
-// ===== LIFF INIT =====
+// ===== ดัก LIFF ให้ทำงานแน่นอน =====
 async function initLIFF() {
-  await liff.init({ liffId: "1660910795-lvGYgQ6B" });
+  try {
+    await liff.init({ liffId: "1660910795-lvGYgQ6B" });
+    await liff.ready;
 
-  if (!liff.isLoggedIn()) liff.login();
+    console.log("LIFF Loaded OK");
+
+    if (!liff.isLoggedIn()) {
+      liff.login();
+      return;
+    }
+
+  } catch (err) {
+    document.getElementById("errorBox").textContent =
+      "LIFF Error: " + err.message;
+  }
 }
 initLIFF();
 
@@ -81,23 +93,39 @@ initLIFF();
 function validateForm(member_id, id_card) {
   if (!member_id) return "กรุณากรอกเลขทะเบียนสมาชิก";
   if (!id_card) return "กรุณากรอกเลขบัตรประชาชน";
-  if (id_card.length !== 13) return "เลขบัตรประชาชนต้องมี 13 หลัก";
+
+  const cleanId = id_card.replace(/\D/g, "");
+  if (cleanId.length !== 13) return "เลขบัตรประชาชนต้องมี 13 หลัก";
+
   return null;
 }
 
-// ===== Register Function =====
+// ===== Register =====
+document.getElementById("btnRegister").addEventListener("click", register);
+
 async function register() {
   const member_id = document.getElementById("member_id").value.trim();
   const id_card = document.getElementById("id_card").value.trim();
   const errorBox = document.getElementById("errorBox");
 
-  const error = validateForm(member_id, id_card);
-  if (error) {
-    errorBox.textContent = error;
+  errorBox.textContent = "";
+
+  const err = validateForm(member_id, id_card);
+  if (err) {
+    errorBox.textContent = err;
     return;
   }
 
-  const profile = await liff.getProfile();
+  let profile;
+  try {
+    profile = await liff.getProfile();
+  } catch (e) {
+    errorBox.textContent = "ไม่สามารถดึงข้อมูล LINE ได้";
+    return;
+  }
+
+  document.getElementById("btnRegister").disabled = true;
+  document.getElementById("btnRegister").innerHTML = "กำลังลงทะเบียน...";
 
   const payload = {
     member_id,
@@ -117,6 +145,8 @@ async function register() {
 
   if (data.error) {
     errorBox.textContent = "❌ " + data.error;
+    document.getElementById("btnRegister").disabled = false;
+    document.getElementById("btnRegister").innerHTML = "ลงทะเบียน";
   } else {
     alert("🎉 ลงทะเบียนสำเร็จ");
     liff.closeWindow();
