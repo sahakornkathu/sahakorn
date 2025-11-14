@@ -371,6 +371,7 @@ button.delete:hover { background:#c53030; }
   </select>
     <div class="buttons-group">
       <button id="printReport">🖨️ ปริ้นรายงานสมาชิก</button>
+      <button id="exportExcel">📥 ดาวน์โหลด Excel</button>
       <button id="clearFilter">🧹 ล้างตัวกรอง</button>
     </div>
   </div>
@@ -401,6 +402,8 @@ button.delete:hover { background:#c53030; }
   <span id="pageInfo">หน้า 1</span>
   <button id="nextPage">ถัดไป</button>
 </div>
+  <!-- cdn export excel -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
 <script>
 /* ====== CONFIG ====== */
@@ -641,6 +644,50 @@ document.getElementById('printReport').addEventListener('click', () => {
     alert('ไม่มีข้อมูลสมาชิกให้พิมพ์รายงาน');
     return;
   }
+
+/* ====== ปุ่ม Export Excel ====== */
+document.getElementById('exportExcel').addEventListener('click', () => {
+  if (allMembers.length === 0) {
+    alert("ไม่พบข้อมูลสมาชิก");
+    return;
+  }
+
+  // แปลงข้อมูลให้พร้อมใช้งาน
+  const exportData = allMembers.map(m => ({
+    "เลขสมาชิก": m.member_id || "",
+    "คำนำหน้า": m.title || "",
+    "ชื่อ": m.first_name || "",
+    "นามสกุล": m.last_name || "",
+    "เพศ": m.gender || "",
+    "สถานะสมาชิก": m.member_status || "",
+    "กลุ่ม": m.group || "",
+
+    "เลขบัตรประชาชน": m.id_card || "",
+    "วันเกิด": m.birthday || "",
+    "อายุ": m.age || "",
+
+    "ที่อยู่": `${m.house_no || ''} ${m.moo ? 'หมู่ ' + m.moo : ''} ${m.street || ''} ${m.village || ''} ต.${m.subdistrict || ''} อ.${m.district || ''} จ.${m.province || ''} ${m.postal_code || ''}`.trim(),
+
+    "เบอร์โทร": m.phone || "",
+    "เบอร์สำรอง": m.phone_alt || "",
+
+    "วันสมัคร": m.join_date || "",
+    "สถานะสมรส": m.marital_status || "",
+    "ชื่อคู่สมรส": m.spouse_name || "",
+    "สมาชิก กยท": m.kyot_member ? "ใช่" : "ไม่ใช่",
+    "เลขสมาชิก กยท": m.kyot_member_id || "",
+
+    "ชื่อบิดา": m.father_name || "",
+    "ชื่อมารดา": m.mother_name || ""
+  }));
+
+  // สร้างไฟล์ Excel
+  const worksheet = XLSX.utils.json_to_sheet(exportData);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Members");
+
+  XLSX.writeFile(workbook, "members_export.xlsx");
+});
 
   const now = new Date();
   const dateStr = now.toLocaleDateString('th-TH', { year:'numeric', month:'long', day:'numeric' });
