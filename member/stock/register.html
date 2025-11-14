@@ -1,512 +1,127 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>ลงทะเบียนซื้อหุ้น</title>
-<link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.3.2/dist/tailwind.min.css" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600&display=swap" rel="stylesheet">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ลงทะเบียนสมาชิกสหกรณ์</title>
+
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+
 <style>
-/* ========= GLOBAL ========= */
 body {
-  font-family: 'Prompt', sans-serif;
-  background: linear-gradient(145deg, #e8f5e9, #c8e6c9);
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 16px;
-  color: #333;
+  font-family: "Prompt", sans-serif;
+  background: #f1f5f9;
+  padding: 20px;
 }
-
-/* ========= CARD ========= */
-.card {
-  background: #fff;
-  border-radius: 1.25rem;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-  width: 100%;
+.container {
   max-width: 420px;
-  padding: 2rem;
-  box-sizing: border-box;
-  animation: fadeIn 0.6s ease-in-out;
+  margin: auto;
+  background: white;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+h2 {
   text-align: center;
-}
-
-/* ========= LOGO ========= */
-.card img[alt="logo"] {
-  width: 60px;
-  height: 60px;
-  margin: 0 auto 0.75rem;
-  opacity: 0.9;
-}
-
-/* ========= HEADER ========= */
-h1 {
-  font-size: 1.4rem;
-  font-weight: 600;
-  color: #2e7d32;
-  margin-bottom: 0.2rem;
-}
-p.text-gray-500 {
-  color: #6b7280;
-  margin-bottom: 1.5rem;
-  font-size: 0.9rem;
-}
-
-/* ========= PROFILE ========= */
-#profile {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 1rem;
-  opacity: 0;
-  transform: translateY(10px);
-  animation: fadeUp 0.6s ease forwards;
-  animation-delay: 0.3s;
-}
-.profile-img {
-  width: 70px;
-  height: 70px;
-  border-radius: 50%;
-  border: 2px solid #43a047;
-  object-fit: cover;
-  box-shadow: 0 0 5px rgba(67, 160, 71, 0.25);
-  margin-bottom: 0.4rem;
-  position: relative;
-}
-
-/* 🌈 Gradient + Glow + Sparkle Animation */
-#profile p {
-  position: relative;
-  font-weight: 700;
-  font-size: 1rem;
-  background: linear-gradient(90deg, #43a047, #2e7d32, #43a047);
-  background-size: 200% auto;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: gradientFlow 3s linear infinite;
-  transition: text-shadow 0.3s ease;
-}
-
-/* 🪄 Glow เมื่อ Hover */
-#profile p:hover {
-  text-shadow: 0 0 10px rgba(76, 175, 80, 0.8), 0 0 15px rgba(67, 160, 71, 0.4);
-}
-
-/* ✨ Sparkle Effect */
-#profile p::after {
-  content: "✨";
-  position: absolute;
-  top: 0;
-  left: -10%;
-  opacity: 0;
-  font-size: 1.1rem;
-  animation: sparkle 4s infinite linear;
-}
-@keyframes sparkle {
-  0% {
-    opacity: 0;
-    left: -10%;
-    transform: rotate(0deg) scale(0.8);
-  }
-  10% {
-    opacity: 1;
-    transform: rotate(15deg) scale(1);
-  }
-  40% {
-    left: 110%;
-    opacity: 0.9;
-    transform: rotate(25deg) scale(1.2);
-  }
-  60% {
-    opacity: 0;
-  }
-  100% {
-    left: 120%;
-    opacity: 0;
-  }
-}
-
-/* ========= STATUS ========= */
-#status {
-  color: #555;
-  font-size: 0.95rem;
-  margin-bottom: 1.2rem;
-  text-align: center;
-}
-
-/* ========= FORM ========= */
-form {
-  text-align: left;
-  padding: 0 0.25rem;
-}
-form label {
-  margin-left: 2px;
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: #374151;
-  display: block;
-  margin-bottom: 0.3rem;
-}
-form div {
-  margin-bottom: 1.1rem;
+  margin-bottom: 20px;
+  color: #1e40af;
 }
 input {
   width: 100%;
-  padding: 0.65rem 0.9rem;
-  border-radius: 10px;
-  border: 1px solid #d1d5db;
-  font-size: 0.95rem;
-  transition: all 0.25s ease;
-  box-sizing: border-box;
-  background-color: #fafafa;
+  padding: 10px;
+  margin: 8px 0;
+  border-radius: 8px;
+  border: 1px solid #ccc;
 }
-input:focus {
-  border-color: #43a047;
-  box-shadow: 0 0 0 3px rgba(67, 160, 71, 0.15);
-  background-color: #fff;
-  outline: none;
-}
-
-/* ========= BUTTON ========= */
 button {
   width: 100%;
-  padding: 0.9rem;
+  padding: 15px;
+  background: #1e40af;
   border: none;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #43a047, #2e7d32);
   color: white;
-  font-weight: 600;
-  font-size: 1rem;
-  letter-spacing: 0.3px;
-  transition: all 0.3s ease;
-  box-shadow: 0 3px 8px rgba(67, 160, 71, 0.25);
-  margin-top: 0.5rem;
+  border-radius: 10px;
+  font-size: 16px;
+  margin-top: 10px;
 }
-button:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 5px 14px rgba(67, 160, 71, 0.35);
-  background: linear-gradient(135deg, #4caf50, #2e7d32);
-}
-button:active:not(:disabled) {
-  transform: scale(0.98);
-  box-shadow: 0 2px 6px rgba(67, 160, 71, 0.2);
-}
-button:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-}
-
-/* ========= SPINNER ========= */
-.spinner {
-  border: 2px solid #eee;
-  border-top: 2px solid #4caf50;
-  border-radius: 50%;
-  width: 18px;
-  height: 18px;
-  animation: spin 1s linear infinite;
-  display: inline-block;
-  vertical-align: middle;
-  margin-right: 6px;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
-
-/* ========= RESULT ========= */
-#result {
-  font-size: 0.9rem;
-  line-height: 1.4;
-  text-align: center;
-  margin-top: 1rem;
-}
-
-/* ========= FOOTER ========= */
-.card p.text-xs {
-  margin-top: 2rem;
-  text-align: center;
-  color: #9ca3af;
-  font-size: 0.72rem;
-}
-
-/* ========= ANIMATIONS ========= */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-@keyframes fadeUp {
-  to { opacity: 1; transform: translateY(0); }
-}
-@keyframes gradientFlow {
-  0% { background-position: 0% 50%; }
-  100% { background-position: 200% 50%; }
+.error {
+  color: red;
+  margin: 5px 0;
+  font-size: 14px;
 }
 </style>
 </head>
-
 <body>
-  <div class="card">
-    <img src="https://lh5.googleusercontent.com/d/1h0cRr_Yj6xynWjXTGYNbhhtb7MC3-4Rl" alt="logo">
-    <h1>ลงทะเบียนซื้อหุ้น</h1>
-    <p class="text-gray-500">ยืนยันตัวตนผ่านบัญชี LINE</p>
 
-    <div id="profile" class="hidden">
-      <img id="linePic" class="profile-img" alt="LINE Profile" />
-      <p id="lineName"></p>
-    </div>
+<div class="container">
+  <h2>ลงทะเบียนเข้าใช้งาน</h2>
 
-    <div id="status">กำลังตรวจสอบสถานะ...</div>
+  <label>เลขทะเบียนสมาชิก</label>
+  <input type="text" id="member_id" placeholder="เช่น 1001">
+  
+  <label>เลขบัตรประชาชน</label>
+  <input type="text" id="id_card" placeholder="13 หลัก">
 
-    <form id="registerForm" class="hidden">
-      <div>
-        <label>รหัสสมาชิก</label>
-        <input id="member_id" type="text" placeholder="กรอกรหัสสมาชิก" required />
-      </div>
-      <div>
-        <label>4 ตัวท้ายเลขบัตรประชาชน</label>
-        <input id="id_card" maxlength="4" placeholder="เช่น 1234" required />
-      </div>
-      <button type="submit" id="submitBtn">ลงทะเบียน</button>
-    </form>
+  <div class="error" id="errorBox"></div>
 
-    <p id="result"></p>
-    <p class="text-xs">© 2025 Sahakorn System — Powered by Supabase + LINE LIFF</p>
-  </div>
+  <button onclick="register()">ลงทะเบียน</button>
+</div>
 
-  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script>
-const LIFF_ID = "1660910795-pVE6RZB3";
-const SUPABASE_REGISTER_URL = "https://ttottijljxoinptmhgtu.supabase.co/functions/v1/register-member";
-const SUPABASE_CHECK_URL = "https://ttottijljxoinptmhgtu.supabase.co/functions/v1/check-member";
-const BUY_PAGE_URL = "https://sahakornkathu.github.io/sahakorn/member/stock/buy.html"; // 🔹 หน้าซื้อหุ้น
+const FUNCTION_URL = "https://ttottijljxoinptmhgtu.supabase.co/functions/v1/register-member";
 
-async function main() {
-  try {
-    await liff.init({ liffId: LIFF_ID });
-    if (!liff.isLoggedIn()) {
-      liff.login();
-      return;
-    }
+// ===== LIFF INIT =====
+async function initLIFF() {
+  await liff.init({ liffId: "1660910795-pVE6RZB3" });
 
-    const profile = await liff.getProfile();
-    document.getElementById("linePic").src = profile.pictureUrl;
-    document.getElementById("lineName").textContent = profile.displayName;
-    document.getElementById("profile").classList.remove("hidden");
+  if (!liff.isLoggedIn()) liff.login();
+}
+initLIFF();
 
-    const statusDiv = document.getElementById("status");
-    const form = document.getElementById("registerForm");
-    const result = document.getElementById("result");
-    const submitBtn = document.getElementById("submitBtn");
+// ===== Validation =====
+function validateForm(member_id, id_card) {
+  if (!member_id) return "กรุณากรอกเลขทะเบียนสมาชิก";
+  if (!id_card) return "กรุณากรอกเลขบัตรประชาชน";
+  if (id_card.length !== 13) return "เลขบัตรประชาชนต้องมี 13 หลัก";
+  return null;
+}
 
-    // ✅ ตรวจสอบสถานะสมาชิก
-    const checkRes = await fetch(SUPABASE_CHECK_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ line_user_id: profile.userId })
-    });
-    const checkData = await checkRes.json();
+// ===== Register Function =====
+async function register() {
+  const member_id = document.getElementById("member_id").value.trim();
+  const id_card = document.getElementById("id_card").value.trim();
+  const errorBox = document.getElementById("errorBox");
 
-    // 🔒 ถ้าลงทะเบียนแล้ว
-    if (checkData.status === "registered") {
-      form.style.display = "none";
-      statusDiv.textContent = `คุณ ${checkData.name || profile.displayName} ได้ลงทะเบียนแล้ว ✅`;
-      showSuccessPopup("คุณได้ลงทะเบียนแล้ว!", "ไปยังหน้าซื้อหุ้น...");
-      return;
-    }
+  const error = validateForm(member_id, id_card);
+  if (error) {
+    errorBox.textContent = error;
+    return;
+  }
 
-    // ⚪ ถ้ายังไม่ลงทะเบียน
-    statusDiv.textContent = "กรุณากรอกข้อมูลเพื่อยืนยันตัวตน";
-    form.style.display = "block";
+  const profile = await liff.getProfile();
 
-    // 🧾 เมื่อกดปุ่มลงทะเบียน
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      result.textContent = "";
-      submitBtn.disabled = true;
-      submitBtn.innerHTML = `<span class="spinner"></span> กำลังบันทึก...`;
+  const payload = {
+    member_id,
+    id_card,
+    line_uid: profile.userId,
+    displayName: profile.displayName,
+    picture: profile.pictureUrl
+  };
 
-      const body = {
-        member_id: document.getElementById("member_id").value.trim(),
-        id_card_last4: document.getElementById("id_card").value.trim(),
-        line_user_id: profile.userId,
-        display_name: profile.displayName,
-        picture_url: profile.pictureUrl
-      };
+  const res = await fetch(FUNCTION_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
 
-      try {
-        const res = await fetch(SUPABASE_REGISTER_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body)
-        });
-        const data = await res.json();
+  const data = await res.json();
 
-        if (data.status === "success") {
-          form.style.display = "none";
-          statusDiv.textContent = `คุณ ${profile.displayName} ได้ลงทะเบียนแล้ว ✅`;
-          showSuccessPopup("ลงทะเบียนสำเร็จ!", "กำลังไปยังหน้าซื้อหุ้น...");
-        } else {
-          result.classList.add("text-red-600");
-          result.textContent = data.message || "ไม่สามารถลงทะเบียนได้ ❌";
-        }
-      } catch {
-        result.classList.add("text-red-500");
-        result.textContent = "ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้ ❌";
-      } finally {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = "ลงทะเบียน";
-      }
-    });
-  } catch {
-    alert("กรุณาเปิดจากในแอป LINE เท่านั้น");
+  if (data.error) {
+    errorBox.textContent = "❌ " + data.error;
+  } else {
+    alert("🎉 ลงทะเบียนสำเร็จ");
+    liff.closeWindow();
   }
 }
-
-// ✅ Popup function (ใช้ได้ทั้งตอนลงทะเบียนใหม่และตอนเคยลงทะเบียนแล้ว)
-function showSuccessPopup(titleText = "ลงทะเบียนสำเร็จ!", msgText = "กำลังไปยังหน้าซื้อหุ้น...") {
-  const overlay = document.createElement("div");
-  Object.assign(overlay.style, {
-    position: "fixed",
-    top: 0,
-    left: 0,
-    width: "100vw",
-    height: "100vh",
-    background: "rgba(0,0,0,0.5)",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    zIndex: "9999",
-    animation: "fadeIn 0.4s ease"
-  });
-
-  const modal = document.createElement("div");
-  Object.assign(modal.style, {
-    background: "#fff",
-    borderRadius: "16px",
-    padding: "1.8rem 1.5rem",
-    textAlign: "center",
-    width: "85%",
-    maxWidth: "360px",
-    boxShadow: "0 8px 20px rgba(0,0,0,0.15)",
-    animation: "bounceIn 0.7s ease"
-  });
-
-  const checkIcon = document.createElement("div");
-  checkIcon.innerHTML = "✅";
-  Object.assign(checkIcon.style, {
-    fontSize: "2.8rem",
-    marginBottom: "0.6rem",
-    animation: "popIcon 0.8s ease"
-  });
-
-  const title = document.createElement("h2");
-  title.textContent = titleText;
-  Object.assign(title.style, {
-    fontSize: "1.25rem",
-    fontWeight: "600",
-    color: "#2e7d32",
-    marginBottom: "0.3rem"
-  });
-
-  const message = document.createElement("p");
-  message.textContent = "ระบบได้บันทึกข้อมูลของคุณเรียบร้อยแล้ว";
-  Object.assign(message.style, {
-    fontSize: "0.9rem",
-    color: "#555",
-    marginBottom: "1.2rem"
-  });
-
-  // 🕒 Progress Circle
-  const progressContainer = document.createElement("div");
-  Object.assign(progressContainer.style, {
-    position: "relative",
-    width: "65px",
-    height: "65px",
-    margin: "0 auto 1rem"
-  });
-
-  const progressCircle = document.createElement("div");
-  Object.assign(progressCircle.style, {
-    width: "65px",
-    height: "65px",
-    borderRadius: "50%",
-    border: "4px solid #c8e6c9",
-    borderTop: "4px solid #4caf50",
-    animation: "spin 3s linear infinite",
-    position: "absolute",
-    top: 0,
-    left: 0
-  });
-
-  const countdownText = document.createElement("div");
-  Object.assign(countdownText.style, {
-    position: "absolute",
-    top: "50%",
-    left: "50%",
-    transform: "translate(-50%, -50%)",
-    fontSize: "1.2rem",
-    fontWeight: "600",
-    color: "#2e7d32"
-  });
-  countdownText.textContent = "3";
-
-  progressContainer.append(progressCircle, countdownText);
-
-  const redirectMsg = document.createElement("p");
-  redirectMsg.textContent = msgText;
-  Object.assign(redirectMsg.style, {
-    fontSize: "0.85rem",
-    color: "#777",
-    marginBottom: "1rem"
-  });
-
-  const button = document.createElement("button");
-  button.textContent = "ไปยังหน้าซื้อหุ้น ➜";
-  Object.assign(button.style, {
-    background: "linear-gradient(135deg, #43a047, #2e7d32)",
-    color: "white",
-    border: "none",
-    padding: "0.7rem 1.2rem",
-    borderRadius: "10px",
-    cursor: "pointer",
-    fontWeight: "600",
-    fontSize: "1rem",
-    transition: "all 0.3s ease"
-  });
-  button.onmouseenter = () => (button.style.opacity = "0.9");
-  button.onmouseleave = () => (button.style.opacity = "1");
-  button.onclick = () => (window.location.href = BUY_PAGE_URL);
-
-  modal.append(checkIcon, title, message, progressContainer, redirectMsg, button);
-  overlay.appendChild(modal);
-  document.body.appendChild(overlay);
-
-  // Countdown 3 → 0 แล้ว Redirect
-  let countdown = 3;
-  const timer = setInterval(() => {
-    countdown--;
-    countdownText.textContent = countdown;
-    if (countdown <= 0) {
-      clearInterval(timer);
-      window.location.href = BUY_PAGE_URL;
-    }
-  }, 1000);
-
-  // ✅ Animation Keyframes
-  const style = document.createElement("style");
-  style.textContent = `
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    @keyframes popIcon { 0% { transform: scale(0); opacity: 0; } 60% { transform: scale(1.3); opacity: 1; } 100% { transform: scale(1); } }
-    @keyframes bounceIn {
-      0% { transform: scale(0.8); opacity: 0; }
-      50% { transform: scale(1.05); opacity: 1; }
-      100% { transform: scale(1); }
-    }
-  `;
-  document.head.appendChild(style);
-}
-
-main();
 </script>
 
 </body>
