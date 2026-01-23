@@ -31,7 +31,6 @@
       <option value="อื่นๆ">อื่นๆ</option>
     </select>
     <select name="status" class="border p-2 rounded">
-      <option value="">ทุกสถานะ</option>
       <option value="Active">Active</option>
       <option value="Inactive">Inactive</option>
     </select>
@@ -40,7 +39,7 @@
     </button>
   </form>
 
-  <!-- ===== EXPORT / PRINT ===== -->
+  <!-- ===== EXPORT / PRINT (เพิ่ม) ===== -->
   <div class="flex gap-2 mb-4">
     <button onclick="exportExcel()" class="bg-green-600 text-white px-4 py-2 rounded">
       Export Excel
@@ -60,14 +59,14 @@ let editId = null;
 
 /* ================= FETCH (เดิม) ================= */
 async function fetchMembers() {
-  const res = await fetch(API_URL);
+  const res = await fetch(API_URL, { method: "GET" });
   const data = await res.json();
   const list = document.getElementById("membersList");
 
   list.innerHTML = data.map(m => `
     <li class="flex justify-between bg-gray-50 p-2 rounded border">
       <div>
-        ${m.first_name} ${m.last_name} - ${m.phone || ""} - ${m.status || ""} - ${m.province || ""}
+        ${m.first_name} ${m.last_name} - ${m.phone} - ${m.status} - ${m.province}
       </div>
       <div>
         <button onclick="editMember('${m.id}')" class="bg-yellow-400 text-white px-2 rounded mr-2">แก้ไข</button>
@@ -77,15 +76,17 @@ async function fetchMembers() {
   `).join('');
 }
 
-/* ================= FORM / CRUD (เดิม) ================= */
+/* ================= FORM (เดิม) ================= */
 document.getElementById("memberForm").addEventListener("submit", async (e) => {
   e.preventDefault();
-  const body = Object.fromEntries(new FormData(e.target));
+  const formData = new FormData(e.target);
+  const body = Object.fromEntries(formData.entries());
+  const method = editId ? "PUT" : "POST";
   if(editId) body.id = editId;
 
-  await fetch(API_URL,{
-    method: editId ? "PUT" : "POST",
-    headers:{ "Content-Type":"application/json" },
+  await fetch(API_URL, {
+    method,
+    headers: {"Content-Type": "application/json"},
     body: JSON.stringify(body)
   });
 
@@ -94,36 +95,39 @@ document.getElementById("memberForm").addEventListener("submit", async (e) => {
   fetchMembers();
 });
 
-async function editMember(id){
-  const res = await fetch(API_URL);
+/* ================= EDIT / DELETE (เดิม) ================= */
+async function editMember(id) {
+  const res = await fetch(API_URL, { method: "GET" });
   const members = await res.json();
-  const m = members.find(x => x.id === id);
-  if(!m) return;
+  const member = members.find(m => m.id === id);
+  if(!member) return;
 
-  const f = document.getElementById("memberForm");
-  Object.keys(m).forEach(k => f[k] && (f[k].value = m[k] ?? ""));
+  const form = document.getElementById("memberForm");
+  for (const key in member) {
+    if(form[key]) form[key].value = member[key] ?? "";
+  }
   editId = id;
 }
 
-async function deleteMember(id){
+async function deleteMember(id) {
   if(!confirm("ต้องการลบสมาชิกนี้หรือไม่?")) return;
-  await fetch(API_URL,{
-    method:"DELETE",
-    headers:{ "Content-Type":"application/json" },
+  await fetch(API_URL, {
+    method: "DELETE",
+    headers: {"Content-Type": "application/json"},
     body: JSON.stringify({ id })
   });
   fetchMembers();
 }
 
 /* =================================================
-   EXPORT → อ่านเฉพาะรายการที่ “มองเห็นอยู่จริง”
+   EXPORT → เอาเฉพาะรายการที่ “มองเห็นอยู่จริง”
    ================================================= */
 function exportExcel(){
   const rows = [];
   const items = document.querySelectorAll("#membersList li");
 
   items.forEach(li => {
-    // ถ้าโดน filter ซ่อน จะไม่ export
+    // ถ้าในอนาคตคุณมี filter ซ่อน li ตัวนี้จะไม่ถูก export
     if (li.offsetParent === null) return;
 
     const text = li.querySelector("div").innerText;
@@ -150,7 +154,7 @@ function exportExcel(){
   a.href = URL.createObjectURL(
     new Blob([csv], { type: "text/csv;charset=utf-8;" })
   );
-  a.download = "members_filtered.csv";
+  a.download = "members.csv";
   a.click();
 }
 
