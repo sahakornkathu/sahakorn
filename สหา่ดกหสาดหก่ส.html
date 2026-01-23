@@ -3,19 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <title>ระบบจัดการสมาชิก</title>
-
-  <!-- Supabase JS v2 -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
   <style>
-    body { font-family: sans-serif; background:#f3f4f6; padding:20px }
-    h2 { margin-bottom:10px }
-    form { background:#fff; padding:15px; border-radius:6px }
-    input { padding:6px; margin:4px 0; width:200px }
-    button { padding:6px 10px; margin-top:6px }
-    table { width:100%; border-collapse:collapse; margin-top:20px; background:#fff }
-    th, td { border:1px solid #ddd; padding:8px; text-align:left }
-    th { background:#eee }
+    body { font-family:sans-serif; background:#f3f4f6; padding:20px }
+    form, table { background:#fff; padding:15px; border-radius:6px }
+    input { padding:6px; margin:4px }
+    table { width:100%; border-collapse:collapse; margin-top:20px }
+    th, td { border:1px solid #ddd; padding:8px }
   </style>
 </head>
 <body>
@@ -24,20 +17,10 @@
 
 <form id="memberForm">
   <input type="hidden" id="id">
-
-  <div>
-    <input id="prefix" placeholder="คำนำหน้า">
-  </div>
-  <div>
-    <input id="name" placeholder="ชื่อ" required>
-  </div>
-  <div>
-    <input id="lastname" placeholder="นามสกุล" required>
-  </div>
-  <div>
-    <input id="phone" placeholder="เบอร์โทร">
-  </div>
-
+  <input id="prefix" placeholder="คำนำหน้า">
+  <input id="name" placeholder="ชื่อ" required>
+  <input id="lastname" placeholder="นามสกุล" required>
+  <input id="phone" placeholder="เบอร์โทร">
   <button type="submit">💾 บันทึก</button>
   <button type="button" onclick="resetForm()">ยกเลิก</button>
 </form>
@@ -55,109 +38,77 @@
   <tbody id="memberTable"></tbody>
 </table>
 
-<script>
-/* ================= SUPABASE CONFIG ================= */
-const SUPABASE_URL = 'https://ttottijljxoinptmhgtu.supabase.co'
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'
+<script type="module">
+  import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-// ❗ ใช้ชื่อ db แทน supabase (แก้ error ซ้ำชื่อ)
-const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
+  const SUPABASE_URL = 'https://ttottijljxoinptmhgtu.supabase.co'
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'
 
-/* ================= ELEMENT ================= */
-const form = document.getElementById('memberForm')
-const table = document.getElementById('memberTable')
+  const db = createClient(SUPABASE_URL, SUPABASE_KEY)
 
-/* ================= LOAD DATA ================= */
-async function loadMembers() {
-  const { data, error } = await db
-    .from('members')
-    .select('*')
-    .order('created_at', { ascending: false })
+  const form = document.getElementById('memberForm')
+  const table = document.getElementById('memberTable')
 
-  if (error) {
-    alert('โหลดข้อมูลไม่สำเร็จ')
-    console.error(error)
-    return
+  async function loadMembers() {
+    const { data } = await db.from('members').select('*').order('created_at', { ascending:false })
+    table.innerHTML = ''
+    data.forEach(m => {
+      table.innerHTML += `
+        <tr>
+          <td>${m.prefix || ''}</td>
+          <td>${m.name}</td>
+          <td>${m.lastname}</td>
+          <td>${m.phone || ''}</td>
+          <td>
+            <button onclick='editMember(${JSON.stringify(m)})'>✏️</button>
+            <button onclick="deleteMember('${m.id}')">🗑</button>
+          </td>
+        </tr>
+      `
+    })
   }
 
-  table.innerHTML = ''
-  data.forEach(m => {
-    table.innerHTML += `
-      <tr>
-        <td>${m.prefix || ''}</td>
-        <td>${m.name}</td>
-        <td>${m.lastname}</td>
-        <td>${m.phone || ''}</td>
-        <td>
-          <button onclick='editMember(${JSON.stringify(m)})'>✏️</button>
-          <button onclick="deleteMember('${m.id}')">🗑</button>
-        </td>
-      </tr>
-    `
+  form.addEventListener('submit', async e => {
+    e.preventDefault()
+    const id = document.getElementById('id').value
+
+    const data = {
+      prefix: prefix.value,
+      name: name.value,
+      lastname: lastname.value,
+      phone: phone.value
+    }
+
+    if (id) {
+      await db.from('members').update(data).eq('id', id)
+    } else {
+      await db.from('members').insert([data])
+    }
+
+    resetForm()
+    loadMembers()
   })
-}
 
-/* ================= SAVE / UPDATE ================= */
-form.addEventListener('submit', async (e) => {
-  e.preventDefault()
-
-  const id = document.getElementById('id').value
-
-  const data = {
-    prefix: prefix.value,
-    name: name.value,
-    lastname: lastname.value,
-    phone: phone.value
+  window.editMember = m => {
+    id.value = m.id
+    prefix.value = m.prefix || ''
+    name.value = m.name
+    lastname.value = m.lastname
+    phone.value = m.phone || ''
   }
 
-  let result
-  if (id) {
-    result = await db.from('members').update(data).eq('id', id)
-  } else {
-    result = await db.from('members').insert([data])
+  window.deleteMember = async id => {
+    if (!confirm('ยืนยันการลบ?')) return
+    await db.from('members').delete().eq('id', id)
+    loadMembers()
   }
 
-  if (result.error) {
-    alert('บันทึกไม่สำเร็จ')
-    console.error(result.error)
-    return
-  }
-
-  resetForm()
-  loadMembers()
-})
-
-/* ================= EDIT ================= */
-function editMember(m) {
-  id.value = m.id
-  prefix.value = m.prefix || ''
-  name.value = m.name
-  lastname.value = m.lastname
-  phone.value = m.phone || ''
-}
-
-/* ================= DELETE ================= */
-async function deleteMember(id) {
-  if (!confirm('ยืนยันการลบข้อมูลนี้?')) return
-
-  const { error } = await db.from('members').delete().eq('id', id)
-  if (error) {
-    alert('ลบไม่สำเร็จ')
-    console.error(error)
-    return
+  window.resetForm = () => {
+    form.reset()
+    document.getElementById('id').value = ''
   }
 
   loadMembers()
-}
-
-/* ================= RESET ================= */
-function resetForm() {
-  form.reset()
-  document.getElementById('id').value = ''
-}
-
-/* ================= INIT ================= */
-loadMembers()
 </script>
 
 </body>
