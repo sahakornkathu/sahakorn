@@ -1,198 +1,125 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-<meta charset="UTF-8">
-<title>ระบบสมาชิก</title>
-<link rel="stylesheet" href="dist/output.css">
+  <meta charset="UTF-8">
+  <title>จัดการสมาชิก</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body { font-family: sans-serif; padding: 20px }
+    table { border-collapse: collapse; width: 100%; margin-top: 20px }
+    th, td { border: 1px solid #ccc; padding: 8px }
+    button { margin: 2px }
+  </style>
 </head>
-<body class="bg-gray-100 p-6">
-<div class="max-w-5xl mx-auto bg-white p-6 rounded shadow">
-  <h1 class="text-2xl font-bold mb-4">ระบบสมาชิก</h1>
+<body>
 
-  <form id="memberForm" class="grid grid-cols-2 gap-4 mb-6">
-    <input name="first_name" placeholder="ชื่อ" class="border p-2 rounded" required>
-    <input name="last_name" placeholder="นามสกุล" class="border p-2 rounded" required>
-    <input name="house_no" placeholder="บ้านเลขที่" class="border p-2 rounded">
-    <input name="village_no" placeholder="หมู่" class="border p-2 rounded">
-    <input name="street" placeholder="ถนน" class="border p-2 rounded">
-    <input name="village" placeholder="หมู่บ้าน" class="border p-2 rounded">
-    <input name="sub_district" placeholder="ตำบล" class="border p-2 rounded">
-    <input name="district" placeholder="อำเภอ" class="border p-2 rounded">
-    <input name="province" placeholder="จังหวัด" class="border p-2 rounded">
-    <input name="postal_code" placeholder="เลขไปรษณีย์" class="border p-2 rounded">
-    <input name="phone" placeholder="เบอร์โทรศัพท์" class="border p-2 rounded">
-    <input name="alt_phone" placeholder="เบอร์โทรศัพท์สำรอง" class="border p-2 rounded">
-    <select name="gender" class="border p-2 rounded">
-      <option value="">เลือกเพศ</option>
-      <option value="ชาย">ชาย</option>
-      <option value="หญิง">หญิง</option>
-      <option value="อื่นๆ">อื่นๆ</option>
-    </select>
-    <select name="status" class="border p-2 rounded">
-      <option value="Active">Active</option>
-      <option value="Inactive">Inactive</option>
-    </select>
-    <button type="submit" class="col-span-2 bg-blue-500 text-white p-2 rounded">
-      บันทึกสมาชิก
-    </button>
-  </form>
+<h2>📋 ระบบจัดการสมาชิก</h2>
 
-  <!-- ===== เพิ่มเฉพาะปุ่ม Export / Print ===== -->
-  <div class="flex gap-2 mb-4">
-    <button onclick="exportExcel()" class="bg-green-600 text-white px-4 py-2 rounded">
-      Export Excel
-    </button>
-    <button onclick="printMembers()" class="bg-blue-600 text-white px-4 py-2 rounded">
-      Print
-    </button>
-  </div>
+<form id="memberForm">
+  <input type="hidden" id="id">
 
-  <ul id="membersList" class="space-y-2"></ul>
-</div>
+  <input placeholder="คำนำหน้า" id="prefix">
+  <input placeholder="ชื่อ" id="name" required>
+  <input placeholder="นามสกุล" id="lastname" required>
+  <input placeholder="เบอร์โทร" id="phone">
+
+  <button type="submit">💾 บันทึก</button>
+  <button type="button" onclick="resetForm()">ยกเลิก</button>
+</form>
+
+<table>
+  <thead>
+    <tr>
+      <th>คำนำหน้า</th>
+      <th>ชื่อ</th>
+      <th>นามสกุล</th>
+      <th>โทร</th>
+      <th>จัดการ</th>
+    </tr>
+  </thead>
+  <tbody id="memberTable"></tbody>
+</table>
 
 <script>
-const API_URL = "https://ttottijljxoinptmhgtu.supabase.co/functions/v1/members";
-let editId = null;
+const supabaseUrl = 'https://ttottijljxoinptmhgtu.supabase.co'
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'
+const supabase = supabase.createClient(supabaseUrl, supabaseKey)
 
-async function fetchMembers() {
-  const res = await fetch(API_URL, { method: "GET" });
-  const data = await res.json();
-  const list = document.getElementById("membersList");
-  list.innerHTML = data.map(m => `
-    <li class="flex justify-between bg-gray-50 p-2 rounded border">
-      <div>
-        ${m.first_name} ${m.last_name} - ${m.phone} - ${m.status} - ${m.province}
-      </div>
-      <div>
-        <button onclick="editMember('${m.id}')" class="bg-yellow-400 text-white px-2 rounded mr-2">แก้ไข</button>
-        <button onclick="deleteMember('${m.id}')" class="bg-red-500 text-white px-2 rounded">ลบ</button>
-      </div>
-    </li>
-  `).join('');
+const form = document.getElementById('memberForm')
+const table = document.getElementById('memberTable')
+
+form.addEventListener('submit', saveMember)
+
+// ================== LOAD ==================
+async function loadMembers() {
+  const { data } = await supabase
+    .from('members')
+    .select('*')
+    .order('created_at', { ascending: false })
+
+  table.innerHTML = ''
+  data.forEach(m => {
+    table.innerHTML += `
+      <tr>
+        <td>${m.prefix || ''}</td>
+        <td>${m.name}</td>
+        <td>${m.lastname}</td>
+        <td>${m.phone || ''}</td>
+        <td>
+          <button onclick='editMember(${JSON.stringify(m)})'>✏️</button>
+          <button onclick="deleteMember('${m.id}')">🗑</button>
+        </td>
+      </tr>
+    `
+  })
 }
 
-document.getElementById("memberForm").addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const formData = new FormData(e.target);
-  const body = Object.fromEntries(formData.entries());
-  const method = editId ? "PUT" : "POST";
-  if(editId) body.id = editId;
+// ================== SAVE / UPDATE ==================
+async function saveMember(e) {
+  e.preventDefault()
 
-  await fetch(API_URL, {
-    method,
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify(body)
-  });
-
-  e.target.reset();
-  editId = null;
-  fetchMembers();
-});
-
-async function editMember(id) {
-  const res = await fetch(API_URL, { method: "GET" });
-  const members = await res.json();
-  const member = members.find(m => m.id === id);
-  if(!member) return;
-
-  const form = document.getElementById("memberForm");
-  for (const key in member) {
-    if(form[key]) form[key].value = member[key] ?? "";
+  const id = document.getElementById('id').value
+  const data = {
+    prefix: prefix.value,
+    name: name.value,
+    lastname: lastname.value,
+    phone: phone.value
   }
-  editId = id;
+
+  if (id) {
+    await supabase.from('members').update(data).eq('id', id)
+  } else {
+    await supabase.from('members').insert([data])
+  }
+
+  resetForm()
+  loadMembers()
 }
 
+// ================== EDIT ==================
+function editMember(m) {
+  id.value = m.id
+  prefix.value = m.prefix || ''
+  name.value = m.name
+  lastname.value = m.lastname
+  phone.value = m.phone || ''
+}
+
+// ================== DELETE ==================
 async function deleteMember(id) {
-  if(!confirm("ต้องการลบสมาชิกนี้หรือไม่?")) return;
-  await fetch(API_URL, {
-    method: "DELETE",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({ id })
-  });
-  fetchMembers();
+  if (!confirm('ยืนยันการลบ?')) return
+  await supabase.from('members').delete().eq('id', id)
+  loadMembers()
 }
 
-/* =================================================
-   EXPORT → เอาเฉพาะรายการที่แสดงอยู่ใน <ul>
-   ================================================= */
-function exportExcel(){
-  const rows = [];
-  document.querySelectorAll("#membersList li").forEach(li => {
-    if (li.offsetParent === null) return;
-
-    const parts = li.querySelector("div").innerText
-      .split(" - ")
-      .map(t => t.trim());
-
-    rows.push({
-      fullname: parts[0] || "",
-      phone: parts[1] || "",
-      status: parts[2] || "",
-      province: parts[3] || ""
-    });
-  });
-
-  if(!rows.length){
-    alert("ไม่มีข้อมูลให้ export");
-    return;
-  }
-
-  const csv =
-    Object.keys(rows[0]).join(",") + "\n" +
-    rows.map(r => Object.values(r).join(",")).join("\n");
-
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(
-    new Blob([csv], { type: "text/csv;charset=utf-8;" })
-  );
-  a.download = "members.csv";
-  a.click();
+// ================== RESET ==================
+function resetForm() {
+  form.reset()
+  id.value = ''
 }
 
-/* =================================================
-   PRINT → พิมพ์เฉพาะที่เห็น
-   ================================================= */
-function printMembers(){
-  let rows = "";
-
-  document.querySelectorAll("#membersList li").forEach(li => {
-    if (li.offsetParent === null) return;
-
-    const p = li.querySelector("div").innerText
-      .split(" - ")
-      .map(t => t.trim());
-
-    rows += `
-      <tr>
-        <td>${p[0] || ""}</td>
-        <td>${p[1] || ""}</td>
-        <td>${p[2] || ""}</td>
-        <td>${p[3] || ""}</td>
-      </tr>
-    `;
-  });
-
-  if(!rows){
-    alert("ไม่มีข้อมูลให้พิมพ์");
-    return;
-  }
-
-  const w = window.open("");
-  w.document.write(`
-    <table border="1" width="100%" cellspacing="0">
-      <tr>
-        <th>ชื่อ-นามสกุล</th>
-        <th>โทร</th>
-        <th>สถานะ</th>
-        <th>จังหวัด</th>
-      </tr>
-      ${rows}
-    </table>
-  `);
-  w.print();
-}
-
-fetchMembers();
+loadMembers()
 </script>
+
 </body>
 </html>
