@@ -2,13 +2,13 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8">
-  <title>จัดการสมาชิก</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <title>ระบบจัดการสมาชิก</title>
   <style>
-    body { font-family: sans-serif; padding: 20px }
-    table { border-collapse: collapse; width: 100%; margin-top: 20px }
-    th, td { border: 1px solid #ccc; padding: 8px }
-    button { margin: 2px }
+    body { font-family:sans-serif; background:#f3f4f6; padding:20px }
+    form, table { background:#fff; padding:15px; border-radius:6px }
+    input { padding:6px; margin:4px }
+    table { width:100%; border-collapse:collapse; margin-top:20px }
+    th, td { border:1px solid #ddd; padding:8px }
   </style>
 </head>
 <body>
@@ -17,12 +17,10 @@
 
 <form id="memberForm">
   <input type="hidden" id="id">
-
-  <input placeholder="คำนำหน้า" id="prefix">
-  <input placeholder="ชื่อ" id="name" required>
-  <input placeholder="นามสกุล" id="lastname" required>
-  <input placeholder="เบอร์โทร" id="phone">
-
+  <input id="prefix" placeholder="คำนำหน้า">
+  <input id="name" placeholder="ชื่อ" required>
+  <input id="lastname" placeholder="นามสกุล" required>
+  <input id="phone" placeholder="เบอร์โทร">
   <button type="submit">💾 บันทึก</button>
   <button type="button" onclick="resetForm()">ยกเลิก</button>
 </form>
@@ -40,85 +38,77 @@
   <tbody id="memberTable"></tbody>
 </table>
 
-<script>
-const supabaseUrl = 'https://ttottijljxoinptmhgtu.supabase.co'
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'
-const supabase = supabase.createClient(supabaseUrl, supabaseKey)
+<script type="module">
+  import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-const form = document.getElementById('memberForm')
-const table = document.getElementById('memberTable')
+  const SUPABASE_URL = 'https://ttottijljxoinptmhgtu.supabase.co'
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'
 
-form.addEventListener('submit', saveMember)
+  const db = createClient(SUPABASE_URL, SUPABASE_KEY)
 
-// ================== LOAD ==================
-async function loadMembers() {
-  const { data } = await supabase
-    .from('members')
-    .select('*')
-    .order('created_at', { ascending: false })
+  const form = document.getElementById('memberForm')
+  const table = document.getElementById('memberTable')
 
-  table.innerHTML = ''
-  data.forEach(m => {
-    table.innerHTML += `
-      <tr>
-        <td>${m.prefix || ''}</td>
-        <td>${m.name}</td>
-        <td>${m.lastname}</td>
-        <td>${m.phone || ''}</td>
-        <td>
-          <button onclick='editMember(${JSON.stringify(m)})'>✏️</button>
-          <button onclick="deleteMember('${m.id}')">🗑</button>
-        </td>
-      </tr>
-    `
+  async function loadMembers() {
+    const { data } = await db.from('members').select('*').order('created_at', { ascending:false })
+    table.innerHTML = ''
+    data.forEach(m => {
+      table.innerHTML += `
+        <tr>
+          <td>${m.prefix || ''}</td>
+          <td>${m.name}</td>
+          <td>${m.lastname}</td>
+          <td>${m.phone || ''}</td>
+          <td>
+            <button onclick='editMember(${JSON.stringify(m)})'>✏️</button>
+            <button onclick="deleteMember('${m.id}')">🗑</button>
+          </td>
+        </tr>
+      `
+    })
+  }
+
+  form.addEventListener('submit', async e => {
+    e.preventDefault()
+    const id = document.getElementById('id').value
+
+    const data = {
+      prefix: prefix.value,
+      name: name.value,
+      lastname: lastname.value,
+      phone: phone.value
+    }
+
+    if (id) {
+      await db.from('members').update(data).eq('id', id)
+    } else {
+      await db.from('members').insert([data])
+    }
+
+    resetForm()
+    loadMembers()
   })
-}
 
-// ================== SAVE / UPDATE ==================
-async function saveMember(e) {
-  e.preventDefault()
-
-  const id = document.getElementById('id').value
-  const data = {
-    prefix: prefix.value,
-    name: name.value,
-    lastname: lastname.value,
-    phone: phone.value
+  window.editMember = m => {
+    id.value = m.id
+    prefix.value = m.prefix || ''
+    name.value = m.name
+    lastname.value = m.lastname
+    phone.value = m.phone || ''
   }
 
-  if (id) {
-    await supabase.from('members').update(data).eq('id', id)
-  } else {
-    await supabase.from('members').insert([data])
+  window.deleteMember = async id => {
+    if (!confirm('ยืนยันการลบ?')) return
+    await db.from('members').delete().eq('id', id)
+    loadMembers()
   }
 
-  resetForm()
+  window.resetForm = () => {
+    form.reset()
+    document.getElementById('id').value = ''
+  }
+
   loadMembers()
-}
-
-// ================== EDIT ==================
-function editMember(m) {
-  id.value = m.id
-  prefix.value = m.prefix || ''
-  name.value = m.name
-  lastname.value = m.lastname
-  phone.value = m.phone || ''
-}
-
-// ================== DELETE ==================
-async function deleteMember(id) {
-  if (!confirm('ยืนยันการลบ?')) return
-  await supabase.from('members').delete().eq('id', id)
-  loadMembers()
-}
-
-// ================== RESET ==================
-function resetForm() {
-  form.reset()
-  id.value = ''
-}
-
-loadMembers()
 </script>
 
 </body>
