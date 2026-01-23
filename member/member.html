@@ -5,12 +5,10 @@
 <title>ระบบสมาชิก</title>
 <link rel="stylesheet" href="dist/output.css">
 </head>
-
 <body class="bg-gray-100 p-6">
 <div class="max-w-5xl mx-auto bg-white p-6 rounded shadow">
   <h1 class="text-2xl font-bold mb-4">ระบบสมาชิก</h1>
 
-  <!-- ===== FORM (เดิม) ===== -->
   <form id="memberForm" class="grid grid-cols-2 gap-4 mb-6">
     <input name="first_name" placeholder="ชื่อ" class="border p-2 rounded" required>
     <input name="last_name" placeholder="นามสกุล" class="border p-2 rounded" required>
@@ -39,7 +37,7 @@
     </button>
   </form>
 
-  <!-- ===== EXPORT / PRINT (เพิ่ม) ===== -->
+  <!-- ===== เพิ่มเฉพาะปุ่ม ===== -->
   <div class="flex gap-2 mb-4">
     <button onclick="exportExcel()" class="bg-green-600 text-white px-4 py-2 rounded">
       Export Excel
@@ -49,7 +47,6 @@
     </button>
   </div>
 
-  <!-- ===== LIST ===== -->
   <ul id="membersList" class="space-y-2"></ul>
 </div>
 
@@ -57,12 +54,10 @@
 const API_URL = "https://ttottijljxoinptmhgtu.supabase.co/functions/v1/members";
 let editId = null;
 
-/* ================= FETCH (เดิม) ================= */
 async function fetchMembers() {
   const res = await fetch(API_URL, { method: "GET" });
   const data = await res.json();
   const list = document.getElementById("membersList");
-
   list.innerHTML = data.map(m => `
     <li class="flex justify-between bg-gray-50 p-2 rounded border">
       <div>
@@ -76,7 +71,6 @@ async function fetchMembers() {
   `).join('');
 }
 
-/* ================= FORM (เดิม) ================= */
 document.getElementById("memberForm").addEventListener("submit", async (e) => {
   e.preventDefault();
   const formData = new FormData(e.target);
@@ -95,7 +89,6 @@ document.getElementById("memberForm").addEventListener("submit", async (e) => {
   fetchMembers();
 });
 
-/* ================= EDIT / DELETE (เดิม) ================= */
 async function editMember(id) {
   const res = await fetch(API_URL, { method: "GET" });
   const members = await res.json();
@@ -120,14 +113,14 @@ async function deleteMember(id) {
 }
 
 /* =================================================
-   EXPORT → เอาเฉพาะรายการที่ “มองเห็นอยู่จริง”
+   EXPORT → เอาเฉพาะ <li> ที่ “แสดงอยู่จริง”
    ================================================= */
 function exportExcel(){
   const rows = [];
   const items = document.querySelectorAll("#membersList li");
 
   items.forEach(li => {
-    // ถ้าในอนาคตคุณมี filter ซ่อน li ตัวนี้จะไม่ถูก export
+    // ถ้าโดนซ่อน (filter) จะไม่ export
     if (li.offsetParent === null) return;
 
     const text = li.querySelector("div").innerText;
@@ -159,7 +152,7 @@ function exportExcel(){
 }
 
 /* =================================================
-   PRINT → พิมพ์เฉพาะรายการที่เห็น
+   PRINT → พิมพ์เฉพาะที่เห็น
    ================================================= */
 function printMembers(){
   let rows = "";
@@ -202,7 +195,6 @@ function printMembers(){
   w.print();
 }
 
-/* ================= INIT ================= */
 fetchMembers();
 </script>
 </body>
