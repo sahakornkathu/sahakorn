@@ -5,10 +5,12 @@
 <title>ระบบสมาชิก</title>
 <link rel="stylesheet" href="dist/output.css">
 </head>
+
 <body class="bg-gray-100 p-6">
 <div class="max-w-5xl mx-auto bg-white p-6 rounded shadow">
   <h1 class="text-2xl font-bold mb-4">ระบบสมาชิก</h1>
 
+  <!-- ===== FORM ===== -->
   <form id="memberForm" class="grid grid-cols-2 gap-4 mb-6">
     <input name="first_name" placeholder="ชื่อ" class="border p-2 rounded" required>
     <input name="last_name" placeholder="นามสกุล" class="border p-2 rounded" required>
@@ -29,6 +31,7 @@
       <option value="อื่นๆ">อื่นๆ</option>
     </select>
     <select name="status" class="border p-2 rounded">
+      <option value="">ทุกสถานะ</option>
       <option value="Active">Active</option>
       <option value="Inactive">Inactive</option>
     </select>
@@ -37,7 +40,19 @@
     </button>
   </form>
 
-  <!-- ===== เพิ่มเฉพาะปุ่ม ===== -->
+  <!-- ===== FILTER ===== -->
+  <div class="grid grid-cols-4 gap-2 mb-4">
+    <input id="filterName" placeholder="ชื่อ / นามสกุล" class="border p-2 rounded" oninput="applyFilter()">
+    <input id="filterPhone" placeholder="เบอร์โทร" class="border p-2 rounded" oninput="applyFilter()">
+    <select id="filterStatus" class="border p-2 rounded" onchange="applyFilter()">
+      <option value="">ทุกสถานะ</option>
+      <option value="Active">Active</option>
+      <option value="Inactive">Inactive</option>
+    </select>
+    <input id="filterProvince" placeholder="จังหวัด" class="border p-2 rounded" oninput="applyFilter()">
+  </div>
+
+  <!-- ===== EXPORT / PRINT ===== -->
   <div class="flex gap-2 mb-4">
     <button onclick="exportExcel()" class="bg-green-600 text-white px-4 py-2 rounded">
       Export Excel
@@ -47,21 +62,33 @@
     </button>
   </div>
 
+  <!-- ===== LIST ===== -->
   <ul id="membersList" class="space-y-2"></ul>
 </div>
 
 <script>
 const API_URL = "https://ttottijljxoinptmhgtu.supabase.co/functions/v1/members";
-let editId = null;
 
+let editId = null;
+let allMembers = [];
+let currentRenderedMembers = [];
+
+/* ================= FETCH ================= */
 async function fetchMembers() {
-  const res = await fetch(API_URL, { method: "GET" });
-  const data = await res.json();
+  const res = await fetch(API_URL);
+  allMembers = await res.json();
+  renderMembers(allMembers);
+}
+
+/* ================= RENDER ================= */
+function renderMembers(data){
+  currentRenderedMembers = data;
+
   const list = document.getElementById("membersList");
   list.innerHTML = data.map(m => `
     <li class="flex justify-between bg-gray-50 p-2 rounded border">
       <div>
-        ${m.first_name} ${m.last_name} - ${m.phone} - ${m.status} - ${m.province}
+        ${m.first_name} ${m.last_name} - ${m.phone || ""} - ${m.status || ""} - ${m.province || ""}
       </div>
       <div>
         <button onclick="editMember('${m.id}')" class="bg-yellow-400 text-white px-2 rounded mr-2">แก้ไข</button>
@@ -71,60 +98,35 @@ async function fetchMembers() {
   `).join('');
 }
 
-document.getElementById("memberForm").addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const formData = new FormData(e.target);
-  const body = Object.fromEntries(formData.entries());
-  const method = editId ? "PUT" : "POST";
-  if(editId) body.id = editId;
+/* ================= FILTER ================= */
+function applyFilter(){
+  const name = filterName.value.toLowerCase();
+  const phone = filterPhone.value;
+  const status = filterStatus.value;
+  const province = filterProvince.value.toLowerCase();
 
-  await fetch(API_URL, {
-    method,
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify(body)
+  const filtered = allMembers.filter(m => {
+    const fullName = `${m.first_name} ${m.last_name}`.toLowerCase();
+    return (
+      (!name || fullName.includes(name)) &&
+      (!phone || (m.phone || "").includes(phone)) &&
+      (!status || m.status === status) &&
+      (!province || (m.province || "").toLowerCase().includes(province))
+    );
   });
 
-  e.target.reset();
-  editId = null;
-  fetchMembers();
-});
-
-async function editMember(id) {
-  const res = await fetch(API_URL, { method: "GET" });
-  const members = await res.json();
-  const member = members.find(m => m.id === id);
-  if(!member) return;
-
-  const form = document.getElementById("memberForm");
-  for (const key in member) {
-    if(form[key]) form[key].value = member[key] ?? "";
-  }
-  editId = id;
+  renderMembers(filtered);
 }
 
-async function deleteMember(id) {
-  if(!confirm("ต้องการลบสมาชิกนี้หรือไม่?")) return;
-  await fetch(API_URL, {
-    method: "DELETE",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({ id })
-  });
-  fetchMembers();
-}
-
-/* =================================================
-   EXPORT → เอาเฉพาะ <li> ที่ “แสดงอยู่จริง”
-   ================================================= */
+/* ================= EXPORT (DOM จริง) ================= */
 function exportExcel(){
   const rows = [];
-  const items = document.querySelectorAll("#membersList li");
-
-  items.forEach(li => {
-    // ถ้าโดนซ่อน (filter) จะไม่ export
+  document.querySelectorAll("#membersList li").forEach(li => {
     if (li.offsetParent === null) return;
 
-    const text = li.querySelector("div").innerText;
-    const parts = text.split(" - ").map(t => t.trim());
+    const parts = li.querySelector("div").innerText
+      .split(" - ")
+      .map(t => t.trim());
 
     rows.push({
       fullname: parts[0] || "",
@@ -144,33 +146,28 @@ function exportExcel(){
     rows.map(r => Object.values(r).join(",")).join("\n");
 
   const a = document.createElement("a");
-  a.href = URL.createObjectURL(
-    new Blob([csv], { type: "text/csv;charset=utf-8;" })
-  );
-  a.download = "members.csv";
+  a.href = URL.createObjectURL(new Blob([csv], {type:"text/csv;charset=utf-8;"}));
+  a.download = "members_filtered.csv";
   a.click();
 }
 
-/* =================================================
-   PRINT → พิมพ์เฉพาะที่เห็น
-   ================================================= */
+/* ================= PRINT (DOM จริง) ================= */
 function printMembers(){
   let rows = "";
-  const items = document.querySelectorAll("#membersList li");
 
-  items.forEach(li => {
+  document.querySelectorAll("#membersList li").forEach(li => {
     if (li.offsetParent === null) return;
 
-    const parts = li.querySelector("div").innerText
+    const p = li.querySelector("div").innerText
       .split(" - ")
       .map(t => t.trim());
 
     rows += `
       <tr>
-        <td>${parts[0] || ""}</td>
-        <td>${parts[1] || ""}</td>
-        <td>${parts[2] || ""}</td>
-        <td>${parts[3] || ""}</td>
+        <td>${p[0] || ""}</td>
+        <td>${p[1] || ""}</td>
+        <td>${p[2] || ""}</td>
+        <td>${p[3] || ""}</td>
       </tr>
     `;
   });
@@ -193,6 +190,41 @@ function printMembers(){
     </table>
   `);
   w.print();
+}
+
+/* ================= CRUD ================= */
+document.getElementById("memberForm").onsubmit = async e => {
+  e.preventDefault();
+  const body = Object.fromEntries(new FormData(e.target));
+  if(editId) body.id = editId;
+
+  await fetch(API_URL,{
+    method: editId ? "PUT" : "POST",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify(body)
+  });
+
+  e.target.reset();
+  editId = null;
+  fetchMembers();
+};
+
+async function editMember(id){
+  const m = allMembers.find(x => x.id === id);
+  if(!m) return;
+  const f = document.getElementById("memberForm");
+  Object.keys(m).forEach(k => f[k] && (f[k].value = m[k] ?? ""));
+  editId = id;
+}
+
+async function deleteMember(id){
+  if(!confirm("ต้องการลบสมาชิกนี้หรือไม่?")) return;
+  await fetch(API_URL,{
+    method:"DELETE",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({ id })
+  });
+  fetchMembers();
 }
 
 fetchMembers();
