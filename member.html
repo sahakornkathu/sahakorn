@@ -10,7 +10,7 @@
 <div class="max-w-5xl mx-auto bg-white p-6 rounded shadow">
   <h1 class="text-2xl font-bold mb-4">ระบบสมาชิก</h1>
 
-  <!-- ===== FORM (ของเดิม) ===== -->
+  <!-- ===== FORM (เดิม) ===== -->
   <form id="memberForm" class="grid grid-cols-2 gap-4 mb-6">
     <input name="first_name" placeholder="ชื่อ" class="border p-2 rounded" required>
     <input name="last_name" placeholder="นามสกุล" class="border p-2 rounded" required>
@@ -74,7 +74,7 @@ async function fetchMembers() {
   `).join('');
 }
 
-/* ================= FORM / EDIT / DELETE (เดิม) ================= */
+/* ================= CRUD (เดิม) ================= */
 document.getElementById("memberForm").addEventListener("submit", async (e) => {
   e.preventDefault();
   const body = Object.fromEntries(new FormData(e.target));
@@ -100,11 +100,20 @@ async function deleteMember(id){
 }
 
 /* =================================================
-   EXPORT → เอาเฉพาะแถวที่มองเห็น (filter แล้ว)
+   ⭐ ตัวคุมจริง: เช็คว่าแสดงอยู่จริงหรือไม่
    ================================================= */
+function isVisible(li){
+  const style = window.getComputedStyle(li);
+  return (
+    style.display !== "none" &&
+    style.visibility !== "hidden" &&
+    !li.classList.contains("hidden")
+  );
+}
+
+/* ================= EXPORT ================= */
 function exportExcel(){
-  const items = [...document.querySelectorAll("#membersList li")]
-    .filter(li => li.offsetParent !== null); // ⭐ ตัวสำคัญ
+  const items = [...document.querySelectorAll("#membersList li")].filter(isVisible);
 
   if(items.length === 0){
     alert("ไม่มีข้อมูลให้ export");
@@ -122,8 +131,9 @@ function exportExcel(){
     };
   });
 
-  const csv = Object.keys(rows[0]).join(",") + "\n" +
-              rows.map(r=>Object.values(r).join(",")).join("\n");
+  const csv =
+    Object.keys(rows[0]).join(",") + "\n" +
+    rows.map(r=>Object.values(r).join(",")).join("\n");
 
   const a = document.createElement("a");
   a.href = URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8;"}));
@@ -131,12 +141,9 @@ function exportExcel(){
   a.click();
 }
 
-/* =================================================
-   PRINT → พิมพ์เฉพาะแถวที่มองเห็น (filter แล้ว)
-   ================================================= */
+/* ================= PRINT ================= */
 function printMembers(){
-  const items = [...document.querySelectorAll("#membersList li")]
-    .filter(li => li.offsetParent !== null);
+  const items = [...document.querySelectorAll("#membersList li")].filter(isVisible);
 
   if(items.length === 0){
     alert("ไม่มีข้อมูลให้พิมพ์");
@@ -146,11 +153,11 @@ function printMembers(){
   const rows = items.map(li=>{
     const p = li.querySelector("div").innerText.split("|").map(t=>t.trim());
     return `<tr>
-      <td>${p[0]||""}</td>
-      <td>${p[1]||""}</td>
-      <td>${p[2]||""}</td>
-      <td>${p[3]||""}</td>
-      <td>${p[4]||""}</td>
+      <td>${p[0]}</td>
+      <td>${p[1]}</td>
+      <td>${p[2]}</td>
+      <td>${p[3]}</td>
+      <td>${p[4]}</td>
     </tr>`;
   }).join("");
 
