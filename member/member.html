@@ -10,7 +10,7 @@
 <div class="max-w-5xl mx-auto bg-white p-6 rounded shadow">
   <h1 class="text-2xl font-bold mb-4">ระบบสมาชิก</h1>
 
-  <!-- ===== FORM ===== -->
+  <!-- ===== FORM (เดิม) ===== -->
   <form id="memberForm" class="grid grid-cols-2 gap-4 mb-6">
     <input name="first_name" placeholder="ชื่อ" class="border p-2 rounded" required>
     <input name="last_name" placeholder="นามสกุล" class="border p-2 rounded" required>
@@ -40,18 +40,6 @@
     </button>
   </form>
 
-  <!-- ===== FILTER ===== -->
-  <div class="grid grid-cols-4 gap-2 mb-4">
-    <input id="filterName" placeholder="ชื่อ / นามสกุล" class="border p-2 rounded" oninput="applyFilter()">
-    <input id="filterPhone" placeholder="เบอร์โทร" class="border p-2 rounded" oninput="applyFilter()">
-    <select id="filterStatus" class="border p-2 rounded" onchange="applyFilter()">
-      <option value="">ทุกสถานะ</option>
-      <option value="Active">Active</option>
-      <option value="Inactive">Inactive</option>
-    </select>
-    <input id="filterProvince" placeholder="จังหวัด" class="border p-2 rounded" oninput="applyFilter()">
-  </div>
-
   <!-- ===== EXPORT / PRINT ===== -->
   <div class="flex gap-2 mb-4">
     <button onclick="exportExcel()" class="bg-green-600 text-white px-4 py-2 rounded">
@@ -68,23 +56,14 @@
 
 <script>
 const API_URL = "https://ttottijljxoinptmhgtu.supabase.co/functions/v1/members";
-
 let editId = null;
-let allMembers = [];
-let currentRenderedMembers = []; // 🔒 แหล่งจริงที่สุด
 
-/* ================= FETCH ================= */
+/* ================= FETCH (เดิม) ================= */
 async function fetchMembers() {
   const res = await fetch(API_URL);
-  allMembers = await res.json();
-  renderMembers(allMembers);
-}
-
-/* ================= RENDER (จุดศูนย์กลาง) ================= */
-function renderMembers(data){
-  currentRenderedMembers = data; // ⭐ สำคัญที่สุด
-
+  const data = await res.json();
   const list = document.getElementById("membersList");
+
   list.innerHTML = data.map(m => `
     <li class="flex justify-between bg-gray-50 p-2 rounded border">
       <div>
@@ -98,39 +77,70 @@ function renderMembers(data){
   `).join('');
 }
 
-/* ================= FILTER ================= */
-function applyFilter(){
-  const name = document.getElementById("filterName").value.toLowerCase();
-  const phone = document.getElementById("filterPhone").value;
-  const status = document.getElementById("filterStatus").value;
-  const province = document.getElementById("filterProvince").value.toLowerCase();
+/* ================= FORM / CRUD (เดิม) ================= */
+document.getElementById("memberForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const body = Object.fromEntries(new FormData(e.target));
+  if(editId) body.id = editId;
 
-  const filtered = allMembers.filter(m => {
-    const fullName = `${m.first_name} ${m.last_name}`.toLowerCase();
-    return (
-      (!name || fullName.includes(name)) &&
-      (!phone || (m.phone || "").includes(phone)) &&
-      (!status || m.status === status) &&
-      (!province || (m.province || "").toLowerCase().includes(province))
-    );
+  await fetch(API_URL,{
+    method: editId ? "PUT" : "POST",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify(body)
   });
 
-  renderMembers(filtered);
+  e.target.reset();
+  editId = null;
+  fetchMembers();
+});
+
+async function editMember(id){
+  const res = await fetch(API_URL);
+  const members = await res.json();
+  const m = members.find(x => x.id === id);
+  if(!m) return;
+
+  const f = document.getElementById("memberForm");
+  Object.keys(m).forEach(k => f[k] && (f[k].value = m[k] ?? ""));
+  editId = id;
 }
 
-/* ================= EXPORT (ใช้แหล่งเดียว) ================= */
+async function deleteMember(id){
+  if(!confirm("ต้องการลบสมาชิกนี้หรือไม่?")) return;
+  await fetch(API_URL,{
+    method:"DELETE",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({ id })
+  });
+  fetchMembers();
+}
+
+/* =================================================
+   EXPORT → อ่านเฉพาะรายการที่ “มองเห็นอยู่จริง”
+   ================================================= */
 function exportExcel(){
-  if(!currentRenderedMembers.length){
+  const rows = [];
+  const items = document.querySelectorAll("#membersList li");
+
+  items.forEach(li => {
+    // ถ้าโดน filter ซ่อน จะไม่ export
+    if (li.offsetParent === null) return;
+
+    const text = li.querySelector("div").innerText;
+    const parts = text.split(" - ").map(t => t.trim());
+
+    rows.push({
+      fullname: parts[0] || "",
+      phone: parts[1] || "",
+      status: parts[2] || "",
+      province: parts[3] || ""
+    });
+  });
+
+  if(!rows.length){
     alert("ไม่มีข้อมูลให้ export");
     return;
   }
-
-  const rows = currentRenderedMembers.map(m => ({
-    fullname: `${m.first_name} ${m.last_name}`,
-    phone: m.phone || "",
-    status: m.status || "",
-    province: m.province || ""
-  }));
 
   const csv =
     Object.keys(rows[0]).join(",") + "\n" +
@@ -144,21 +154,34 @@ function exportExcel(){
   a.click();
 }
 
-/* ================= PRINT ================= */
+/* =================================================
+   PRINT → พิมพ์เฉพาะรายการที่เห็น
+   ================================================= */
 function printMembers(){
-  if(!currentRenderedMembers.length){
+  let rows = "";
+  const items = document.querySelectorAll("#membersList li");
+
+  items.forEach(li => {
+    if (li.offsetParent === null) return;
+
+    const parts = li.querySelector("div").innerText
+      .split(" - ")
+      .map(t => t.trim());
+
+    rows += `
+      <tr>
+        <td>${parts[0] || ""}</td>
+        <td>${parts[1] || ""}</td>
+        <td>${parts[2] || ""}</td>
+        <td>${parts[3] || ""}</td>
+      </tr>
+    `;
+  });
+
+  if(!rows){
     alert("ไม่มีข้อมูลให้พิมพ์");
     return;
   }
-
-  const rows = currentRenderedMembers.map(m => `
-    <tr>
-      <td>${m.first_name} ${m.last_name}</td>
-      <td>${m.phone || ""}</td>
-      <td>${m.status || ""}</td>
-      <td>${m.province || ""}</td>
-    </tr>
-  `).join("");
 
   const w = window.open("");
   w.document.write(`
@@ -173,41 +196,6 @@ function printMembers(){
     </table>
   `);
   w.print();
-}
-
-/* ================= CRUD เดิม ================= */
-document.getElementById("memberForm").onsubmit = async e => {
-  e.preventDefault();
-  const body = Object.fromEntries(new FormData(e.target));
-  if(editId) body.id = editId;
-
-  await fetch(API_URL,{
-    method: editId ? "PUT" : "POST",
-    headers:{ "Content-Type":"application/json" },
-    body: JSON.stringify(body)
-  });
-
-  e.target.reset();
-  editId = null;
-  fetchMembers();
-};
-
-async function editMember(id){
-  const m = allMembers.find(x => x.id === id);
-  if(!m) return;
-  const f = document.getElementById("memberForm");
-  Object.keys(m).forEach(k => f[k] && (f[k].value = m[k] ?? ""));
-  editId = id;
-}
-
-async function deleteMember(id){
-  if(!confirm("ต้องการลบสมาชิกนี้หรือไม่?")) return;
-  await fetch(API_URL,{
-    method:"DELETE",
-    headers:{ "Content-Type":"application/json" },
-    body: JSON.stringify({ id })
-  });
-  fetchMembers();
 }
 
 /* ================= INIT ================= */
