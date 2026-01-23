@@ -5,12 +5,11 @@
 <title>ระบบสมาชิก</title>
 <link rel="stylesheet" href="dist/output.css">
 </head>
-
 <body class="bg-gray-100 p-6">
 <div class="max-w-5xl mx-auto bg-white p-6 rounded shadow">
   <h1 class="text-2xl font-bold mb-4">ระบบสมาชิก</h1>
 
-  <!-- ===== FORM (เดิม) ===== -->
+  <!-- ===== FORM (เดิมทั้งหมด) ===== -->
   <form id="memberForm" class="grid grid-cols-2 gap-4 mb-6">
     <input name="first_name" placeholder="ชื่อ" class="border p-2 rounded" required>
     <input name="last_name" placeholder="นามสกุล" class="border p-2 rounded" required>
@@ -39,7 +38,7 @@
     </button>
   </form>
 
-  <!-- ===== EXPORT / PRINT ===== -->
+  <!-- ===== EXPORT / PRINT (เพิ่มใหม่) ===== -->
   <div class="flex gap-2 mb-4">
     <button onclick="exportExcel()" class="bg-green-600 text-white px-4 py-2 rounded">
       Export Excel
@@ -59,12 +58,13 @@ let editId = null;
 
 /* ================= FETCH (เดิม) ================= */
 async function fetchMembers() {
-  const res = await fetch(API_URL);
+  const res = await fetch(API_URL, { method: "GET" });
   const data = await res.json();
-  document.getElementById("membersList").innerHTML = data.map(m => `
+  const list = document.getElementById("membersList");
+  list.innerHTML = data.map(m => `
     <li class="flex justify-between bg-gray-50 p-2 rounded border">
       <div>
-        ${m.first_name} ${m.last_name} | ${m.phone} | ${m.gender} | ${m.province} | ${m.status}
+        ${m.first_name} ${m.last_name} - ${m.phone} - ${m.status} - ${m.province}
       </div>
       <div>
         <button onclick="editMember('${m.id}')" class="bg-yellow-400 text-white px-2 rounded mr-2">แก้ไข</button>
@@ -74,102 +74,134 @@ async function fetchMembers() {
   `).join('');
 }
 
-/* ================= CRUD (เดิม) ================= */
+/* ================= FORM (เดิม) ================= */
 document.getElementById("memberForm").addEventListener("submit", async (e) => {
   e.preventDefault();
-  const body = Object.fromEntries(new FormData(e.target));
+  const formData = new FormData(e.target);
+  const body = Object.fromEntries(formData.entries());
+  const method = editId ? "PUT" : "POST";
   if(editId) body.id = editId;
-  await fetch(API_URL,{method:editId?"PUT":"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
-  e.target.reset(); editId=null; fetchMembers();
+
+  await fetch(API_URL, {
+    method,
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify(body)
+  });
+
+  e.target.reset();
+  editId = null;
+  fetchMembers();
 });
 
-async function editMember(id){
-  const res = await fetch(API_URL);
+/* ================= EDIT / DELETE (เดิม) ================= */
+async function editMember(id) {
+  const res = await fetch(API_URL, { method: "GET" });
   const members = await res.json();
-  const m = members.find(x=>x.id===id);
-  if(!m) return;
-  const f = document.getElementById("memberForm");
-  Object.keys(m).forEach(k=>f[k] && (f[k].value=m[k]||""));
-  editId=id;
+  const member = members.find(m => m.id === id);
+  if(!member) return;
+
+  const form = document.getElementById("memberForm");
+  for (const key in member) {
+    if(form[key]) form[key].value = member[key] ?? "";
+  }
+  editId = id;
 }
 
-async function deleteMember(id){
+async function deleteMember(id) {
   if(!confirm("ต้องการลบสมาชิกนี้หรือไม่?")) return;
-  await fetch(API_URL,{method:"DELETE",headers:{"Content-Type":"application/json"},body:JSON.stringify({id})});
+  await fetch(API_URL, {
+    method: "DELETE",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ id })
+  });
   fetchMembers();
 }
 
 /* =================================================
-   ⭐ ตัวคุมจริง: เช็คว่าแสดงอยู่จริงหรือไม่
+   EXPORT → เอาจากรายการที่แสดงอยู่จริงเท่านั้น
    ================================================= */
-function isVisible(li){
-  const style = window.getComputedStyle(li);
-  return (
-    style.display !== "none" &&
-    style.visibility !== "hidden" &&
-    !li.classList.contains("hidden")
-  );
-}
-
-/* ================= EXPORT ================= */
 function exportExcel(){
-  const items = [...document.querySelectorAll("#membersList li")].filter(isVisible);
-
+  const items = document.querySelectorAll("#membersList li");
   if(items.length === 0){
     alert("ไม่มีข้อมูลให้ export");
     return;
   }
 
-  const rows = items.map(li => {
-    const p = li.querySelector("div").innerText.split("|").map(t=>t.trim());
-    return {
-      name: p[0] || "",
-      phone: p[1] || "",
-      gender: p[2] || "",
-      province: p[3] || "",
-      status: p[4] || ""
-    };
+  const rows = [];
+  items.forEach(li => {
+    const text = li.querySelector("div").innerText;
+    // รูปแบบ: ชื่อ นามสกุล - โทร - สถานะ - จังหวัด
+    const parts = text.split(" - ").map(t => t.trim());
+    rows.push({
+      fullname: parts[0] || "",
+      phone: parts[1] || "",
+      status: parts[2] || "",
+      province: parts[3] || ""
+    });
   });
 
-  const csv =
-    Object.keys(rows[0]).join(",") + "\n" +
-    rows.map(r=>Object.values(r).join(",")).join("\n");
+  const header = Object.keys(rows[0]).join(",");
+  const body = rows.map(r => Object.values(r).join(",")).join("\n");
+  const csv = header + "\n" + body;
 
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
   const a = document.createElement("a");
-  a.href = URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8;"}));
+  a.href = URL.createObjectURL(blob);
   a.download = "members_filtered.csv";
   a.click();
 }
 
-/* ================= PRINT ================= */
+/* =================================================
+   PRINT → พิมพ์จากรายการที่แสดงอยู่จริงเท่านั้น
+   ================================================= */
 function printMembers(){
-  const items = [...document.querySelectorAll("#membersList li")].filter(isVisible);
-
+  const items = document.querySelectorAll("#membersList li");
   if(items.length === 0){
     alert("ไม่มีข้อมูลให้พิมพ์");
     return;
   }
 
-  const rows = items.map(li=>{
-    const p = li.querySelector("div").innerText.split("|").map(t=>t.trim());
-    return `<tr>
-      <td>${p[0]}</td>
-      <td>${p[1]}</td>
-      <td>${p[2]}</td>
-      <td>${p[3]}</td>
-      <td>${p[4]}</td>
-    </tr>`;
-  }).join("");
+  let rows = "";
+  items.forEach(li => {
+    const parts = li.querySelector("div").innerText
+      .split(" - ")
+      .map(t => t.trim());
 
-  const w = window.open("");
-  w.document.write(`
-    <table border="1" width="100%" cellspacing="0">
+    rows += `
       <tr>
-        <th>ชื่อ-นามสกุล</th><th>โทร</th><th>เพศ</th><th>จังหวัด</th><th>สถานะ</th>
+        <td>${parts[0] || ""}</td>
+        <td>${parts[1] || ""}</td>
+        <td>${parts[2] || ""}</td>
+        <td>${parts[3] || ""}</td>
       </tr>
-      ${rows}
-    </table>
+    `;
+  });
+
+  const w = window.open("", "_blank");
+  w.document.write(`
+    <html>
+    <head>
+      <title>พิมพ์รายชื่อสมาชิก</title>
+      <style>
+        table { width:100%; border-collapse:collapse }
+        th,td { border:1px solid #000; padding:6px }
+      </style>
+    </head>
+    <body>
+      <h2>รายชื่อสมาชิก (ตามที่กรองแล้ว)</h2>
+      <table>
+        <tr>
+          <th>ชื่อ-นามสกุล</th>
+          <th>โทร</th>
+          <th>สถานะ</th>
+          <th>จังหวัด</th>
+        </tr>
+        ${rows}
+      </table>
+    </body>
+    </html>
   `);
+  w.document.close();
   w.print();
 }
 
