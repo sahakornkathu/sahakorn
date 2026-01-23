@@ -40,22 +40,16 @@
     </button>
   </form>
 
-  <!-- ===== FILTER (เพิ่มจริง) ===== -->
+  <!-- ===== FILTER ===== -->
   <div class="grid grid-cols-4 gap-2 mb-4">
-    <input id="filterName" placeholder="ค้นชื่อ / นามสกุล"
-      class="border p-2 rounded" oninput="applyFilter()">
-
-    <input id="filterPhone" placeholder="เบอร์โทร"
-      class="border p-2 rounded" oninput="applyFilter()">
-
+    <input id="filterName" placeholder="ชื่อ / นามสกุล" class="border p-2 rounded" oninput="applyFilter()">
+    <input id="filterPhone" placeholder="เบอร์โทร" class="border p-2 rounded" oninput="applyFilter()">
     <select id="filterStatus" class="border p-2 rounded" onchange="applyFilter()">
       <option value="">ทุกสถานะ</option>
       <option value="Active">Active</option>
       <option value="Inactive">Inactive</option>
     </select>
-
-    <input id="filterProvince" placeholder="จังหวัด"
-      class="border p-2 rounded" oninput="applyFilter()">
+    <input id="filterProvince" placeholder="จังหวัด" class="border p-2 rounded" oninput="applyFilter()">
   </div>
 
   <!-- ===== EXPORT / PRINT ===== -->
@@ -68,19 +62,23 @@
     </button>
   </div>
 
+  <!-- ===== LIST ===== -->
   <ul id="membersList" class="space-y-2"></ul>
 </div>
 
 <script>
 const API_URL = "https://ttottijljxoinptmhgtu.supabase.co/functions/v1/members";
+
 let editId = null;
 let allMembers = [];
+let filteredMembers = []; // ⭐ แหล่งเดียวที่ export ใช้
 
 /* ================= FETCH ================= */
 async function fetchMembers() {
   const res = await fetch(API_URL);
   allMembers = await res.json();
-  renderMembers(allMembers);
+  filteredMembers = allMembers;
+  renderMembers(filteredMembers);
 }
 
 /* ================= RENDER ================= */
@@ -89,7 +87,7 @@ function renderMembers(data){
   list.innerHTML = data.map(m => `
     <li class="flex justify-between bg-gray-50 p-2 rounded border">
       <div>
-        ${m.first_name} ${m.last_name} - ${m.phone} - ${m.status} - ${m.province}
+        ${m.first_name} ${m.last_name} - ${m.phone || ""} - ${m.status || ""} - ${m.province || ""}
       </div>
       <div>
         <button onclick="editMember('${m.id}')" class="bg-yellow-400 text-white px-2 rounded mr-2">แก้ไข</button>
@@ -106,7 +104,7 @@ function applyFilter(){
   const status = document.getElementById("filterStatus").value;
   const province = document.getElementById("filterProvince").value.toLowerCase();
 
-  const filtered = allMembers.filter(m => {
+  filteredMembers = allMembers.filter(m => {
     const fullName = `${m.first_name} ${m.last_name}`.toLowerCase();
     return (
       (!name || fullName.includes(name)) &&
@@ -116,48 +114,60 @@ function applyFilter(){
     );
   });
 
-  renderMembers(filtered);
+  renderMembers(filteredMembers);
 }
 
-/* ================= EXPORT ================= */
+/* ================= EXPORT (FIXED 100%) ================= */
 function exportExcel(){
-  const items = document.querySelectorAll("#membersList li");
-  if(!items.length) return alert("ไม่มีข้อมูล");
+  if(!filteredMembers.length){
+    alert("ไม่มีข้อมูลให้ export");
+    return;
+  }
 
-  const rows = [...items].map(li => {
-    const p = li.querySelector("div").innerText.split(" - ");
-    return {
-      fullname: p[0],
-      phone: p[1],
-      status: p[2],
-      province: p[3]
-    };
-  });
+  const rows = filteredMembers.map(m => ({
+    fullname: `${m.first_name} ${m.last_name}`,
+    phone: m.phone || "",
+    status: m.status || "",
+    province: m.province || ""
+  }));
 
   const csv =
     Object.keys(rows[0]).join(",") + "\n" +
-    rows.map(r=>Object.values(r).join(",")).join("\n");
+    rows.map(r => Object.values(r).join(",")).join("\n");
 
   const a = document.createElement("a");
-  a.href = URL.createObjectURL(new Blob([csv],{type:"text/csv"}));
+  a.href = URL.createObjectURL(
+    new Blob([csv], { type: "text/csv;charset=utf-8;" })
+  );
   a.download = "members_filtered.csv";
   a.click();
 }
 
 /* ================= PRINT ================= */
 function printMembers(){
-  const items = document.querySelectorAll("#membersList li");
-  if(!items.length) return alert("ไม่มีข้อมูล");
+  if(!filteredMembers.length){
+    alert("ไม่มีข้อมูลให้พิมพ์");
+    return;
+  }
 
-  const rows = [...items].map(li=>{
-    const p = li.querySelector("div").innerText.split(" - ");
-    return `<tr><td>${p[0]}</td><td>${p[1]}</td><td>${p[2]}</td><td>${p[3]}</td></tr>`;
-  }).join("");
+  const rows = filteredMembers.map(m => `
+    <tr>
+      <td>${m.first_name} ${m.last_name}</td>
+      <td>${m.phone || ""}</td>
+      <td>${m.status || ""}</td>
+      <td>${m.province || ""}</td>
+    </tr>
+  `).join("");
 
   const w = window.open("");
   w.document.write(`
-    <table border="1" width="100%">
-      <tr><th>ชื่อ</th><th>โทร</th><th>สถานะ</th><th>จังหวัด</th></tr>
+    <table border="1" width="100%" cellspacing="0">
+      <tr>
+        <th>ชื่อ-นามสกุล</th>
+        <th>โทร</th>
+        <th>สถานะ</th>
+        <th>จังหวัด</th>
+      </tr>
       ${rows}
     </table>
   `);
@@ -169,21 +179,31 @@ document.getElementById("memberForm").onsubmit = async e => {
   e.preventDefault();
   const body = Object.fromEntries(new FormData(e.target));
   if(editId) body.id = editId;
-  await fetch(API_URL,{method:editId?"PUT":"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
-  e.target.reset(); editId=null; fetchMembers();
+  await fetch(API_URL,{
+    method: editId ? "PUT" : "POST",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify(body)
+  });
+  e.target.reset();
+  editId = null;
+  fetchMembers();
 };
 
 async function editMember(id){
-  const m = allMembers.find(x=>x.id===id);
+  const m = allMembers.find(x => x.id === id);
   if(!m) return;
   const f = document.getElementById("memberForm");
-  Object.keys(m).forEach(k=>f[k] && (f[k].value=m[k]||""));
-  editId=id;
+  Object.keys(m).forEach(k => f[k] && (f[k].value = m[k] ?? ""));
+  editId = id;
 }
 
 async function deleteMember(id){
-  if(!confirm("ลบสมาชิกนี้?")) return;
-  await fetch(API_URL,{method:"DELETE",headers:{"Content-Type":"application/json"},body:JSON.stringify({id})});
+  if(!confirm("ต้องการลบสมาชิกนี้หรือไม่?")) return;
+  await fetch(API_URL,{
+    method:"DELETE",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({ id })
+  });
   fetchMembers();
 }
 
