@@ -1,180 +1,35 @@
-<!DOCTYPE html>
-<html lang="th">
-<head>
-<meta charset="UTF-8">
-<title>ระบบสมาชิก</title>
-<link rel="stylesheet" href="dist/output.css">
-</head>
-
-<body class="bg-gray-100 p-6">
-<div class="max-w-5xl mx-auto bg-white p-6 rounded shadow">
-  <h1 class="text-2xl font-bold mb-4">ระบบสมาชิก</h1>
-
-  <!-- ===== FORM (เดิมทั้งหมด) ===== -->
-  <form id="memberForm" class="grid grid-cols-2 gap-4 mb-6">
-    <input name="first_name" placeholder="ชื่อ" class="border p-2 rounded" required>
-    <input name="last_name" placeholder="นามสกุล" class="border p-2 rounded" required>
-    <input name="house_no" placeholder="บ้านเลขที่" class="border p-2 rounded">
-    <input name="village_no" placeholder="หมู่" class="border p-2 rounded">
-    <input name="street" placeholder="ถนน" class="border p-2 rounded">
-    <input name="village" placeholder="หมู่บ้าน" class="border p-2 rounded">
-    <input name="sub_district" placeholder="ตำบล" class="border p-2 rounded">
-    <input name="district" placeholder="อำเภอ" class="border p-2 rounded">
-    <input name="province" placeholder="จังหวัด" class="border p-2 rounded">
-    <input name="postal_code" placeholder="เลขไปรษณีย์" class="border p-2 rounded">
-    <input name="phone" placeholder="เบอร์โทรศัพท์" class="border p-2 rounded">
-    <input name="alt_phone" placeholder="เบอร์โทรศัพท์สำรอง" class="border p-2 rounded">
-    <select name="gender" class="border p-2 rounded">
-      <option value="">เลือกเพศ</option>
-      <option value="ชาย">ชาย</option>
-      <option value="หญิง">หญิง</option>
-      <option value="อื่นๆ">อื่นๆ</option>
-    </select>
-    <select name="status" class="border p-2 rounded">
-      <option value="Active">Active</option>
-      <option value="Inactive">Inactive</option>
-    </select>
-    <button type="submit" class="col-span-2 bg-blue-500 text-white p-2 rounded">
-      บันทึกสมาชิก
-    </button>
-  </form>
-
-  <!-- ===== FILTER + SEARCH ===== -->
-  <div class="grid grid-cols-5 gap-2 mb-4">
-    <input id="searchText" class="border p-2 rounded col-span-2"
-      placeholder="ค้นหา ชื่อ / โทร / จังหวัด">
-
-    <select id="filterProvince" class="border p-2 rounded">
-      <option value="">ทุกจังหวัด</option>
-    </select>
-
-    <select id="filterGender" class="border p-2 rounded">
-      <option value="">ทุกเพศ</option>
-      <option value="ชาย">ชาย</option>
-      <option value="หญิง">หญิง</option>
-      <option value="อื่นๆ">อื่นๆ</option>
-    </select>
-
-    <select id="filterStatus" class="border p-2 rounded">
-      <option value="">ทุกสถานะ</option>
-      <option value="Active">Active</option>
-      <option value="Inactive">Inactive</option>
-    </select>
-  </div>
-
-  <div class="flex gap-2 mb-4">
-    <button id="btnExport" class="bg-green-600 text-white px-4 rounded">Export Excel</button>
-    <button id="btnPrint" class="bg-blue-600 text-white px-4 rounded">Print</button>
-  </div>
-
-  <ul id="membersList" class="space-y-2"></ul>
-</div>
-
 <script>
-const API_URL = "https://ttottijljxoinptmhgtu.supabase.co/functions/v1/members";
-let editId = null;
-let allMembers = [];
-let filtersReady = false;
+function exportExcel(){
+  const rows = [];
+  const items = document.querySelectorAll("#membersList li");
 
-/* ================= FETCH ================= */
-async function fetchMembers() {
-  const res = await fetch(API_URL);
-  allMembers = await res.json();
-  if (!filtersReady) initProvinceFilter();
-  applyFilter();
-}
+  if(items.length === 0){
+    alert("ไม่มีข้อมูลให้ export");
+    return;
+  }
 
-/* ================= FILTER CORE ================= */
-function getFilteredMembers(){
-  const text = document.getElementById("searchText").value.toLowerCase();
-  const province = document.getElementById("filterProvince").value;
-  const gender = document.getElementById("filterGender").value;
-  const status = document.getElementById("filterStatus").value;
+  items.forEach(li => {
+    const text = li.querySelector("div").innerText;
+    // รูปแบบ: ชื่อ นามสกุล | โทร | เพศ | จังหวัด | สถานะ
+    const parts = text.split("|").map(t => t.trim());
 
-  return allMembers.filter(m => {
-    const search = `${m.first_name||""} ${m.last_name||""} ${m.phone||""} ${m.province||""}`.toLowerCase();
-    return (
-      (!text || search.includes(text)) &&
-      (!province || m.province === province) &&
-      (!gender || m.gender === gender) &&
-      (!status || m.status === status)
-    );
+    rows.push({
+      name: parts[0] || "",
+      phone: parts[1] || "",
+      gender: parts[2] || "",
+      province: parts[3] || "",
+      status: parts[4] || ""
+    });
   });
-}
 
-function applyFilter(){
-  renderMembers(getFilteredMembers());
-}
+  const header = Object.keys(rows[0]).join(",");
+  const body = rows.map(r => Object.values(r).join(",")).join("\n");
+  const csv = header + "\n" + body;
 
-/* ================= INIT FILTER ================= */
-function initProvinceFilter(){
-  const select = document.getElementById("filterProvince");
-  const provinces = [...new Set(allMembers.map(m => m.province).filter(Boolean))];
-  provinces.forEach(p => select.innerHTML += `<option value="${p}">${p}</option>`);
-  filtersReady = true;
-}
-
-/* ================= RENDER ================= */
-function renderMembers(data){
-  document.getElementById("membersList").innerHTML = data.map(m => `
-    <li class="flex justify-between bg-gray-50 p-2 rounded border">
-      <div>${m.first_name} ${m.last_name} | ${m.phone} | ${m.gender} | ${m.province} | ${m.status}</div>
-      <div>
-        <button onclick="editMember('${m.id}')" class="bg-yellow-400 text-white px-2 rounded mr-2">แก้ไข</button>
-        <button onclick="deleteMember('${m.id}')" class="bg-red-500 text-white px-2 rounded">ลบ</button>
-      </div>
-    </li>`).join('');
-}
-
-/* ================= EXPORT ================= */
-document.getElementById("btnExport").onclick = () => {
-  const rows = getFilteredMembers();
-  if(!rows.length) return alert("ไม่มีข้อมูล");
-  const csv = Object.keys(rows[0]).join(",") + "\n" +
-    rows.map(r => Object.values(r).join(",")).join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
   const a = document.createElement("a");
-  a.href = URL.createObjectURL(new Blob([csv],{type:"text/csv"}));
-  a.download = "members_filtered.csv";
+  a.href = URL.createObjectURL(blob);
+  a.download = "members_from_list.csv";
   a.click();
-};
-
-/* ================= PRINT ================= */
-document.getElementById("btnPrint").onclick = () => {
-  const rows = getFilteredMembers();
-  if(!rows.length) return alert("ไม่มีข้อมูล");
-  const w = window.open("");
-  w.document.write(`<table border="1" width="100%">
-    <tr><th>ชื่อ</th><th>นามสกุล</th><th>โทร</th><th>เพศ</th><th>จังหวัด</th><th>สถานะ</th></tr>
-    ${rows.map(r=>`<tr><td>${r.first_name}</td><td>${r.last_name}</td><td>${r.phone}</td><td>${r.gender}</td><td>${r.province}</td><td>${r.status}</td></tr>`).join("")}
-  </table>`);
-  w.print();
-};
-
-/* ================= CRUD เดิม ================= */
-document.getElementById("memberForm").onsubmit = async e => {
-  e.preventDefault();
-  const body = Object.fromEntries(new FormData(e.target));
-  if(editId) body.id = editId;
-  await fetch(API_URL,{method:editId?"PUT":"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
-  e.target.reset(); editId=null; fetchMembers();
-};
-
-function editMember(id){
-  const m = allMembers.find(x=>x.id===id);
-  if(!m) return;
-  const f = document.getElementById("memberForm");
-  Object.keys(m).forEach(k=>f[k] && (f[k].value=m[k]||""));
-  editId=id;
 }
-
-async function deleteMember(id){
-  if(!confirm("ลบสมาชิกนี้?")) return;
-  await fetch(API_URL,{method:"DELETE",headers:{"Content-Type":"application/json"},body:JSON.stringify({id})});
-  fetchMembers();
-}
-
-/* ================= INIT ================= */
-document.addEventListener("DOMContentLoaded", fetchMembers);
 </script>
-</body>
-</html>
