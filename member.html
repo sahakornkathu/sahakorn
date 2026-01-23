@@ -10,7 +10,7 @@
 <div class="max-w-5xl mx-auto bg-white p-6 rounded shadow">
   <h1 class="text-2xl font-bold mb-4">ระบบสมาชิก</h1>
 
-  <!-- ===== FORM (เดิม) ===== -->
+  <!-- ===== FORM ===== -->
   <form id="memberForm" class="grid grid-cols-2 gap-4 mb-6">
     <input name="first_name" placeholder="ชื่อ" class="border p-2 rounded" required>
     <input name="last_name" placeholder="นามสกุล" class="border p-2 rounded" required>
@@ -71,7 +71,7 @@ const API_URL = "https://ttottijljxoinptmhgtu.supabase.co/functions/v1/members";
 
 let editId = null;
 let allMembers = [];
-let filteredMembers = []; // ⭐ แหล่งเดียวที่ export ใช้
+let filteredMembers = [];
 
 /* ================= FETCH ================= */
 async function fetchMembers() {
@@ -97,7 +97,7 @@ function renderMembers(data){
   `).join('');
 }
 
-/* ================= FILTER CORE ================= */
+/* ================= FILTER ================= */
 function applyFilter(){
   const name = document.getElementById("filterName").value.toLowerCase();
   const phone = document.getElementById("filterPhone").value;
@@ -117,8 +117,11 @@ function applyFilter(){
   renderMembers(filteredMembers);
 }
 
-/* ================= EXPORT (FIXED 100%) ================= */
+/* ================= EXPORT (FIX จุดพัง) ================= */
 function exportExcel(){
+  // 🔥 บังคับ sync filter ล่าสุดก่อน export
+  applyFilter();
+
   if(!filteredMembers.length){
     alert("ไม่มีข้อมูลให้ export");
     return;
@@ -145,6 +148,9 @@ function exportExcel(){
 
 /* ================= PRINT ================= */
 function printMembers(){
+  // 🔥 sync filter เช่นเดียวกัน
+  applyFilter();
+
   if(!filteredMembers.length){
     alert("ไม่มีข้อมูลให้พิมพ์");
     return;
@@ -179,11 +185,13 @@ document.getElementById("memberForm").onsubmit = async e => {
   e.preventDefault();
   const body = Object.fromEntries(new FormData(e.target));
   if(editId) body.id = editId;
+
   await fetch(API_URL,{
     method: editId ? "PUT" : "POST",
     headers:{ "Content-Type":"application/json" },
     body: JSON.stringify(body)
   });
+
   e.target.reset();
   editId = null;
   fetchMembers();
