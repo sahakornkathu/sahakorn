@@ -1,114 +1,146 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8">
-  <title>ระบบจัดการสมาชิก</title>
-  <style>
-    body { font-family:sans-serif; background:#f3f4f6; padding:20px }
-    form, table { background:#fff; padding:15px; border-radius:6px }
-    input { padding:6px; margin:4px }
-    table { width:100%; border-collapse:collapse; margin-top:20px }
-    th, td { border:1px solid #ddd; padding:8px }
-  </style>
+<meta charset="UTF-8">
+<title>จัดการข้อมูลสมาชิก</title>
+<style>
+body { font-family:sans-serif; background:#f3f4f6; padding:20px }
+form, table { background:#fff; padding:15px; border-radius:6px }
+input, select { padding:6px; margin:4px; width:200px }
+table { width:100%; border-collapse:collapse; margin-top:20px }
+th, td { border:1px solid #ddd; padding:8px }
+</style>
 </head>
 <body>
 
-<h2>📋 ระบบจัดการสมาชิก</h2>
+<h2>📋 จัดการข้อมูลสมาชิก</h2>
 
 <form id="memberForm">
-  <input type="hidden" id="id">
-  <input id="prefix" placeholder="คำนำหน้า">
-  <input id="name" placeholder="ชื่อ" required>
-  <input id="lastname" placeholder="นามสกุล" required>
-  <input id="phone" placeholder="เบอร์โทร">
+  <input type="number" id="member_id" placeholder="รหัสสมาชิก" required>
+
+  <input type="date" id="join_date">
+  <input id="title" placeholder="คำนำหน้า">
+  <input id="first_name" placeholder="ชื่อ" required>
+  <input id="last_name" placeholder="นามสกุล" required>
+
+  <input id="id_card" placeholder="เลขบัตรประชาชน">
+  <input type="date" id="birthday">
+
+  <input id="group" placeholder="กลุ่ม">
+  <input id="house_no" placeholder="บ้านเลขที่">
+  <input id="moo" placeholder="หมู่">
+  <input id="street" placeholder="ถนน">
+  <input id="village" placeholder="หมู่บ้าน">
+
+  <input id="subdistrict" placeholder="ตำบล">
+  <input id="district" placeholder="อำเภอ">
+  <input id="province" placeholder="จังหวัด">
+  <input id="postal_code" placeholder="รหัสไปรษณีย์">
+
+  <input id="phone" placeholder="โทรศัพท์">
+  <input id="phone_alt" placeholder="โทรศัพท์สำรอง">
+
+  <select id="member_status">
+    <option value="">สถานะสมาชิก</option>
+    <option value="active">ปกติ</option>
+    <option value="inactive">พ้นสภาพ</option>
+  </select>
+
+  <select id="marital_status">
+    <option value="">สถานภาพ</option>
+    <option value="single">โสด</option>
+    <option value="married">สมรส</option>
+  </select>
+
+  <input id="spouse_name" placeholder="ชื่อคู่สมรส">
+
+  <br>
   <button type="submit">💾 บันทึก</button>
   <button type="button" onclick="resetForm()">ยกเลิก</button>
 </form>
 
 <table>
-  <thead>
-    <tr>
-      <th>คำนำหน้า</th>
-      <th>ชื่อ</th>
-      <th>นามสกุล</th>
-      <th>โทร</th>
-      <th>จัดการ</th>
-    </tr>
-  </thead>
-  <tbody id="memberTable"></tbody>
+<thead>
+<tr>
+  <th>รหัส</th>
+  <th>ชื่อ</th>
+  <th>โทร</th>
+  <th>สถานะ</th>
+  <th>จัดการ</th>
+</tr>
+</thead>
+<tbody id="rows"></tbody>
 </table>
 
 <script type="module">
-  import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-  const SUPABASE_URL = 'https://ttottijljxoinptmhgtu.supabase.co'
-  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'
+const SUPABASE_URL = 'https://ttottijljxoinptmhgtu.supabase.co'
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'
+const db = createClient(SUPABASE_URL, SUPABASE_KEY)
 
-  const db = createClient(SUPABASE_URL, SUPABASE_KEY)
+const form = document.getElementById('memberForm')
+const rows = document.getElementById('rows')
 
-  const form = document.getElementById('memberForm')
-  const table = document.getElementById('memberTable')
+async function loadMembers() {
+  const { data } = await db
+    .from('members')
+    .select('member_id, first_name, last_name, phone, member_status')
+    .order('member_id')
 
-  async function loadMembers() {
-    const { data } = await db.from('members').select('*').order('created_at', { ascending:false })
-    table.innerHTML = ''
-    data.forEach(m => {
-      table.innerHTML += `
-        <tr>
-          <td>${m.prefix || ''}</td>
-          <td>${m.name}</td>
-          <td>${m.lastname}</td>
-          <td>${m.phone || ''}</td>
-          <td>
-            <button onclick='editMember(${JSON.stringify(m)})'>✏️</button>
-            <button onclick="deleteMember('${m.id}')">🗑</button>
-          </td>
-        </tr>
-      `
-    })
-  }
-
-  form.addEventListener('submit', async e => {
-    e.preventDefault()
-    const id = document.getElementById('id').value
-
-    const data = {
-      prefix: prefix.value,
-      name: name.value,
-      lastname: lastname.value,
-      phone: phone.value
-    }
-
-    if (id) {
-      await db.from('members').update(data).eq('id', id)
-    } else {
-      await db.from('members').insert([data])
-    }
-
-    resetForm()
-    loadMembers()
+  rows.innerHTML = ''
+  data.forEach(m => {
+    rows.innerHTML += `
+      <tr>
+        <td>${m.member_id}</td>
+        <td>${m.first_name} ${m.last_name}</td>
+        <td>${m.phone ?? ''}</td>
+        <td>${m.member_status ?? ''}</td>
+        <td>
+          <button onclick='editMember(${JSON.stringify(m)})'>✏️</button>
+          <button onclick="deleteMember(${m.member_id})">🗑</button>
+        </td>
+      </tr>`
   })
+}
 
-  window.editMember = m => {
-    id.value = m.id
-    prefix.value = m.prefix || ''
-    name.value = m.name
-    lastname.value = m.lastname
-    phone.value = m.phone || ''
-  }
+form.addEventListener('submit', async e => {
+  e.preventDefault()
 
-  window.deleteMember = async id => {
-    if (!confirm('ยืนยันการลบ?')) return
-    await db.from('members').delete().eq('id', id)
-    loadMembers()
-  }
+  const data = Object.fromEntries(
+    [...form.elements]
+      .filter(el => el.id)
+      .map(el => [el.id, el.value || null])
+  )
 
-  window.resetForm = () => {
-    form.reset()
-    document.getElementById('id').value = ''
-  }
+  await db.from('members')
+    .upsert([data], { onConflict: 'member_id' })
 
+  resetForm()
   loadMembers()
+})
+
+window.editMember = m => {
+  member_id.value = m.member_id
+  member_id.disabled = true
+  first_name.value = m.first_name
+  last_name.value = m.last_name
+  phone.value = m.phone ?? ''
+  member_status.value = m.member_status ?? ''
+}
+
+window.deleteMember = async id => {
+  if (!confirm('ยืนยันลบสมาชิกนี้?')) return
+  await db.from('members').delete().eq('member_id', id)
+  loadMembers()
+}
+
+window.resetForm = () => {
+  form.reset()
+  member_id.disabled = false
+}
+
+loadMembers()
 </script>
 
 </body>
