@@ -7,285 +7,195 @@
 </head>
 
 <body class="bg-blue-50 p-6 text-slate-800">
-
 <div class="max-w-7xl mx-auto space-y-6">
 
-  <!-- ===== SUMMARY ===== -->
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-    <div class="summary green">
-      <div>สมาชิก</div>
-      <div id="count-member" class="num">0</div>
-    </div>
-    <div class="summary orange">
-      <div>ลาออก</div>
-      <div id="count-resign" class="num">0</div>
-    </div>
-    <div class="summary red">
-      <div>เสียชีวิต</div>
-      <div id="count-dead" class="num">0</div>
-    </div>
+<!-- ===== SUMMARY ===== -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+  <div class="summary green">
+    <div>สมาชิก</div>
+    <div id="count-member" class="num">0</div>
   </div>
-
-  <!-- ===== TABS ===== -->
-  <div class="flex gap-2">
-    <button class="tab active" onclick="setStatusFilter('')">ทั้งหมด</button>
-    <button class="tab" onclick="setStatusFilter('สมาชิก')">สมาชิก</button>
-    <button class="tab" onclick="setStatusFilter('ลาออก')">ลาออก</button>
-    <button class="tab" onclick="setStatusFilter('เสียชีวิต')">เสียชีวิต</button>
+  <div class="summary orange">
+    <div>ลาออก</div>
+    <div id="count-resign" class="num">0</div>
   </div>
+  <div class="summary red">
+    <div>เสียชีวิต</div>
+    <div id="count-dead" class="num">0</div>
+  </div>
+</div>
 
-  <!-- ===== FORM ===== -->
-  <form id="memberForm" class="box">
+<!-- ===== FORM ===== -->
+<form id="memberForm" class="box space-y-4">
+<h2 class="title">บันทึกข้อมูลสมาชิก</h2>
 
-    <h2 class="title">บันทึกข้อมูลสมาชิก</h2>
+<div class="grid grid-cols-1 md:grid-cols-4 gap-3">
 
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+  <div class="field"><label>รหัส</label><input id="member_id" type="number" required></div>
+  <div class="field"><label>คำนำหน้า</label>
+    <select id="title">
+      <option value="">-- เลือก --</option>
+      <option>นาย</option><option>นาง</option><option>นางสาว</option>
+    </select>
+  </div>
+  <div class="field"><label>ชื่อ</label><input id="first_name"></div>
+  <div class="field"><label>นามสกุล</label><input id="last_name"></div>
 
-      <div class="field">
-        <label>รหัสสมาชิก</label>
-        <input id="member_id" type="number" required>
-      </div>
+  <div class="field"><label>บัตร ปชช.</label><input id="id_card"></div>
+  <div class="field"><label>โทรศัพท์</label><input id="phone"></div>
 
-      <div class="field">
-        <label>คำนำหน้า</label>
-        <select id="title">
-          <option value="">-- เลือก --</option>
-          <option value="นาย">นาย</option>
-          <option value="นาง">นาง</option>
-          <option value="นางสาว">นางสาว</option>
-        </select>
-      </div>
-
-      <div class="field">
-        <label>ชื่อ</label>
-        <input id="first_name" required>
-      </div>
-
-      <div class="field">
-        <label>นามสกุล</label>
-        <input id="last_name" required>
-      </div>
-
-      <div class="field">
-        <label>โทรศัพท์</label>
-        <input id="phone">
-      </div>
-
-      <div class="field">
-        <label>สถานะสมาชิก</label>
-        <select id="member_status">
-          <option value="">-- เลือก --</option>
-          <option value="สมาชิก">สมาชิก</option>
-          <option value="ลาออก">ลาออก</option>
-          <option value="เสียชีวิต">เสียชีวิต</option>
-        </select>
-      </div>
-
-    </div>
-
-    <div class="flex gap-4 mt-4">
-      <button type="submit" class="btn blue">บันทึก</button>
-      <button type="button" onclick="resetForm()" class="btn gray">ยกเลิก</button>
-    </div>
-
-  </form>
-
-  <!-- ===== TABLE ===== -->
-  <div class="box">
-    <h2 class="title">รายชื่อสมาชิก</h2>
-
-    <table class="w-full text-sm">
-      <thead>
-        <tr>
-          <th>รหัส</th>
-          <th>ชื่อ</th>
-          <th>โทร</th>
-          <th>สถานะ</th>
-          <th>จัดการ</th>
-        </tr>
-      </thead>
-      <tbody id="rows"></tbody>
-    </table>
-
-    <div class="flex justify-between mt-4">
-      <button onclick="prevPage()" class="btn gray">◀ ก่อนหน้า</button>
-      <span id="pageInfo"></span>
-      <button onclick="nextPage()" class="btn gray">ถัดไป ▶</button>
-    </div>
+  <div class="field">
+    <label>สถานะ</label>
+    <select id="member_status">
+      <option value="">-- เลือก --</option>
+      <option>สมาชิก</option>
+      <option>ลาออก</option>
+      <option>เสียชีวิต</option>
+    </select>
   </div>
 
 </div>
 
+<div class="flex gap-4">
+  <button type="submit" class="btn blue">บันทึก</button>
+  <button type="button" onclick="resetForm()" class="btn gray">ยกเลิก</button>
+</div>
+</form>
+
+<!-- ===== TABLE ===== -->
+<div class="box">
+<h2 class="title">รายชื่อสมาชิก</h2>
+
+<table class="w-full text-sm">
+<thead>
+<tr>
+  <th>รหัส</th>
+  <th>ชื่อ</th>
+  <th>โทร</th>
+  <th>สถานะ</th>
+  <th>จัดการ</th>
+</tr>
+</thead>
+<tbody id="rows"></tbody>
+</table>
+
+<div class="flex justify-between mt-4">
+  <button onclick="prevPage()" class="btn gray">◀ ก่อนหน้า</button>
+  <span id="pageInfo"></span>
+  <button onclick="nextPage()" class="btn gray">ถัดไป ▶</button>
+</div>
+</div>
+
+</div>
+
+<!-- ===== SCRIPT ===== -->
 <script type="module">
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-const db = createClient(
-  'https://ttottijljxoinptmhgtu.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'
-)
+const SUPABASE_URL = 'https://ttottijljxoinptmhgtu.supabase.co'
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'
+const db = createClient(SUPABASE_URL, SUPABASE_KEY)
 
 const PAGE_SIZE = 15
-let currentPage = 1
-let statusFilter = ''
+let page = 1
 
-const rows = document.getElementById('rows')
 const form = document.getElementById('memberForm')
+const rows = document.getElementById('rows')
 const statusEl = document.getElementById('member_status')
 
-/* ===== FILTER ===== */
-window.setStatusFilter = function (status) {
-  statusFilter = status
-  currentPage = 1
-  loadMembers()
-}
-
-/* ===== SUMMARY (FIXED) ===== */
+/* ===== SUMMARY ===== */
 async function loadSummary() {
-
-  const member = await db
-    .from('members')
-    .select('member_id', { count: 'exact', head: true })
-    .eq('member_status', 'สมาชิก')
-
-  const resign = await db
-    .from('members')
-    .select('member_id', { count: 'exact', head: true })
-    .eq('member_status', 'ลาออก')
-
-  const dead = await db
-    .from('members')
-    .select('member_id', { count: 'exact', head: true })
-    .eq('member_status', 'เสียชีวิต')
-
-  document.getElementById('count-member').innerText = member.count ?? 0
-  document.getElementById('count-resign').innerText = resign.count ?? 0
-  document.getElementById('count-dead').innerText = dead.count ?? 0
+  const a = await db.from('members').select('member_id',{count:'exact',head:true}).eq('member_status','สมาชิก')
+  const b = await db.from('members').select('member_id',{count:'exact',head:true}).eq('member_status','ลาออก')
+  const c = await db.from('members').select('member_id',{count:'exact',head:true}).eq('member_status','เสียชีวิต')
+  count-member.innerText = a.count || 0
+  count-resign.innerText = b.count || 0
+  count-dead.innerText = c.count || 0
 }
 
-/* ===== LOAD MEMBERS ===== */
+/* ===== LIST ===== */
 async function loadMembers() {
-  let query = db.from('members')
-    .select('member_id, first_name, last_name, phone, member_status')
-    .order('member_id')
-
-  if (statusFilter) query = query.eq('member_status', statusFilter)
-
-  const from = (currentPage - 1) * PAGE_SIZE
+  const from = (page-1)*PAGE_SIZE
   const to = from + PAGE_SIZE - 1
-
-  const { data } = await query.range(from, to)
+  const { data } = await db
+    .from('members')
+    .select('member_id,first_name,last_name,phone,member_status')
+    .order('member_id')
+    .range(from,to)
 
   rows.innerHTML = ''
-  data.forEach(function (m) {
-    let color =
-      m.member_status === 'สมาชิก' ? 'green'
-      : m.member_status === 'ลาออก' ? 'orange'
-      : 'red'
-
+  data.forEach(function(m){
+    const color = m.member_status==='สมาชิก'?'green':
+                  m.member_status==='ลาออก'?'orange':'red'
     rows.innerHTML += `
-      <tr>
-        <td>${m.member_id}</td>
-        <td>${m.first_name} ${m.last_name}</td>
-        <td>${m.phone || ''}</td>
-        <td class="${color}">${m.member_status}</td>
-        <td>
-          <button onclick="editMember(${m.member_id})" class="link">แก้ไข</button>
-        </td>
-      </tr>`
+    <tr>
+      <td>${m.member_id}</td>
+      <td>${m.first_name||''} ${m.last_name||''}</td>
+      <td>${m.phone||''}</td>
+      <td class="${color}">${m.member_status||''}</td>
+      <td><button class="link" onclick="editMember(${m.member_id})">แก้ไข</button></td>
+    </tr>`
   })
-
-  document.getElementById('pageInfo').innerText = 'หน้า ' + currentPage
+  pageInfo.innerText = 'หน้า '+page
 }
 
 /* ===== SUBMIT ===== */
-form.addEventListener('submit', async function (e) {
+form.addEventListener('submit', async function(e){
   e.preventDefault()
-
   const data = {}
-  Array.from(form.elements).forEach(function (el) {
-    if (el.id) data[el.id] = el.value || null
+  Array.from(form.elements).forEach(function(el){
+    if(el.id) data[el.id] = el.value || null
   })
-
-  await db.from('members').upsert([data], { onConflict: 'member_id' })
+  await db.from('members').upsert([data],{onConflict:'member_id'})
   resetForm()
   loadMembers()
   loadSummary()
 })
 
 /* ===== LOCK WHEN DEAD ===== */
-statusEl.addEventListener('change', function () {
-  const lock = statusEl.value === 'เสียชีวิต'
-  Array.from(form.elements).forEach(function (el) {
-    if (!el.id) return
-    if (el.id !== 'member_status') el.disabled = lock
+statusEl.addEventListener('change',function(){
+  const lock = statusEl.value==='เสียชีวิต'
+  Array.from(form.elements).forEach(function(el){
+    if(el.id && el.id!=='member_status') el.disabled = lock
   })
 })
 
-/* ===== EDIT ===== */
-window.editMember = async function (id) {
-  const { data } = await db
-    .from('members')
-    .select('*')
-    .eq('member_id', id)
-    .single()
-
-  Array.from(form.elements).forEach(function (el) {
-    if (el.id) el.value = data[el.id] || ''
+window.editMember = async function(id){
+  const { data } = await db.from('members').select('*').eq('member_id',id).single()
+  Array.from(form.elements).forEach(function(el){
+    if(el.id) el.value = data[el.id] || ''
   })
-
-  document.getElementById('member_id').disabled = true
+  member_id.disabled = true
 }
 
-/* ===== RESET ===== */
-window.resetForm = function () {
+window.resetForm = function(){
   form.reset()
-  Array.from(form.elements).forEach(function (el) {
-    el.disabled = false
-  })
+  member_id.disabled = false
+  Array.from(form.elements).forEach(function(el){ el.disabled=false })
 }
 
-/* ===== PAGINATION ===== */
-window.nextPage = function () {
-  currentPage++
-  loadMembers()
-}
-window.prevPage = function () {
-  if (currentPage > 1) {
-    currentPage--
-    loadMembers()
-  }
-}
+window.nextPage = function(){ page++; loadMembers() }
+window.prevPage = function(){ if(page>1){ page--; loadMembers() } }
 
-/* ===== INIT ===== */
 loadMembers()
 loadSummary()
 </script>
 
 <style>
-.box { background:#fff; border:2px solid #93c5fd; border-radius:12px; padding:16px }
-.title { font-weight:600; margin-bottom:12px }
-
-.field { display:flex; align-items:center; gap:8px }
-.field label { width:90px; font-size:14px }
-.field input, .field select {
-  flex:1; border:2px solid #94a3b8; border-radius:6px; padding:6px
-}
-
-.summary { background:#fff; border:2px solid; border-radius:12px; padding:12px; text-align:center }
-.summary .num { font-size:28px; font-weight:700 }
-
-.green { border-color:#22c55e; color:#15803d }
-.orange { border-color:#f97316; color:#c2410c }
-.red { border-color:#ef4444; color:#b91c1c }
-
-.tab { padding:6px 14px; border:1px solid #cbd5f5; border-radius:8px; background:#fff }
-.tab.active { background:#2563eb; color:#fff }
-
-.btn { padding:6px 16px; border-radius:8px }
-.btn.blue { background:#2563eb; color:#fff }
-.btn.gray { background:#e5e7eb }
-
-.link { color:#2563eb; cursor:pointer }
+.box{background:#fff;border:2px solid #93c5fd;border-radius:12px;padding:16px}
+.title{font-weight:600;margin-bottom:8px}
+.field{display:flex;align-items:center;gap:6px}
+.field label{width:90px;font-size:13px}
+.field input,.field select{flex:1;border:2px solid #94a3b8;border-radius:6px;padding:6px}
+.summary{background:#fff;border:2px solid;border-radius:12px;padding:12px;text-align:center}
+.summary .num{font-size:28px;font-weight:700}
+.green{border-color:#22c55e;color:#15803d}
+.orange{border-color:#f97316;color:#c2410c}
+.red{border-color:#ef4444;color:#b91c1c}
+.btn{padding:6px 16px;border-radius:8px}
+.btn.blue{background:#2563eb;color:#fff}
+.btn.gray{background:#e5e7eb}
+.link{color:#2563eb;cursor:pointer}
 </style>
 
 </body>
