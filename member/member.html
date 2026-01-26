@@ -446,6 +446,59 @@ tr.highlight{
   box-shadow: inset 0 0 0 2px #38bdf8;
 }
 
+  /* ===== FIX พื้นหลังขาวทั้งหน้า ===== */
+html, body {
+  background: #020617 !important;
+}
+
+/* กรณีมี container ที่ยังเป็นขาว */
+.max-w-7xl,
+body > div {
+  background: transparent !important;
+}
+
+/* ===== TABLE BACKGROUND ===== */
+table {
+  background: #0f172a !important;
+}
+
+thead {
+  background: #020617 !important;
+}
+
+tbody tr {
+  background: #0f172a;
+}
+
+tbody tr:hover {
+  background: #020617;
+}
+
+/* ===== FIX ไฮไลต์แถวที่กำลังแก้ไข ===== */
+/* เดิมเป็นขาว → เปลี่ยนเป็นส้มเข้ม */
+tr.highlight,
+tr.bg-white,
+tr.bg-gray-100 {
+  background: #7c2d12 !important;   /* ส้มเข้ม */
+  color: #fff !important;
+}
+
+/* ตัวหนังสือในแถวไฮไลต์ */
+tr.highlight td {
+  color: #fff !important;
+  font-weight: 600;
+}
+
+/* ปุ่มในแถวไฮไลต์ */
+tr.highlight .link {
+  color: #fde68a !important;
+}
+
+/* ===== SUMMARY CARD (กันพื้นขาวแอบโผล่) ===== */
+.summary {
+  background: linear-gradient(135deg,#020617,#0f172a) !important;
+}
+
 </style>
 
 </body>
