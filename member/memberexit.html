@@ -1,322 +1,167 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8">
-  <title>ระบบสมาชิกลาออก/เสียชีวิต + Dashboard + รายงาน</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
-    /* ✅ Navbar Style */
-#navbar {
-  background: #4a90e2;
-  color: white;
-  padding: 10px 20px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  position: sticky;
-  top: 0;
-  z-index: 1000;
-}
-.nav-container {
-  max-width: 1000px;
-  margin: 0 auto;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-}
-.nav-logo {
-  font-weight: 600;
-  font-size: 18px;
-  letter-spacing: 0.5px;
-}
-.nav-links {
-  list-style: none;
-  display: flex;
-  gap: 15px;
-  margin: 0;
-  padding: 0;
-}
-.nav-links li a {
-  color: white;
-  text-decoration: none;
-  font-weight: 400;
-  padding: 6px 12px;
-  border-radius: 6px;
-  transition: background 0.2s;
-}
-.nav-links li a:hover {
-  background: rgba(255,255,255,0.2);
-}
-.nav-links li a.active {
-  background: white;
-  color: #4a90e2;
-  font-weight: 500;
-}
-@media (max-width:768px) {
-  .nav-container { flex-direction: column; align-items: flex-start; gap: 10px; }
-  .nav-links { flex-direction: column; width: 100%; }
-  .nav-links li a { display: block; width: 100%; }
-}
-
-  </style>
+<meta charset="UTF-8">
+<title>บันทึกสมาชิกลาออก / เสียชีวิต</title>
+<script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 font-sans">
-<!-- ✅ Navbar -->
-<nav id="navbar">
-  <div class="nav-container">
-    <div class="nav-logo">ระบบจัดการสมาชิก</div>
-    <ul class="nav-links">
-      <li><a href="member.html">ข้อมูลสมาชิก</a></li>
-      <li><a href="memberexit.html"  class="active">สมาชิกลาออก</a></li>
-      <li><a href="welfare.html">สวัสดิการสมาชิก</a></li>
-    </ul>
-  </div>
-</nav>
 
-<div class="container mx-auto p-6">
-  <h1 class="text-2xl font-bold mb-6">📌 ระบบสมาชิกลาออก/เสียชีวิต + Dashboard + รายงาน</h1>
+<body class="bg-slate-900 p-6 text-slate-100">
+<div class="max-w-4xl mx-auto">
 
-  <!-- Dashboard -->
-  <div class="bg-white p-4 rounded shadow mb-6">
-    <h2 class="text-xl font-semibold mb-4">📊 Dashboard</h2>
-    <div class="flex flex-col sm:flex-row gap-2 sm:gap-4 mb-4">
-      <input type="date" id="startDate" class="border rounded p-2 flex-1">
-      <input type="date" id="endDate" class="border rounded p-2 flex-1">
-      <button onclick="loadDashboard()" class="bg-indigo-500 text-white px-4 py-2 rounded hover:bg-indigo-600 w-full sm:w-auto">🔄 โหลด</button>
-    </div>
-    <div class="grid grid-cols-2 gap-4 sm:gap-6 mb-4">
-      <div class="bg-gray-100 p-4 rounded shadow text-center">
-        <h2 class="text-lg font-semibold">สมาชิกลาออก</h2>
-        <p id="countResign" class="text-2xl sm:text-3xl font-bold mt-2">0</p>
+<div class="bg-slate-800 border border-slate-700 rounded-xl p-6 space-y-6">
+  <h1 class="text-xl font-bold text-center text-red-400">
+    บันทึกสมาชิกลาออก / เสียชีวิต
+  </h1>
+
+  <!-- ===== FORM ===== -->
+  <form id="exitForm" class="space-y-4">
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+      <div>
+        <label class="label">รหัสสมาชิก</label>
+        <input id="member_id" type="text" required class="input">
       </div>
-      <div class="bg-gray-100 p-4 rounded shadow text-center">
-        <h2 class="text-lg font-semibold">สมาชิกเสียชีวิต</h2>
-        <p id="countDeceased" class="text-2xl sm:text-3xl font-bold mt-2">0</p>
+
+      <div>
+        <label class="label">คำนำหน้า</label>
+        <input id="title" class="input" readonly>
       </div>
+
+      <div>
+        <label class="label">ชื่อ</label>
+        <input id="first_name" class="input" readonly>
+      </div>
+
+      <div>
+        <label class="label">นามสกุล</label>
+        <input id="last_name" class="input" readonly>
+      </div>
+
+      <div>
+        <label class="label">กลุ่ม</label>
+        <input id="group" class="input" readonly>
+      </div>
+
+      <div>
+        <label class="label">สถานะ</label>
+        <select id="member_status" class="input" required>
+          <option value="">-- เลือก --</option>
+          <option value="ลาออก">ลาออก</option>
+          <option value="เสียชีวิต">เสียชีวิต</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="label">วันที่ประชุม</label>
+        <input id="meeting_date" type="date" class="input">
+      </div>
+
+      <div>
+        <label class="label">จำนวนหุ้นคงเหลือ</label>
+        <input id="share_amount" type="number" step="0.01" class="input">
+      </div>
+
+      <div>
+        <label class="label">วันที่รับเงิน</label>
+        <input id="receive_date" type="date" class="input">
+      </div>
+
     </div>
-    <div class="bg-white p-2 sm:p-4 rounded shadow">
-      <canvas id="statusChart"></canvas>
+
+    <div class="flex justify-center gap-4 pt-4">
+      <button class="btn red" type="submit">บันทึกข้อมูล</button>
+      <button class="btn gray" type="reset">ล้างฟอร์ม</button>
     </div>
-  </div>
 
-  <!-- ตารางสมาชิก -->
-  <div class="overflow-x-auto mb-6">
-    <table class="min-w-full bg-white shadow rounded">
-      <thead class="bg-indigo-600 text-white">
-        <tr>
-          <th class="p-3">รหัส</th>
-          <th class="p-3">คำนำหน้า</th>
-          <th class="p-3">ชื่อ</th>
-          <th class="p-3">นามสกุล</th>
-          <th class="p-3">กลุ่ม</th>
-          <th class="p-3">สถานะ</th>
-          <th class="p-3">วันที่ประชุม</th>
-          <th class="p-3">จำนวนเงิน</th>
-          <th class="p-3">วันที่รับเงิน</th>
-          <th class="p-3">บันทึก</th>
-        </tr>
-      </thead>
-      <tbody id="memberBody" class="divide-y"></tbody>
-    </table>
-  </div>
+  </form>
 
-  <!-- ประวัติ -->
-  <h2 class="text-xl font-semibold mb-2">📋 ประวัติการบันทึก</h2>
-
-  <!-- ตัวเลือกฟิลเตอร์ -->
-  <div class="flex flex-col sm:flex-row gap-2 sm:gap-4 mb-2">
-    <input type="date" id="printStartDate" class="border rounded p-2 flex-1">
-    <input type="date" id="printEndDate" class="border rounded p-2 flex-1">
-    <select id="printStatus" class="border rounded p-2 flex-1">
-      <option value="">สถานะทั้งหมด</option>
-      <option value="ลาออก">ลาออก</option>
-      <option value="เสียชีวิต">เสียชีวิต</option>
-    </select>
-    <select id="printGroup" class="border rounded p-2 flex-1">
-      <option value="">กลุ่มทั้งหมด</option>
-    </select>
-    <button onclick="loadHistory()" class="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded w-full sm:w-auto">🔍 กรองข้อมูล</button>
-    <button onclick="printReport()" class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded w-full sm:w-auto">🖨️ พิมพ์ HTML</button>
-  </div>
-
-  <!-- ✅ ตัวนับจำนวนรายการ -->
-  <div class="flex flex-col sm:flex-row justify-between items-center mb-2 text-gray-700">
-    <p id="recordCount" class="font-semibold">พบข้อมูลทั้งหมด 0 รายการ</p>
-    <p id="totalAmount" class="font-semibold text-green-700">💰 รวมจำนวนเงินทั้งหมด 0 บาท</p>
-  </div>
-
-  <div class="overflow-x-auto">
-    <table class="min-w-full bg-white shadow rounded">
-      <thead class="bg-gray-700 text-white">
-        <tr>
-          <th class="p-3">รหัส</th>
-          <th class="p-3">คำนำหน้า</th>
-          <th class="p-3">ชื่อ</th>
-          <th class="p-3">นามสกุล</th>
-          <th class="p-3">กลุ่ม</th>
-          <th class="p-3">สถานะ</th>
-          <th class="p-3">วันที่ประชุม</th>
-          <th class="p-3">จำนวนเงิน</th>
-          <th class="p-3">วันที่รับเงิน</th>
-        </tr>
-      </thead>
-      <tbody id="historyBody" class="divide-y"></tbody>
-    </table>
-  </div>
+</div>
 </div>
 
-<script>
-const SUPABASE_URL="https://ttottijljxoinptmhgtu.supabase.co";
-const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y";
-const client=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+<script type="module">
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-let chart=null;
+const SUPABASE_URL = 'https://ttottijljxoinptmhgtu.supabase.co'
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'
+const db = createClient(SUPABASE_URL, SUPABASE_KEY)
 
-// ========== LOAD MEMBERS ==========
-async function loadMembers(){
-  const { data } = await client.from('members')
-    .select('member_id, title, first_name, last_name, group, member_status')
-    .in('member_status',['ลาออก','เสียชีวิต']);
-  const tbody=document.getElementById('memberBody');
-  tbody.innerHTML='';
-  data.forEach(m=>{
-    tbody.innerHTML+=`
-    <tr class="hover:bg-gray-100">
-      <td class="p-2">${m.member_id}</td>
-      <td class="p-2">${m.title||''}</td>
-      <td class="p-2">${m.first_name}</td>
-      <td class="p-2">${m.last_name}</td>
-      <td class="p-2">${m.group}</td>
-      <td class="p-2">${m.member_status}</td>
-      <td class="p-2"><input type="date" id="meeting_date_${m.member_id}" class="border rounded p-1 w-full"></td>
-      <td class="p-2"><input type="number" id="share_amount_${m.member_id}" class="border rounded p-1 w-full"></td>
-      <td class="p-2"><input type="date" id="receive_date_${m.member_id}" class="border rounded p-1 w-full"></td>
-      <td class="p-2"><button onclick="saveMemberExit('${m.member_id}','${m.first_name}','${m.last_name}','${m.group}','${m.member_status}','${m.title||''}')" class="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded">💾 บันทึก</button></td>
-    </tr>`;
-  });
-  populateGroupFilter(); // โหลดรายชื่อกลุ่มทั้งหมด
-}
+const memberIdInput = document.getElementById('member_id')
 
-// ========== SAVE MEMBER EXIT ==========
-async function saveMemberExit(member_id,first_name,last_name,group,member_status,title){
-  const meeting_date=document.getElementById(`meeting_date_${member_id}`).value;
-  const share_amount=document.getElementById(`share_amount_${member_id}`).value;
-  const receive_date=document.getElementById(`receive_date_${member_id}`).value;
-  if(!meeting_date||!share_amount||!receive_date){alert('กรุณากรอกข้อมูลให้ครบ');return;}
-  const {error}=await client.from('member_exit').insert([{member_id,title,first_name,last_name,group,member_status,meeting_date,share_amount,receive_date}]);
-  if(error){alert(error.message);return;}
-  alert(`บันทึก ${title}${first_name} ${last_name} สำเร็จ`);
-  loadHistory();
-}
+/* ===== โหลดข้อมูลสมาชิก ===== */
+memberIdInput.addEventListener('blur', async ()=>{
+  if(!memberIdInput.value) return
 
-// ========== HISTORY ==========
-async function loadHistory(){
-  const start=document.getElementById('printStartDate').value;
-  const end=document.getElementById('printEndDate').value;
-  const status=document.getElementById('printStatus').value;
-  const group=document.getElementById('printGroup').value;
+  const { data, error } = await db
+    .from('members')
+    .select('title, first_name, last_name, group')
+    .eq('member_id', memberIdInput.value)
+    .single()
 
-  let query=client.from('member_exit').select('*').order('receive_date',{ascending:false});
-  if(start)query=query.gte('receive_date',start);
-  if(end)query=query.lte('receive_date',end);
-  if(status)query=query.eq('member_status',status);
-  if(group)query=query.eq('group',group);
+  if(error || !data){
+    alert('ไม่พบรหัสสมาชิก')
+    document.getElementById('exitForm').reset()
+    return
+  }
 
-  const {data,error}=await query;
-  if(error){console.error(error);return;}
+  title.value = data.title
+  first_name.value = data.first_name
+  last_name.value = data.last_name
+  group.value = data.group
+})
 
-  // ✅ อัปเดตจำนวนรายการ
-  document.getElementById('recordCount').innerText = `พบข้อมูลทั้งหมด ${data.length} รายการ`;
+/* ===== SUBMIT ===== */
+document.getElementById('exitForm').addEventListener('submit', async e=>{
+  e.preventDefault()
 
-  // ✅ คำนวณยอดรวมจำนวนเงิน
-  const total = data.reduce((sum, i) => sum + (parseFloat(i.share_amount) || 0), 0);
-  document.getElementById('totalAmount').innerText = `💰 รวมจำนวนเงินทั้งหมด ${total.toLocaleString()} บาท`;
+  const payload = {
+    member_id: member_id.value,
+    title: title.value,
+    first_name: first_name.value,
+    last_name: last_name.value,
+    group: group.value,
+    member_status: member_status.value,
+    meeting_date: meeting_date.value || null,
+    share_amount: share_amount.value || null,
+    receive_date: receive_date.value || null
+  }
 
-  const tbody=document.getElementById('historyBody');
-  tbody.innerHTML='';
-  data.forEach(i=>{
-    tbody.innerHTML+=`
-    <tr class="hover:bg-gray-100">
-      <td class="p-2">${i.member_id}</td>
-      <td class="p-2">${i.title||''}</td>
-      <td class="p-2">${i.first_name}</td>
-      <td class="p-2">${i.last_name}</td>
-      <td class="p-2">${i.group}</td>
-      <td class="p-2">${i.member_status}</td>
-      <td class="p-2">${i.meeting_date||''}</td>
-      <td class="p-2 text-right">${i.share_amount?Number(i.share_amount).toLocaleString():""}</td>
-      <td class="p-2">${i.receive_date||''}</td>
-    </tr>`;
-  });
-}
+  // 1) insert member_exit
+  const { error: insertError } = await db
+    .from('member_exit')
+    .insert([payload])
 
-// ========== DASHBOARD ==========
-async function loadDashboard(){
-  const start=document.getElementById('startDate').value;
-  const end=document.getElementById('endDate').value;
-  let query=client.from('member_exit').select('member_status,receive_date');
-  if(start)query=query.gte('receive_date',start);
-  if(end)query=query.lte('receive_date',end);
-  const {data,error}=await query;
-  if(error){alert(error.message);return;}
-  const resign=data.filter(d=>d.member_status==='ลาออก').length;
-  const dead=data.filter(d=>d.member_status==='เสียชีวิต').length;
-  document.getElementById('countResign').innerText=resign;
-  document.getElementById('countDeceased').innerText=dead;
-  const ctx=document.getElementById('statusChart').getContext('2d');
-  if(chart)chart.destroy();
-  chart=new Chart(ctx,{type:'bar',data:{labels:['ลาออก','เสียชีวิต'],datasets:[{data:[resign,dead],backgroundColor:['#3B82F6','#EF4444']}]},options:{plugins:{legend:{display:false}}}});
-}
+  if(insertError){
+    alert('บันทึก member_exit ไม่สำเร็จ')
+    console.error(insertError)
+    return
+  }
 
-// ========== PRINT ==========
-async function printReport(){
-  const start=document.getElementById('printStartDate').value;
-  const end=document.getElementById('printEndDate').value;
-  const status=document.getElementById('printStatus').value;
-  const group=document.getElementById('printGroup').value;
-  const logoUrl='https://lh5.googleusercontent.com/d/1B0sZdUz54kO4zAv0oJgoN4Aipy3UyCyR';
-  let query=client.from('member_exit').select('*').order('receive_date',{ascending:false});
-  if(start)query=query.gte('receive_date',start);
-  if(end)query=query.lte('receive_date',end);
-  if(status)query=query.eq('member_status',status);
-  if(group)query=query.eq('group',group);
-  const {data,error}=await query;
-  if(error){alert(error.message);return;}
+  // 2) update members.status
+  const { error: updateError } = await db
+    .from('members')
+    .update({ member_status: member_status.value })
+    .eq('member_id', member_id.value)
 
-  const total = data.reduce((sum, i) => sum + (parseFloat(i.share_amount) || 0), 0);
+  if(updateError){
+    alert('อัปเดตสถานะสมาชิกไม่สำเร็จ')
+    console.error(updateError)
+    return
+  }
 
-  let html=`<html><head><title>รายงานสมาชิกลาออก/เสียชีวิต</title>
-  <style>body{font-family:Arial;padding:20px;}table{width:100%;border-collapse:collapse;}th,td{border:1px solid #000;padding:8px;}th{background:#eee;}</style>
-  </head><body>
-  <img src="${logoUrl}" width="70"><h1 style="text-align:center;">รายงานสมาชิกลาออก/เสียชีวิต</h1>
-  <p style="text-align:center;">ช่วงวันที่: ${start||'ทั้งหมด'} ถึง ${end||'ทั้งหมด'} | สถานะ: ${status||'ทั้งหมด'} | กลุ่ม: ${group||'ทั้งหมด'}</p>
-  <p style="text-align:right;">รวมทั้งหมด ${data.length} รายการ | 💰 รวมจำนวนเงิน ${total.toLocaleString()} บาท</p>
-  <table><thead><tr><th>รหัส</th><th>ชื่อ-นามสกุล</th><th>กลุ่ม</th><th>สถานะ</th><th>วันที่ประชุม</th><th>จำนวนเงิน</th><th>วันที่รับเงิน</th></tr></thead><tbody>`;
-  data.forEach(i=>{
-    html+=`<tr><td>${i.member_id}</td><td>${i.title||''}${i.first_name} ${i.last_name}</td><td>${i.group}</td><td>${i.member_status}</td><td>${i.meeting_date}</td><td>${Number(i.share_amount||0).toLocaleString()}</td><td>${i.receive_date}</td></tr>`;
-  });
-  html+=`</tbody></table></body></html>`;
-  const w=window.open('','_blank');w.document.write(html);w.document.close();w.print();
-}
-
-// ========== เติม Dropdown กลุ่มทั้งหมด ==========
-async function populateGroupFilter(){
-  const groupSelect=document.getElementById('printGroup');
-  const { data, error } = await client.from('members').select('group');
-  if(error){console.error(error);return;}
-  const groups=[...new Set(data.map(i=>i.group).filter(Boolean))];
-  groupSelect.innerHTML='<option value="">กลุ่มทั้งหมด</option>';
-  groups.forEach(g=>{
-    const opt=document.createElement('option');
-    opt.value=g; opt.textContent=g;
-    groupSelect.appendChild(opt);
-  });
-}
-
-// ========== INIT ==========
-loadMembers();
-loadHistory();
+  alert('บันทึกข้อมูลเรียบร้อย')
+  e.target.reset()
+})
 </script>
+
+<style>
+.label{display:block;margin-bottom:4px;color:#cbd5f5}
+.input{width:100%;padding:8px;border-radius:6px;background:#020617;border:1px solid #334155;color:white}
+.btn{padding:8px 20px;border-radius:8px}
+.btn.red{background:#dc2626}
+.btn.gray{background:#475569}
+</style>
+
 </body>
 </html>
