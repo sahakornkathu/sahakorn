@@ -110,7 +110,9 @@ const SUPABASE_URL = 'https://ttottijljxoinptmhgtu.supabase.co'
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'
 const db = createClient(SUPABASE_URL, SUPABASE_KEY)
 
-let editingExitId = null
+let editingMode = false
+let editingMemberId = null
+let editingMeetingDate = null
 
 /* ===== โหลดข้อมูลสมาชิก ===== */
 member_id.addEventListener('blur', async ()=>{
@@ -133,15 +135,15 @@ member_id.addEventListener('blur', async ()=>{
   group.value = data.group
 })
 
-/* ===== บันทึก / แก้ไข (ป้องกันซ้ำ) ===== */
+/* ===== บันทึก / แก้ไข (กันซ้ำ) ===== */
 exitForm.onsubmit = async e=>{
   e.preventDefault()
 
-  // ป้องกันบันทึกซ้ำ (member + วันที่ประชุม)
-  if(!editingExitId){
+  // กันบันทึกซ้ำ (เฉพาะเพิ่มใหม่)
+  if(!editingMode){
     const { data: exists } = await db
       .from('member_exit')
-      .select('id')
+      .select('member_id')
       .eq('member_id', member_id.value)
       .eq('meeting_date', meeting_date.value)
       .maybeSingle()
@@ -164,8 +166,11 @@ exitForm.onsubmit = async e=>{
     receive_date: receive_date.value || null
   }
 
-  if(editingExitId){
-    await db.from('member_exit').update(payload).eq('id', editingExitId)
+  if(editingMode){
+    await db.from('member_exit')
+      .update(payload)
+      .eq('member_id', editingMemberId)
+      .eq('meeting_date', editingMeetingDate)
   }else{
     await db.from('member_exit').insert([payload])
   }
@@ -191,51 +196,55 @@ async function loadHistory(){
   <td class="${r.member_status==='เสียชีวิต'?'text-red-400':'text-orange-400'}">
     ${r.member_status}
   </td>
-  <td>${r.meeting_date || ''}</td>
+  <td>${r.meeting_date}</td>
   <td>${r.share_amount || ''}</td>
   <td>${r.receive_date || ''}</td>
   <td class="space-x-2">
-    <button class="text-blue-400" onclick='editRow(${JSON.stringify(r)})'>แก้ไข</button>
-    <button class="text-red-500" onclick="deleteRow(${r.id}, '${r.member_id}')">ลบ</button>
+    <button class="text-blue-400"
+      onclick='editRow(${JSON.stringify(r)})'>แก้ไข</button>
+    <button class="text-red-500"
+      onclick="deleteRow('${r.member_id}','${r.meeting_date}')">ลบ</button>
   </td>
 </tr>`
   })
 }
 
 window.editRow = r=>{
-  editingExitId = r.id
+  editingMode = true
+  editingMemberId = r.member_id
+  editingMeetingDate = r.meeting_date
+
   member_id.value = r.member_id
   title.value = r.title
   first_name.value = r.first_name
   last_name.value = r.last_name
   group.value = r.group
   member_status.value = r.member_status
-  meeting_date.value = r.meeting_date || ''
+  meeting_date.value = r.meeting_date
   share_amount.value = r.share_amount || ''
   receive_date.value = r.receive_date || ''
 }
 
-/* ===== ลบข้อมูล + คืนสถานะสมาชิก ===== */
-window.deleteRow = async (id, memberId)=>{
+/* ===== ลบข้อมูล + คืนสถานะ ===== */
+window.deleteRow = async (memberId, meetingDate)=>{
   if(!confirm('ยืนยันการลบรายการนี้ ?')) return
 
-  // ลบ record
-  await db.from('member_exit').delete().eq('id', id)
+  await db.from('member_exit')
+    .delete()
+    .eq('member_id', memberId)
+    .eq('meeting_date', meetingDate)
 
-  // หา record ล่าสุดที่ยังเหลือ
-  const { data:last } = await db
-    .from('member_exit')
+  const { data:last } = await db.from('member_exit')
     .select('member_status')
     .eq('member_id', memberId)
     .order('meeting_date', { ascending: false })
     .limit(1)
 
-  if(last && last.length > 0){
+  if(last && last.length){
     await db.from('members')
       .update({ member_status: last[0].member_status })
       .eq('member_id', memberId)
   }else{
-    // ไม่มี history แล้ว → คืนเป็นสมาชิก
     await db.from('members')
       .update({ member_status: 'สมาชิก' })
       .eq('member_id', memberId)
@@ -245,10 +254,9 @@ window.deleteRow = async (id, memberId)=>{
   loadHistory()
 }
 
-/* ===== sync สถานะจาก history ล่าสุด ===== */
+/* ===== sync สถานะ ===== */
 async function syncMemberStatus(memberId){
-  const { data:last } = await db
-    .from('member_exit')
+  const { data:last } = await db.from('member_exit')
     .select('member_status')
     .eq('member_id', memberId)
     .order('meeting_date', { ascending: false })
@@ -264,7 +272,9 @@ async function syncMemberStatus(memberId){
 
 /* ===== ล้างฟอร์ม ===== */
 window.clearEdit = ()=>{
-  editingExitId = null
+  editingMode = false
+  editingMemberId = null
+  editingMeetingDate = null
   exitForm.reset()
 }
 
