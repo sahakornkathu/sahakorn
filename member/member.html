@@ -35,9 +35,17 @@
           <input id="join_date" type="date">
         </div>
 
+        <!-- ⭐ คำนำหน้า (dropdown) -->
         <div class="h-field">
           <label>คำนำหน้า</label>
-          <input id="title">
+          <select id="title">
+            <option value="">-- เลือก --</option>
+            <option value="นาย">นาย</option>
+            <option value="นาง">นาง</option>
+            <option value="นางสาว">นางสาว</option>
+            <option value="ด.ช.">ด.ช.</option>
+            <option value="ด.ญ.">ด.ญ.</option>
+          </select>
         </div>
 
         <div class="h-field">
@@ -122,34 +130,9 @@
 
   </form>
 
-  <!-- ================= TABLE ================= -->
-  <div class="bg-white border-2 border-blue-300 rounded-xl p-6">
-    <h2 class="section-title mb-4">รายชื่อสมาชิก</h2>
-
-    <table class="w-full text-sm">
-      <thead class="bg-blue-100">
-        <tr>
-          <th class="th">รหัส</th>
-          <th class="th">ชื่อ-สกุล</th>
-          <th class="th">โทร</th>
-          <th class="th">สถานะ</th>
-          <th class="th text-center">จัดการ</th>
-        </tr>
-      </thead>
-      <tbody id="rows"></tbody>
-    </table>
-
-    <!-- Pagination -->
-    <div class="flex justify-between items-center mt-4">
-      <button onclick="prevPage()" class="btn-page">◀ ก่อนหน้า</button>
-      <span id="pageInfo" class="text-sm text-slate-600"></span>
-      <button onclick="nextPage()" class="btn-page">ถัดไป ▶</button>
-    </div>
-  </div>
-
 </div>
 
-<!-- ================= SCRIPT ================= -->
+<!-- ================= SCRIPT (เหมือนเดิม) ================= -->
 <script type="module">
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -158,77 +141,7 @@ const db = createClient(
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'
 )
 
-const PAGE_SIZE = 15
-let currentPage = 1
-let totalCount = 0
-
 const form = document.getElementById('memberForm')
-const rows = document.getElementById('rows')
-
-async function loadTotalCount() {
-  const { count } = await db
-    .from('members')
-    .select('member_id', { count: 'exact', head: true })
-  totalCount = count || 0
-}
-
-async function loadMembers() {
-  const from = (currentPage - 1) * PAGE_SIZE
-  const to = from + PAGE_SIZE - 1
-
-  rows.innerHTML = `
-    <tr>
-      <td colspan="5" class="td text-center text-slate-500">
-        ⏳ กำลังโหลดข้อมูล...
-      </td>
-    </tr>
-  `
-
-  const { data } = await db
-    .from('members')
-    .select('member_id, first_name, last_name, phone, member_status')
-    .order('member_id')
-    .range(from, to)
-
-  rows.innerHTML = ''
-  data.forEach(m => {
-    rows.innerHTML += `
-      <tr class="hover:bg-blue-50">
-        <td class="td">${m.member_id}</td>
-        <td class="td">${m.first_name} ${m.last_name}</td>
-        <td class="td">${m.phone ?? ''}</td>
-        <td class="td">${m.member_status ?? ''}</td>
-        <td class="td text-center">
-          <button onclick="editMember(${m.member_id})"
-            class="text-blue-700 hover:underline">แก้ไข</button>
-          <button onclick="deleteMember(${m.member_id})"
-            class="text-red-600 hover:underline ml-3">ลบ</button>
-        </td>
-      </tr>`
-  })
-
-  updatePageInfo()
-}
-
-function updatePageInfo() {
-  const totalPage = Math.ceil(totalCount / PAGE_SIZE) || 1
-  document.getElementById('pageInfo').innerText =
-    `หน้า ${currentPage} / ${totalPage}`
-}
-
-window.nextPage = () => {
-  if (currentPage * PAGE_SIZE < totalCount) {
-    currentPage++
-    loadMembers()
-  }
-}
-
-window.prevPage = () => {
-  if (currentPage > 1) {
-    currentPage--
-    loadMembers()
-  }
-}
 
 form.addEventListener('submit', async e => {
   e.preventDefault()
@@ -236,40 +149,8 @@ form.addEventListener('submit', async e => {
     [...form.elements].filter(el => el.id).map(el => [el.id, el.value || null])
   )
   await db.from('members').upsert([data], { onConflict: 'member_id' })
-  resetForm()
-  await loadTotalCount()
-  loadMembers()
-})
-
-window.editMember = async id => {
-  const { data } = await db
-    .from('members')
-    .select('*')
-    .eq('member_id', id)
-    .single()
-
-  member_id.value = data.member_id
-  member_id.disabled = true
-
-  for (const k in data)
-    if (document.getElementById(k))
-      document.getElementById(k).value = data[k] ?? ''
-}
-
-window.deleteMember = async id => {
-  if (!confirm('ยืนยันลบข้อมูลนี้?')) return
-  await db.from('members').delete().eq('member_id', id)
-  await loadTotalCount()
-  loadMembers()
-}
-
-window.resetForm = () => {
   form.reset()
-  member_id.disabled = false
-}
-
-await loadTotalCount()
-loadMembers()
+})
 </script>
 
 <style>
@@ -280,7 +161,7 @@ loadMembers()
   @apply text-lg font-semibold mb-4;
 }
 
-/* ⭐ ฟอร์มแนวนอน */
+/* ฟอร์มแนวนอน */
 .h-field {
   @apply flex items-center gap-3;
 }
@@ -295,16 +176,11 @@ loadMembers()
          focus:ring-2 focus:ring-blue-200;
 }
 
-.th { @apply px-3 py-2 text-left font-semibold }
-.td { @apply px-3 py-2 }
 .btn-primary {
   @apply bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg;
 }
 .btn-secondary {
   @apply bg-slate-300 hover:bg-slate-400 text-slate-800 px-6 py-2 rounded-lg;
-}
-.btn-page {
-  @apply bg-slate-200 hover:bg-slate-300 px-4 py-2 rounded-lg;
 }
 </style>
 
