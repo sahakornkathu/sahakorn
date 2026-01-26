@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <title>ระบบจัดการข้อมูลสมาชิก</title>
 <script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 
 <body class="bg-blue-50 p-6 text-slate-800">
@@ -21,6 +22,7 @@
 <h2 class="title">บันทึกข้อมูลสมาชิก</h2>
 
 <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+
   <div class="field"><label>รหัสสมาชิก</label><input id="member_id" type="number" required></div>
   <div class="field"><label>วันที่สมัคร</label><input id="join_date" type="date"></div>
   <div class="field"><label>คำนำหน้า</label>
@@ -69,6 +71,7 @@
   <div class="field"><label>เลข กยท.</label><input id="kyot_member_id"></div>
   <div class="field"><label>บิดา</label><input id="father_name"></div>
   <div class="field"><label>มารดา</label><input id="mother_name"></div>
+
 </div>
 
 <div class="flex gap-4">
@@ -80,7 +83,8 @@
 <!-- ===== FILTER ===== -->
 <div class="box space-y-3">
 <h2 class="title">ค้นหารายชื่อสมาชิก</h2>
-<div class="grid grid-cols-1 md:grid-cols-7 gap-3">
+
+<div class="grid grid-cols-1 md:grid-cols-8 gap-3">
   <input id="f_member_id" class="input" placeholder="รหัสสมาชิก">
   <input id="f_first_name" class="input" placeholder="ชื่อ">
   <input id="f_last_name" class="input" placeholder="นามสกุล">
@@ -88,7 +92,9 @@
   <input id="f_phone" class="input" placeholder="เบอร์โทร">
   <select id="f_gender" class="input"><option value="">เพศ</option><option>ชาย</option><option>หญิง</option></select>
   <select id="f_status" class="input"><option value="">สถานะ</option><option>สมาชิก</option><option>ลาออก</option><option>เสียชีวิต</option></select>
+  <button class="btn green" onclick="exportExcel()">Export Excel</button>
 </div>
+
 <div>พบ <b><span id="resultCount">0</span></b> รายการ</div>
 </div>
 
@@ -96,10 +102,13 @@
 <div class="box">
 <table class="w-full text-sm">
 <thead>
-<tr><th>รหัส</th><th>ชื่อ</th><th>กลุ่ม</th><th>โทร</th><th>เพศ</th><th>สถานะ</th><th>จัดการ</th></tr>
+<tr>
+  <th>รหัส</th><th>ชื่อ</th><th>กลุ่ม</th><th>โทร</th><th>เพศ</th><th>สถานะ</th><th>จัดการ</th>
+</tr>
 </thead>
 <tbody id="rows"></tbody>
 </table>
+
 <div class="flex justify-between mt-4">
   <button onclick="prevPage()" class="btn gray">◀</button>
   <span id="pageInfo"></span>
@@ -149,7 +158,7 @@ form.addEventListener('submit',async e=>{
   resetForm(); loadMembers(); loadSummary()
 })
 
-window.resetForm=()=>{ form.reset() }
+window.resetForm=()=>form.reset()
 
 async function loadMembers(){
   let q=db.from('members')
@@ -212,6 +221,29 @@ window.prevPage=()=>{ if(page>1){page--;loadMembers()} }
   })
 })
 
+window.exportExcel = async ()=>{
+  let q=db.from('members').select('*').order('member_id')
+  if(fMemberId.value) q=q.eq('member_id',fMemberId.value)
+  if(fFirst.value) q=q.ilike('first_name','%'+fFirst.value+'%')
+  if(fLast.value) q=q.ilike('last_name','%'+fLast.value+'%')
+  if(fGroup.value) q=q.ilike('group','%'+fGroup.value+'%')
+  if(fPhone.value) q=q.ilike('phone','%'+fPhone.value+'%')
+  if(fGender.value) q=q.eq('gender',fGender.value)
+  if(fStatus.value) q=q.eq('member_status',fStatus.value)
+
+  const {data}=await q
+  if(!data||!data.length){alert('ไม่มีข้อมูลให้ export');return}
+
+  const ws=XLSX.utils.json_to_sheet(data)
+  const wb=XLSX.utils.book_new()
+  XLSX.utils.book_append_sheet(wb,ws,'Members')
+  XLSX.writeFile(wb,
+    fMemberId.value||fFirst.value||fLast.value||fGroup.value||fPhone.value||fGender.value||fStatus.value
+    ? 'members_filtered.xlsx'
+    : 'members_all.xlsx'
+  )
+}
+
 loadMembers(); loadSummary()
 </script>
 
@@ -228,6 +260,7 @@ loadMembers(); loadSummary()
 .btn{padding:6px 16px;border-radius:8px}
 .btn.blue{background:#2563eb;color:#fff}
 .btn.gray{background:#e5e7eb}
+.btn.green{background:#16a34a;color:#fff}
 .link{color:#2563eb;cursor:pointer}
 </style>
 
