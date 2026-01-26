@@ -22,16 +22,10 @@
 <h2 class="title">บันทึกข้อมูลสมาชิก</h2>
 
 <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
-
   <div class="field"><label>รหัสสมาชิก</label><input id="member_id" type="number" required></div>
   <div class="field"><label>วันที่สมัคร</label><input id="join_date" type="date"></div>
   <div class="field"><label>คำนำหน้า</label>
-    <select id="title">
-      <option value="">--</option>
-      <option>นาย</option>
-      <option>นาง</option>
-      <option>นางสาว</option>
-    </select>
+    <select id="title"><option value="">--</option><option>นาย</option><option>นาง</option><option>นางสาว</option></select>
   </div>
   <div class="field"><label>กลุ่ม</label><input id="group"></div>
 
@@ -41,11 +35,7 @@
   <div class="field"><label>วันเกิด</label><input id="birthday" type="date"></div>
 
   <div class="field"><label>เพศ</label>
-    <select id="gender">
-      <option value="">--</option>
-      <option>ชาย</option>
-      <option>หญิง</option>
-    </select>
+    <select id="gender"><option value="">--</option><option>ชาย</option><option>หญิง</option></select>
   </div>
   <div class="field"><label>อายุ</label><input id="age" type="number"></div>
 
@@ -63,20 +53,11 @@
   <div class="field"><label>โทรศัพท์สำรอง</label><input id="phone_alt"></div>
 
   <div class="field"><label>สถานะสมาชิก</label>
-    <select id="member_status">
-      <option value="">--</option>
-      <option>สมาชิก</option>
-      <option>ลาออก</option>
-      <option>เสียชีวิต</option>
-    </select>
+    <select id="member_status"><option value="">--</option><option>สมาชิก</option><option>ลาออก</option><option>เสียชีวิต</option></select>
   </div>
 
   <div class="field"><label>สถานภาพสมรส</label>
-    <select id="marital_status">
-      <option value="">--</option>
-      <option>โสด</option>
-      <option>สมรส</option>
-    </select>
+    <select id="marital_status"><option value="">--</option><option>โสด</option><option>สมรส</option></select>
   </div>
 
   <div class="field"><label>ชื่อคู่สมรส</label><input id="spouse_name"></div>
@@ -84,7 +65,6 @@
   <div class="field"><label>เลขสมาชิก กยท.</label><input id="kyot_member_id"></div>
   <div class="field"><label>ชื่อบิดา</label><input id="father_name"></div>
   <div class="field"><label>ชื่อมารดา</label><input id="mother_name"></div>
-
 </div>
 
 <div class="flex gap-4">
@@ -160,6 +140,24 @@ const fPhone = document.getElementById('f_phone')
 const fGender= document.getElementById('f_gender')
 const fStatus= document.getElementById('f_status')
 
+/* ===== helper ตั้งชื่อไฟล์ ===== */
+function buildExportFileName(){
+  const parts=[]
+  if(fMemberId.value) parts.push(`รหัส${fMemberId.value}`)
+  if(fFirst.value) parts.push(`ชื่อ${fFirst.value}`)
+  if(fLast.value) parts.push(`สกุล${fLast.value}`)
+  if(fGroup.value) parts.push(`กลุ่ม${fGroup.value}`)
+  if(fPhone.value) parts.push(`โทร${fPhone.value}`)
+  if(fGender.value) parts.push(`เพศ${fGender.value}`)
+  if(fStatus.value) parts.push(`สถานะ${fStatus.value}`)
+
+  if(parts.length===0) return 'รายชื่อสมาชิก_ทั้งหมด.xlsx'
+
+  const safe=parts.join('_').replace(/[^\u0E00-\u0E7Fa-zA-Z0-9_]/g,'')
+  return `รายชื่อสมาชิก_${safe}.xlsx`
+}
+
+/* ===== SUMMARY ===== */
 async function loadSummary(){
   document.getElementById('count-member').innerText =
     (await db.from('members').select('member_id',{count:'exact',head:true}).eq('member_status','สมาชิก')).count||0
@@ -169,20 +167,18 @@ async function loadSummary(){
     (await db.from('members').select('member_id',{count:'exact',head:true}).eq('member_status','เสียชีวิต')).count||0
 }
 
-form.addEventListener('submit', async e=>{
+/* ===== SUBMIT ===== */
+form.addEventListener('submit',async e=>{
   e.preventDefault()
   const data={}
-  Array.from(form.elements).forEach(el=>{
-    if(el.id) data[el.id]=el.value||null
-  })
+  Array.from(form.elements).forEach(el=>{ if(el.id) data[el.id]=el.value||null })
   await db.from('members').upsert([data],{onConflict:'member_id'})
-  resetForm()
-  loadMembers()
-  loadSummary()
+  resetForm(); loadMembers(); loadSummary()
 })
 
-window.resetForm = ()=> form.reset()
+window.resetForm=()=>form.reset()
 
+/* ===== LOAD MEMBERS ===== */
 async function loadMembers(){
   let q=db.from('members')
     .select('member_id,first_name,last_name,group,phone,gender,member_status',{count:'exact'})
@@ -223,23 +219,23 @@ async function loadMembers(){
   })
 }
 
+/* ===== EDIT / DELETE ===== */
 window.editMember = async id=>{
   const {data}=await db.from('members').select('*').eq('member_id',id).single()
-  Array.from(form.elements).forEach(el=>{
-    if(el.id) el.value=data[el.id]||''
-  })
+  Array.from(form.elements).forEach(el=>{ if(el.id) el.value=data[el.id]||'' })
 }
 
 window.deleteMember = async id=>{
   if(!confirm('ยืนยันการลบสมาชิก รหัส '+id)) return
   await db.from('members').delete().eq('member_id',id)
-  loadMembers()
-  loadSummary()
+  loadMembers(); loadSummary()
 }
 
+/* ===== PAGINATION ===== */
 window.nextPage=()=>{ if(page*PAGE_SIZE<totalCount){page++;loadMembers()} }
 window.prevPage=()=>{ if(page>1){page--;loadMembers()} }
 
+/* ===== AUTO FILTER ===== */
 ;[fMemberId,fFirst,fLast,fGroup,fPhone,fGender,fStatus].forEach(el=>{
   el.addEventListener('input',()=>{
     clearTimeout(debounceTimer)
@@ -247,6 +243,7 @@ window.prevPage=()=>{ if(page>1){page--;loadMembers()} }
   })
 })
 
+/* ===== EXPORT EXCEL (ทุกคอลัมน์ + TH) ===== */
 window.exportExcel = async ()=>{
   let q=db.from('members').select('*').order('member_id')
 
@@ -262,52 +259,45 @@ window.exportExcel = async ()=>{
   if(!data||!data.length){alert('ไม่มีข้อมูลให้ export');return}
 
   const thaiData=data.map(r=>({
-    'รหัสสมาชิก': r.member_id,
-    'วันที่สมัคร': r.join_date,
-    'คำนำหน้า': r.title,
-    'ชื่อ': r.first_name,
-    'นามสกุล': r.last_name,
-    'เลขบัตรประชาชน': r.id_card,
-    'วันเกิด': r.birthday,
-    'กลุ่ม': r.group,
-    'บ้านเลขที่': r.house_no,
-    'หมู่': r.moo,
-    'ถนน': r.street,
-    'หมู่บ้าน': r.village,
-    'ตำบล': r.subdistrict,
-    'อำเภอ': r.district,
-    'จังหวัด': r.province,
-    'รหัสไปรษณีย์': r.postal_code,
-    'โทรศัพท์': r.phone,
-    'โทรศัพท์สำรอง': r.phone_alt,
-    'สถานะสมาชิก': r.member_status,
-    'สถานภาพสมรส': r.marital_status,
-    'ชื่อคู่สมรส': r.spouse_name,
-    'เป็นสมาชิก กยท.': r.kyot_member,
-    'เลขสมาชิก กยท.': r.kyot_member_id,
-    'ชื่อบิดา': r.father_name,
-    'ชื่อมารดา': r.mother_name,
-    'เพศ': r.gender,
-    'อายุ': r.age,
-    'วันที่สร้าง': r.created_at,
-    'วันที่แก้ไขล่าสุด': r.updated_at,
-    'LINE User ID': r.line_user_id,
-    'ชื่อ LINE': r.line_display_name,
-    'รูปโปรไฟล์ LINE': r.line_picture
+    'รหัสสมาชิก':r.member_id,
+    'วันที่สมัคร':r.join_date,
+    'คำนำหน้า':r.title,
+    'ชื่อ':r.first_name,
+    'นามสกุล':r.last_name,
+    'เลขบัตรประชาชน':r.id_card,
+    'วันเกิด':r.birthday,
+    'กลุ่ม':r.group,
+    'บ้านเลขที่':r.house_no,
+    'หมู่':r.moo,
+    'ถนน':r.street,
+    'หมู่บ้าน':r.village,
+    'ตำบล':r.subdistrict,
+    'อำเภอ':r.district,
+    'จังหวัด':r.province,
+    'รหัสไปรษณีย์':r.postal_code,
+    'โทรศัพท์':r.phone,
+    'โทรศัพท์สำรอง':r.phone_alt,
+    'สถานะสมาชิก':r.member_status,
+    'สถานภาพสมรส':r.marital_status,
+    'ชื่อคู่สมรส':r.spouse_name,
+    'เป็นสมาชิก กยท.':r.kyot_member,
+    'เลขสมาชิก กยท.':r.kyot_member_id,
+    'ชื่อบิดา':r.father_name,
+    'ชื่อมารดา':r.mother_name,
+    'เพศ':r.gender,
+    'อายุ':r.age,
+    'วันที่สร้าง':r.created_at,
+    'วันที่แก้ไขล่าสุด':r.updated_at,
+    'LINE User ID':r.line_user_id,
+    'ชื่อ LINE':r.line_display_name,
+    'รูปโปรไฟล์ LINE':r.line_picture
   }))
 
   const ws=XLSX.utils.json_to_sheet(thaiData)
   const wb=XLSX.utils.book_new()
   XLSX.utils.book_append_sheet(wb,ws,'สมาชิก')
 
-  const hasFilter =
-    fMemberId.value||fFirst.value||fLast.value||
-    fGroup.value||fPhone.value||fGender.value||fStatus.value
-
-  XLSX.writeFile(
-    wb,
-    hasFilter ? 'รายชื่อสมาชิก_ตามเงื่อนไข.xlsx' : 'รายชื่อสมาชิก_ทั้งหมด.xlsx'
-  )
+  XLSX.writeFile(wb, buildExportFileName())
 }
 
 loadMembers()
