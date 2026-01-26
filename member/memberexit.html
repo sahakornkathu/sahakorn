@@ -13,47 +13,41 @@
 จัดการสมาชิกลาออก / เสียชีวิต
 </h1>
 
-<!-- ================= FORM ================= -->
+<!-- ================= ฟอร์มบันทึก ================= -->
 <div class="bg-slate-800 border border-slate-700 rounded-xl p-6">
 <h2 class="text-lg font-bold text-yellow-400 mb-4">
-บันทึกข้อมูล (member_exit)
+บันทึกข้อมูล
 </h2>
 
 <form id="exitForm" class="grid grid-cols-1 md:grid-cols-4 gap-4">
 
-<!-- member_id -->
 <div>
-  <label class="label">member_id (รหัสสมาชิก)</label>
+  <label class="label">รหัสสมาชิก</label>
   <input id="member_id" class="input" required>
 </div>
 
-<!-- title -->
 <div>
-  <label class="label">title (คำนำหน้า)</label>
+  <label class="label">คำนำหน้า</label>
   <input id="title" class="input" readonly>
 </div>
 
-<!-- first_name -->
 <div>
-  <label class="label">first_name (ชื่อ)</label>
+  <label class="label">ชื่อ</label>
   <input id="first_name" class="input" readonly>
 </div>
 
-<!-- last_name -->
 <div>
-  <label class="label">last_name (นามสกุล)</label>
+  <label class="label">นามสกุล</label>
   <input id="last_name" class="input" readonly>
 </div>
 
-<!-- group -->
 <div>
-  <label class="label">group (กลุ่ม)</label>
+  <label class="label">กลุ่ม</label>
   <input id="group" class="input" readonly>
 </div>
 
-<!-- member_status -->
 <div>
-  <label class="label">member_status (สถานะ)</label>
+  <label class="label">สถานะสมาชิก</label>
   <select id="member_status" class="input" required>
     <option value="">-- เลือก --</option>
     <option value="ลาออก">ลาออก</option>
@@ -61,48 +55,45 @@
   </select>
 </div>
 
-<!-- meeting_date -->
 <div>
-  <label class="label">meeting_date (วันที่ประชุม)</label>
+  <label class="label">วันที่ประชุม</label>
   <input id="meeting_date" type="date" class="input">
 </div>
 
-<!-- share_amount -->
 <div>
-  <label class="label">share_amount (จำนวนหุ้นคงเหลือ)</label>
+  <label class="label">จำนวนหุ้นคงเหลือ</label>
   <input id="share_amount" type="number" step="0.01" class="input">
 </div>
 
-<!-- receive_date -->
 <div>
-  <label class="label">receive_date (วันที่รับเงิน)</label>
+  <label class="label">วันที่รับเงิน</label>
   <input id="receive_date" type="date" class="input">
 </div>
 
 <div class="col-span-full flex justify-center gap-4 pt-4">
-  <button class="btn red">บันทึก</button>
+  <button class="btn red">บันทึกข้อมูล</button>
   <button type="reset" class="btn gray" onclick="clearEdit()">ล้างฟอร์ม</button>
 </div>
 
 </form>
 </div>
 
-<!-- ================= HISTORY ================= -->
+<!-- ================= รายการย้อนหลัง ================= -->
 <div class="bg-slate-800 border border-slate-700 rounded-xl p-6">
 <h2 class="text-lg font-bold text-orange-400 mb-4">
-รายการย้อนหลัง (member_exit history)
+รายการย้อนหลัง (แก้ไขได้)
 </h2>
 
 <table class="w-full text-sm text-center">
 <thead class="bg-slate-700">
 <tr>
-  <th>member_id</th>
+  <th>รหัสสมาชิก</th>
   <th>ชื่อ-นามสกุล</th>
-  <th>group</th>
-  <th>member_status</th>
-  <th>meeting_date</th>
-  <th>share_amount</th>
-  <th>receive_date</th>
+  <th>กลุ่ม</th>
+  <th>สถานะ</th>
+  <th>วันที่ประชุม</th>
+  <th>หุ้นคงเหลือ</th>
+  <th>วันที่รับเงิน</th>
   <th>จัดการ</th>
 </tr>
 </thead>
@@ -121,7 +112,7 @@ const db = createClient(SUPABASE_URL, SUPABASE_KEY)
 
 let editingExitId = null
 
-/* ===== โหลดข้อมูลสมาชิกจาก members ===== */
+/* ===== โหลดข้อมูลสมาชิก ===== */
 member_id.addEventListener('blur', async ()=>{
   if(!member_id.value) return
 
@@ -142,7 +133,7 @@ member_id.addEventListener('blur', async ()=>{
   group.value = data.group
 })
 
-/* ===== SUBMIT ===== */
+/* ===== บันทึก ===== */
 exitForm.onsubmit = async e=>{
   e.preventDefault()
 
@@ -169,7 +160,7 @@ exitForm.onsubmit = async e=>{
   loadHistory()
 }
 
-/* ===== HISTORY ===== */
+/* ===== โหลดรายการย้อนหลัง ===== */
 async function loadHistory(){
   const { data } = await db.from('member_exit')
     .select('*')
@@ -210,7 +201,7 @@ window.editRow = r=>{
   receive_date.value = r.receive_date || ''
 }
 
-/* ===== SYNC STATUS ไป members ===== */
+/* ===== sync สถานะไป members ===== */
 async function syncMemberStatus(mid){
   const { data:last } = await db.from('member_exit')
     .select('member_status')
@@ -226,7 +217,7 @@ async function syncMemberStatus(mid){
   }
 }
 
-/* ===== CLEAR ===== */
+/* ===== ล้างฟอร์ม ===== */
 window.clearEdit = ()=>{
   editingExitId = null
   exitForm.reset()
