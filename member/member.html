@@ -9,7 +9,7 @@
 <body class="bg-blue-50 p-6 text-slate-800">
 <div class="max-w-7xl mx-auto space-y-6">
 
-<!-- ===== SUMMARY ===== -->
+<!-- ================= SUMMARY ================= -->
 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
   <div class="summary green">
     <div>สมาชิก</div>
@@ -25,27 +25,61 @@
   </div>
 </div>
 
-<!-- ===== FORM ===== -->
+<!-- ================= FORM ================= -->
 <form id="memberForm" class="box space-y-4">
-<h2 class="title">บันทึกข้อมูลสมาชิก</h2>
+<h2 class="title">บันทึกข้อมูลสมาชิก (ครบทุกช่อง)</h2>
 
+<!-- ข้อมูลหลัก -->
 <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+  <div class="field"><label>รหัสสมาชิก</label><input id="member_id" type="number" required></div>
+  <div class="field"><label>วันที่สมัคร</label><input id="join_date" type="date"></div>
 
-  <div class="field"><label>รหัส</label><input id="member_id" type="number" required></div>
-  <div class="field"><label>คำนำหน้า</label>
+  <div class="field">
+    <label>คำนำหน้า</label>
     <select id="title">
       <option value="">-- เลือก --</option>
       <option>นาย</option><option>นาง</option><option>นางสาว</option>
     </select>
   </div>
+
+  <div class="field"><label>กลุ่ม</label><input id="group"></div>
+
   <div class="field"><label>ชื่อ</label><input id="first_name"></div>
   <div class="field"><label>นามสกุล</label><input id="last_name"></div>
-
-  <div class="field"><label>บัตร ปชช.</label><input id="id_card"></div>
-  <div class="field"><label>โทรศัพท์</label><input id="phone"></div>
+  <div class="field"><label>เลขบัตร ปชช.</label><input id="id_card"></div>
+  <div class="field"><label>วันเกิด</label><input id="birthday" type="date"></div>
 
   <div class="field">
-    <label>สถานะ</label>
+    <label>เพศ</label>
+    <select id="gender">
+      <option value="">-- เลือก --</option>
+      <option>ชาย</option><option>หญิง</option>
+    </select>
+  </div>
+
+  <div class="field"><label>อายุ</label><input id="age" type="number"></div>
+</div>
+
+<!-- ที่อยู่ -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+  <div class="field"><label>บ้านเลขที่</label><input id="house_no"></div>
+  <div class="field"><label>หมู่</label><input id="moo"></div>
+  <div class="field"><label>ถนน</label><input id="street"></div>
+  <div class="field"><label>หมู่บ้าน</label><input id="village"></div>
+
+  <div class="field"><label>ตำบล</label><input id="subdistrict"></div>
+  <div class="field"><label>อำเภอ</label><input id="district"></div>
+  <div class="field"><label>จังหวัด</label><input id="province"></div>
+  <div class="field"><label>รหัสไปรษณีย์</label><input id="postal_code"></div>
+</div>
+
+<!-- ติดต่อ / สถานะ -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+  <div class="field"><label>โทรศัพท์</label><input id="phone"></div>
+  <div class="field"><label>โทรศัพท์สำรอง</label><input id="phone_alt"></div>
+
+  <div class="field">
+    <label>สถานะสมาชิก</label>
     <select id="member_status">
       <option value="">-- เลือก --</option>
       <option>สมาชิก</option>
@@ -54,6 +88,24 @@
     </select>
   </div>
 
+  <div class="field">
+    <label>สถานภาพสมรส</label>
+    <select id="marital_status">
+      <option value="">-- เลือก --</option>
+      <option>โสด</option>
+      <option>สมรส</option>
+    </select>
+  </div>
+</div>
+
+<!-- ครอบครัว / อื่น ๆ -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+  <div class="field"><label>ชื่อคู่สมรส</label><input id="spouse_name"></div>
+  <div class="field"><label>สมาชิก กยท.</label><input id="kyot_member"></div>
+  <div class="field"><label>เลขสมาชิก กยท.</label><input id="kyot_member_id"></div>
+
+  <div class="field"><label>ชื่อบิดา</label><input id="father_name"></div>
+  <div class="field"><label>ชื่อมารดา</label><input id="mother_name"></div>
 </div>
 
 <div class="flex gap-4">
@@ -62,7 +114,7 @@
 </div>
 </form>
 
-<!-- ===== TABLE ===== -->
+<!-- ================= TABLE ================= -->
 <div class="box">
 <h2 class="title">รายชื่อสมาชิก</h2>
 
@@ -88,7 +140,7 @@
 
 </div>
 
-<!-- ===== SCRIPT ===== -->
+<!-- ================= SCRIPT ================= -->
 <script type="module">
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -103,20 +155,22 @@ const form = document.getElementById('memberForm')
 const rows = document.getElementById('rows')
 const statusEl = document.getElementById('member_status')
 
-/* ===== SUMMARY ===== */
+/* ===== SUMMARY (นับจาก DB จริง) ===== */
 async function loadSummary() {
   const a = await db.from('members').select('member_id',{count:'exact',head:true}).eq('member_status','สมาชิก')
   const b = await db.from('members').select('member_id',{count:'exact',head:true}).eq('member_status','ลาออก')
   const c = await db.from('members').select('member_id',{count:'exact',head:true}).eq('member_status','เสียชีวิต')
-  count-member.innerText = a.count || 0
-  count-resign.innerText = b.count || 0
-  count-dead.innerText = c.count || 0
+
+  document.getElementById('count-member').innerText = a.count || 0
+  document.getElementById('count-resign').innerText = b.count || 0
+  document.getElementById('count-dead').innerText = c.count || 0
 }
 
-/* ===== LIST ===== */
+/* ===== LOAD LIST ===== */
 async function loadMembers() {
-  const from = (page-1)*PAGE_SIZE
+  const from = (page - 1) * PAGE_SIZE
   const to = from + PAGE_SIZE - 1
+
   const { data } = await db
     .from('members')
     .select('member_id,first_name,last_name,phone,member_status')
@@ -125,27 +179,35 @@ async function loadMembers() {
 
   rows.innerHTML = ''
   data.forEach(function(m){
-    const color = m.member_status==='สมาชิก'?'green':
-                  m.member_status==='ลาออก'?'orange':'red'
+    const color =
+      m.member_status==='สมาชิก'?'green':
+      m.member_status==='ลาออก'?'orange':'red'
+
     rows.innerHTML += `
     <tr>
       <td>${m.member_id}</td>
       <td>${m.first_name||''} ${m.last_name||''}</td>
       <td>${m.phone||''}</td>
       <td class="${color}">${m.member_status||''}</td>
-      <td><button class="link" onclick="editMember(${m.member_id})">แก้ไข</button></td>
+      <td>
+        <button class="link" onclick="editMember(${m.member_id})">แก้ไข</button>
+        <button class="link text-red-600 ml-2" onclick="deleteMember(${m.member_id})">ลบ</button>
+      </td>
     </tr>`
   })
-  pageInfo.innerText = 'หน้า '+page
+
+  document.getElementById('pageInfo').innerText = 'หน้า ' + page
 }
 
 /* ===== SUBMIT ===== */
 form.addEventListener('submit', async function(e){
   e.preventDefault()
+
   const data = {}
   Array.from(form.elements).forEach(function(el){
     if(el.id) data[el.id] = el.value || null
   })
+
   await db.from('members').upsert([data],{onConflict:'member_id'})
   resetForm()
   loadMembers()
@@ -160,23 +222,35 @@ statusEl.addEventListener('change',function(){
   })
 })
 
+/* ===== EDIT ===== */
 window.editMember = async function(id){
   const { data } = await db.from('members').select('*').eq('member_id',id).single()
   Array.from(form.elements).forEach(function(el){
     if(el.id) el.value = data[el.id] || ''
   })
-  member_id.disabled = true
+  document.getElementById('member_id').disabled = true
 }
 
+/* ===== DELETE ===== */
+window.deleteMember = async function(id){
+  if(!confirm('ยืนยันลบข้อมูลนี้ ?')) return
+  await db.from('members').delete().eq('member_id',id)
+  loadMembers()
+  loadSummary()
+}
+
+/* ===== RESET ===== */
 window.resetForm = function(){
   form.reset()
-  member_id.disabled = false
+  document.getElementById('member_id').disabled = false
   Array.from(form.elements).forEach(function(el){ el.disabled=false })
 }
 
+/* ===== PAGINATION ===== */
 window.nextPage = function(){ page++; loadMembers() }
 window.prevPage = function(){ if(page>1){ page--; loadMembers() } }
 
+/* ===== INIT ===== */
 loadMembers()
 loadSummary()
 </script>
@@ -185,7 +259,7 @@ loadSummary()
 .box{background:#fff;border:2px solid #93c5fd;border-radius:12px;padding:16px}
 .title{font-weight:600;margin-bottom:8px}
 .field{display:flex;align-items:center;gap:6px}
-.field label{width:90px;font-size:13px}
+.field label{width:110px;font-size:13px}
 .field input,.field select{flex:1;border:2px solid #94a3b8;border-radius:6px;padding:6px}
 .summary{background:#fff;border:2px solid;border-radius:12px;padding:12px;text-align:center}
 .summary .num{font-size:28px;font-weight:700}
