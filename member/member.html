@@ -9,110 +9,27 @@
 <body class="bg-blue-50 p-6 text-slate-800">
 <div class="max-w-7xl mx-auto space-y-6">
 
-<!-- ================= SUMMARY ================= -->
-<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-  <div class="summary green">
-    <div>สมาชิก</div>
-    <div id="count-member" class="num">0</div>
-  </div>
-  <div class="summary orange">
-    <div>ลาออก</div>
-    <div id="count-resign" class="num">0</div>
-  </div>
-  <div class="summary red">
-    <div>เสียชีวิต</div>
-    <div id="count-dead" class="num">0</div>
-  </div>
-</div>
+<!-- ================= FILTER ================= -->
+<div class="box space-y-3">
+  <h2 class="title">ค้นหารายชื่อสมาชิก</h2>
 
-<!-- ================= FORM ================= -->
-<form id="memberForm" class="box space-y-4">
-<h2 class="title">บันทึกข้อมูลสมาชิก (ครบทุกช่อง)</h2>
-
-<!-- ข้อมูลหลัก -->
-<div class="grid grid-cols-1 md:grid-cols-4 gap-3">
-  <div class="field"><label>รหัสสมาชิก</label><input id="member_id" type="number" required></div>
-  <div class="field"><label>วันที่สมัคร</label><input id="join_date" type="date"></div>
-
-  <div class="field">
-    <label>คำนำหน้า</label>
-    <select id="title">
-      <option value="">-- เลือก --</option>
-      <option>นาย</option><option>นาง</option><option>นางสาว</option>
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+    <input id="searchText" class="input" placeholder="ค้นหา ชื่อ / นามสกุล / กลุ่ม / เบอร์โทร">
+    
+    <select id="searchGender" class="input">
+      <option value="">เพศทั้งหมด</option>
+      <option value="ชาย">ชาย</option>
+      <option value="หญิง">หญิง</option>
     </select>
+
+    <button onclick="searchMembers()" class="btn blue">ค้นหา</button>
+    <button onclick="resetSearch()" class="btn gray">ล้างการค้นหา</button>
   </div>
 
-  <div class="field"><label>กลุ่ม</label><input id="group"></div>
-
-  <div class="field"><label>ชื่อ</label><input id="first_name"></div>
-  <div class="field"><label>นามสกุล</label><input id="last_name"></div>
-  <div class="field"><label>เลขบัตร ปชช.</label><input id="id_card"></div>
-  <div class="field"><label>วันเกิด</label><input id="birthday" type="date"></div>
-
-  <div class="field">
-    <label>เพศ</label>
-    <select id="gender">
-      <option value="">-- เลือก --</option>
-      <option>ชาย</option><option>หญิง</option>
-    </select>
-  </div>
-
-  <div class="field"><label>อายุ</label><input id="age" type="number"></div>
-</div>
-
-<!-- ที่อยู่ -->
-<div class="grid grid-cols-1 md:grid-cols-4 gap-3">
-  <div class="field"><label>บ้านเลขที่</label><input id="house_no"></div>
-  <div class="field"><label>หมู่</label><input id="moo"></div>
-  <div class="field"><label>ถนน</label><input id="street"></div>
-  <div class="field"><label>หมู่บ้าน</label><input id="village"></div>
-
-  <div class="field"><label>ตำบล</label><input id="subdistrict"></div>
-  <div class="field"><label>อำเภอ</label><input id="district"></div>
-  <div class="field"><label>จังหวัด</label><input id="province"></div>
-  <div class="field"><label>รหัสไปรษณีย์</label><input id="postal_code"></div>
-</div>
-
-<!-- ติดต่อ / สถานะ -->
-<div class="grid grid-cols-1 md:grid-cols-4 gap-3">
-  <div class="field"><label>โทรศัพท์</label><input id="phone"></div>
-  <div class="field"><label>โทรศัพท์สำรอง</label><input id="phone_alt"></div>
-
-  <div class="field">
-    <label>สถานะสมาชิก</label>
-    <select id="member_status">
-      <option value="">-- เลือก --</option>
-      <option>สมาชิก</option>
-      <option>ลาออก</option>
-      <option>เสียชีวิต</option>
-    </select>
-  </div>
-
-  <div class="field">
-    <label>สถานภาพสมรส</label>
-    <select id="marital_status">
-      <option value="">-- เลือก --</option>
-      <option>โสด</option>
-      <option>สมรส</option>
-    </select>
+  <div class="text-sm text-slate-600">
+    ผลการค้นหา: <b><span id="resultCount">0</span></b> รายการ
   </div>
 </div>
-
-<!-- ครอบครัว / อื่น ๆ -->
-<div class="grid grid-cols-1 md:grid-cols-4 gap-3">
-  <div class="field"><label>ชื่อคู่สมรส</label><input id="spouse_name"></div>
-  <div class="field"><label>สมาชิก กยท.</label><input id="kyot_member"></div>
-  <div class="field"><label>เลขสมาชิก กยท.</label><input id="kyot_member_id"></div>
-
-  <div class="field"><label>ชื่อบิดา</label><input id="father_name"></div>
-  <div class="field"><label>ชื่อมารดา</label><input id="mother_name"></div>
-</div>
-
-<div class="flex gap-4">
-  <button type="submit" class="btn blue">บันทึก</button>
-  <button type="button" onclick="resetForm()" class="btn gray">ยกเลิก</button>
-</div>
-</form>
 
 <!-- ================= TABLE ================= -->
 <div class="box">
@@ -122,8 +39,10 @@
 <thead>
 <tr>
   <th>รหัส</th>
-  <th>ชื่อ</th>
+  <th>ชื่อ-นามสกุล</th>
+  <th>กลุ่ม</th>
   <th>โทร</th>
+  <th>เพศ</th>
   <th>สถานะ</th>
   <th>จัดการ</th>
 </tr>
@@ -140,7 +59,6 @@
 
 </div>
 
-<!-- ================= SCRIPT ================= -->
 <script type="module">
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -150,125 +68,110 @@ const db = createClient(SUPABASE_URL, SUPABASE_KEY)
 
 const PAGE_SIZE = 15
 let page = 1
+let lastCount = 0
 
-const form = document.getElementById('memberForm')
 const rows = document.getElementById('rows')
-const statusEl = document.getElementById('member_status')
+const searchTextEl = document.getElementById('searchText')
+const searchGenderEl = document.getElementById('searchGender')
 
-/* ===== SUMMARY (นับจาก DB จริง) ===== */
-async function loadSummary() {
-  const a = await db.from('members').select('member_id',{count:'exact',head:true}).eq('member_status','สมาชิก')
-  const b = await db.from('members').select('member_id',{count:'exact',head:true}).eq('member_status','ลาออก')
-  const c = await db.from('members').select('member_id',{count:'exact',head:true}).eq('member_status','เสียชีวิต')
-
-  document.getElementById('count-member').innerText = a.count || 0
-  document.getElementById('count-resign').innerText = b.count || 0
-  document.getElementById('count-dead').innerText = c.count || 0
+/* ===== SEARCH ===== */
+window.searchMembers = function () {
+  page = 1
+  loadMembers()
 }
 
-/* ===== LOAD LIST ===== */
+window.resetSearch = function () {
+  searchTextEl.value = ''
+  searchGenderEl.value = ''
+  page = 1
+  loadMembers()
+}
+
+/* ===== LOAD MEMBERS + FILTER ===== */
 async function loadMembers() {
+  const keyword = searchTextEl.value.trim()
+  const gender = searchGenderEl.value
+
+  let query = db.from('members')
+    .select(
+      'member_id, first_name, last_name, group, phone, gender, member_status',
+      { count: 'exact' }
+    )
+    .order('member_id')
+
+  if (keyword) {
+    query = query.or(
+      `first_name.ilike.%${keyword}%,last_name.ilike.%${keyword}%,group.ilike.%${keyword}%,phone.ilike.%${keyword}%`
+    )
+  }
+
+  if (gender) {
+    query = query.eq('gender', gender)
+  }
+
   const from = (page - 1) * PAGE_SIZE
   const to = from + PAGE_SIZE - 1
 
-  const { data } = await db
-    .from('members')
-    .select('member_id,first_name,last_name,phone,member_status')
-    .order('member_id')
-    .range(from,to)
+  const { data, count } = await query.range(from, to)
+
+  lastCount = count || 0
+  document.getElementById('resultCount').innerText = lastCount
 
   rows.innerHTML = ''
-  data.forEach(function(m){
+
+  data.forEach(function (m) {
     const color =
-      m.member_status==='สมาชิก'?'green':
-      m.member_status==='ลาออก'?'orange':'red'
+      m.member_status === 'สมาชิก' ? 'green' :
+      m.member_status === 'ลาออก' ? 'orange' : 'red'
 
     rows.innerHTML += `
     <tr>
       <td>${m.member_id}</td>
-      <td>${m.first_name||''} ${m.last_name||''}</td>
-      <td>${m.phone||''}</td>
-      <td class="${color}">${m.member_status||''}</td>
+      <td>${m.first_name || ''} ${m.last_name || ''}</td>
+      <td>${m.group || ''}</td>
+      <td>${m.phone || ''}</td>
+      <td>${m.gender || ''}</td>
+      <td class="${color}">${m.member_status || ''}</td>
       <td>
         <button class="link" onclick="editMember(${m.member_id})">แก้ไข</button>
-        <button class="link text-red-600 ml-2" onclick="deleteMember(${m.member_id})">ลบ</button>
       </td>
     </tr>`
   })
 
-  document.getElementById('pageInfo').innerText = 'หน้า ' + page
-}
-
-/* ===== SUBMIT ===== */
-form.addEventListener('submit', async function(e){
-  e.preventDefault()
-
-  const data = {}
-  Array.from(form.elements).forEach(function(el){
-    if(el.id) data[el.id] = el.value || null
-  })
-
-  await db.from('members').upsert([data],{onConflict:'member_id'})
-  resetForm()
-  loadMembers()
-  loadSummary()
-})
-
-/* ===== LOCK WHEN DEAD ===== */
-statusEl.addEventListener('change',function(){
-  const lock = statusEl.value==='เสียชีวิต'
-  Array.from(form.elements).forEach(function(el){
-    if(el.id && el.id!=='member_status') el.disabled = lock
-  })
-})
-
-/* ===== EDIT ===== */
-window.editMember = async function(id){
-  const { data } = await db.from('members').select('*').eq('member_id',id).single()
-  Array.from(form.elements).forEach(function(el){
-    if(el.id) el.value = data[el.id] || ''
-  })
-  document.getElementById('member_id').disabled = true
-}
-
-/* ===== DELETE ===== */
-window.deleteMember = async function(id){
-  if(!confirm('ยืนยันลบข้อมูลนี้ ?')) return
-  await db.from('members').delete().eq('member_id',id)
-  loadMembers()
-  loadSummary()
-}
-
-/* ===== RESET ===== */
-window.resetForm = function(){
-  form.reset()
-  document.getElementById('member_id').disabled = false
-  Array.from(form.elements).forEach(function(el){ el.disabled=false })
+  const totalPage = Math.max(1, Math.ceil(lastCount / PAGE_SIZE))
+  document.getElementById('pageInfo').innerText =
+    `หน้า ${page} / ${totalPage}`
 }
 
 /* ===== PAGINATION ===== */
-window.nextPage = function(){ page++; loadMembers() }
-window.prevPage = function(){ if(page>1){ page--; loadMembers() } }
+window.nextPage = function () {
+  if (page * PAGE_SIZE < lastCount) {
+    page++
+    loadMembers()
+  }
+}
+
+window.prevPage = function () {
+  if (page > 1) {
+    page--
+    loadMembers()
+  }
+}
 
 /* ===== INIT ===== */
 loadMembers()
-loadSummary()
 </script>
 
 <style>
 .box{background:#fff;border:2px solid #93c5fd;border-radius:12px;padding:16px}
 .title{font-weight:600;margin-bottom:8px}
-.field{display:flex;align-items:center;gap:6px}
-.field label{width:110px;font-size:13px}
-.field input,.field select{flex:1;border:2px solid #94a3b8;border-radius:6px;padding:6px}
-.summary{background:#fff;border:2px solid;border-radius:12px;padding:12px;text-align:center}
-.summary .num{font-size:28px;font-weight:700}
-.green{border-color:#22c55e;color:#15803d}
-.orange{border-color:#f97316;color:#c2410c}
-.red{border-color:#ef4444;color:#b91c1c}
+.input{border:2px solid #94a3b8;border-radius:6px;padding:6px;width:100%}
 .btn{padding:6px 16px;border-radius:8px}
 .btn.blue{background:#2563eb;color:#fff}
 .btn.gray{background:#e5e7eb}
+.green{color:#15803d;font-weight:600}
+.orange{color:#c2410c;font-weight:600}
+.red{color:#b91c1c;font-weight:600}
 .link{color:#2563eb;cursor:pointer}
 </style>
 
