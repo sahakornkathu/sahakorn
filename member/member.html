@@ -77,7 +77,7 @@
 <div class="box space-y-3">
 <h2 class="title">ค้นหา / Export</h2>
 
-<div class="grid grid-cols-1 md:grid-cols-8 gap-3">
+<div class="grid grid-cols-1 md:grid-cols-9 gap-3">
   <input id="f_member_id" class="input" placeholder="รหัสสมาชิก">
   <input id="f_first_name" class="input" placeholder="ชื่อ">
   <input id="f_last_name" class="input" placeholder="นามสกุล">
@@ -85,6 +85,7 @@
   <input id="f_phone" class="input" placeholder="เบอร์โทร">
   <select id="f_gender" class="input"><option value="">เพศ</option><option>ชาย</option><option>หญิง</option></select>
   <select id="f_status" class="input"><option value="">สถานะ</option><option>สมาชิก</option><option>ลาออก</option><option>เสียชีวิต</option></select>
+  <button class="btn gray" onclick="clearFilters()">ล้างกรอง</button>
   <button class="btn green" onclick="exportExcel()">Export Excel</button>
 </div>
 
@@ -140,7 +141,6 @@ const fPhone = document.getElementById('f_phone')
 const fGender= document.getElementById('f_gender')
 const fStatus= document.getElementById('f_status')
 
-/* ===== helper ตั้งชื่อไฟล์ ===== */
 function buildExportFileName(){
   const parts=[]
   if(fMemberId.value) parts.push(`รหัส${fMemberId.value}`)
@@ -150,11 +150,21 @@ function buildExportFileName(){
   if(fPhone.value) parts.push(`โทร${fPhone.value}`)
   if(fGender.value) parts.push(`เพศ${fGender.value}`)
   if(fStatus.value) parts.push(`สถานะ${fStatus.value}`)
-
   if(parts.length===0) return 'รายชื่อสมาชิก_ทั้งหมด.xlsx'
+  return `รายชื่อสมาชิก_${parts.join('_').replace(/[^\u0E00-\u0E7Fa-zA-Z0-9_]/g,'')}.xlsx`
+}
 
-  const safe=parts.join('_').replace(/[^\u0E00-\u0E7Fa-zA-Z0-9_]/g,'')
-  return `รายชื่อสมาชิก_${safe}.xlsx`
+/* ===== CLEAR FILTER ===== */
+window.clearFilters = ()=>{
+  fMemberId.value=''
+  fFirst.value=''
+  fLast.value=''
+  fGroup.value=''
+  fPhone.value=''
+  fGender.value=''
+  fStatus.value=''
+  page=1
+  loadMembers()
 }
 
 /* ===== SUMMARY ===== */
@@ -243,10 +253,9 @@ window.prevPage=()=>{ if(page>1){page--;loadMembers()} }
   })
 })
 
-/* ===== EXPORT EXCEL (ทุกคอลัมน์ + TH) ===== */
+/* ===== EXPORT EXCEL ===== */
 window.exportExcel = async ()=>{
   let q=db.from('members').select('*').order('member_id')
-
   if(fMemberId.value) q=q.eq('member_id',fMemberId.value)
   if(fFirst.value) q=q.ilike('first_name','%'+fFirst.value+'%')
   if(fLast.value) q=q.ilike('last_name','%'+fLast.value+'%')
@@ -296,7 +305,6 @@ window.exportExcel = async ()=>{
   const ws=XLSX.utils.json_to_sheet(thaiData)
   const wb=XLSX.utils.book_new()
   XLSX.utils.book_append_sheet(wb,ws,'สมาชิก')
-
   XLSX.writeFile(wb, buildExportFileName())
 }
 
