@@ -23,57 +23,57 @@
 <form id="exitForm" class="grid grid-cols-1 md:grid-cols-4 gap-4">
 
 <div>
-<label class="label">รหัสสมาชิก</label>
-<input id="member_id" class="input" required>
+  <label class="label">รหัสสมาชิก</label>
+  <input id="member_id" class="input" required>
 </div>
 
 <div>
-<label class="label">คำนำหน้า</label>
-<input id="title" class="input" readonly>
+  <label class="label">คำนำหน้า</label>
+  <input id="title" class="input" readonly>
 </div>
 
 <div>
-<label class="label">ชื่อ</label>
-<input id="first_name" class="input" readonly>
+  <label class="label">ชื่อ</label>
+  <input id="first_name" class="input" readonly>
 </div>
 
 <div>
-<label class="label">นามสกุล</label>
-<input id="last_name" class="input" readonly>
+  <label class="label">นามสกุล</label>
+  <input id="last_name" class="input" readonly>
 </div>
 
 <div>
-<label class="label">กลุ่ม</label>
-<input id="group" class="input" readonly>
+  <label class="label">กลุ่ม</label>
+  <input id="group" class="input" readonly>
 </div>
 
 <div>
-<label class="label">สถานะสมาชิก</label>
-<select id="member_status" class="input" required>
-<option value="">-- เลือก --</option>
-<option value="ลาออก">ลาออก</option>
-<option value="เสียชีวิต">เสียชีวิต</option>
-</select>
+  <label class="label">สถานะสมาชิก</label>
+  <select id="member_status" class="input" required>
+    <option value="">-- เลือก --</option>
+    <option value="ลาออก">ลาออก</option>
+    <option value="เสียชีวิต">เสียชีวิต</option>
+  </select>
 </div>
 
 <div>
-<label class="label">วันที่ประชุม</label>
-<input id="meeting_date" type="date" class="input" required>
+  <label class="label">วันที่ประชุม</label>
+  <input id="meeting_date" type="date" class="input" required>
 </div>
 
 <div>
-<label class="label">หุ้นคงเหลือ</label>
-<input id="share_amount" type="number" step="0.01" class="input">
+  <label class="label">หุ้นคงเหลือ</label>
+  <input id="share_amount" type="number" step="0.01" class="input">
 </div>
 
 <div>
-<label class="label">วันที่รับเงิน</label>
-<input id="receive_date" type="date" class="input">
+  <label class="label">วันที่รับเงิน</label>
+  <input id="receive_date" type="date" class="input">
 </div>
 
 <div class="col-span-full flex justify-center gap-4 pt-4">
-<button class="btn red">บันทึก</button>
-<button type="reset" class="btn gray" onclick="clearEdit()">ล้างฟอร์ม</button>
+  <button class="btn red">บันทึก</button>
+  <button type="reset" class="btn gray" onclick="clearEdit()">ล้างฟอร์ม</button>
 </div>
 
 </form>
@@ -91,12 +91,12 @@
 <div><label class="label">กลุ่ม</label><input id="f_group" class="input"></div>
 
 <div>
-<label class="label">สถานะ</label>
-<select id="f_status" class="input">
-<option value="">ทั้งหมด</option>
-<option value="ลาออก">ลาออก</option>
-<option value="เสียชีวิต">เสียชีวิต</option>
-</select>
+  <label class="label">สถานะ</label>
+  <select id="f_status" class="input">
+    <option value="">ทั้งหมด</option>
+    <option value="ลาออก">ลาออก</option>
+    <option value="เสียชีวิต">เสียชีวิต</option>
+  </select>
 </div>
 
 <div><label class="label">วันที่ (จาก)</label><input id="f_date_from" type="date" class="input"></div>
@@ -105,8 +105,8 @@
 </div>
 
 <div class="flex justify-end gap-3 mt-4">
-<button class="btn gray" onclick="clearFilter()">ล้างตัวกรอง</button>
-<button class="btn green" onclick="exportExcel()">Export Excel</button>
+  <button class="btn gray" onclick="clearFilter()">ล้างตัวกรอง</button>
+  <button class="btn green" onclick="exportExcel()">Export Excel</button>
 </div>
 </div>
 
@@ -133,9 +133,9 @@
 </table>
 
 <div class="flex justify-center items-center gap-4 mt-4">
-<button class="btn gray" onclick="prevPage()">ก่อนหน้า</button>
-<span id="pageInfo"></span>
-<button class="btn gray" onclick="nextPage()">ถัดไป</button>
+  <button class="btn gray" onclick="prevPage()">ก่อนหน้า</button>
+  <span id="pageInfo"></span>
+  <button class="btn gray" onclick="nextPage()">ถัดไป</button>
 </div>
 
 </div>
@@ -283,6 +283,24 @@ window.clearFilter=()=>{
   loadHistory()
 }
 
+/* ===== build filename ===== */
+function buildFileName(){
+  let parts=['รายชื่อสมาชิก']
+  if(f_status.value) parts.push(f_status.value)
+  if(f_group.value) parts.push('กลุ่ม'+f_group.value)
+  if(f_member_id.value) parts.push('รหัส'+f_member_id.value)
+
+  if(f_date_from.value && f_date_to.value){
+    parts.push(f_date_from.value+'_ถึง_'+f_date_to.value)
+  }else if(f_date_from.value){
+    parts.push('ตั้งแต่_'+f_date_from.value)
+  }else if(f_date_to.value){
+    parts.push('ถึง_'+f_date_to.value)
+  }
+
+  return parts.join('_')+'.xlsx'
+}
+
 /* ===== export ===== */
 window.exportExcel=()=>{
   if(!allData.length){ alert('ไม่มีข้อมูล'); return }
@@ -299,7 +317,7 @@ window.exportExcel=()=>{
   })))
   const wb=XLSX.utils.book_new()
   XLSX.utils.book_append_sheet(wb,ws,'ข้อมูล')
-  XLSX.writeFile(wb,'รายชื่อสมาชิกลาออก.xlsx')
+  XLSX.writeFile(wb, buildFileName())
 }
 
 loadHistory()
