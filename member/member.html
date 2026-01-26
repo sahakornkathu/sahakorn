@@ -10,121 +10,81 @@
 
 <div class="max-w-7xl mx-auto space-y-6">
 
-  <!-- Header -->
-  <div class="bg-blue-100 border-2 border-blue-300 rounded-xl p-6">
-    <h1 class="text-2xl font-semibold">ระบบจัดการข้อมูลสมาชิก</h1>
-    <p class="text-sm text-slate-600">ฟอร์มบันทึก + รายชื่อสมาชิก</p>
+  <!-- ================= SUMMARY ================= -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div class="summary-card border-green-400">
+      <div class="summary-title text-green-700">สมาชิก</div>
+      <div id="count-active" class="summary-number text-green-700">0</div>
+    </div>
+    <div class="summary-card border-orange-400">
+      <div class="summary-title text-orange-600">ลาออก</div>
+      <div id="count-resign" class="summary-number text-orange-600">0</div>
+    </div>
+    <div class="summary-card border-red-400">
+      <div class="summary-title text-red-600">เสียชีวิต</div>
+      <div id="count-dead" class="summary-number text-red-600">0</div>
+    </div>
+  </div>
+
+  <!-- ================= TABS ================= -->
+  <div class="flex gap-2">
+    <button class="tab active" onclick="setStatusFilter('')">ทั้งหมด</button>
+    <button class="tab" onclick="setStatusFilter('สมาชิก')">สมาชิก</button>
+    <button class="tab" onclick="setStatusFilter('ลาออก')">ลาออก</button>
+    <button class="tab" onclick="setStatusFilter('เสียชีวิต')">เสียชีวิต</button>
   </div>
 
   <!-- ================= FORM ================= -->
-  <form id="memberForm" class="space-y-6">
+  <form id="memberForm" class="space-y-6 bg-white border-2 border-blue-300 rounded-xl p-6">
 
-    <!-- ข้อมูลสมาชิก -->
-    <div class="section">
-      <h2 class="section-title">ข้อมูลสมาชิก</h2>
+    <h2 class="section-title">บันทึกข้อมูลสมาชิก</h2>
 
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
 
-        <div class="h-field">
-          <label>รหัสสมาชิก</label>
-          <input id="member_id" type="number" required>
-        </div>
-
-        <div class="h-field">
-          <label>วันที่สมัคร</label>
-          <input id="join_date" type="date">
-        </div>
-
-        <div class="h-field">
-          <label>คำนำหน้า</label>
-          <select id="title">
-            <option value="">-- เลือก --</option>
-            <option value="นาย">นาย</option>
-            <option value="นาง">นาง</option>
-            <option value="นางสาว">นางสาว</option>
-            <option value="ด.ช.">ด.ช.</option>
-            <option value="ด.ญ.">ด.ญ.</option>
-          </select>
-        </div>
-
-        <div class="h-field">
-          <label>กลุ่ม</label>
-          <input id="group">
-        </div>
-
-        <div class="h-field">
-          <label>ชื่อ</label>
-          <input id="first_name" required>
-        </div>
-
-        <div class="h-field">
-          <label>นามสกุล</label>
-          <input id="last_name" required>
-        </div>
-
-        <div class="h-field">
-          <label>เลขบัตรประชาชน</label>
-          <input id="id_card">
-        </div>
-
-        <div class="h-field">
-          <label>วันเกิด</label>
-          <input id="birthday" type="date">
-        </div>
-
+      <div class="h-field">
+        <label>รหัสสมาชิก</label>
+        <input id="member_id" type="number" required>
       </div>
+
+      <div class="h-field">
+        <label>คำนำหน้า</label>
+        <select id="title">
+          <option value="">-- เลือก --</option>
+          <option value="นาย">นาย</option>
+          <option value="นาง">นาง</option>
+          <option value="นางสาว">นางสาว</option>
+        </select>
+      </div>
+
+      <div class="h-field">
+        <label>ชื่อ</label>
+        <input id="first_name" required>
+      </div>
+
+      <div class="h-field">
+        <label>นามสกุล</label>
+        <input id="last_name" required>
+      </div>
+
+      <div class="h-field">
+        <label>โทรศัพท์</label>
+        <input id="phone">
+      </div>
+
+      <div class="h-field">
+        <label>สถานะสมาชิก</label>
+        <select id="member_status">
+          <option value="">-- เลือก --</option>
+          <option value="สมาชิก">สมาชิก</option>
+          <option value="ลาออก">ลาออก</option>
+          <option value="เสียชีวิต">เสียชีวิต</option>
+        </select>
+      </div>
+
     </div>
 
-    <!-- ข้อมูลติดต่อ -->
-    <div class="section">
-      <h2 class="section-title">ข้อมูลติดต่อ</h2>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div class="h-field">
-          <label>โทรศัพท์</label>
-          <input id="phone">
-        </div>
-        <div class="h-field">
-          <label>โทรศัพท์สำรอง</label>
-          <input id="phone_alt">
-        </div>
-      </div>
-    </div>
-
-    <!-- สถานะ -->
-    <div class="section">
-      <h2 class="section-title">สถานะ</h2>
-
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div class="h-field">
-          <label>สถานะสมาชิก</label>
-          <select id="member_status">
-            <option value="">-- เลือกสถานะ --</option>
-            <option value="สมาชิก">สมาชิก</option>
-            <option value="ลาออก">ลาออก</option>
-            <option value="เสียชีวิต">เสียชีวิต</option>
-          </select>
-        </div>
-
-        <div class="h-field">
-          <label>สถานภาพสมรส</label>
-          <select id="marital_status">
-            <option value="">-- เลือก --</option>
-            <option value="single">โสด</option>
-            <option value="married">สมรส</option>
-          </select>
-        </div>
-
-        <div class="h-field">
-          <label>ชื่อคู่สมรส</label>
-          <input id="spouse_name">
-        </div>
-      </div>
-    </div>
-
-    <!-- Actions -->
     <div class="flex gap-4">
-      <button type="submit" class="btn-primary">บันทึกข้อมูล</button>
+      <button type="submit" class="btn-primary">บันทึก</button>
       <button type="button" onclick="resetForm()" class="btn-secondary">ยกเลิก</button>
     </div>
 
@@ -138,7 +98,7 @@
       <thead class="bg-blue-100">
         <tr>
           <th class="th">รหัส</th>
-          <th class="th">ชื่อ-สกุล</th>
+          <th class="th">ชื่อ</th>
           <th class="th">โทร</th>
           <th class="th">สถานะ</th>
           <th class="th text-center">จัดการ</th>
@@ -147,17 +107,15 @@
       <tbody id="rows"></tbody>
     </table>
 
-    <!-- Pagination -->
     <div class="flex justify-between items-center mt-4">
       <button onclick="prevPage()" class="btn-page">◀ ก่อนหน้า</button>
-      <span id="pageInfo" class="text-sm text-slate-600"></span>
+      <span id="pageInfo"></span>
       <button onclick="nextPage()" class="btn-page">ถัดไป ▶</button>
     </div>
   </div>
 
 </div>
 
-<!-- ================= SCRIPT ================= -->
 <script type="module">
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -169,177 +127,122 @@ const db = createClient(
 const PAGE_SIZE = 15
 let currentPage = 1
 let totalCount = 0
+let statusFilter = ''
 
-const form = document.getElementById('memberForm')
 const rows = document.getElementById('rows')
-const memberStatusEl = document.getElementById('member_status')
+const form = document.getElementById('memberForm')
+const statusEl = document.getElementById('member_status')
 
-/* ---------- Load Count ---------- */
-async function loadTotalCount() {
-  const { count } = await db
-    .from('members')
-    .select('member_id', { count: 'exact', head: true })
-  totalCount = count || 0
+/* ---------- FILTER TAB ---------- */
+window.setStatusFilter = (status) => {
+  statusFilter = status
+  currentPage = 1
+  document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'))
+  event.target.classList.add('active')
+  loadMembers()
 }
 
-/* ---------- Load Members (list) ---------- */
-async function loadMembers() {
-  const from = (currentPage - 1) * PAGE_SIZE
-  const to = from + PAGE_SIZE - 1
+/* ---------- SUMMARY ---------- */
+async function loadSummary() {
+  const { data } = await db.from('members').select('member_status')
+  document.getElementById('count-active').innerText =
+    data.filter(d => d.member_status === 'สมาชิก').length
+  document.getElementById('count-resign').innerText =
+    data.filter(d => d.member_status === 'ลาออก').length
+  document.getElementById('count-dead').innerText =
+    data.filter(d => d.member_status === 'เสียชีวิต').length
+}
 
-  const { data } = await db
-    .from('members')
+/* ---------- LOAD MEMBERS ---------- */
+async function loadMembers() {
+  let query = db.from('members')
     .select('member_id, first_name, last_name, phone, member_status')
     .order('member_id')
-    .range(from, to)
 
+  if (statusFilter) query = query.eq('member_status', statusFilter)
+
+  const { data, count } = await query.range(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE - 1
+  )
+
+  totalCount = count || 0
   rows.innerHTML = ''
 
   data.forEach(m => {
-    const statusColor =
-      m.member_status === 'สมาชิก' ? 'text-green-600 font-semibold'
-      : m.member_status === 'ลาออก' ? 'text-orange-500 font-semibold'
-      : m.member_status === 'เสียชีวิต' ? 'text-red-600 font-semibold'
-      : ''
+    const color =
+      m.member_status === 'สมาชิก' ? 'text-green-600'
+      : m.member_status === 'ลาออก' ? 'text-orange-500'
+      : 'text-red-600'
 
     rows.innerHTML += `
-      <tr class="hover:bg-blue-50">
+      <tr>
         <td class="td">${m.member_id}</td>
         <td class="td">${m.first_name} ${m.last_name}</td>
         <td class="td">${m.phone ?? ''}</td>
-        <td class="td ${statusColor}">${m.member_status ?? ''}</td>
+        <td class="td font-semibold ${color}">${m.member_status}</td>
         <td class="td text-center">
-          <button onclick="editMember(${m.member_id})"
-            class="text-blue-700 hover:underline">แก้ไข</button>
-          <button onclick="deleteMember(${m.member_id})"
-            class="text-red-600 hover:underline ml-3">ลบ</button>
+          <button onclick="editMember(${m.member_id})" class="text-blue-600">แก้ไข</button>
         </td>
       </tr>`
   })
 
-  updatePageInfo()
-}
-
-/* ---------- Pagination ---------- */
-function updatePageInfo() {
-  const totalPage = Math.ceil(totalCount / PAGE_SIZE) || 1
   document.getElementById('pageInfo').innerText =
-    `หน้า ${currentPage} / ${totalPage}`
+    `หน้า ${currentPage}`
 }
 
-window.nextPage = () => {
-  if (currentPage * PAGE_SIZE < totalCount) {
-    currentPage++
-    loadMembers()
-  }
-}
-
-window.prevPage = () => {
-  if (currentPage > 1) {
-    currentPage--
-    loadMembers()
-  }
-}
-
-/* ---------- Form Submit ---------- */
+/* ---------- FORM ---------- */
 form.addEventListener('submit', async e => {
   e.preventDefault()
-
   const data = Object.fromEntries(
     [...form.elements].filter(el => el.id).map(el => [el.id, el.value || null])
   )
-
   await db.from('members').upsert([data], { onConflict: 'member_id' })
   resetForm()
-  await loadTotalCount()
   loadMembers()
+  loadSummary()
 })
 
-/* ---------- Edit ---------- */
-window.editMember = async id => {
-  const { data } = await db
-    .from('members')
-    .select('*')
-    .eq('member_id', id)
-    .single()
-
-  member_id.value = data.member_id
-  member_id.disabled = true
-
-  for (const k in data)
-    if (document.getElementById(k))
-      document.getElementById(k).value = data[k] ?? ''
-
-  toggleFormLock(data.member_status === 'เสียชีวิต')
-}
-
-/* ---------- Delete ---------- */
-window.deleteMember = async id => {
-  if (!confirm('ยืนยันลบข้อมูลนี้?')) return
-  await db.from('members').delete().eq('member_id', id)
-  await loadTotalCount()
-  loadMembers()
-}
-
-/* ---------- Lock form if deceased ---------- */
-memberStatusEl.addEventListener('change', () => {
-  toggleFormLock(memberStatusEl.value === 'เสียชีวิต')
-})
-
-function toggleFormLock(lock) {
+/* ---------- LOCK WHEN DEAD ---------- */
+statusEl.addEventListener('change', () => {
+  const lock = statusEl.value === 'เสียชีวิต'
   [...form.elements].forEach(el => {
-    if (!el.id) return
-    if (el.id === 'member_status') {
-      el.disabled = false
-    } else {
-      el.disabled = lock
-    }
+    if (el.id && el.id !== 'member_status') el.disabled = lock
   })
-}
+})
 
-/* ---------- Reset ---------- */
 window.resetForm = () => {
   form.reset()
-  member_id.disabled = false
-  toggleFormLock(false)
+  [...form.elements].forEach(el => el.disabled = false)
 }
 
-/* ---------- Init ---------- */
-await loadTotalCount()
+/* ---------- INIT ---------- */
 loadMembers()
+loadSummary()
 </script>
 
 <style>
-.section {
-  @apply bg-white border-2 border-blue-300 rounded-xl p-6;
+.summary-card { @apply bg-white border-2 rounded-xl p-4 text-center }
+.summary-title { @apply text-sm font-medium }
+.summary-number { @apply text-3xl font-bold }
+
+.tab { @apply px-4 py-2 border rounded-lg bg-white }
+.tab.active { @apply bg-blue-600 text-white }
+
+.section-title { @apply text-lg font-semibold mb-4 }
+
+.h-field { @apply flex items-center gap-3 }
+.h-field label { @apply w-24 text-sm font-medium }
+.h-field input, .h-field select {
+  @apply flex-1 border-2 border-slate-400 rounded-md px-3 py-2
 }
-.section-title {
-  @apply text-lg font-semibold mb-4;
-}
-.h-field {
-  @apply flex items-center gap-3;
-}
-.h-field label {
-  @apply w-32 text-sm font-medium text-slate-700 whitespace-nowrap;
-}
-.h-field input,
-.h-field select {
-  @apply flex-1 bg-slate-50 border-2 border-slate-400 rounded-md
-         px-3 py-2
-         focus:outline-none focus:border-blue-600
-         focus:ring-2 focus:ring-blue-200;
-}
+
 .th { @apply px-3 py-2 text-left font-semibold }
 .td { @apply px-3 py-2 }
-.btn-primary {
-  @apply bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg;
-}
-.btn-secondary {
-  @apply bg-slate-300 hover:bg-slate-400 text-slate-800 px-6 py-2 rounded-lg;
-}
-.btn-page {
-  @apply bg-slate-200 hover:bg-slate-300 px-4 py-2 rounded-lg;
-}
+
+.btn-primary { @apply bg-blue-600 text-white px-6 py-2 rounded-lg }
+.btn-secondary { @apply bg-slate-300 px-6 py-2 rounded-lg }
+.btn-page { @apply bg-slate-200 px-4 py-2 rounded-lg }
 </style>
 
 </body>
