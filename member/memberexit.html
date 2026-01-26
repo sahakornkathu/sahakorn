@@ -3,13 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <title>จัดการสมาชิกลาออก / เสียชีวิต</title>
+
 <script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
 </head>
-
 <body class="bg-slate-900 text-slate-100 p-6">
-<div class="max-w-6xl mx-auto space-y-8">
 
-<h1 class="text-xl font-bold text-center text-red-400">
+<div class="max-w-7xl mx-auto space-y-8">
+
+<h1 class="text-2xl font-bold text-center text-red-400">
 จัดการสมาชิกลาออก / เสียชีวิต
 </h1>
 
@@ -20,57 +23,57 @@
 <form id="exitForm" class="grid grid-cols-1 md:grid-cols-4 gap-4">
 
 <div>
-  <label class="label">รหัสสมาชิก</label>
-  <input id="member_id" class="input" required>
+<label class="label">รหัสสมาชิก</label>
+<input id="member_id" class="input" required>
 </div>
 
 <div>
-  <label class="label">คำนำหน้า</label>
-  <input id="title" class="input" readonly>
+<label class="label">คำนำหน้า</label>
+<input id="title" class="input" readonly>
 </div>
 
 <div>
-  <label class="label">ชื่อ</label>
-  <input id="first_name" class="input" readonly>
+<label class="label">ชื่อ</label>
+<input id="first_name" class="input" readonly>
 </div>
 
 <div>
-  <label class="label">นามสกุล</label>
-  <input id="last_name" class="input" readonly>
+<label class="label">นามสกุล</label>
+<input id="last_name" class="input" readonly>
 </div>
 
 <div>
-  <label class="label">กลุ่ม</label>
-  <input id="group" class="input" readonly>
+<label class="label">กลุ่ม</label>
+<input id="group" class="input" readonly>
 </div>
 
 <div>
-  <label class="label">สถานะสมาชิก</label>
-  <select id="member_status" class="input" required>
-    <option value="">-- เลือก --</option>
-    <option value="ลาออก">ลาออก</option>
-    <option value="เสียชีวิต">เสียชีวิต</option>
-  </select>
+<label class="label">สถานะสมาชิก</label>
+<select id="member_status" class="input" required>
+<option value="">-- เลือก --</option>
+<option value="ลาออก">ลาออก</option>
+<option value="เสียชีวิต">เสียชีวิต</option>
+</select>
 </div>
 
 <div>
-  <label class="label">วันที่ประชุม</label>
-  <input id="meeting_date" type="date" class="input" required>
+<label class="label">วันที่ประชุม</label>
+<input id="meeting_date" type="date" class="input" required>
 </div>
 
 <div>
-  <label class="label">หุ้นคงเหลือ</label>
-  <input id="share_amount" type="number" step="0.01" class="input">
+<label class="label">หุ้นคงเหลือ</label>
+<input id="share_amount" type="number" step="0.01" class="input">
 </div>
 
 <div>
-  <label class="label">วันที่รับเงิน</label>
-  <input id="receive_date" type="date" class="input">
+<label class="label">วันที่รับเงิน</label>
+<input id="receive_date" type="date" class="input">
 </div>
 
 <div class="col-span-full flex justify-center gap-4 pt-4">
-  <button class="btn red">บันทึกข้อมูล</button>
-  <button type="reset" class="btn gray" onclick="clearEdit()">ล้างฟอร์ม</button>
+<button class="btn red">บันทึก</button>
+<button type="reset" class="btn gray" onclick="clearEdit()">ล้างฟอร์ม</button>
 </div>
 
 </form>
@@ -80,61 +83,80 @@
 <div class="bg-slate-800 border border-slate-700 rounded-xl p-6">
 <h2 class="text-lg font-bold text-sky-400 mb-4">ค้นหา / กรองข้อมูล</h2>
 
-<div class="grid grid-cols-1 md:grid-cols-6 gap-3">
-  <input id="f_member_id" class="input" placeholder="รหัสสมาชิก">
-  <input id="f_first_name" class="input" placeholder="ชื่อ">
-  <input id="f_last_name" class="input" placeholder="นามสกุล">
-  <input id="f_group" class="input" placeholder="กลุ่ม">
+<div class="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-4">
 
-  <select id="f_status" class="input">
-    <option value="">สถานะทั้งหมด</option>
-    <option value="ลาออก">ลาออก</option>
-    <option value="เสียชีวิต">เสียชีวิต</option>
-  </select>
+<div><label class="label">รหัสสมาชิก</label><input id="f_member_id" class="input"></div>
+<div><label class="label">ชื่อ</label><input id="f_first_name" class="input"></div>
+<div><label class="label">นามสกุล</label><input id="f_last_name" class="input"></div>
+<div><label class="label">กลุ่ม</label><input id="f_group" class="input"></div>
 
-  <div class="flex gap-2">
-    <input id="f_date_from" type="date" class="input">
-    <input id="f_date_to" type="date" class="input">
-  </div>
+<div>
+<label class="label">สถานะ</label>
+<select id="f_status" class="input">
+<option value="">ทั้งหมด</option>
+<option value="ลาออก">ลาออก</option>
+<option value="เสียชีวิต">เสียชีวิต</option>
+</select>
+</div>
+
+<div><label class="label">วันที่ (จาก)</label><input id="f_date_from" type="date" class="input"></div>
+<div><label class="label">วันที่ (ถึง)</label><input id="f_date_to" type="date" class="input"></div>
+
+</div>
+
+<div class="flex justify-end gap-3 mt-4">
+<button class="btn gray" onclick="clearFilter()">ล้างตัวกรอง</button>
+<button class="btn green" onclick="exportExcel()">Export Excel</button>
 </div>
 </div>
 
 <!-- ================= TABLE ================= -->
 <div class="bg-slate-800 border border-slate-700 rounded-xl p-6">
-<h2 class="text-lg font-bold text-orange-400 mb-4">
-รายการย้อนหลัง
-(<span id="resultCount">0</span> รายการ)
+<h2 class="text-lg font-bold text-orange-400 mb-2">
+รายการย้อนหลัง (<span id="resultCount">0</span> รายการ)
 </h2>
 
 <table class="w-full text-sm text-center">
 <thead class="bg-slate-700">
 <tr>
-  <th>รหัสสมาชิก</th>
-  <th>ชื่อ-นามสกุล</th>
-  <th>กลุ่ม</th>
-  <th>สถานะ</th>
-  <th>วันที่ประชุม</th>
-  <th>หุ้นคงเหลือ</th>
-  <th>วันที่รับเงิน</th>
-  <th>จัดการ</th>
+<th>รหัสสมาชิก</th>
+<th>ชื่อ-นามสกุล</th>
+<th>กลุ่ม</th>
+<th>สถานะ</th>
+<th>วันที่ประชุม</th>
+<th>หุ้นคงเหลือ</th>
+<th>วันที่รับเงิน</th>
+<th>จัดการ</th>
 </tr>
 </thead>
 <tbody id="rows"></tbody>
 </table>
+
+<div class="flex justify-center items-center gap-4 mt-4">
+<button class="btn gray" onclick="prevPage()">ก่อนหน้า</button>
+<span id="pageInfo"></span>
+<button class="btn gray" onclick="nextPage()">ถัดไป</button>
+</div>
+
 </div>
 
 </div>
 
 <script type="module">
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+
 const SUPABASE_URL = 'https://ttottijljxoinptmhgtu.supabase.co'
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'
 const db = createClient(SUPABASE_URL, SUPABASE_KEY)
 
-let editingMode=false, editMember=null, editDate=null
+let allData = []
+let currentPage = 1
+const pageSize = 10
+let editingKey = null
 
 /* ===== โหลดข้อมูลสมาชิก ===== */
 member_id.addEventListener('blur', async ()=>{
+  if(!member_id.value) return
   const {data}=await db.from('members')
     .select('title,first_name,last_name,group')
     .eq('member_id',member_id.value).single()
@@ -145,7 +167,7 @@ member_id.addEventListener('blur', async ()=>{
   group.value=data.group
 })
 
-/* ===== โหลดรายการ + FILTER ===== */
+/* ===== โหลดข้อมูล + filter ===== */
 async function loadHistory(){
   let q=db.from('member_exit').select('*')
 
@@ -158,16 +180,25 @@ async function loadHistory(){
   if(f_date_to.value) q=q.lte('meeting_date',f_date_to.value)
 
   const {data}=await q.order('meeting_date',{ascending:false})
-  rows.innerHTML=''
-  resultCount.innerText=data.length
+  allData = data || []
+  resultCount.innerText = allData.length
+  renderTable()
+}
 
-  data.forEach(r=>{
+function renderTable(){
+  rows.innerHTML=''
+  const start=(currentPage-1)*pageSize
+  const pageData=allData.slice(start,start+pageSize)
+
+  pageData.forEach(r=>{
+    const key=r.member_id+r.meeting_date
+    const hl = key===editingKey?'bg-sky-900 border-2 border-sky-400':''
     rows.innerHTML+=`
-<tr class="border-b border-slate-700 hover:bg-slate-700">
+<tr class="border-b border-slate-700 hover:bg-slate-700 ${hl}">
 <td>${r.member_id}</td>
 <td>${r.first_name} ${r.last_name}</td>
 <td>${r.group||''}</td>
-<td class="${r.member_status==='เสียชีวิต'?'text-red-400':'text-orange-400'}">${r.member_status}</td>
+<td>${r.member_status}</td>
 <td>${r.meeting_date}</td>
 <td>${r.share_amount||''}</td>
 <td>${r.receive_date||''}</td>
@@ -177,15 +208,17 @@ async function loadHistory(){
 </td>
 </tr>`
   })
+
+  pageInfo.innerText=`หน้า ${currentPage} / ${Math.max(1,Math.ceil(allData.length/pageSize))}`
 }
 
-/* ===== auto filter ===== */
-;[f_member_id,f_first_name,f_last_name,f_group,f_status,f_date_from,f_date_to]
-.forEach(el=>el.addEventListener('input',loadHistory))
+/* ===== pagination ===== */
+function nextPage(){ if(currentPage*pageSize<allData.length){currentPage++;renderTable()} }
+function prevPage(){ if(currentPage>1){currentPage--;renderTable()} }
 
-/* ===== แก้ / ลบ / sync ===== */
+/* ===== edit / delete ===== */
 window.editRow=r=>{
-  editingMode=true; editMember=r.member_id; editDate=r.meeting_date
+  editingKey=r.member_id+r.meeting_date
   member_id.value=r.member_id
   title.value=r.title
   first_name.value=r.first_name
@@ -213,30 +246,60 @@ async function syncMemberStatus(mid){
   }).eq('member_id',mid)
 }
 
-window.clearEdit=()=>{
-  editingMode=false; editMember=null; editDate=null
-  exitForm.reset()
-}
-
+/* ===== submit ===== */
 exitForm.onsubmit=async e=>{
   e.preventDefault()
-  const payload={
-    member_id:member_id.value,title:title.value,
-    first_name:first_name.value,last_name:last_name.value,
-    group:group.value,member_status:member_status.value,
+  await db.from('member_exit').insert([{
+    member_id:member_id.value,
+    title:title.value,
+    first_name:first_name.value,
+    last_name:last_name.value,
+    group:group.value,
+    member_status:member_status.value,
     meeting_date:meeting_date.value,
     share_amount:share_amount.value||null,
     receive_date:receive_date.value||null
-  }
-  if(editingMode){
-    await db.from('member_exit')
-      .update(payload).eq('member_id',editMember).eq('meeting_date',editDate)
-  }else{
-    await db.from('member_exit').insert([payload])
-  }
+  }])
   await syncMemberStatus(member_id.value)
   clearEdit()
   loadHistory()
+}
+
+window.clearEdit=()=>{ editingKey=null; exitForm.reset() }
+
+/* ===== filter ===== */
+;[f_member_id,f_first_name,f_last_name,f_group,f_status,f_date_from,f_date_to]
+.forEach(el=>el.addEventListener('input',()=>{currentPage=1;loadHistory()}))
+
+window.clearFilter=()=>{
+  f_member_id.value=''
+  f_first_name.value=''
+  f_last_name.value=''
+  f_group.value=''
+  f_status.value=''
+  f_date_from.value=''
+  f_date_to.value=''
+  currentPage=1
+  loadHistory()
+}
+
+/* ===== export ===== */
+window.exportExcel=()=>{
+  if(!allData.length){ alert('ไม่มีข้อมูล'); return }
+  const ws=XLSX.utils.json_to_sheet(allData.map(r=>({
+    'รหัสสมาชิก':r.member_id,
+    'คำนำหน้า':r.title,
+    'ชื่อ':r.first_name,
+    'นามสกุล':r.last_name,
+    'กลุ่ม':r.group,
+    'สถานะ':r.member_status,
+    'วันที่ประชุม':r.meeting_date,
+    'หุ้นคงเหลือ':r.share_amount,
+    'วันที่รับเงิน':r.receive_date
+  })))
+  const wb=XLSX.utils.book_new()
+  XLSX.utils.book_append_sheet(wb,ws,'ข้อมูล')
+  XLSX.writeFile(wb,'รายชื่อสมาชิกลาออก.xlsx')
 }
 
 loadHistory()
@@ -248,6 +311,7 @@ loadHistory()
 .btn{padding:8px 20px;border-radius:8px}
 .red{background:#dc2626}
 .gray{background:#475569}
+.green{background:#16a34a}
 </style>
 
 </body>
