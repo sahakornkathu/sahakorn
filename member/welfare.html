@@ -23,16 +23,13 @@
 <body class="bg-slate-900 text-slate-100 p-6">
 <div class="max-w-7xl mx-auto space-y-8">
 
-<h1 class="text-2xl font-bold text-center text-green-400">
-ระบบสวัสดิการสมาชิก
-</h1>
+<h1 class="text-2xl font-bold text-center text-green-400">ระบบสวัสดิการสมาชิก</h1>
 
-<!-- ================= FORM ================= -->
+<!-- ===== FORM ===== -->
 <div class="bg-slate-800 p-6 rounded-xl border border-slate-700">
 <h2 class="font-bold text-yellow-400 mb-4">บันทึกสวัสดิการ</h2>
 
 <form id="welfareForm" class="grid grid-cols-1 md:grid-cols-4 gap-4">
-
 <div><label class="label">รหัสสมาชิก</label><input id="member_id" class="input" required></div>
 <div><label class="label">คำนำหน้า</label><input id="title" class="input" readonly></div>
 <div><label class="label">ชื่อ</label><input id="first_name" class="input" readonly></div>
@@ -64,7 +61,7 @@
 </form>
 </div>
 
-<!-- ================= FILTER ================= -->
+<!-- ===== FILTER ===== -->
 <div class="filter-box">
 <h2 class="filter-title">ค้นหา / กรองข้อมูล</h2>
 
@@ -99,7 +96,7 @@
 </div>
 </div>
 
-<!-- ================= TABLE ================= -->
+<!-- ===== TABLE ===== -->
 <div class="bg-slate-800 p-6 rounded-xl border border-slate-700">
 <h2 class="font-bold text-orange-400 mb-2">
 รายการสวัสดิการ (<span id="resultCount">0</span>)
@@ -164,7 +161,7 @@ function render(){
   allData.slice((page-1)*pageSize,page*pageSize).forEach((r,idx)=>{
     const i=(page-1)*pageSize+idx
     rows.innerHTML+=`
-<tr class="${editId===r.id?'bg-sky-900':''}">
+<tr>
 <td>${r.member_id}</td>
 <td>${r.members.title}${r.members.first_name} ${r.members.last_name}</td>
 <td>${r.members.group}</td>
@@ -180,131 +177,36 @@ function render(){
   pageInfo.innerText=`หน้า ${page}/${Math.max(1,Math.ceil(allData.length/pageSize))}`
 }
 
+/* ===== FIX FILTER: ผูก event ทุกช่อง ===== */
+[
+  f_member_id,
+  f_first_name,
+  f_last_name,
+  f_group,
+  f_remark,
+  f_date_from,
+  f_date_to
+].forEach(el=>{
+  el.addEventListener('input',()=>{
+    page=1
+    load()
+  })
+})
+
+window.clearFilter=()=>{
+  f_member_id.value=''
+  f_first_name.value=''
+  f_last_name.value=''
+  f_group.value=''
+  f_remark.value=''
+  f_date_from.value=''
+  f_date_to.value=''
+  page=1
+  load()
+}
+
 window.nextPage=()=>{if(page*pageSize<allData.length){page++;render()}}
 window.prevPage=()=>{if(page>1){page--;render()}}
-
-window.editRow=i=>{
-  const r=allData[i]
-  editing=true;editId=r.id
-  member_id.value=r.member_id
-  receive_date.value=r.receive_date
-  amount.value=r.amount
-  remark.value=r.remark
-  note.value=r.note||''
-}
-
-welfareForm.onsubmit=async e=>{
-  e.preventDefault()
-  const payload={
-    member_id:member_id.value,
-    receive_date:receive_date.value,
-    amount:amount.value,
-    remark:remark.value,
-    note:note.value
-  }
-
-  if(!editing){
-    const {data:exists}=await db.from('welfare')
-      .select('id').eq('member_id',payload.member_id)
-      .eq('remark',payload.remark).maybeSingle()
-    if(exists){
-      Swal.fire('บันทึกซ้ำไม่ได้',`${payload.remark} ถูกบันทึกแล้ว`,'warning')
-      return
-    }
-    await db.from('welfare').insert([payload])
-    Swal.fire('บันทึกสำเร็จ','','success')
-  }else{
-    await db.from('welfare').update(payload).eq('id',editId)
-    Swal.fire('แก้ไขสำเร็จ','','success')
-  }
-
-  clearEdit();load()
-}
-
-window.del=async(id,remark)=>{
-  const ok=await Swal.fire({title:'ลบข้อมูล?',text:remark,showCancelButton:true})
-  if(!ok.isConfirmed) return
-  await db.from('welfare').delete().eq('id',id)
-  Swal.fire('ลบแล้ว','','success')
-  load()
-}
-
-window.clearEdit=()=>{editing=false;editId=null;welfareForm.reset()}
-window.clearFilter=()=>{
-  f_member_id.value=f_first_name.value=f_last_name.value=
-  f_group.value=f_remark.value=f_date_from.value=f_date_to.value=''
-  load()
-}
-
-window.exportExcel=()=>{
-  if(!allData.length){Swal.fire('ไม่มีข้อมูล','','warning');return}
-  const ws=XLSX.utils.json_to_sheet(allData)
-  const wb=XLSX.utils.book_new()
-  XLSX.utils.book_append_sheet(wb,ws,'data')
-  XLSX.writeFile(wb,'รายงานสวัสดิการ.xlsx')
-}
-
-function getCurrentFiscalYearThai(){
-  const d=new Date(),y=d.getFullYear(),m=d.getMonth()+1
-  return (m<4?y-1:y)+543
-}
-
-window.printReport=()=>{
-  if(!allData.length){Swal.fire('ไม่มีข้อมูล','','warning');return}
-  const fy=getCurrentFiscalYearThai(),total=allData.length
-
-  const rowsHtml=allData.map((r,i)=>`
-<tr>
-<td>${i+1}</td>
-<td>${r.member_id}</td>
-<td>${r.members.title}${r.members.first_name} ${r.members.last_name}</td>
-<td>${r.members.group}</td>
-<td>${r.receive_date}</td>
-<td>${r.amount}</td>
-<td>${r.remark}</td>
-</tr>`).join('')
-
-  const html=`
-<html><head><meta charset="UTF-8">
-<style>
-@page{margin:20mm;@bottom-center{content:"หน้า " counter(page) " / " counter(pages);}}
-body{font-family:"TH Sarabun New",sans-serif;font-size:16px}
-.header-grid{display:grid;grid-template-columns:100px 1fr 100px;align-items:center}
-.logo{width:80px}
-.title-box{text-align:center}
-table{width:100%;border-collapse:collapse;margin-top:14px}
-th,td{border:1px solid #000;padding:6px;text-align:center}
-</style>
-</head>
-<body>
-
-<div class="header-grid">
-  <div><img src="${COOP_LOGO_URL}" class="logo"></div>
-  <div class="title-box">
-    <h2>รายงานสวัสดิการสมาชิก</h2>
-    <div><b>ประจำปี ${fy}</b></div>
-    <div>1 เมษายน ${fy} – 31 มีนาคม ${fy+1}</div>
-    <div>รวม ${total} ราย</div>
-  </div>
-  <div></div>
-</div>
-
-<table>
-<thead>
-<tr>
-<th>ลำดับ</th><th>รหัสสมาชิก</th><th>ชื่อ–นามสกุล</th>
-<th>กลุ่ม</th><th>วันที่รับ</th><th>จำนวนเงิน</th><th>หมายเหตุ</th>
-</tr>
-</thead>
-<tbody>${rowsHtml}</tbody>
-</table>
-
-</body></html>`
-  const w=window.open('')
-  w.document.write(html)
-  w.document.close()
-  w.print()
-}
 
 load()
 </script>
