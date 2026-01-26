@@ -9,16 +9,16 @@
 <body class="bg-blue-50 p-6 text-slate-800">
 <div class="max-w-7xl mx-auto space-y-6">
 
-<!-- ===== SUMMARY ===== -->
+<!-- SUMMARY -->
 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
   <div class="summary green"><div>สมาชิก</div><div id="count-member" class="num">0</div></div>
   <div class="summary orange"><div>ลาออก</div><div id="count-resign" class="num">0</div></div>
   <div class="summary red"><div>เสียชีวิต</div><div id="count-dead" class="num">0</div></div>
 </div>
 
-<!-- ===== FORM (ครบทุก textbox) ===== -->
+<!-- FORM -->
 <form id="memberForm" class="box space-y-4">
-<h2 class="title">บันทึกข้อมูลสมาชิก (ครบทุกช่อง)</h2>
+<h2 class="title">บันทึกข้อมูลสมาชิก</h2>
 
 <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
   <div class="field"><label>รหัสสมาชิก</label><input id="member_id" type="number" required></div>
@@ -30,7 +30,7 @@
 
   <div class="field"><label>ชื่อ</label><input id="first_name"></div>
   <div class="field"><label>นามสกุล</label><input id="last_name"></div>
-  <div class="field"><label>เลขบัตร ปชช.</label><input id="id_card"></div>
+  <div class="field"><label>เลขบัตร</label><input id="id_card"></div>
   <div class="field"><label>วันเกิด</label><input id="birthday" type="date"></div>
 
   <div class="field"><label>เพศ</label>
@@ -48,24 +48,22 @@
   <div class="field"><label>จังหวัด</label><input id="province"></div>
   <div class="field"><label>รหัสไปรษณีย์</label><input id="postal_code"></div>
 
-  <div class="field"><label>โทรศัพท์</label><input id="phone"></div>
-  <div class="field"><label>โทรศัพท์สำรอง</label><input id="phone_alt"></div>
+  <div class="field"><label>โทร</label><input id="phone"></div>
+  <div class="field"><label>โทรสำรอง</label><input id="phone_alt"></div>
 
-  <div class="field"><label>สถานะสมาชิก</label>
-    <select id="member_status">
-      <option value="">--</option><option>สมาชิก</option><option>ลาออก</option><option>เสียชีวิต</option>
-    </select>
+  <div class="field"><label>สถานะ</label>
+    <select id="member_status"><option value="">--</option><option>สมาชิก</option><option>ลาออก</option><option>เสียชีวิต</option></select>
   </div>
 
-  <div class="field"><label>สถานภาพสมรส</label>
+  <div class="field"><label>สถานภาพ</label>
     <select id="marital_status"><option value="">--</option><option>โสด</option><option>สมรส</option></select>
   </div>
 
-  <div class="field"><label>ชื่อคู่สมรส</label><input id="spouse_name"></div>
-  <div class="field"><label>เป็นสมาชิก กยท.</label><input id="kyot_member"></div>
-  <div class="field"><label>เลขสมาชิก กยท.</label><input id="kyot_member_id"></div>
-  <div class="field"><label>ชื่อบิดา</label><input id="father_name"></div>
-  <div class="field"><label>ชื่อมารดา</label><input id="mother_name"></div>
+  <div class="field"><label>คู่สมรส</label><input id="spouse_name"></div>
+  <div class="field"><label>กยท.</label><input id="kyot_member"></div>
+  <div class="field"><label>เลข กยท.</label><input id="kyot_member_id"></div>
+  <div class="field"><label>บิดา</label><input id="father_name"></div>
+  <div class="field"><label>มารดา</label><input id="mother_name"></div>
 </div>
 
 <div class="flex gap-4">
@@ -74,20 +72,21 @@
 </div>
 </form>
 
-<!-- ===== FILTER + TABLE (เหมือนเดิม ไม่ตัด) ===== -->
+<!-- FILTER -->
 <div class="box space-y-3">
-<h2 class="title">ค้นหารายชื่อสมาชิก</h2>
+<h2 class="title">ค้นหา</h2>
 <div class="grid grid-cols-1 md:grid-cols-6 gap-3">
   <input id="f_first_name" class="input" placeholder="ชื่อ">
   <input id="f_last_name" class="input" placeholder="นามสกุล">
   <input id="f_group" class="input" placeholder="กลุ่ม">
-  <input id="f_phone" class="input" placeholder="เบอร์โทร">
+  <input id="f_phone" class="input" placeholder="เบอร์">
   <select id="f_gender" class="input"><option value="">เพศ</option><option>ชาย</option><option>หญิง</option></select>
   <select id="f_status" class="input"><option value="">สถานะ</option><option>สมาชิก</option><option>ลาออก</option><option>เสียชีวิต</option></select>
 </div>
 <div>พบ <b><span id="resultCount">0</span></b> รายการ</div>
 </div>
 
+<!-- TABLE -->
 <div class="box">
 <table class="w-full text-sm">
 <thead><tr><th>รหัส</th><th>ชื่อ</th><th>กลุ่ม</th><th>โทร</th><th>เพศ</th><th>สถานะ</th></tr></thead>
@@ -99,11 +98,25 @@
 
 <script type="module">
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-const db = createClient('https://ttottijljxoinptmhgtu.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y')
+
+const db = createClient(
+  'https://ttottijljxoinptmhgtu.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'
+)
+
 const form = document.getElementById('memberForm')
 const rows = document.getElementById('rows')
 
-form.addEventListener('submit',async e=>{
+const fFirst = document.getElementById('f_first_name')
+const fLast  = document.getElementById('f_last_name')
+const fGroup = document.getElementById('f_group')
+const fPhone = document.getElementById('f_phone')
+const fGender= document.getElementById('f_gender')
+const fStatus= document.getElementById('f_status')
+
+let timer = null
+
+form.addEventListener('submit', async e=>{
   e.preventDefault()
   const data={}
   Array.from(form.elements).forEach(el=>{ if(el.id) data[el.id]=el.value||null })
@@ -114,26 +127,44 @@ form.addEventListener('submit',async e=>{
 window.resetForm=()=>form.reset()
 
 async function loadSummary(){
-  count-member.innerText=(await db.from('members').select('member_id',{count:'exact',head:true}).eq('member_status','สมาชิก')).count||0
-  count-resign.innerText=(await db.from('members').select('member_id',{count:'exact',head:true}).eq('member_status','ลาออก')).count||0
-  count-dead.innerText=(await db.from('members').select('member_id',{count:'exact',head:true}).eq('member_status','เสียชีวิต')).count||0
+  document.getElementById('count-member').innerText =
+    (await db.from('members').select('member_id',{count:'exact',head:true}).eq('member_status','สมาชิก')).count||0
+  document.getElementById('count-resign').innerText =
+    (await db.from('members').select('member_id',{count:'exact',head:true}).eq('member_status','ลาออก')).count||0
+  document.getElementById('count-dead').innerText =
+    (await db.from('members').select('member_id',{count:'exact',head:true}).eq('member_status','เสียชีวิต')).count||0
 }
 
 async function loadMembers(){
   let q=db.from('members').select('member_id,first_name,last_name,group,phone,gender,member_status',{count:'exact'})
-  if(f_first_name.value) q=q.ilike('first_name','%'+f_first_name.value+'%')
-  if(f_last_name.value) q=q.ilike('last_name','%'+f_last_name.value+'%')
-  if(f_group.value) q=q.ilike('group','%'+f_group.value+'%')
-  if(f_phone.value) q=q.ilike('phone','%'+f_phone.value+'%')
-  if(f_gender.value) q=q.eq('gender',f_gender.value)
-  if(f_status.value) q=q.eq('member_status',f_status.value)
+  if(fFirst.value) q=q.ilike('first_name','%'+fFirst.value+'%')
+  if(fLast.value)  q=q.ilike('last_name','%'+fLast.value+'%')
+  if(fGroup.value) q=q.ilike('group','%'+fGroup.value+'%')
+  if(fPhone.value) q=q.ilike('phone','%'+fPhone.value+'%')
+  if(fGender.value)q=q.eq('gender',fGender.value)
+  if(fStatus.value)q=q.eq('member_status',fStatus.value)
+
   const {data,count}=await q
-  resultCount.innerText=count||0
+  document.getElementById('resultCount').innerText=count||0
   rows.innerHTML=''
-  data.forEach(m=>rows.innerHTML+=`<tr><td>${m.member_id}</td><td>${m.first_name||''} ${m.last_name||''}</td><td>${m.group||''}</td><td>${m.phone||''}</td><td>${m.gender||''}</td><td>${m.member_status||''}</td></tr>`)
+  data.forEach(m=>{
+    rows.innerHTML+=`<tr>
+      <td>${m.member_id}</td>
+      <td>${m.first_name||''} ${m.last_name||''}</td>
+      <td>${m.group||''}</td>
+      <td>${m.phone||''}</td>
+      <td>${m.gender||''}</td>
+      <td>${m.member_status||''}</td>
+    </tr>`
+  })
 }
 
-;[f_first_name,f_last_name,f_group,f_phone,f_gender,f_status].forEach(el=>el.addEventListener('input',loadMembers))
+;[fFirst,fLast,fGroup,fPhone,fGender,fStatus].forEach(el=>{
+  el.addEventListener('input',()=>{
+    clearTimeout(timer)
+    timer=setTimeout(loadMembers,300)
+  })
+})
 
 loadMembers(); loadSummary()
 </script>
