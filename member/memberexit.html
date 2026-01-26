@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<title>รายงานสมาชิกลาออก / เสียชีวิต</title>
+<title>จัดการสมาชิกลาออก / เสียชีวิต</title>
 
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
@@ -10,39 +10,90 @@
 
 <body class="bg-slate-900 text-slate-100 p-6">
 
-<div class="max-w-7xl mx-auto space-y-6">
+<div class="max-w-7xl mx-auto space-y-8">
 
 <h1 class="text-2xl font-bold text-center text-red-400">
-จัดการสมาชิกลาออก / เสียชีวิต
+ระบบจัดการสมาชิกลาออก / เสียชีวิต
 </h1>
 
+<!-- ================= FORM ================= -->
+<div class="bg-slate-800 p-6 rounded-xl border border-slate-700">
+<h2 class="font-bold text-yellow-400 mb-4">บันทึกข้อมูล</h2>
+
+<form id="exitForm" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+
+<div><label class="label">รหัสสมาชิก</label><input id="member_id" class="input" required></div>
+<div><label class="label">คำนำหน้า</label><input id="title" class="input" readonly></div>
+<div><label class="label">ชื่อ</label><input id="first_name" class="input" readonly></div>
+<div><label class="label">นามสกุล</label><input id="last_name" class="input" readonly></div>
+<div><label class="label">กลุ่ม</label><input id="group" class="input" readonly></div>
+
+<div>
+<label class="label">สถานะสมาชิก</label>
+<select id="member_status" class="input" required>
+<option value="">-- เลือก --</option>
+<option value="ลาออก">ลาออก</option>
+<option value="เสียชีวิต">เสียชีวิต</option>
+</select>
+</div>
+
+<div><label class="label">วันที่ประชุม</label><input id="meeting_date" type="date" class="input" required></div>
+<div><label class="label">หุ้นคงเหลือ</label><input id="share_amount" type="number" class="input"></div>
+<div><label class="label">วันที่รับเงิน</label><input id="receive_date" type="date" class="input"></div>
+
+<div class="col-span-full flex justify-center gap-4">
+<button class="btn red">บันทึก</button>
+<button type="reset" class="btn gray" onclick="clearEdit()">ล้างฟอร์ม</button>
+</div>
+</form>
+</div>
+
 <!-- ================= FILTER ================= -->
-<div class="bg-slate-800 border border-slate-700 rounded-xl p-6">
-<h2 class="text-lg font-bold text-sky-400 mb-4">ค้นหา / กรองข้อมูล</h2>
+<div class="bg-slate-800 p-6 rounded-xl border border-slate-700">
+<h2 class="font-bold text-sky-400 mb-4">ค้นหา / กรองข้อมูล</h2>
 
 <div class="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-4">
-<div>
-  <label class="label">กลุ่ม</label>
-  <input id="f_group" class="input">
-</div>
+<input id="f_member_id" class="input" placeholder="รหัสสมาชิก">
+<input id="f_first_name" class="input" placeholder="ชื่อ">
+<input id="f_last_name" class="input" placeholder="นามสกุล">
+<input id="f_group" class="input" placeholder="กลุ่ม">
 
-<div>
-  <label class="label">สถานะ</label>
-  <select id="f_status" class="input">
-    <option value="">ทั้งหมด</option>
-    <option value="ลาออก">ลาออก</option>
-    <option value="เสียชีวิต">เสียชีวิต</option>
-  </select>
-</div>
+<select id="f_status" class="input">
+<option value="">สถานะทั้งหมด</option>
+<option value="ลาออก">ลาออก</option>
+<option value="เสียชีวิต">เสียชีวิต</option>
+</select>
 
-<div>
-  <label class="label">วันที่เริ่ม (ใช้คำนวณปี)</label>
-  <input id="f_date_from" type="date" class="input">
-</div>
+<input id="f_date_from" type="date" class="input">
 </div>
 
 <div class="flex justify-end gap-3 mt-4">
-<button class="btn blue" onclick="printReport()">พิมพ์รายงาน</button>
+<button class="btn gray" onclick="clearFilter()">ล้างตัวกรอง</button>
+<button class="btn green" onclick="exportExcel()">Export</button>
+<button class="btn blue" onclick="printReport()">Print</button>
+</div>
+</div>
+
+<!-- ================= TABLE ================= -->
+<div class="bg-slate-800 p-6 rounded-xl border border-slate-700">
+<h2 class="font-bold text-orange-400 mb-2">
+รายการย้อนหลัง (<span id="resultCount">0</span>)
+</h2>
+
+<table class="w-full text-center text-sm">
+<thead class="bg-slate-700">
+<tr>
+<th>รหัส</th><th>ชื่อ</th><th>กลุ่ม</th><th>สถานะ</th>
+<th>ประชุม</th><th>หุ้น</th><th>รับเงิน</th><th>จัดการ</th>
+</tr>
+</thead>
+<tbody id="rows"></tbody>
+</table>
+
+<div class="flex justify-center gap-4 mt-4">
+<button class="btn gray" onclick="prevPage()">ก่อนหน้า</button>
+<span id="pageInfo"></span>
+<button class="btn gray" onclick="nextPage()">ถัดไป</button>
 </div>
 </div>
 
@@ -51,120 +102,178 @@
 <script type="module">
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-/* ===== CONFIG ===== */
 const SUPABASE_URL = 'https://ttottijljxoinptmhgtu.supabase.co'
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'
 const COOP_LOGO_URL = 'https://ttottijljxoinptmhgtu.supabase.co/storage/v1/object/public/slips/logo.png'
 
 const db = createClient(SUPABASE_URL, SUPABASE_KEY)
 
-/* ===== FISCAL YEAR (ง่าย ๆ ตามที่บอก) ===== */
-function getFiscalYearThai(dateFrom){
-  if(!dateFrom) return null
+let allData=[], page=1, pageSize=10
+let editing=false, editKey=null
 
-  const [y, m] = dateFrom.split('-').map(Number)
-  let fy = y + 543
+/* ===== LOAD MEMBER ===== */
+member_id.addEventListener('blur', async ()=>{
+  const {data}=await db.from('members')
+    .select('title,first_name,last_name,group')
+    .eq('member_id',member_id.value).single()
+  if(!data){ alert('ไม่พบสมาชิก'); return }
+  title.value=data.title
+  first_name.value=data.first_name
+  last_name.value=data.last_name
+  group.value=data.group
+})
 
-  // ถ้าก่อนเมษายน → ยังเป็นปีงบเก่า
-  if(m < 4){
-    fy -= 1
-  }
+/* ===== LOAD ===== */
+async function load(){
+  let q=db.from('member_exit').select('*')
 
-  return fy
+  if(f_member_id.value) q=q.eq('member_id',f_member_id.value)
+  if(f_first_name.value) q=q.ilike('first_name','%'+f_first_name.value+'%')
+  if(f_last_name.value) q=q.ilike('last_name','%'+f_last_name.value+'%')
+  if(f_group.value) q=q.ilike('group','%'+f_group.value+'%')
+  if(f_status.value) q=q.eq('member_status',f_status.value)
+  if(f_date_from.value) q=q.gte('meeting_date',f_date_from.value)
+
+  const {data}=await q.order('meeting_date',{ascending:false})
+  allData=data||[]
+  resultCount.innerText=allData.length
+  render()
 }
 
-function getFiscalRangeThai(fy){
-  return `1 เมษายน ${fy} – 31 มีนาคม ${fy + 1}`
-}
-
-/* ===== PRINT REPORT ===== */
-window.printReport = async ()=>{
-  if(!f_date_from.value){
-    alert('กรุณาเลือกวันที่เริ่ม (from)')
-    return
-  }
-
-  let q = db.from('member_exit').select('*')
-
-  if(f_group.value){
-    q = q.eq('group', f_group.value)
-  }
-
-  if(f_status.value){
-    q = q.eq('member_status', f_status.value)
-  }
-
-  const { data } = await q
-  if(!data || !data.length){
-    alert('ไม่มีข้อมูล')
-    return
-  }
-
-  const fiscalYear = getFiscalYearThai(f_date_from.value)
-  const fiscalRange = getFiscalRangeThai(fiscalYear)
-
-  const rowsHtml = data.map((r,i)=>`
-<tr>
-<td>${i+1}</td>
+function render(){
+  rows.innerHTML=''
+  allData.slice((page-1)*pageSize,page*pageSize).forEach(r=>{
+    rows.innerHTML+=`
+<tr class="border-b border-slate-700 ${editKey===r.member_id+r.meeting_date?'bg-sky-900':''}">
 <td>${r.member_id}</td>
-<td>${r.title}${r.first_name} ${r.last_name}</td>
-<td>${r.group || ''}</td>
+<td>${r.first_name} ${r.last_name}</td>
+<td>${r.group}</td>
 <td>${r.member_status}</td>
 <td>${r.meeting_date}</td>
-</tr>
-`).join('')
+<td>${r.share_amount||''}</td>
+<td>${r.receive_date||''}</td>
+<td>
+<button onclick='editRow(${JSON.stringify(r)})' class="text-blue-400">แก้</button>
+<button onclick="del('${r.member_id}','${r.meeting_date}')" class="text-red-400">ลบ</button>
+</td>
+</tr>`
+  })
+  pageInfo.innerText=`หน้า ${page}/${Math.max(1,Math.ceil(allData.length/pageSize))}`
+}
 
-  const html = `
-<html>
-<head>
-<style>
-body{font-family:"TH Sarabun New",sans-serif;font-size:16px}
-.header{display:flex;align-items:center}
-.logo{width:80px}
-.center{text-align:center;flex:1}
-table{width:100%;border-collapse:collapse;margin-top:20px}
-th,td{border:1px solid #000;padding:6px;text-align:center}
-</style>
-</head>
-<body>
+window.nextPage=()=>{if(page*pageSize<allData.length){page++;render()}}
+window.prevPage=()=>{if(page>1){page--;render()}}
 
-<div class="header">
-  <img src="${COOP_LOGO_URL}" class="logo">
-  <div class="center">
-    <h2>รายงานสมาชิก ${f_status.value || 'ลาออก / เสียชีวิต'}</h2>
-    ${f_group.value ? `<div>กลุ่ม ${f_group.value}</div>` : ''}
-    <div><strong>ประจำปี ${fiscalYear}</strong></div>
-    <div>${fiscalRange}</div>
-  </div>
-</div>
+/* ===== SAVE ===== */
+exitForm.onsubmit=async e=>{
+  e.preventDefault()
+  const payload={
+    member_id:member_id.value,
+    title:title.value,
+    first_name:first_name.value,
+    last_name:last_name.value,
+    group:group.value,
+    member_status:member_status.value,
+    meeting_date:meeting_date.value,
+    share_amount:share_amount.value||null,
+    receive_date:receive_date.value||null
+  }
 
-<table>
-<tr>
-  <th>ลำดับ</th>
-  <th>รหัสสมาชิก</th>
-  <th>ชื่อ-นามสกุล</th>
-  <th>กลุ่ม</th>
-  <th>สถานะ</th>
-  <th>วันที่ประชุม</th>
-</tr>
-${rowsHtml}
-</table>
+  if(editing){
+    await db.from('member_exit')
+      .update(payload)
+      .eq('member_id',payload.member_id)
+      .eq('meeting_date',payload.meeting_date)
+  }else{
+    await db.from('member_exit').insert([payload])
+  }
 
-</body>
-</html>
-`
+  await syncStatus(payload.member_id)
+  clearEdit()
+  load()
+}
 
-  const w = window.open('')
+window.editRow=r=>{
+  editing=true
+  editKey=r.member_id+r.meeting_date
+  Object.assign(exitForm,{
+    member_id:{value:r.member_id},
+    title:{value:r.title},
+    first_name:{value:r.first_name},
+    last_name:{value:r.last_name},
+    group:{value:r.group},
+    member_status:{value:r.member_status},
+    meeting_date:{value:r.meeting_date},
+    share_amount:{value:r.share_amount||''},
+    receive_date:{value:r.receive_date||''}
+  })
+}
+
+window.del=async(id,date)=>{
+  if(!confirm('ลบ?'))return
+  await db.from('member_exit').delete().eq('member_id',id).eq('meeting_date',date)
+  await syncStatus(id)
+  load()
+}
+
+async function syncStatus(id){
+  const {data}=await db.from('member_exit')
+    .select('member_status').eq('member_id',id)
+    .order('meeting_date',{ascending:false}).limit(1)
+  await db.from('members').update({
+    member_status:data?.[0]?.member_status||'สมาชิก'
+  }).eq('member_id',id)
+}
+
+window.clearEdit=()=>{editing=false;editKey=null;exitForm.reset()}
+
+/* ===== FILTER ===== */
+;[f_member_id,f_first_name,f_last_name,f_group,f_status,f_date_from]
+.forEach(i=>i.addEventListener('input',()=>{page=1;load()}))
+
+window.clearFilter=()=>{
+  f_member_id.value=f_first_name.value=f_last_name.value=f_group.value=f_status.value=f_date_from.value=''
+  load()
+}
+
+/* ===== EXPORT ===== */
+window.exportExcel=()=>{
+  const ws=XLSX.utils.json_to_sheet(allData)
+  const wb=XLSX.utils.book_new()
+  XLSX.utils.book_append_sheet(wb,ws,'data')
+  XLSX.writeFile(wb,'รายชื่อสมาชิก.xlsx')
+}
+
+/* ===== PRINT (SIMPLE YEAR) ===== */
+function fiscalYear(date){
+  const [y,m]=date.split('-').map(Number)
+  return m<4?y+542:y+543
+}
+
+window.printReport=()=>{
+  if(!f_date_from.value){alert('เลือกวันที่');return}
+  const fy=fiscalYear(f_date_from.value)
+
+  const html=`
+  <h2 style="text-align:center">รายงานสมาชิก ${f_status.value||'ลาออก / เสียชีวิต'}</h2>
+  <div style="text-align:center">ประจำปี ${fy}</div>
+  <div style="text-align:center">1 เมษายน ${fy} – 31 มีนาคม ${fy+1}</div>
+  `
+  const w=window.open('')
   w.document.write(html)
-  w.document.close()
   w.print()
 }
+
+load()
 </script>
 
 <style>
-.label{font-size:13px;color:#cbd5f5}
-.input{background:#020617;border:1px solid #334155;padding:8px;border-radius:6px;width:100%}
-.btn{padding:8px 20px;border-radius:8px}
+.input{background:#020617;border:1px solid #334155;padding:6px;border-radius:6px}
+.label{font-size:12px}
+.btn{padding:6px 16px;border-radius:6px}
+.red{background:#dc2626}
+.gray{background:#475569}
+.green{background:#16a34a}
 .blue{background:#2563eb}
 </style>
 
