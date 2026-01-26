@@ -95,7 +95,7 @@
 <!-- ===== TABLE ===== -->
 <div class="box">
 <table class="w-full text-sm text-center">
-<thead class="bg-blue-100">
+<thead>
 <tr>
   <th>รหัส</th>
   <th>ชื่อ-นามสกุล</th>
@@ -129,7 +129,7 @@ const PAGE_SIZE = 15
 let page = 1
 let totalCount = 0
 let debounceTimer = null
-let editingMemberId = null   // ⭐ ตัวแปรไฮไลต์แถว
+let editingMemberId = null
 
 const form = document.getElementById('memberForm')
 const rows = document.getElementById('rows')
@@ -141,60 +141,6 @@ const fGroup = document.getElementById('f_group')
 const fPhone = document.getElementById('f_phone')
 const fGender= document.getElementById('f_gender')
 const fStatus= document.getElementById('f_status')
-
-/* ===== helper ตั้งชื่อไฟล์ ===== */
-function buildExportFileName(){
-  const parts=[]
-  if(fMemberId.value) parts.push(`รหัส${fMemberId.value}`)
-  if(fFirst.value) parts.push(`ชื่อ${fFirst.value}`)
-  if(fLast.value) parts.push(`สกุล${fLast.value}`)
-  if(fGroup.value) parts.push(`กลุ่ม${fGroup.value}`)
-  if(fPhone.value) parts.push(`โทร${fPhone.value}`)
-  if(fGender.value) parts.push(`เพศ${fGender.value}`)
-  if(fStatus.value) parts.push(`สถานะ${fStatus.value}`)
-  if(parts.length===0) return 'รายชื่อสมาชิก_ทั้งหมด.xlsx'
-  return `รายชื่อสมาชิก_${parts.join('_').replace(/[^\u0E00-\u0E7Fa-zA-Z0-9_]/g,'')}.xlsx`
-}
-
-/* ===== CLEAR FILTER ===== */
-window.clearFilters = ()=>{
-  fMemberId.value=''
-  fFirst.value=''
-  fLast.value=''
-  fGroup.value=''
-  fPhone.value=''
-  fGender.value=''
-  fStatus.value=''
-  page=1
-  loadMembers()
-}
-
-/* ===== SUMMARY ===== */
-async function loadSummary(){
-  document.getElementById('count-member').innerText =
-    (await db.from('members').select('member_id',{count:'exact',head:true}).eq('member_status','สมาชิก')).count||0
-  document.getElementById('count-resign').innerText =
-    (await db.from('members').select('member_id',{count:'exact',head:true}).eq('member_status','ลาออก')).count||0
-  document.getElementById('count-dead').innerText =
-    (await db.from('members').select('member_id',{count:'exact',head:true}).eq('member_status','เสียชีวิต')).count||0
-}
-
-/* ===== SUBMIT ===== */
-form.addEventListener('submit',async e=>{
-  e.preventDefault()
-  const data={}
-  Array.from(form.elements).forEach(el=>{ if(el.id) data[el.id]=el.value||null })
-  await db.from('members').upsert([data],{onConflict:'member_id'})
-  resetForm()
-  loadMembers()
-  loadSummary()
-})
-
-window.resetForm = ()=>{
-  form.reset()
-  editingMemberId = null
-  loadMembers()
-}
 
 /* ===== LOAD MEMBERS ===== */
 async function loadMembers(){
@@ -221,16 +167,15 @@ async function loadMembers(){
 
   rows.innerHTML=''
   data.forEach(m=>{
-    const isEditing = m.member_id === editingMemberId
     rows.innerHTML+=`
-    <tr class="border-b ${isEditing ? 'bg-yellow-100 ring-2 ring-yellow-400' : 'hover:bg-blue-50'}">
+    <tr class="border-b hover:bg-blue-50">
       <td class="py-2">${m.member_id}</td>
       <td>${m.first_name||''} ${m.last_name||''}</td>
       <td>${m.group||''}</td>
       <td>${m.phone||''}</td>
       <td>${m.gender||''}</td>
       <td>${m.member_status||''}</td>
-      <td class="space-x-2">
+      <td>
         <button class="link" onclick="editMember(${m.member_id})">แก้ไข</button>
         <button class="link text-red-600" onclick="deleteMember(${m.member_id})">ลบ</button>
       </td>
@@ -238,252 +183,29 @@ async function loadMembers(){
   })
 }
 
-/* ===== EDIT / DELETE ===== */
-window.editMember = async id=>{
-  editingMemberId = id
-  const {data}=await db.from('members').select('*').eq('member_id',id).single()
-  Array.from(form.elements).forEach(el=>{ if(el.id) el.value=data[el.id]||'' })
-  loadMembers()
-}
-
-window.deleteMember = async id=>{
-  if(!confirm('ยืนยันการลบสมาชิก รหัส '+id)) return
-  await db.from('members').delete().eq('member_id',id)
-  editingMemberId = null
-  loadMembers()
-  loadSummary()
-}
-
-/* ===== PAGINATION ===== */
-window.nextPage=()=>{ if(page*PAGE_SIZE<totalCount){page++;loadMembers()} }
-window.prevPage=()=>{ if(page>1){page--;loadMembers()} }
-
-/* ===== AUTO FILTER ===== */
-;[fMemberId,fFirst,fLast,fGroup,fPhone,fGender,fStatus].forEach(el=>{
-  el.addEventListener('input',()=>{
-    clearTimeout(debounceTimer)
-    debounceTimer=setTimeout(()=>{page=1;loadMembers()},300)
-  })
-})
-
-/* ===== EXPORT EXCEL ===== */
-window.exportExcel = async ()=>{
-  let q=db.from('members').select('*').order('member_id')
-  if(fMemberId.value) q=q.eq('member_id',fMemberId.value)
-  if(fFirst.value) q=q.ilike('first_name','%'+fFirst.value+'%')
-  if(fLast.value) q=q.ilike('last_name','%'+fLast.value+'%')
-  if(fGroup.value) q=q.ilike('group','%'+fGroup.value+'%')
-  if(fPhone.value) q=q.ilike('phone','%'+fPhone.value+'%')
-  if(fGender.value) q=q.eq('gender',fGender.value)
-  if(fStatus.value) q=q.eq('member_status',fStatus.value)
-
-  const {data}=await q
-  if(!data||!data.length){alert('ไม่มีข้อมูลให้ export');return}
-
-  const thaiData=data.map(r=>({
-    'รหัสสมาชิก':r.member_id,
-    'วันที่สมัคร':r.join_date,
-    'คำนำหน้า':r.title,
-    'ชื่อ':r.first_name,
-    'นามสกุล':r.last_name,
-    'เลขบัตรประชาชน':r.id_card,
-    'วันเกิด':r.birthday,
-    'กลุ่ม':r.group,
-    'บ้านเลขที่':r.house_no,
-    'หมู่':r.moo,
-    'ถนน':r.street,
-    'หมู่บ้าน':r.village,
-    'ตำบล':r.subdistrict,
-    'อำเภอ':r.district,
-    'จังหวัด':r.province,
-    'รหัสไปรษณีย์':r.postal_code,
-    'โทรศัพท์':r.phone,
-    'โทรศัพท์สำรอง':r.phone_alt,
-    'สถานะสมาชิก':r.member_status,
-    'สถานภาพสมรส':r.marital_status,
-    'ชื่อคู่สมรส':r.spouse_name,
-    'เป็นสมาชิก กยท.':r.kyot_member,
-    'เลขสมาชิก กยท.':r.kyot_member_id,
-    'ชื่อบิดา':r.father_name,
-    'ชื่อมารดา':r.mother_name,
-    'เพศ':r.gender,
-    'อายุ':r.age,
-    'วันที่สร้าง':r.created_at,
-    'วันที่แก้ไขล่าสุด':r.updated_at,
-    'LINE User ID':r.line_user_id,
-    'ชื่อ LINE':r.line_display_name,
-    'รูปโปรไฟล์ LINE':r.line_picture
-  }))
-
-  const ws=XLSX.utils.json_to_sheet(thaiData)
-  const wb=XLSX.utils.book_new()
-  XLSX.utils.book_append_sheet(wb,ws,'สมาชิก')
-  XLSX.writeFile(wb, buildExportFileName())
-}
-
+/* ===== INIT ===== */
 loadMembers()
-loadSummary()
 </script>
 
 <style>
-body{
-  background:#020617;
-  color:#e5e7eb;
+body{background:#020617;color:#e5e7eb}
+.box{background:#0f172a;border:1px solid #334155;border-radius:16px;padding:16px}
+.title{color:#38bdf8;font-weight:700;font-size:20px;text-align:center}
+.field{display:flex;align-items:center;gap:8px}
+.field label{width:120px;font-size:13px;color:#cbd5f5}
+.field input,.field select,.input{
+  background:#020617;border:1px solid #334155;color:#fff;
+  border-radius:8px;padding:6px 8px
 }
-
-/* ===== BOX / CARD ===== */
-.box{
-  background:#0f172a;
-  border:1px solid #334155;
-  border-radius:16px;
-  padding:16px;
-}
-
-/* ===== TITLE ===== */
-.title{
-  color:#38bdf8;
-  font-weight:700;
-  font-size:20px;
-  text-align:center;
-}
-
-/* ===== INPUT / SELECT ===== */
-.input,
-.field input,
-.field select{
-  background:#020617;
-  border:1px solid #334155;
-  color:#fff;
-  border-radius:8px;
-  padding:6px 8px;
-}
-
-.input:focus,
-.field input:focus,
-.field select:focus{
-  outline:none;
-  border-color:#38bdf8;
-}
-
-/* ===== FIELD LAYOUT ===== */
-.field{
-  display:flex;
-  align-items:center;
-  gap:8px;
-}
-.field label{
-  width:120px;
-  font-size:13px;
-  color:#cbd5f5;
-}
-
-/* ===== BUTTON ===== */
-.btn{
-  padding:6px 16px;
-  border-radius:10px;
-  font-weight:500;
-}
+.btn{padding:6px 16px;border-radius:10px}
 .btn.blue{background:#2563eb;color:#fff}
 .btn.gray{background:#475569;color:#fff}
 .btn.green{background:#16a34a;color:#fff}
-
-/* ===== LINK ===== */
-.link{
-  color:#60a5fa;
-  cursor:pointer;
-}
-.link:hover{color:#93c5fd}
+.link{color:#60a5fa}
 .link.text-red-600{color:#f87171}
-
-/* ===== SUMMARY ===== */
-.summary{
-  background: linear-gradient(135deg,#020617,#0f172a);
-  border:1px solid;
-  border-radius:16px;
-  padding:12px;
-  text-align:center;
-}
-.summary .num{
-  font-size:28px;
-  font-weight:700;
-}
-.green{border-color:#22c55e;color:#22c55e}
-.orange{border-color:#f97316;color:#fb923c}
-.red{border-color:#ef4444;color:#f87171}
-
-/* ===== FIX พื้นหลังขาวทั้งหน้า ===== */
-html, body {
-  background:#020617 !important;
-}
-
-.max-w-7xl,
-body > div {
-  background: transparent !important;
-}
-
-/* ===== TABLE ===== */
-table{
-  background:#0f172a !important;
-  color:#e5e7eb;
-}
-
-thead{
-  background:#020617 !important;
-}
-
-tbody tr{
-  background:#0f172a;
-  border-bottom:1px solid #334155;
-}
-
-tbody tr:hover{
-  background:#020617;
-}
-
-/* ===== HIGHLIGHT ROW (แก้ตรงนี้ตามที่สั่ง) ===== */
-tr.highlight,
-tr.bg-black,
-tr.bg-gray-100{
-  background:#7c2d12 !important;   /* ส้มเข้ม */
-}
-
-/* 👉 ตัวหนังสือสีดำ เฉพาะแถวที่ไฮไลต์ */
-tr.highlight td{
-  color:#000 !important;
-  font-weight:600;
-}
-
-/* 👉 ลิงก์ในแถวที่ไฮไลต์ */
-tr.highlight .link{
-  color:#000 !important;
-  text-decoration:underline;
-}
-  /* ===== FIX จริง : แถวที่ถูกเลือก ===== */
-tr.highlight,
-tr.bg-black {
-  background: #7c2d12 !important;   /* ส้มเข้ม */
-}
-
-/* บังคับตัวหนังสือทุกช่องในแถวไฮไลต์ */
-tr.highlight td,
-tr.bg-black td {
-  color: #000 !important;           /* ดำ */
-  font-weight: 600;
-}
-
-/* ลิงก์ แก้ไข / ลบ ในแถวไฮไลต์ */
-tr.highlight td .link,
-tr.bg-black td .link {
-  color: #000 !important;
-  text-decoration: underline;
-}
-
-/* กัน Tailwind ใส่สีจาง */
-tr.highlight td *,
-tr.bg-black td * {
-  color: #000 !important;
-}
-
+table{background:#0f172a;color:#e5e7eb}
+thead{background:#020617}
+tbody tr:hover{background:#020617}
 </style>
 
 </body>
