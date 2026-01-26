@@ -23,13 +23,16 @@
 <body class="bg-slate-900 text-slate-100 p-6">
 <div class="max-w-7xl mx-auto space-y-8">
 
-<h1 class="text-2xl font-bold text-center text-green-400">ระบบสวัสดิการสมาชิก</h1>
+<h1 class="text-2xl font-bold text-center text-green-400">
+ระบบสวัสดิการสมาชิก
+</h1>
 
-<!-- ===== FORM ===== -->
+<!-- ================= FORM ================= -->
 <div class="bg-slate-800 p-6 rounded-xl border border-slate-700">
 <h2 class="font-bold text-yellow-400 mb-4">บันทึกสวัสดิการ</h2>
 
 <form id="welfareForm" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+
 <div><label class="label">รหัสสมาชิก</label><input id="member_id" class="input" required></div>
 <div><label class="label">คำนำหน้า</label><input id="title" class="input" readonly></div>
 <div><label class="label">ชื่อ</label><input id="first_name" class="input" readonly></div>
@@ -61,7 +64,7 @@
 </form>
 </div>
 
-<!-- ===== FILTER ===== -->
+<!-- ================= FILTER ================= -->
 <div class="filter-box">
 <h2 class="filter-title">ค้นหา / กรองข้อมูล</h2>
 
@@ -91,7 +94,7 @@
 </div>
 </div>
 
-<!-- ===== TABLE ===== -->
+<!-- ================= TABLE ================= -->
 <div class="bg-slate-800 p-6 rounded-xl border border-slate-700">
 <h2 class="font-bold text-orange-400 mb-2">
 รายการสวัสดิการ (<span id="resultCount">0</span>)
@@ -100,8 +103,13 @@
 <table class="w-full text-center text-sm">
 <thead class="bg-slate-700">
 <tr>
-<th>รหัส</th><th>ชื่อ</th><th>กลุ่ม</th>
-<th>วันที่รับ</th><th>จำนวนเงิน</th><th>หมายเหตุ</th><th>จัดการ</th>
+<th>รหัส</th>
+<th>ชื่อ</th>
+<th>กลุ่ม</th>
+<th>วันที่รับ</th>
+<th>จำนวนเงิน</th>
+<th>หมายเหตุ</th>
+<th>จัดการ</th>
 </tr>
 </thead>
 <tbody id="rows"></tbody>
@@ -127,7 +135,7 @@ const db=createClient(SUPABASE_URL,SUPABASE_KEY)
 let allData=[], page=1, pageSize=10
 let editing=false, editId=null
 
-// ===== ดึงข้อมูลสมาชิก =====
+/* ===== ดึงข้อมูลสมาชิก ===== */
 member_id.addEventListener('blur', async ()=>{
   const r=await db.from('members')
     .select('title,first_name,last_name,group')
@@ -139,7 +147,7 @@ member_id.addEventListener('blur', async ()=>{
   group.value=r.data.group
 })
 
-// ===== LOAD =====
+/* ===== LOAD ===== */
 async function load(){
   let q=db.from('welfare')
     .select('*, members(title,first_name,last_name,group)')
@@ -163,13 +171,13 @@ async function load(){
   render()
 }
 
-// ===== RENDER =====
+/* ===== RENDER ===== */
 function render(){
   rows.innerHTML=''
   const start=(page-1)*pageSize, end=page*pageSize
   for(let i=start;i<Math.min(end,allData.length);i++){
     const r=allData[i]
-    rows.innerHTML +=
+    rows.innerHTML+=
       '<tr>'+
       '<td>'+r.member_id+'</td>'+
       '<td>'+r.members.title+r.members.first_name+' '+r.members.last_name+'</td>'+
@@ -188,7 +196,7 @@ function render(){
 window.nextPage=()=>{if(page*pageSize<allData.length){page++;render()}}
 window.prevPage=()=>{if(page>1){page--;render()}}
 
-// ===== EDIT / DELETE =====
+/* ===== EDIT / DELETE ===== */
 window.editRow=i=>{
   const r=allData[i]
   editing=true; editId=r.id
@@ -207,7 +215,7 @@ window.del=async id=>{
 }
 window.clearEdit=()=>{editing=false;editId=null;welfareForm.reset()}
 
-// ===== SUBMIT (กันซ้ำ member_id + remark) =====
+/* ===== SUBMIT (กันซ้ำ member_id + remark) ===== */
 welfareForm.onsubmit=async e=>{
   e.preventDefault()
   const payload={
@@ -233,7 +241,7 @@ welfareForm.onsubmit=async e=>{
   clearEdit(); load()
 }
 
-// ===== FILTER EVENTS =====
+/* ===== FILTER EVENTS ===== */
 ;[f_member_id,f_group,f_remark,f_date_from,f_date_to]
   .forEach(el=>el.addEventListener('input',()=>{page=1;load()}))
 window.clearFilter=()=>{
@@ -241,14 +249,29 @@ window.clearFilter=()=>{
   load()
 }
 
-// ===== EXPORT / PRINT =====
+/* ===== EXPORT (แก้แล้ว: ไม่เอา members) ===== */
 window.exportExcel=()=>{
   if(!allData.length){Swal.fire('ไม่มีข้อมูล','','warning');return}
-  const ws=XLSX.utils.json_to_sheet(allData)
+
+  const exportData = allData.map(r=>({
+    member_id: r.member_id,
+    title: r.members?.title || '',
+    first_name: r.members?.first_name || '',
+    last_name: r.members?.last_name || '',
+    group: r.members?.group || '',
+    receive_date: r.receive_date,
+    amount: r.amount,
+    remark: r.remark,
+    note: r.note || ''
+  }))
+
+  const ws=XLSX.utils.json_to_sheet(exportData)
   const wb=XLSX.utils.book_new()
-  XLSX.utils.book_append_sheet(wb,ws,'data')
-  XLSX.writeFile(wb,'รายงานสวัสดิการ.xlsx')
+  XLSX.utils.book_append_sheet(wb,ws,'รายงานสวัสดิการ')
+  XLSX.writeFile(wb,'รายงานสวัสดิการสมาชิก.xlsx')
 }
+
+/* ===== PRINT ===== */
 function getFY(){
   const d=new Date(), y=d.getFullYear(), m=d.getMonth()+1
   return (m<4?y-1:y)+543
@@ -276,5 +299,6 @@ window.printReport=()=>{
 
 load()
 </script>
+
 </body>
 </html>
