@@ -132,25 +132,37 @@ const rows = document.getElementById('rows')
 const form = document.getElementById('memberForm')
 const statusEl = document.getElementById('member_status')
 
+/* ===== FILTER ===== */
 window.setStatusFilter = function (status) {
   statusFilter = status
   currentPage = 1
   loadMembers()
 }
 
+/* ===== SUMMARY (FIXED) ===== */
 async function loadSummary() {
-  const { data } = await db.from('members').select('member_status')
-  let m = 0, r = 0, d = 0
-  data.forEach(function (x) {
-    if (x.member_status === 'สมาชิก') m++
-    else if (x.member_status === 'ลาออก') r++
-    else if (x.member_status === 'เสียชีวิต') d++
-  })
-  document.getElementById('count-member').innerText = m
-  document.getElementById('count-resign').innerText = r
-  document.getElementById('count-dead').innerText = d
+
+  const member = await db
+    .from('members')
+    .select('member_id', { count: 'exact', head: true })
+    .eq('member_status', 'สมาชิก')
+
+  const resign = await db
+    .from('members')
+    .select('member_id', { count: 'exact', head: true })
+    .eq('member_status', 'ลาออก')
+
+  const dead = await db
+    .from('members')
+    .select('member_id', { count: 'exact', head: true })
+    .eq('member_status', 'เสียชีวิต')
+
+  document.getElementById('count-member').innerText = member.count ?? 0
+  document.getElementById('count-resign').innerText = resign.count ?? 0
+  document.getElementById('count-dead').innerText = dead.count ?? 0
 }
 
+/* ===== LOAD MEMBERS ===== */
 async function loadMembers() {
   let query = db.from('members')
     .select('member_id, first_name, last_name, phone, member_status')
@@ -165,9 +177,10 @@ async function loadMembers() {
 
   rows.innerHTML = ''
   data.forEach(function (m) {
-    let color = m.member_status === 'สมาชิก'
-      ? 'green' : m.member_status === 'ลาออก'
-      ? 'orange' : 'red'
+    let color =
+      m.member_status === 'สมาชิก' ? 'green'
+      : m.member_status === 'ลาออก' ? 'orange'
+      : 'red'
 
     rows.innerHTML += `
       <tr>
@@ -184,6 +197,7 @@ async function loadMembers() {
   document.getElementById('pageInfo').innerText = 'หน้า ' + currentPage
 }
 
+/* ===== SUBMIT ===== */
 form.addEventListener('submit', async function (e) {
   e.preventDefault()
 
@@ -198,6 +212,7 @@ form.addEventListener('submit', async function (e) {
   loadSummary()
 })
 
+/* ===== LOCK WHEN DEAD ===== */
 statusEl.addEventListener('change', function () {
   const lock = statusEl.value === 'เสียชีวิต'
   Array.from(form.elements).forEach(function (el) {
@@ -206,14 +221,22 @@ statusEl.addEventListener('change', function () {
   })
 })
 
+/* ===== EDIT ===== */
 window.editMember = async function (id) {
-  const { data } = await db.from('members').select('*').eq('member_id', id).single()
+  const { data } = await db
+    .from('members')
+    .select('*')
+    .eq('member_id', id)
+    .single()
+
   Array.from(form.elements).forEach(function (el) {
     if (el.id) el.value = data[el.id] || ''
   })
+
   document.getElementById('member_id').disabled = true
 }
 
+/* ===== RESET ===== */
 window.resetForm = function () {
   form.reset()
   Array.from(form.elements).forEach(function (el) {
@@ -221,11 +244,11 @@ window.resetForm = function () {
   })
 }
 
+/* ===== PAGINATION ===== */
 window.nextPage = function () {
   currentPage++
   loadMembers()
 }
-
 window.prevPage = function () {
   if (currentPage > 1) {
     currentPage--
@@ -233,6 +256,7 @@ window.prevPage = function () {
   }
 }
 
+/* ===== INIT ===== */
 loadMembers()
 loadSummary()
 </script>
@@ -240,6 +264,7 @@ loadSummary()
 <style>
 .box { background:#fff; border:2px solid #93c5fd; border-radius:12px; padding:16px }
 .title { font-weight:600; margin-bottom:12px }
+
 .field { display:flex; align-items:center; gap:8px }
 .field label { width:90px; font-size:14px }
 .field input, .field select {
@@ -248,6 +273,7 @@ loadSummary()
 
 .summary { background:#fff; border:2px solid; border-radius:12px; padding:12px; text-align:center }
 .summary .num { font-size:28px; font-weight:700 }
+
 .green { border-color:#22c55e; color:#15803d }
 .orange { border-color:#f97316; color:#c2410c }
 .red { border-color:#ef4444; color:#b91c1c }
