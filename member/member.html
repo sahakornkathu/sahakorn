@@ -19,6 +19,7 @@
   <!-- ================= FORM ================= -->
   <form id="memberForm" class="space-y-6">
 
+    <!-- ข้อมูลสมาชิก -->
     <div class="section">
       <h2 class="section-title">ข้อมูลสมาชิก</h2>
 
@@ -74,6 +75,7 @@
       </div>
     </div>
 
+    <!-- ข้อมูลติดต่อ -->
     <div class="section">
       <h2 class="section-title">ข้อมูลติดต่อ</h2>
 
@@ -89,17 +91,18 @@
       </div>
     </div>
 
+    <!-- สถานะ -->
     <div class="section">
       <h2 class="section-title">สถานะ</h2>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div class="h-field">
           <label>สถานะสมาชิก</label>
-         <select id="member_status">
-          <option value="">-- เลือกสถานะ --</option>
-          <option value="สมาชิก">สมาชิก</option>
-          <option value="ลาออก">ลาออก</option>
-          <option value="เสียชีวิต">เสียชีวิต</option>
+          <select id="member_status">
+            <option value="">-- เลือกสถานะ --</option>
+            <option value="สมาชิก">สมาชิก</option>
+            <option value="ลาออก">ลาออก</option>
+            <option value="เสียชีวิต">เสียชีวิต</option>
           </select>
         </div>
 
@@ -109,7 +112,6 @@
             <option value="">-- เลือก --</option>
             <option value="single">โสด</option>
             <option value="married">สมรส</option>
-            <option value="married">หม้าย</option>
           </select>
         </div>
 
@@ -120,6 +122,7 @@
       </div>
     </div>
 
+    <!-- Actions -->
     <div class="flex gap-4">
       <button type="submit" class="btn-primary">บันทึกข้อมูล</button>
       <button type="button" onclick="resetForm()" class="btn-secondary">ยกเลิก</button>
@@ -144,6 +147,7 @@
       <tbody id="rows"></tbody>
     </table>
 
+    <!-- Pagination -->
     <div class="flex justify-between items-center mt-4">
       <button onclick="prevPage()" class="btn-page">◀ ก่อนหน้า</button>
       <span id="pageInfo" class="text-sm text-slate-600"></span>
@@ -168,7 +172,9 @@ let totalCount = 0
 
 const form = document.getElementById('memberForm')
 const rows = document.getElementById('rows')
+const memberStatusEl = document.getElementById('member_status')
 
+/* ---------- Load Count ---------- */
 async function loadTotalCount() {
   const { count } = await db
     .from('members')
@@ -176,6 +182,7 @@ async function loadTotalCount() {
   totalCount = count || 0
 }
 
+/* ---------- Load Members (list) ---------- */
 async function loadMembers() {
   const from = (currentPage - 1) * PAGE_SIZE
   const to = from + PAGE_SIZE - 1
@@ -187,13 +194,20 @@ async function loadMembers() {
     .range(from, to)
 
   rows.innerHTML = ''
+
   data.forEach(m => {
+    const statusColor =
+      m.member_status === 'สมาชิก' ? 'text-green-600 font-semibold'
+      : m.member_status === 'ลาออก' ? 'text-orange-500 font-semibold'
+      : m.member_status === 'เสียชีวิต' ? 'text-red-600 font-semibold'
+      : ''
+
     rows.innerHTML += `
       <tr class="hover:bg-blue-50">
         <td class="td">${m.member_id}</td>
         <td class="td">${m.first_name} ${m.last_name}</td>
         <td class="td">${m.phone ?? ''}</td>
-        <td class="td">${m.member_status ?? ''}</td>
+        <td class="td ${statusColor}">${m.member_status ?? ''}</td>
         <td class="td text-center">
           <button onclick="editMember(${m.member_id})"
             class="text-blue-700 hover:underline">แก้ไข</button>
@@ -206,6 +220,7 @@ async function loadMembers() {
   updatePageInfo()
 }
 
+/* ---------- Pagination ---------- */
 function updatePageInfo() {
   const totalPage = Math.ceil(totalCount / PAGE_SIZE) || 1
   document.getElementById('pageInfo').innerText =
@@ -226,17 +241,21 @@ window.prevPage = () => {
   }
 }
 
+/* ---------- Form Submit ---------- */
 form.addEventListener('submit', async e => {
   e.preventDefault()
+
   const data = Object.fromEntries(
     [...form.elements].filter(el => el.id).map(el => [el.id, el.value || null])
   )
+
   await db.from('members').upsert([data], { onConflict: 'member_id' })
   resetForm()
   await loadTotalCount()
   loadMembers()
 })
 
+/* ---------- Edit ---------- */
 window.editMember = async id => {
   const { data } = await db
     .from('members')
@@ -246,11 +265,15 @@ window.editMember = async id => {
 
   member_id.value = data.member_id
   member_id.disabled = true
+
   for (const k in data)
     if (document.getElementById(k))
       document.getElementById(k).value = data[k] ?? ''
+
+  toggleFormLock(data.member_status === 'เสียชีวิต')
 }
 
+/* ---------- Delete ---------- */
 window.deleteMember = async id => {
   if (!confirm('ยืนยันลบข้อมูลนี้?')) return
   await db.from('members').delete().eq('member_id', id)
@@ -258,11 +281,30 @@ window.deleteMember = async id => {
   loadMembers()
 }
 
+/* ---------- Lock form if deceased ---------- */
+memberStatusEl.addEventListener('change', () => {
+  toggleFormLock(memberStatusEl.value === 'เสียชีวิต')
+})
+
+function toggleFormLock(lock) {
+  [...form.elements].forEach(el => {
+    if (!el.id) return
+    if (el.id === 'member_status') {
+      el.disabled = false
+    } else {
+      el.disabled = lock
+    }
+  })
+}
+
+/* ---------- Reset ---------- */
 window.resetForm = () => {
   form.reset()
   member_id.disabled = false
+  toggleFormLock(false)
 }
 
+/* ---------- Init ---------- */
 await loadTotalCount()
 loadMembers()
 </script>
