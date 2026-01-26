@@ -10,22 +10,28 @@
 <body class="bg-blue-50 p-6 text-slate-800">
 <div class="max-w-7xl mx-auto space-y-6">
 
-<!-- ================= SUMMARY ================= -->
+<!-- ===== SUMMARY ===== -->
 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
   <div class="summary green"><div>สมาชิก</div><div id="count-member" class="num">0</div></div>
   <div class="summary orange"><div>ลาออก</div><div id="count-resign" class="num">0</div></div>
   <div class="summary red"><div>เสียชีวิต</div><div id="count-dead" class="num">0</div></div>
 </div>
 
-<!-- ================= FORM ================= -->
+<!-- ===== FORM ===== -->
 <form id="memberForm" class="box space-y-4">
 <h2 class="title">บันทึกข้อมูลสมาชิก</h2>
 
 <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+
   <div class="field"><label>รหัสสมาชิก</label><input id="member_id" type="number" required></div>
   <div class="field"><label>วันที่สมัคร</label><input id="join_date" type="date"></div>
   <div class="field"><label>คำนำหน้า</label>
-    <select id="title"><option value="">--</option><option>นาย</option><option>นาง</option><option>นางสาว</option></select>
+    <select id="title">
+      <option value="">--</option>
+      <option>นาย</option>
+      <option>นาง</option>
+      <option>นางสาว</option>
+    </select>
   </div>
   <div class="field"><label>กลุ่ม</label><input id="group"></div>
 
@@ -35,7 +41,11 @@
   <div class="field"><label>วันเกิด</label><input id="birthday" type="date"></div>
 
   <div class="field"><label>เพศ</label>
-    <select id="gender"><option value="">--</option><option>ชาย</option><option>หญิง</option></select>
+    <select id="gender">
+      <option value="">--</option>
+      <option>ชาย</option>
+      <option>หญิง</option>
+    </select>
   </div>
   <div class="field"><label>อายุ</label><input id="age" type="number"></div>
 
@@ -53,11 +63,20 @@
   <div class="field"><label>โทรศัพท์สำรอง</label><input id="phone_alt"></div>
 
   <div class="field"><label>สถานะสมาชิก</label>
-    <select id="member_status"><option value="">--</option><option>สมาชิก</option><option>ลาออก</option><option>เสียชีวิต</option></select>
+    <select id="member_status">
+      <option value="">--</option>
+      <option>สมาชิก</option>
+      <option>ลาออก</option>
+      <option>เสียชีวิต</option>
+    </select>
   </div>
 
   <div class="field"><label>สถานภาพสมรส</label>
-    <select id="marital_status"><option value="">--</option><option>โสด</option><option>สมรส</option></select>
+    <select id="marital_status">
+      <option value="">--</option>
+      <option>โสด</option>
+      <option>สมรส</option>
+    </select>
   </div>
 
   <div class="field"><label>ชื่อคู่สมรส</label><input id="spouse_name"></div>
@@ -65,6 +84,7 @@
   <div class="field"><label>เลขสมาชิก กยท.</label><input id="kyot_member_id"></div>
   <div class="field"><label>ชื่อบิดา</label><input id="father_name"></div>
   <div class="field"><label>ชื่อมารดา</label><input id="mother_name"></div>
+
 </div>
 
 <div class="flex gap-4">
@@ -73,7 +93,7 @@
 </div>
 </form>
 
-<!-- ================= FILTER + EXPORT ================= -->
+<!-- ===== FILTER + EXPORT ===== -->
 <div class="box space-y-3">
 <h2 class="title">ค้นหา / Export</h2>
 
@@ -91,12 +111,18 @@
 <div>พบ <b><span id="resultCount">0</span></b> รายการ</div>
 </div>
 
-<!-- ================= TABLE ================= -->
+<!-- ===== TABLE ===== -->
 <div class="box">
 <table class="w-full text-sm">
 <thead>
 <tr>
-  <th>รหัส</th><th>ชื่อ-นามสกุล</th><th>กลุ่ม</th><th>โทร</th><th>เพศ</th><th>สถานะ</th><th>จัดการ</th>
+  <th>รหัส</th>
+  <th>ชื่อ-นามสกุล</th>
+  <th>กลุ่ม</th>
+  <th>โทร</th>
+  <th>เพศ</th>
+  <th>สถานะ</th>
+  <th>จัดการ</th>
 </tr>
 </thead>
 <tbody id="rows"></tbody>
@@ -134,7 +160,6 @@ const fPhone = document.getElementById('f_phone')
 const fGender= document.getElementById('f_gender')
 const fStatus= document.getElementById('f_status')
 
-/* ===== SUMMARY ===== */
 async function loadSummary(){
   document.getElementById('count-member').innerText =
     (await db.from('members').select('member_id',{count:'exact',head:true}).eq('member_status','สมาชิก')).count||0
@@ -144,18 +169,20 @@ async function loadSummary(){
     (await db.from('members').select('member_id',{count:'exact',head:true}).eq('member_status','เสียชีวิต')).count||0
 }
 
-/* ===== SUBMIT ===== */
 form.addEventListener('submit', async e=>{
   e.preventDefault()
   const data={}
-  Array.from(form.elements).forEach(el=>{ if(el.id) data[el.id]=el.value||null })
+  Array.from(form.elements).forEach(el=>{
+    if(el.id) data[el.id]=el.value||null
+  })
   await db.from('members').upsert([data],{onConflict:'member_id'})
-  resetForm(); loadMembers(); loadSummary()
+  resetForm()
+  loadMembers()
+  loadSummary()
 })
 
-window.resetForm=()=>form.reset()
+window.resetForm = ()=> form.reset()
 
-/* ===== LOAD MEMBERS ===== */
 async function loadMembers(){
   let q=db.from('members')
     .select('member_id,first_name,last_name,group,phone,gender,member_status',{count:'exact'})
@@ -196,23 +223,23 @@ async function loadMembers(){
   })
 }
 
-/* ===== EDIT / DELETE ===== */
 window.editMember = async id=>{
   const {data}=await db.from('members').select('*').eq('member_id',id).single()
-  Array.from(form.elements).forEach(el=>{ if(el.id) el.value=data[el.id]||'' })
+  Array.from(form.elements).forEach(el=>{
+    if(el.id) el.value=data[el.id]||''
+  })
 }
 
 window.deleteMember = async id=>{
   if(!confirm('ยืนยันการลบสมาชิก รหัส '+id)) return
   await db.from('members').delete().eq('member_id',id)
-  loadMembers(); loadSummary()
+  loadMembers()
+  loadSummary()
 }
 
-/* ===== PAGINATION ===== */
 window.nextPage=()=>{ if(page*PAGE_SIZE<totalCount){page++;loadMembers()} }
 window.prevPage=()=>{ if(page>1){page--;loadMembers()} }
 
-/* ===== AUTO FILTER ===== */
 ;[fMemberId,fFirst,fLast,fGroup,fPhone,fGender,fStatus].forEach(el=>{
   el.addEventListener('input',()=>{
     clearTimeout(debounceTimer)
@@ -220,7 +247,6 @@ window.prevPage=()=>{ if(page>1){page--;loadMembers()} }
   })
 })
 
-/* ===== EXPORT EXCEL (TH) ===== */
 window.exportExcel = async ()=>{
   let q=db.from('members').select('*').order('member_id')
 
@@ -236,29 +262,56 @@ window.exportExcel = async ()=>{
   if(!data||!data.length){alert('ไม่มีข้อมูลให้ export');return}
 
   const thaiData=data.map(r=>({
-    'รหัสสมาชิก':r.member_id,
-    'วันที่สมัคร':r.join_date,
-    'คำนำหน้า':r.title,
-    'ชื่อ':r.first_name,
-    'นามสกุล':r.last_name,
-    'เลขบัตรประชาชน':r.id_card,
-    'วันเกิด':r.birthday,
-    'กลุ่ม':r.group,
-    'โทรศัพท์':r.phone,
-    'สถานะสมาชิก':r.member_status,
-    'เพศ':r.gender,
-    'อายุ':r.age
+    'รหัสสมาชิก': r.member_id,
+    'วันที่สมัคร': r.join_date,
+    'คำนำหน้า': r.title,
+    'ชื่อ': r.first_name,
+    'นามสกุล': r.last_name,
+    'เลขบัตรประชาชน': r.id_card,
+    'วันเกิด': r.birthday,
+    'กลุ่ม': r.group,
+    'บ้านเลขที่': r.house_no,
+    'หมู่': r.moo,
+    'ถนน': r.street,
+    'หมู่บ้าน': r.village,
+    'ตำบล': r.subdistrict,
+    'อำเภอ': r.district,
+    'จังหวัด': r.province,
+    'รหัสไปรษณีย์': r.postal_code,
+    'โทรศัพท์': r.phone,
+    'โทรศัพท์สำรอง': r.phone_alt,
+    'สถานะสมาชิก': r.member_status,
+    'สถานภาพสมรส': r.marital_status,
+    'ชื่อคู่สมรส': r.spouse_name,
+    'เป็นสมาชิก กยท.': r.kyot_member,
+    'เลขสมาชิก กยท.': r.kyot_member_id,
+    'ชื่อบิดา': r.father_name,
+    'ชื่อมารดา': r.mother_name,
+    'เพศ': r.gender,
+    'อายุ': r.age,
+    'วันที่สร้าง': r.created_at,
+    'วันที่แก้ไขล่าสุด': r.updated_at,
+    'LINE User ID': r.line_user_id,
+    'ชื่อ LINE': r.line_display_name,
+    'รูปโปรไฟล์ LINE': r.line_picture
   }))
 
   const ws=XLSX.utils.json_to_sheet(thaiData)
   const wb=XLSX.utils.book_new()
   XLSX.utils.book_append_sheet(wb,ws,'สมาชิก')
 
-  const hasFilter=fMemberId.value||fFirst.value||fLast.value||fGroup.value||fPhone.value||fGender.value||fStatus.value
-  XLSX.writeFile(wb,hasFilter?'รายชื่อสมาชิก_ตามเงื่อนไข.xlsx':'รายชื่อสมาชิก_ทั้งหมด.xlsx')
+  const hasFilter =
+    fMemberId.value||fFirst.value||fLast.value||
+    fGroup.value||fPhone.value||fGender.value||fStatus.value
+
+  XLSX.writeFile(
+    wb,
+    hasFilter ? 'รายชื่อสมาชิก_ตามเงื่อนไข.xlsx' : 'รายชื่อสมาชิก_ทั้งหมด.xlsx'
+  )
 }
 
-loadMembers(); loadSummary()
+loadMembers()
+loadSummary()
 </script>
 
 <style>
