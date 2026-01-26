@@ -11,7 +11,7 @@
 <div class="max-w-7xl mx-auto space-y-6">
 
 <!-- ===== SUMMARY ===== -->
-<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
   <div class="summary green"><div>สมาชิก</div><div id="count-member" class="num">0</div></div>
   <div class="summary orange"><div>ลาออก</div><div id="count-resign" class="num">0</div></div>
   <div class="summary red"><div>เสียชีวิต</div><div id="count-dead" class="num">0</div></div>
@@ -75,7 +75,7 @@
 
 <!-- ===== FILTER + EXPORT ===== -->
 <div class="box space-y-3">
-<h2 class="title">ค้นหา / Export</h2>
+<h2 class="title text-center">ค้นหา / Export</h2>
 
 <div class="grid grid-cols-1 md:grid-cols-9 gap-3">
   <input id="f_member_id" class="input" placeholder="รหัสสมาชิก">
@@ -89,13 +89,13 @@
   <button class="btn green" onclick="exportExcel()">Export Excel</button>
 </div>
 
-<div>พบ <b><span id="resultCount">0</span></b> รายการ</div>
+<div class="text-center">พบ <b><span id="resultCount">0</span></b> รายการ</div>
 </div>
 
 <!-- ===== TABLE ===== -->
 <div class="box">
-<table class="w-full text-sm">
-<thead>
+<table class="w-full text-sm text-center">
+<thead class="bg-blue-100">
 <tr>
   <th>รหัส</th>
   <th>ชื่อ-นามสกุล</th>
@@ -129,6 +129,7 @@ const PAGE_SIZE = 15
 let page = 1
 let totalCount = 0
 let debounceTimer = null
+let editingMemberId = null   // ⭐ ตัวแปรไฮไลต์แถว
 
 const form = document.getElementById('memberForm')
 const rows = document.getElementById('rows')
@@ -141,6 +142,7 @@ const fPhone = document.getElementById('f_phone')
 const fGender= document.getElementById('f_gender')
 const fStatus= document.getElementById('f_status')
 
+/* ===== helper ตั้งชื่อไฟล์ ===== */
 function buildExportFileName(){
   const parts=[]
   if(fMemberId.value) parts.push(`รหัส${fMemberId.value}`)
@@ -183,10 +185,16 @@ form.addEventListener('submit',async e=>{
   const data={}
   Array.from(form.elements).forEach(el=>{ if(el.id) data[el.id]=el.value||null })
   await db.from('members').upsert([data],{onConflict:'member_id'})
-  resetForm(); loadMembers(); loadSummary()
+  resetForm()
+  loadMembers()
+  loadSummary()
 })
 
-window.resetForm=()=>form.reset()
+window.resetForm = ()=>{
+  form.reset()
+  editingMemberId = null
+  loadMembers()
+}
 
 /* ===== LOAD MEMBERS ===== */
 async function loadMembers(){
@@ -213,15 +221,16 @@ async function loadMembers(){
 
   rows.innerHTML=''
   data.forEach(m=>{
+    const isEditing = m.member_id === editingMemberId
     rows.innerHTML+=`
-    <tr>
-      <td>${m.member_id}</td>
+    <tr class="border-b ${isEditing ? 'bg-yellow-100 ring-2 ring-yellow-400' : 'hover:bg-blue-50'}">
+      <td class="py-2">${m.member_id}</td>
       <td>${m.first_name||''} ${m.last_name||''}</td>
       <td>${m.group||''}</td>
       <td>${m.phone||''}</td>
       <td>${m.gender||''}</td>
       <td>${m.member_status||''}</td>
-      <td>
+      <td class="space-x-2">
         <button class="link" onclick="editMember(${m.member_id})">แก้ไข</button>
         <button class="link text-red-600" onclick="deleteMember(${m.member_id})">ลบ</button>
       </td>
@@ -231,14 +240,18 @@ async function loadMembers(){
 
 /* ===== EDIT / DELETE ===== */
 window.editMember = async id=>{
+  editingMemberId = id
   const {data}=await db.from('members').select('*').eq('member_id',id).single()
   Array.from(form.elements).forEach(el=>{ if(el.id) el.value=data[el.id]||'' })
+  loadMembers()
 }
 
 window.deleteMember = async id=>{
   if(!confirm('ยืนยันการลบสมาชิก รหัส '+id)) return
   await db.from('members').delete().eq('member_id',id)
-  loadMembers(); loadSummary()
+  editingMemberId = null
+  loadMembers()
+  loadSummary()
 }
 
 /* ===== PAGINATION ===== */
