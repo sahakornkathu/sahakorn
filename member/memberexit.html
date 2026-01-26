@@ -2,82 +2,73 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<title>บันทึกสมาชิกลาออก / เสียชีวิต</title>
+<title>ประวัติสมาชิกลาออก / เสียชีวิต</title>
 <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
-<body class="bg-slate-900 p-6 text-slate-100">
-<div class="max-w-4xl mx-auto">
+<body class="bg-slate-900 text-slate-100 p-6">
+<div class="max-w-6xl mx-auto space-y-6">
 
-<div class="bg-slate-800 border border-slate-700 rounded-xl p-6 space-y-6">
-  <h1 class="text-xl font-bold text-center text-red-400">
-    บันทึกสมาชิกลาออก / เสียชีวิต
-  </h1>
+<h1 class="text-xl font-bold text-center text-orange-400">
+  ประวัติลาออก / เสียชีวิต (แก้ไขย้อนหลังได้)
+</h1>
 
-  <!-- ===== FORM ===== -->
-  <form id="exitForm" class="space-y-4">
-
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-      <div>
-        <label class="label">รหัสสมาชิก</label>
-        <input id="member_id" type="text" required class="input">
-      </div>
-
-      <div>
-        <label class="label">คำนำหน้า</label>
-        <input id="title" class="input" readonly>
-      </div>
-
-      <div>
-        <label class="label">ชื่อ</label>
-        <input id="first_name" class="input" readonly>
-      </div>
-
-      <div>
-        <label class="label">นามสกุล</label>
-        <input id="last_name" class="input" readonly>
-      </div>
-
-      <div>
-        <label class="label">กลุ่ม</label>
-        <input id="group" class="input" readonly>
-      </div>
-
-      <div>
-        <label class="label">สถานะ</label>
-        <select id="member_status" class="input" required>
-          <option value="">-- เลือก --</option>
-          <option value="ลาออก">ลาออก</option>
-          <option value="เสียชีวิต">เสียชีวิต</option>
-        </select>
-      </div>
-
-      <div>
-        <label class="label">วันที่ประชุม</label>
-        <input id="meeting_date" type="date" class="input">
-      </div>
-
-      <div>
-        <label class="label">จำนวนหุ้นคงเหลือ</label>
-        <input id="share_amount" type="number" step="0.01" class="input">
-      </div>
-
-      <div>
-        <label class="label">วันที่รับเงิน</label>
-        <input id="receive_date" type="date" class="input">
-      </div>
-
-    </div>
-
-    <div class="flex justify-center gap-4 pt-4">
-      <button class="btn red" type="submit">บันทึกข้อมูล</button>
-      <button class="btn gray" type="reset">ล้างฟอร์ม</button>
-    </div>
-
-  </form>
-
+<!-- ===== TABLE ===== -->
+<div class="bg-slate-800 border border-slate-700 rounded-xl p-4">
+<table class="w-full text-sm text-center">
+<thead class="bg-slate-700">
+<tr>
+  <th>รหัส</th>
+  <th>ชื่อ</th>
+  <th>กลุ่ม</th>
+  <th>สถานะ</th>
+  <th>วันที่ประชุม</th>
+  <th>หุ้น</th>
+  <th>วันที่รับเงิน</th>
+  <th>จัดการ</th>
+</tr>
+</thead>
+<tbody id="rows"></tbody>
+</table>
 </div>
+
+<!-- ===== EDIT MODAL ===== -->
+<div id="modal" class="fixed inset-0 bg-black/60 hidden items-center justify-center">
+  <div class="bg-slate-800 p-6 rounded-xl w-full max-w-md space-y-4">
+    <h2 class="text-lg font-bold text-yellow-400 text-center">แก้ไขรายการย้อนหลัง</h2>
+
+    <input type="hidden" id="exit_id">
+
+    <div>
+      <label class="label">สถานะ</label>
+      <select id="edit_status" class="input">
+        <option value="ลาออก">ลาออก</option>
+        <option value="เสียชีวิต">เสียชีวิต</option>
+      </select>
+    </div>
+
+    <div>
+      <label class="label">วันที่ประชุม</label>
+      <input id="edit_meeting" type="date" class="input">
+    </div>
+
+    <div>
+      <label class="label">จำนวนหุ้น</label>
+      <input id="edit_share" type="number" class="input">
+    </div>
+
+    <div>
+      <label class="label">วันที่รับเงิน</label>
+      <input id="edit_receive" type="date" class="input">
+    </div>
+
+    <div class="flex justify-center gap-4 pt-2">
+      <button class="btn yellow" onclick="saveEdit()">บันทึก</button>
+      <button class="btn gray" onclick="closeModal()">ยกเลิก</button>
+    </div>
+  </div>
+</div>
+
 </div>
 
 <script type="module">
@@ -87,79 +78,89 @@ const SUPABASE_URL = 'https://ttottijljxoinptmhgtu.supabase.co'
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'
 const db = createClient(SUPABASE_URL, SUPABASE_KEY)
 
-const memberIdInput = document.getElementById('member_id')
+let currentMemberId = null
 
-/* ===== โหลดข้อมูลสมาชิก ===== */
-memberIdInput.addEventListener('blur', async ()=>{
-  if(!memberIdInput.value) return
+async function loadHistory(){
+  const { data } = await db
+    .from('member_exit')
+    .select('*')
+    .order('meeting_date', { ascending: false })
 
-  const { data, error } = await db
-    .from('members')
-    .select('title, first_name, last_name, group')
-    .eq('member_id', memberIdInput.value)
+  const rows = document.getElementById('rows')
+  rows.innerHTML = ''
+
+  data.forEach(r=>{
+    rows.innerHTML += `
+    <tr class="border-b border-slate-700 hover:bg-slate-700">
+      <td>${r.member_id}</td>
+      <td>${r.title || ''}${r.first_name} ${r.last_name}</td>
+      <td>${r.group || ''}</td>
+      <td class="${r.member_status==='เสียชีวิต'?'text-red-400':'text-orange-400'}">
+        ${r.member_status}
+      </td>
+      <td>${r.meeting_date || '-'}</td>
+      <td>${r.share_amount || '-'}</td>
+      <td>${r.receive_date || '-'}</td>
+      <td>
+        <button class="text-blue-400" onclick='openEdit(${JSON.stringify(r)})'>
+          แก้ไข
+        </button>
+      </td>
+    </tr>`
+  })
+}
+
+window.openEdit = r=>{
+  exit_id.value = r.id
+  edit_status.value = r.member_status
+  edit_meeting.value = r.meeting_date || ''
+  edit_share.value = r.share_amount || ''
+  edit_receive.value = r.receive_date || ''
+  currentMemberId = r.member_id
+  modal.classList.remove('hidden')
+  modal.classList.add('flex')
+}
+
+window.closeModal = ()=>{
+  modal.classList.add('hidden')
+}
+
+/* ===== SAVE EDIT + SYNC STATUS ===== */
+window.saveEdit = async ()=>{
+  await db.from('member_exit').update({
+    member_status: edit_status.value,
+    meeting_date: edit_meeting.value || null,
+    share_amount: edit_share.value || null,
+    receive_date: edit_receive.value || null
+  }).eq('id', exit_id.value)
+
+  // ดึง record ล่าสุดของ member
+  const { data: latest } = await db
+    .from('member_exit')
+    .select('member_status')
+    .eq('member_id', currentMemberId)
+    .order('meeting_date', { ascending: false })
+    .limit(1)
     .single()
 
-  if(error || !data){
-    alert('ไม่พบรหัสสมาชิก')
-    document.getElementById('exitForm').reset()
-    return
+  if(latest){
+    await db.from('members')
+      .update({ member_status: latest.member_status })
+      .eq('member_id', currentMemberId)
   }
 
-  title.value = data.title
-  first_name.value = data.first_name
-  last_name.value = data.last_name
-  group.value = data.group
-})
+  closeModal()
+  loadHistory()
+}
 
-/* ===== SUBMIT ===== */
-document.getElementById('exitForm').addEventListener('submit', async e=>{
-  e.preventDefault()
-
-  const payload = {
-    member_id: member_id.value,
-    title: title.value,
-    first_name: first_name.value,
-    last_name: last_name.value,
-    group: group.value,
-    member_status: member_status.value,
-    meeting_date: meeting_date.value || null,
-    share_amount: share_amount.value || null,
-    receive_date: receive_date.value || null
-  }
-
-  // 1) insert member_exit
-  const { error: insertError } = await db
-    .from('member_exit')
-    .insert([payload])
-
-  if(insertError){
-    alert('บันทึก member_exit ไม่สำเร็จ')
-    console.error(insertError)
-    return
-  }
-
-  // 2) update members.status
-  const { error: updateError } = await db
-    .from('members')
-    .update({ member_status: member_status.value })
-    .eq('member_id', member_id.value)
-
-  if(updateError){
-    alert('อัปเดตสถานะสมาชิกไม่สำเร็จ')
-    console.error(updateError)
-    return
-  }
-
-  alert('บันทึกข้อมูลเรียบร้อย')
-  e.target.reset()
-})
+loadHistory()
 </script>
 
 <style>
-.label{display:block;margin-bottom:4px;color:#cbd5f5}
-.input{width:100%;padding:8px;border-radius:6px;background:#020617;border:1px solid #334155;color:white}
-.btn{padding:8px 20px;border-radius:8px}
-.btn.red{background:#dc2626}
+.input{width:100%;padding:8px;border-radius:6px;background:#020617;border:1px solid #334155}
+.label{font-size:14px;color:#cbd5f5}
+.btn{padding:6px 16px;border-radius:8px}
+.btn.yellow{background:#ca8a04}
 .btn.gray{background:#475569}
 </style>
 
