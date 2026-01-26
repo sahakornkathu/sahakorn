@@ -149,10 +149,14 @@ const SUPABASE_URL = 'https://ttottijljxoinptmhgtu.supabase.co'
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'
 const db = createClient(SUPABASE_URL, SUPABASE_KEY)
 
+/* ===== state ===== */
 let allData = []
 let currentPage = 1
 const pageSize = 10
 let editingKey = null
+let editingMode = false
+let editMemberId = null
+let editMeetingDate = null
 
 /* ===== โหลดข้อมูลสมาชิก ===== */
 member_id.addEventListener('blur', async ()=>{
@@ -216,9 +220,13 @@ function renderTable(){
 function nextPage(){ if(currentPage*pageSize<allData.length){currentPage++;renderTable()} }
 function prevPage(){ if(currentPage>1){currentPage--;renderTable()} }
 
-/* ===== edit / delete ===== */
+/* ===== edit ===== */
 window.editRow=r=>{
+  editingMode=true
   editingKey=r.member_id+r.meeting_date
+  editMemberId=r.member_id
+  editMeetingDate=r.meeting_date
+
   member_id.value=r.member_id
   title.value=r.title
   first_name.value=r.first_name
@@ -230,13 +238,16 @@ window.editRow=r=>{
   receive_date.value=r.receive_date||''
 }
 
+/* ===== delete ===== */
 window.deleteRow=async(mid,md)=>{
   if(!confirm('ยืนยันการลบ ?')) return
   await db.from('member_exit').delete().eq('member_id',mid).eq('meeting_date',md)
   await syncMemberStatus(mid)
+  clearEdit()
   loadHistory()
 }
 
+/* ===== sync ===== */
 async function syncMemberStatus(mid){
   const {data}=await db.from('member_exit')
     .select('member_status').eq('member_id',mid)
@@ -246,10 +257,11 @@ async function syncMemberStatus(mid){
   }).eq('member_id',mid)
 }
 
-/* ===== submit ===== */
+/* ===== submit (FIXED) ===== */
 exitForm.onsubmit=async e=>{
   e.preventDefault()
-  await db.from('member_exit').insert([{
+
+  const payload={
     member_id:member_id.value,
     title:title.value,
     first_name:first_name.value,
@@ -259,13 +271,30 @@ exitForm.onsubmit=async e=>{
     meeting_date:meeting_date.value,
     share_amount:share_amount.value||null,
     receive_date:receive_date.value||null
-  }])
+  }
+
+  if(editingMode){
+    await db.from('member_exit')
+      .update(payload)
+      .eq('member_id',editMemberId)
+      .eq('meeting_date',editMeetingDate)
+  }else{
+    await db.from('member_exit').insert([payload])
+  }
+
   await syncMemberStatus(member_id.value)
   clearEdit()
   loadHistory()
 }
 
-window.clearEdit=()=>{ editingKey=null; exitForm.reset() }
+/* ===== clear ===== */
+window.clearEdit=()=>{
+  editingMode=false
+  editingKey=null
+  editMemberId=null
+  editMeetingDate=null
+  exitForm.reset()
+}
 
 /* ===== filter ===== */
 ;[f_member_id,f_first_name,f_last_name,f_group,f_status,f_date_from,f_date_to]
@@ -283,25 +312,16 @@ window.clearFilter=()=>{
   loadHistory()
 }
 
-/* ===== build filename ===== */
+/* ===== export ===== */
 function buildFileName(){
   let parts=['รายชื่อสมาชิก']
   if(f_status.value) parts.push(f_status.value)
   if(f_group.value) parts.push('กลุ่ม'+f_group.value)
   if(f_member_id.value) parts.push('รหัส'+f_member_id.value)
-
-  if(f_date_from.value && f_date_to.value){
-    parts.push(f_date_from.value+'_ถึง_'+f_date_to.value)
-  }else if(f_date_from.value){
-    parts.push('ตั้งแต่_'+f_date_from.value)
-  }else if(f_date_to.value){
-    parts.push('ถึง_'+f_date_to.value)
-  }
-
+  if(f_date_from.value&&f_date_to.value) parts.push(f_date_from.value+'_ถึง_'+f_date_to.value)
   return parts.join('_')+'.xlsx'
 }
 
-/* ===== export ===== */
 window.exportExcel=()=>{
   if(!allData.length){ alert('ไม่มีข้อมูล'); return }
   const ws=XLSX.utils.json_to_sheet(allData.map(r=>({
@@ -317,7 +337,7 @@ window.exportExcel=()=>{
   })))
   const wb=XLSX.utils.book_new()
   XLSX.utils.book_append_sheet(wb,ws,'ข้อมูล')
-  XLSX.writeFile(wb, buildFileName())
+  XLSX.writeFile(wb,buildFileName())
 }
 
 loadHistory()
