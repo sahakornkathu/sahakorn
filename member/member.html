@@ -2,91 +2,81 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<title>ระบบจัดการข้อมูลสมาชิก</title>
+<title>ระบบจัดการสมาชิก</title>
 <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
-<body class="bg-gray-100 p-6">
+<body class="bg-zinc-900 text-zinc-200 p-6">
 
 <div class="max-w-7xl mx-auto space-y-6">
 
   <!-- Header -->
-  <div class="bg-white rounded-xl shadow p-6">
-    <h1 class="text-2xl font-bold text-gray-800">📋 ระบบจัดการข้อมูลสมาชิก</h1>
-    <p class="text-gray-500 text-sm">เพิ่ม แก้ไข และจัดการข้อมูลสมาชิกสหกรณ์</p>
+  <div class="rounded-xl border border-zinc-700 p-6 bg-zinc-800">
+    <h1 class="text-2xl font-semibold">ระบบจัดการข้อมูลสมาชิก</h1>
+    <p class="text-sm text-zinc-400">เพิ่ม แก้ไข และจัดการข้อมูลสมาชิก</p>
   </div>
 
-  <!-- ================= FORM ================= -->
+  <!-- FORM -->
   <form id="memberForm" class="space-y-6">
 
-    <!-- Section 1 -->
-    <div class="bg-white rounded-xl shadow p-6">
-      <h2 class="text-lg font-semibold mb-4">🪪 ข้อมูลสมาชิก</h2>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <!-- Section: Member -->
+    <section class="border border-zinc-700 rounded-xl p-6 bg-zinc-850">
+      <h2 class="section-title">ข้อมูลสมาชิก</h2>
 
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div>
           <label class="label">รหัสสมาชิก</label>
           <input id="member_id" type="number" class="input" required>
         </div>
-
         <div>
           <label class="label">วันที่สมัคร</label>
           <input id="join_date" type="date" class="input">
         </div>
-
         <div>
           <label class="label">คำนำหน้า</label>
           <input id="title" class="input">
+        </div>
+        <div>
+          <label class="label">กลุ่ม</label>
+          <input id="group" class="input">
         </div>
 
         <div>
           <label class="label">ชื่อ</label>
           <input id="first_name" class="input" required>
         </div>
-
         <div>
           <label class="label">นามสกุล</label>
           <input id="last_name" class="input" required>
         </div>
-
         <div>
           <label class="label">เลขบัตรประชาชน</label>
           <input id="id_card" class="input">
         </div>
-
         <div>
           <label class="label">วันเกิด</label>
           <input id="birthday" type="date" class="input">
         </div>
-
-        <div>
-          <label class="label">กลุ่มสมาชิก</label>
-          <input id="group" class="input">
-        </div>
-
       </div>
-    </div>
+    </section>
 
-    <!-- Section 2 -->
-    <div class="bg-white rounded-xl shadow p-6">
-      <h2 class="text-lg font-semibold mb-4">🏠 ที่อยู่</h2>
+    <!-- Section: Address -->
+    <section class="border border-zinc-700 rounded-xl p-6 bg-zinc-850">
+      <h2 class="section-title">ที่อยู่</h2>
+
       <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-
         <div>
           <label class="label">บ้านเลขที่</label>
           <input id="house_no" class="input">
         </div>
-
         <div>
           <label class="label">หมู่</label>
           <input id="moo" class="input">
         </div>
-
         <div>
           <label class="label">ถนน</label>
           <input id="street" class="input">
         </div>
-
         <div>
           <label class="label">หมู่บ้าน</label>
           <input id="village" class="input">
@@ -96,48 +86,42 @@
           <label class="label">ตำบล</label>
           <input id="subdistrict" class="input">
         </div>
-
         <div>
           <label class="label">อำเภอ</label>
           <input id="district" class="input">
         </div>
-
         <div>
           <label class="label">จังหวัด</label>
           <input id="province" class="input">
         </div>
-
         <div>
           <label class="label">รหัสไปรษณีย์</label>
           <input id="postal_code" class="input">
         </div>
-
       </div>
-    </div>
+    </section>
 
-    <!-- Section 3 -->
-    <div class="bg-white rounded-xl shadow p-6">
-      <h2 class="text-lg font-semibold mb-4">📞 ข้อมูลติดต่อ</h2>
+    <!-- Section: Contact -->
+    <section class="border border-zinc-700 rounded-xl p-6 bg-zinc-850">
+      <h2 class="section-title">ข้อมูลติดต่อ</h2>
+
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-
         <div>
           <label class="label">โทรศัพท์</label>
           <input id="phone" class="input">
         </div>
-
         <div>
           <label class="label">โทรศัพท์สำรอง</label>
           <input id="phone_alt" class="input">
         </div>
-
       </div>
-    </div>
+    </section>
 
-    <!-- Section 4 -->
-    <div class="bg-white rounded-xl shadow p-6">
-      <h2 class="text-lg font-semibold mb-4">⚙️ สถานะ</h2>
+    <!-- Section: Status -->
+    <section class="border border-zinc-700 rounded-xl p-6 bg-zinc-850">
+      <h2 class="section-title">สถานะ</h2>
+
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-
         <div>
           <label class="label">สถานะสมาชิก</label>
           <select id="member_status" class="input">
@@ -160,23 +144,23 @@
           <label class="label">ชื่อคู่สมรส</label>
           <input id="spouse_name" class="input">
         </div>
-
       </div>
-    </div>
+    </section>
 
     <!-- Actions -->
-    <div class="flex gap-3">
-      <button type="submit" class="btn-primary">💾 บันทึกข้อมูล</button>
+    <div class="flex gap-4">
+      <button type="submit" class="btn-primary">บันทึกข้อมูล</button>
       <button type="button" onclick="resetForm()" class="btn-secondary">ยกเลิก</button>
     </div>
 
   </form>
 
-  <!-- ================= TABLE ================= -->
-  <div class="bg-white rounded-xl shadow p-6">
-    <h2 class="text-lg font-semibold mb-4">📑 รายชื่อสมาชิก</h2>
-    <table class="min-w-full text-sm">
-      <thead class="bg-gray-100">
+  <!-- TABLE -->
+  <div class="border border-zinc-700 rounded-xl p-6 bg-zinc-800">
+    <h2 class="section-title mb-4">รายชื่อสมาชิก</h2>
+
+    <table class="w-full text-sm">
+      <thead class="border-b border-zinc-700 text-zinc-400">
         <tr>
           <th class="th">รหัส</th>
           <th class="th">ชื่อ-สกุล</th>
@@ -185,13 +169,12 @@
           <th class="th text-center">จัดการ</th>
         </tr>
       </thead>
-      <tbody id="rows" class="divide-y"></tbody>
+      <tbody id="rows" class="divide-y divide-zinc-800"></tbody>
     </table>
   </div>
 
 </div>
 
-<!-- ================= SCRIPT ================= -->
 <script type="module">
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -208,14 +191,14 @@ async function loadMembers() {
   rows.innerHTML = ''
   data.forEach(m => {
     rows.innerHTML += `
-      <tr class="hover:bg-gray-50">
+      <tr class="hover:bg-zinc-800">
         <td class="td">${m.member_id}</td>
         <td class="td">${m.first_name} ${m.last_name}</td>
         <td class="td">${m.phone ?? ''}</td>
         <td class="td">${m.member_status ?? ''}</td>
         <td class="td text-center">
-          <button onclick='editMember(${JSON.stringify(m)})' class="text-blue-600">แก้ไข</button>
-          <button onclick="deleteMember(${m.member_id})" class="text-red-600 ml-2">ลบ</button>
+          <button onclick='editMember(${JSON.stringify(m)})' class="text-blue-400">แก้ไข</button>
+          <button onclick="deleteMember(${m.member_id})" class="text-red-400 ml-3">ลบ</button>
         </td>
       </tr>`
   })
@@ -252,12 +235,20 @@ loadMembers()
 </script>
 
 <style>
-.label { @apply text-sm text-gray-600 mb-1 block }
-.input { @apply w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-400 }
-.th { @apply px-3 py-2 text-left text-gray-600 font-semibold }
+.section-title { @apply text-lg font-semibold mb-4 }
+.label { @apply text-sm text-zinc-400 mb-1 block }
+.input {
+  @apply w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2
+         text-zinc-200 focus:outline-none focus:ring-1 focus:ring-blue-500
+}
+.th { @apply px-3 py-2 text-left }
 .td { @apply px-3 py-2 }
-.btn-primary { @apply bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 }
-.btn-secondary { @apply bg-gray-300 px-6 py-2 rounded-lg hover:bg-gray-400 }
+.btn-primary {
+  @apply bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg
+}
+.btn-secondary {
+  @apply bg-zinc-700 hover:bg-zinc-600 text-zinc-200 px-6 py-2 rounded-lg
+}
 </style>
 
 </body>
