@@ -10,19 +10,18 @@
 <body class="bg-blue-50 p-6 text-slate-800">
 <div class="max-w-7xl mx-auto space-y-6">
 
-<!-- ===== SUMMARY ===== -->
+<!-- ================= SUMMARY ================= -->
 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
   <div class="summary green"><div>สมาชิก</div><div id="count-member" class="num">0</div></div>
   <div class="summary orange"><div>ลาออก</div><div id="count-resign" class="num">0</div></div>
   <div class="summary red"><div>เสียชีวิต</div><div id="count-dead" class="num">0</div></div>
 </div>
 
-<!-- ===== FORM ===== -->
+<!-- ================= FORM ================= -->
 <form id="memberForm" class="box space-y-4">
 <h2 class="title">บันทึกข้อมูลสมาชิก</h2>
 
 <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
-
   <div class="field"><label>รหัสสมาชิก</label><input id="member_id" type="number" required></div>
   <div class="field"><label>วันที่สมัคร</label><input id="join_date" type="date"></div>
   <div class="field"><label>คำนำหน้า</label>
@@ -32,7 +31,7 @@
 
   <div class="field"><label>ชื่อ</label><input id="first_name"></div>
   <div class="field"><label>นามสกุล</label><input id="last_name"></div>
-  <div class="field"><label>เลขบัตร</label><input id="id_card"></div>
+  <div class="field"><label>เลขบัตรประชาชน</label><input id="id_card"></div>
   <div class="field"><label>วันเกิด</label><input id="birthday" type="date"></div>
 
   <div class="field"><label>เพศ</label>
@@ -51,27 +50,21 @@
   <div class="field"><label>รหัสไปรษณีย์</label><input id="postal_code"></div>
 
   <div class="field"><label>โทรศัพท์</label><input id="phone"></div>
-  <div class="field"><label>โทรสำรอง</label><input id="phone_alt"></div>
+  <div class="field"><label>โทรศัพท์สำรอง</label><input id="phone_alt"></div>
 
-  <div class="field"><label>สถานะ</label>
-    <select id="member_status">
-      <option value="">--</option>
-      <option>สมาชิก</option>
-      <option>ลาออก</option>
-      <option>เสียชีวิต</option>
-    </select>
+  <div class="field"><label>สถานะสมาชิก</label>
+    <select id="member_status"><option value="">--</option><option>สมาชิก</option><option>ลาออก</option><option>เสียชีวิต</option></select>
   </div>
 
-  <div class="field"><label>สถานภาพ</label>
+  <div class="field"><label>สถานภาพสมรส</label>
     <select id="marital_status"><option value="">--</option><option>โสด</option><option>สมรส</option></select>
   </div>
 
-  <div class="field"><label>คู่สมรส</label><input id="spouse_name"></div>
-  <div class="field"><label>สมาชิก กยท.</label><input id="kyot_member"></div>
-  <div class="field"><label>เลข กยท.</label><input id="kyot_member_id"></div>
-  <div class="field"><label>บิดา</label><input id="father_name"></div>
-  <div class="field"><label>มารดา</label><input id="mother_name"></div>
-
+  <div class="field"><label>ชื่อคู่สมรส</label><input id="spouse_name"></div>
+  <div class="field"><label>เป็นสมาชิก กยท.</label><input id="kyot_member"></div>
+  <div class="field"><label>เลขสมาชิก กยท.</label><input id="kyot_member_id"></div>
+  <div class="field"><label>ชื่อบิดา</label><input id="father_name"></div>
+  <div class="field"><label>ชื่อมารดา</label><input id="mother_name"></div>
 </div>
 
 <div class="flex gap-4">
@@ -80,9 +73,9 @@
 </div>
 </form>
 
-<!-- ===== FILTER ===== -->
+<!-- ================= FILTER + EXPORT ================= -->
 <div class="box space-y-3">
-<h2 class="title">ค้นหารายชื่อสมาชิก</h2>
+<h2 class="title">ค้นหา / Export</h2>
 
 <div class="grid grid-cols-1 md:grid-cols-8 gap-3">
   <input id="f_member_id" class="input" placeholder="รหัสสมาชิก">
@@ -98,12 +91,12 @@
 <div>พบ <b><span id="resultCount">0</span></b> รายการ</div>
 </div>
 
-<!-- ===== TABLE ===== -->
+<!-- ================= TABLE ================= -->
 <div class="box">
 <table class="w-full text-sm">
 <thead>
 <tr>
-  <th>รหัส</th><th>ชื่อ</th><th>กลุ่ม</th><th>โทร</th><th>เพศ</th><th>สถานะ</th><th>จัดการ</th>
+  <th>รหัส</th><th>ชื่อ-นามสกุล</th><th>กลุ่ม</th><th>โทร</th><th>เพศ</th><th>สถานะ</th><th>จัดการ</th>
 </tr>
 </thead>
 <tbody id="rows"></tbody>
@@ -141,6 +134,7 @@ const fPhone = document.getElementById('f_phone')
 const fGender= document.getElementById('f_gender')
 const fStatus= document.getElementById('f_status')
 
+/* ===== SUMMARY ===== */
 async function loadSummary(){
   document.getElementById('count-member').innerText =
     (await db.from('members').select('member_id',{count:'exact',head:true}).eq('member_status','สมาชิก')).count||0
@@ -150,7 +144,8 @@ async function loadSummary(){
     (await db.from('members').select('member_id',{count:'exact',head:true}).eq('member_status','เสียชีวิต')).count||0
 }
 
-form.addEventListener('submit',async e=>{
+/* ===== SUBMIT ===== */
+form.addEventListener('submit', async e=>{
   e.preventDefault()
   const data={}
   Array.from(form.elements).forEach(el=>{ if(el.id) data[el.id]=el.value||null })
@@ -160,6 +155,7 @@ form.addEventListener('submit',async e=>{
 
 window.resetForm=()=>form.reset()
 
+/* ===== LOAD MEMBERS ===== */
 async function loadMembers(){
   let q=db.from('members')
     .select('member_id,first_name,last_name,group,phone,gender,member_status',{count:'exact'})
@@ -200,6 +196,7 @@ async function loadMembers(){
   })
 }
 
+/* ===== EDIT / DELETE ===== */
 window.editMember = async id=>{
   const {data}=await db.from('members').select('*').eq('member_id',id).single()
   Array.from(form.elements).forEach(el=>{ if(el.id) el.value=data[el.id]||'' })
@@ -211,9 +208,11 @@ window.deleteMember = async id=>{
   loadMembers(); loadSummary()
 }
 
+/* ===== PAGINATION ===== */
 window.nextPage=()=>{ if(page*PAGE_SIZE<totalCount){page++;loadMembers()} }
 window.prevPage=()=>{ if(page>1){page--;loadMembers()} }
 
+/* ===== AUTO FILTER ===== */
 ;[fMemberId,fFirst,fLast,fGroup,fPhone,fGender,fStatus].forEach(el=>{
   el.addEventListener('input',()=>{
     clearTimeout(debounceTimer)
@@ -221,8 +220,10 @@ window.prevPage=()=>{ if(page>1){page--;loadMembers()} }
   })
 })
 
+/* ===== EXPORT EXCEL (TH) ===== */
 window.exportExcel = async ()=>{
   let q=db.from('members').select('*').order('member_id')
+
   if(fMemberId.value) q=q.eq('member_id',fMemberId.value)
   if(fFirst.value) q=q.ilike('first_name','%'+fFirst.value+'%')
   if(fLast.value) q=q.ilike('last_name','%'+fLast.value+'%')
@@ -234,14 +235,27 @@ window.exportExcel = async ()=>{
   const {data}=await q
   if(!data||!data.length){alert('ไม่มีข้อมูลให้ export');return}
 
-  const ws=XLSX.utils.json_to_sheet(data)
+  const thaiData=data.map(r=>({
+    'รหัสสมาชิก':r.member_id,
+    'วันที่สมัคร':r.join_date,
+    'คำนำหน้า':r.title,
+    'ชื่อ':r.first_name,
+    'นามสกุล':r.last_name,
+    'เลขบัตรประชาชน':r.id_card,
+    'วันเกิด':r.birthday,
+    'กลุ่ม':r.group,
+    'โทรศัพท์':r.phone,
+    'สถานะสมาชิก':r.member_status,
+    'เพศ':r.gender,
+    'อายุ':r.age
+  }))
+
+  const ws=XLSX.utils.json_to_sheet(thaiData)
   const wb=XLSX.utils.book_new()
-  XLSX.utils.book_append_sheet(wb,ws,'Members')
-  XLSX.writeFile(wb,
-    fMemberId.value||fFirst.value||fLast.value||fGroup.value||fPhone.value||fGender.value||fStatus.value
-    ? 'members_filtered.xlsx'
-    : 'members_all.xlsx'
-  )
+  XLSX.utils.book_append_sheet(wb,ws,'สมาชิก')
+
+  const hasFilter=fMemberId.value||fFirst.value||fLast.value||fGroup.value||fPhone.value||fGender.value||fStatus.value
+  XLSX.writeFile(wb,hasFilter?'รายชื่อสมาชิก_ตามเงื่อนไข.xlsx':'รายชื่อสมาชิก_ทั้งหมด.xlsx')
 }
 
 loadMembers(); loadSummary()
