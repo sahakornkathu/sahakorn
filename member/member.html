@@ -6,28 +6,22 @@
 <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
-<!-- 🔵 พื้นหลังฟ้าอ่อน -->
 <body class="bg-blue-50 p-6 text-slate-800">
 
 <div class="max-w-7xl mx-auto space-y-6">
 
   <!-- Header -->
   <div class="bg-blue-100 border border-blue-200 rounded-xl p-6">
-    <h1 class="text-2xl font-semibold">
-      ระบบจัดการข้อมูลสมาชิก
-    </h1>
-    <p class="text-sm text-slate-600">
-      เพิ่ม แก้ไข และจัดการข้อมูลสมาชิก
-    </p>
+    <h1 class="text-2xl font-semibold">ระบบจัดการข้อมูลสมาชิก</h1>
+    <p class="text-sm text-slate-600">เพิ่ม แก้ไข และจัดการข้อมูลสมาชิก</p>
   </div>
 
   <!-- ================= FORM ================= -->
   <form id="memberForm" class="space-y-6">
 
-    <!-- Section: Member -->
+    <!-- Member -->
     <section class="bg-white border border-blue-200 rounded-xl p-6">
       <h2 class="section-title">ข้อมูลสมาชิก</h2>
-
       <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div>
           <label class="label">รหัสสมาชิก</label>
@@ -65,51 +59,9 @@
       </div>
     </section>
 
-    <!-- Section: Address -->
-    <section class="bg-white border border-blue-200 rounded-xl p-6">
-      <h2 class="section-title">ที่อยู่</h2>
-
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div>
-          <label class="label">บ้านเลขที่</label>
-          <input id="house_no" class="input">
-        </div>
-        <div>
-          <label class="label">หมู่</label>
-          <input id="moo" class="input">
-        </div>
-        <div>
-          <label class="label">ถนน</label>
-          <input id="street" class="input">
-        </div>
-        <div>
-          <label class="label">หมู่บ้าน</label>
-          <input id="village" class="input">
-        </div>
-
-        <div>
-          <label class="label">ตำบล</label>
-          <input id="subdistrict" class="input">
-        </div>
-        <div>
-          <label class="label">อำเภอ</label>
-          <input id="district" class="input">
-        </div>
-        <div>
-          <label class="label">จังหวัด</label>
-          <input id="province" class="input">
-        </div>
-        <div>
-          <label class="label">รหัสไปรษณีย์</label>
-          <input id="postal_code" class="input">
-        </div>
-      </div>
-    </section>
-
-    <!-- Section: Contact -->
+    <!-- Contact -->
     <section class="bg-white border border-blue-200 rounded-xl p-6">
       <h2 class="section-title">ข้อมูลติดต่อ</h2>
-
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label class="label">โทรศัพท์</label>
@@ -122,10 +74,9 @@
       </div>
     </section>
 
-    <!-- Section: Status -->
+    <!-- Status -->
     <section class="bg-white border border-blue-200 rounded-xl p-6">
       <h2 class="section-title">สถานะ</h2>
-
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
           <label class="label">สถานะสมาชิก</label>
@@ -135,7 +86,6 @@
             <option value="inactive">พ้นสภาพ</option>
           </select>
         </div>
-
         <div>
           <label class="label">สถานภาพสมรส</label>
           <select id="marital_status" class="input">
@@ -144,7 +94,6 @@
             <option value="married">สมรส</option>
           </select>
         </div>
-
         <div>
           <label class="label">ชื่อคู่สมรส</label>
           <input id="spouse_name" class="input">
@@ -152,16 +101,14 @@
       </div>
     </section>
 
-    <!-- Actions -->
     <div class="flex gap-4">
       <button type="submit" class="btn-primary">บันทึกข้อมูล</button>
       <button type="button" onclick="resetForm()" class="btn-secondary">ยกเลิก</button>
     </div>
-
   </form>
 
   <!-- ================= TABLE ================= -->
-  <div class="bg-white border border-blue-300 rounded-xl p-6">
+  <div class="bg-white border border-blue-200 rounded-xl p-6">
     <h2 class="section-title mb-4">รายชื่อสมาชิก</h2>
 
     <table class="w-full text-sm">
@@ -174,13 +121,20 @@
           <th class="th text-center">จัดการ</th>
         </tr>
       </thead>
-      <tbody id="rows" class="divide-y"></tbody>
+      <tbody id="rows"></tbody>
     </table>
+
+    <!-- Pagination -->
+    <div class="flex items-center justify-between mt-4">
+      <button onclick="prevPage()" class="btn-page">◀ ก่อนหน้า</button>
+      <span id="pageInfo" class="text-sm text-slate-600">หน้า 1</span>
+      <button onclick="nextPage()" class="btn-page">ถัดไป ▶</button>
+    </div>
   </div>
 
 </div>
 
-<!-- ================= SCRIPT (เหมือนเดิม) ================= -->
+<!-- ================= SCRIPT ================= -->
 <script type="module">
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -189,11 +143,48 @@ const db = createClient(
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'
 )
 
+const PAGE_SIZE = 15
+let currentPage = 1
+let totalCount = 0
+
 const form = document.getElementById('memberForm')
 const rows = document.getElementById('rows')
 
+async function loadTotalCount() {
+  const { count } = await db
+    .from('members')
+    .select('member_id', { count: 'exact', head: true })
+  totalCount = count || 0
+}
+
 async function loadMembers() {
-  const { data } = await db.from('members').select('*').order('member_id')
+  const from = (currentPage - 1) * PAGE_SIZE
+  const to = from + PAGE_SIZE - 1
+
+  rows.innerHTML = `
+    <tr>
+      <td colspan="5" class="td text-center text-slate-500">
+        ⏳ กำลังโหลดข้อมูล...
+      </td>
+    </tr>
+  `
+
+  const { data, error } = await db
+    .from('members')
+    .select('member_id, first_name, last_name, phone, member_status')
+    .order('member_id')
+    .range(from, to)
+
+  if (error) {
+    rows.innerHTML = `
+      <tr>
+        <td colspan="5" class="td text-center text-red-600">
+          โหลดข้อมูลไม่สำเร็จ
+        </td>
+      </tr>`
+    return
+  }
+
   rows.innerHTML = ''
   data.forEach(m => {
     rows.innerHTML += `
@@ -203,13 +194,35 @@ async function loadMembers() {
         <td class="td">${m.phone ?? ''}</td>
         <td class="td">${m.member_status ?? ''}</td>
         <td class="td text-center">
-          <button onclick='editMember(${JSON.stringify(m)})'
+          <button onclick="editMember(${m.member_id})"
             class="text-blue-700 hover:underline">แก้ไข</button>
           <button onclick="deleteMember(${m.member_id})"
             class="text-red-600 hover:underline ml-3">ลบ</button>
         </td>
       </tr>`
   })
+
+  updatePageInfo()
+}
+
+function updatePageInfo() {
+  const totalPage = Math.ceil(totalCount / PAGE_SIZE) || 1
+  document.getElementById('pageInfo').innerText =
+    `หน้า ${currentPage} / ${totalPage}`
+}
+
+window.nextPage = () => {
+  if (currentPage * PAGE_SIZE < totalCount) {
+    currentPage++
+    loadMembers()
+  }
+}
+
+window.prevPage = () => {
+  if (currentPage > 1) {
+    currentPage--
+    loadMembers()
+  }
 }
 
 form.addEventListener('submit', async e => {
@@ -219,20 +232,28 @@ form.addEventListener('submit', async e => {
   )
   await db.from('members').upsert([data], { onConflict: 'member_id' })
   resetForm()
+  await loadTotalCount()
   loadMembers()
 })
 
-window.editMember = m => {
-  member_id.value = m.member_id
+window.editMember = async id => {
+  const { data } = await db
+    .from('members')
+    .select('*')
+    .eq('member_id', id)
+    .single()
+
+  member_id.value = data.member_id
   member_id.disabled = true
-  for (const k in m)
+  for (const k in data)
     if (document.getElementById(k))
-      document.getElementById(k).value = m[k] ?? ''
+      document.getElementById(k).value = data[k] ?? ''
 }
 
 window.deleteMember = async id => {
   if (!confirm('ยืนยันลบข้อมูลนี้?')) return
   await db.from('members').delete().eq('member_id', id)
+  await loadTotalCount()
   loadMembers()
 }
 
@@ -241,6 +262,7 @@ window.resetForm = () => {
   member_id.disabled = false
 }
 
+await loadTotalCount()
 loadMembers()
 </script>
 
@@ -258,6 +280,9 @@ loadMembers()
 }
 .btn-secondary {
   @apply bg-slate-300 hover:bg-slate-400 text-slate-800 px-6 py-2 rounded-lg
+}
+.btn-page {
+  @apply bg-slate-200 hover:bg-slate-300 px-4 py-2 rounded-lg
 }
 </style>
 
