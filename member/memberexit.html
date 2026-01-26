@@ -8,7 +8,7 @@
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
 <style>
-/* ===== GLOBAL ===== */
+/* ===== UI ===== */
 .input{
   width:100%;
   background:#020617;
@@ -33,7 +33,6 @@
 .green{background:#16a34a}
 .blue{background:#2563eb}
 
-/* ===== FILTER LAYOUT ===== */
 .filter-box{
   background:linear-gradient(135deg,#0f172a,#1e293b);
   padding:22px;
@@ -79,12 +78,12 @@
 <div><label class="label">กลุ่ม</label><input id="group" class="input" readonly></div>
 
 <div>
-<label class="label">สถานะสมาชิก</label>
-<select id="member_status" class="input" required>
-<option value="">-- เลือก --</option>
-<option value="ลาออก">ลาออก</option>
-<option value="เสียชีวิต">เสียชีวิต</option>
-</select>
+  <label class="label">สถานะสมาชิก</label>
+  <select id="member_status" class="input" required>
+    <option value="">-- เลือก --</option>
+    <option value="ลาออก">ลาออก</option>
+    <option value="เสียชีวิต">เสียชีวิต</option>
+  </select>
 </div>
 
 <div><label class="label">วันที่ประชุม</label><input id="meeting_date" type="date" class="input" required></div>
@@ -92,8 +91,8 @@
 <div><label class="label">วันที่รับเงิน</label><input id="receive_date" type="date" class="input"></div>
 
 <div class="col-span-full flex justify-center gap-4 mt-2">
-<button class="btn red">บันทึก</button>
-<button type="reset" class="btn gray" onclick="clearEdit()">ล้างฟอร์ม</button>
+  <button class="btn red">บันทึก</button>
+  <button type="reset" class="btn gray" onclick="clearEdit()">ล้างฟอร์ม</button>
 </div>
 </form>
 </div>
@@ -141,8 +140,14 @@
 <table class="w-full text-center text-sm">
 <thead class="bg-slate-700">
 <tr>
-<th>รหัส</th><th>ชื่อ</th><th>กลุ่ม</th><th>สถานะ</th>
-<th>ประชุม</th><th>หุ้น</th><th>รับเงิน</th><th>จัดการ</th>
+<th>รหัส</th>
+<th>ชื่อ</th>
+<th>กลุ่ม</th>
+<th>สถานะ</th>
+<th>ประชุม</th>
+<th>หุ้น</th>
+<th>รับเงิน</th>
+<th>จัดการ</th>
 </tr>
 </thead>
 <tbody id="rows"></tbody>
@@ -160,85 +165,126 @@
 <script type="module">
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
+/* ===== CONFIG ===== */
 const SUPABASE_URL = 'https://ttottijljxoinptmhgtu.supabase.co'
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'
 const COOP_LOGO_URL = 'https://ttottijljxoinptmhgtu.supabase.co/storage/v1/object/public/slips/logo.png'
 
 const db = createClient(SUPABASE_URL, SUPABASE_KEY)
 
-let allData=[], page=1, pageSize=10
-let editing=false, editKey=null
+/* ===== STATE ===== */
+let allData = [], page = 1, pageSize = 10
+let editing = false, editKey = null
 
+/* ===== LOAD MEMBER ===== */
 member_id.addEventListener('blur', async ()=>{
-  const {data}=await db.from('members')
+  const { data } = await db.from('members')
     .select('title,first_name,last_name,group')
-    .eq('member_id',member_id.value).single()
-  if(!data){alert('ไม่พบสมาชิก');return}
-  title.value=data.title
-  first_name.value=data.first_name
-  last_name.value=data.last_name
-  group.value=data.group
+    .eq('member_id', member_id.value)
+    .single()
+
+  if(!data){
+    alert('ไม่พบสมาชิก')
+    return
+  }
+
+  title.value = data.title
+  first_name.value = data.first_name
+  last_name.value = data.last_name
+  group.value = data.group
 })
 
+/* ===== LOAD DATA ===== */
 async function load(){
-  let q=db.from('member_exit').select('*')
-  if(f_member_id.value) q=q.eq('member_id',f_member_id.value)
-  if(f_first_name.value) q=q.ilike('first_name','%'+f_first_name.value+'%')
-  if(f_last_name.value) q=q.ilike('last_name','%'+f_last_name.value+'%')
-  if(f_group.value) q=q.ilike('group','%'+f_group.value+'%')
-  if(f_status.value) q=q.eq('member_status',f_status.value)
-  if(f_date_from.value) q=q.gte('meeting_date',f_date_from.value)
-  if(f_date_to.value) q=q.lte('meeting_date',f_date_to.value)
+  let q = db.from('member_exit').select('*')
 
-  const {data}=await q.order('meeting_date',{ascending:false})
-  allData=data||[]
-  resultCount.innerText=allData.length
+  if(f_member_id.value) q = q.eq('member_id', f_member_id.value)
+  if(f_first_name.value) q = q.ilike('first_name', '%' + f_first_name.value + '%')
+  if(f_last_name.value) q = q.ilike('last_name', '%' + f_last_name.value + '%')
+  if(f_group.value) q = q.ilike('group', '%' + f_group.value + '%')
+  if(f_status.value) q = q.eq('member_status', f_status.value)
+  if(f_date_from.value) q = q.gte('meeting_date', f_date_from.value)
+  if(f_date_to.value) q = q.lte('meeting_date', f_date_to.value)
+
+  const { data } = await q.order('meeting_date', { ascending:false })
+  allData = data || []
+  resultCount.innerText = allData.length
   render()
 }
 
+/* ===== RENDER TABLE ===== */
 function render(){
-  rows.innerHTML=''
-  allData.slice((page-1)*pageSize,page*pageSize).forEach(r=>{
-    rows.innerHTML+=`
+  rows.innerHTML = ''
+
+  allData
+    .slice((page-1)*pageSize, page*pageSize)
+    .forEach((r, idx)=>{
+
+      const realIndex = (page-1)*pageSize + idx
+
+      rows.innerHTML += `
 <tr class="border-b border-slate-700 ${editKey===r.member_id+r.meeting_date?'bg-sky-900':''}">
 <td>${r.member_id}</td>
 <td>${r.first_name} ${r.last_name}</td>
 <td>${r.group}</td>
 <td>${r.member_status}</td>
 <td>${r.meeting_date}</td>
-<td>${r.share_amount||''}</td>
-<td>${r.receive_date||''}</td>
+<td>${r.share_amount || ''}</td>
+<td>${r.receive_date || ''}</td>
 <td>
-<button onclick='editRow(${JSON.stringify(r)})' class="text-blue-400">แก้</button>
-<button onclick="del('${r.member_id}','${r.meeting_date}')" class="text-red-400">ลบ</button>
+<button class="text-blue-400" onclick="editRowByIndex(${realIndex})">แก้</button>
+<button class="text-red-400" onclick="del('${r.member_id}','${r.meeting_date}')">ลบ</button>
 </td>
 </tr>`
-  })
-  pageInfo.innerText=`หน้า ${page}/${Math.max(1,Math.ceil(allData.length/pageSize))}`
+    })
+
+  pageInfo.innerText =
+    `หน้า ${page}/${Math.max(1,Math.ceil(allData.length/pageSize))}`
 }
 
-window.nextPage=()=>{if(page*pageSize<allData.length){page++;render()}}
-window.prevPage=()=>{if(page>1){page--;render()}}
+window.nextPage = ()=>{ if(page*pageSize < allData.length){ page++; render() } }
+window.prevPage = ()=>{ if(page > 1){ page--; render() } }
 
-exitForm.onsubmit=async e=>{
+/* ===== EDIT ===== */
+window.editRowByIndex = (index)=>{
+  const r = allData[index]
+  if(!r) return
+
+  editing = true
+  editKey = r.member_id + r.meeting_date
+
+  member_id.value = r.member_id
+  title.value = r.title
+  first_name.value = r.first_name
+  last_name.value = r.last_name
+  group.value = r.group
+  member_status.value = r.member_status
+  meeting_date.value = r.meeting_date
+  share_amount.value = r.share_amount || ''
+  receive_date.value = r.receive_date || ''
+}
+
+/* ===== SAVE ===== */
+exitForm.onsubmit = async e=>{
   e.preventDefault()
-  const payload={
-    member_id:member_id.value,
-    title:title.value,
-    first_name:first_name.value,
-    last_name:last_name.value,
-    group:group.value,
-    member_status:member_status.value,
-    meeting_date:meeting_date.value,
-    share_amount:share_amount.value||null,
-    receive_date:receive_date.value||null
+
+  const payload = {
+    member_id: member_id.value,
+    title: title.value,
+    first_name: first_name.value,
+    last_name: last_name.value,
+    group: group.value,
+    member_status: member_status.value,
+    meeting_date: meeting_date.value,
+    share_amount: share_amount.value || null,
+    receive_date: receive_date.value || null
   }
 
   if(editing){
     await db.from('member_exit')
       .update(payload)
-      .eq('member_id',payload.member_id)
-      .eq('meeting_date',payload.meeting_date)
+      .eq('member_id', payload.member_id)
+      .eq('meeting_date', payload.meeting_date)
   }else{
     await db.from('member_exit').insert([payload])
   }
@@ -248,70 +294,83 @@ exitForm.onsubmit=async e=>{
   load()
 }
 
-window.editRow=r=>{
-  editing=true
-  editKey=r.member_id+r.meeting_date
-  Object.assign(exitForm,{
-    member_id:{value:r.member_id},
-    title:{value:r.title},
-    first_name:{value:r.first_name},
-    last_name:{value:r.last_name},
-    group:{value:r.group},
-    member_status:{value:r.member_status},
-    meeting_date:{value:r.meeting_date},
-    share_amount:{value:r.share_amount||''},
-    receive_date:{value:r.receive_date||''}
-  })
-}
+window.del = async(id,date)=>{
+  if(!confirm('ลบข้อมูลนี้ ?')) return
+  await db.from('member_exit')
+    .delete()
+    .eq('member_id', id)
+    .eq('meeting_date', date)
 
-window.del=async(id,date)=>{
-  if(!confirm('ลบข้อมูลนี้ ?'))return
-  await db.from('member_exit').delete().eq('member_id',id).eq('meeting_date',date)
   await syncStatus(id)
   load()
 }
 
 async function syncStatus(id){
-  const {data}=await db.from('member_exit')
-    .select('member_status').eq('member_id',id)
-    .order('meeting_date',{ascending:false}).limit(1)
-  await db.from('members').update({
-    member_status:data?.[0]?.member_status||'สมาชิก'
-  }).eq('member_id',id)
+  const { data } = await db.from('member_exit')
+    .select('member_status')
+    .eq('member_id', id)
+    .order('meeting_date', { ascending:false })
+    .limit(1)
+
+  await db.from('members')
+    .update({ member_status: data?.[0]?.member_status || 'สมาชิก' })
+    .eq('member_id', id)
 }
 
-window.clearEdit=()=>{editing=false;editKey=null;exitForm.reset()}
+window.clearEdit = ()=>{
+  editing = false
+  editKey = null
+  exitForm.reset()
+}
 
+/* ===== FILTER ===== */
 ;[f_member_id,f_first_name,f_last_name,f_group,f_status,f_date_from,f_date_to]
-.forEach(i=>i.addEventListener('input',()=>{page=1;load()}))
+.forEach(el=>el.addEventListener('input', ()=>{
+  page = 1
+  load()
+}))
 
-window.clearFilter=()=>{
-  f_member_id.value=f_first_name.value=f_last_name.value=f_group.value=f_status.value=f_date_from.value=f_date_to.value=''
+window.clearFilter = ()=>{
+  f_member_id.value = ''
+  f_first_name.value = ''
+  f_last_name.value = ''
+  f_group.value = ''
+  f_status.value = ''
+  f_date_from.value = ''
+  f_date_to.value = ''
   load()
 }
 
-window.exportExcel=()=>{
-  if(!allData.length){alert('ไม่มีข้อมูล');return}
-  const ws=XLSX.utils.json_to_sheet(allData)
-  const wb=XLSX.utils.book_new()
-  XLSX.utils.book_append_sheet(wb,ws,'data')
-  XLSX.writeFile(wb,'รายชื่อสมาชิก.xlsx')
+/* ===== EXPORT ===== */
+window.exportExcel = ()=>{
+  if(!allData.length){
+    alert('ไม่มีข้อมูล')
+    return
+  }
+  const ws = XLSX.utils.json_to_sheet(allData)
+  const wb = XLSX.utils.book_new()
+  XLSX.utils.book_append_sheet(wb, ws, 'data')
+  XLSX.writeFile(wb, 'รายชื่อสมาชิก.xlsx')
 }
 
+/* ===== PRINT ===== */
 function getCurrentFiscalYearThai(){
-  const d=new Date()
-  const y=d.getFullYear()
-  const m=d.getMonth()+1
-  return (m<4?y-1:y)+543
+  const d = new Date()
+  const y = d.getFullYear()
+  const m = d.getMonth() + 1
+  return (m < 4 ? y - 1 : y) + 543
 }
 
-window.printReport=()=>{
-  if(!allData.length){alert('ไม่มีข้อมูล');return}
+window.printReport = ()=>{
+  if(!allData.length){
+    alert('ไม่มีข้อมูลสำหรับพิมพ์')
+    return
+  }
 
-  const fy=getCurrentFiscalYearThai()
-  const total=allData.length
+  const fy = getCurrentFiscalYearThai()
+  const total = allData.length
 
-  const rowsHtml=allData.map((r,i)=>`
+  const rowsHtml = allData.map((r,i)=>`
 <tr>
 <td>${i+1}</td>
 <td>${r.member_id}</td>
@@ -322,7 +381,7 @@ window.printReport=()=>{
 </tr>
 `).join('')
 
-  const html=`
+  const html = `
 <html>
 <head>
 <meta charset="UTF-8">
@@ -363,8 +422,12 @@ th,td{border:1px solid #000;padding:6px;text-align:center}
 <table>
 <thead>
 <tr>
-<th>ลำดับ</th><th>รหัสสมาชิก</th><th>ชื่อ-นามสกุล</th>
-<th>กลุ่ม</th><th>สถานะ</th><th>วันที่ประชุม</th>
+<th>ลำดับ</th>
+<th>รหัสสมาชิก</th>
+<th>ชื่อ-นามสกุล</th>
+<th>กลุ่ม</th>
+<th>สถานะ</th>
+<th>วันที่ประชุม</th>
 </tr>
 </thead>
 <tbody>${rowsHtml}</tbody>
@@ -374,12 +437,13 @@ th,td{border:1px solid #000;padding:6px;text-align:center}
 </html>
 `
 
-  const w=window.open('')
+  const w = window.open('')
   w.document.write(html)
   w.document.close()
   w.print()
 }
 
+/* ===== INIT ===== */
 load()
 </script>
 
