@@ -9,35 +9,22 @@
 <body class="bg-blue-50 p-6 text-slate-800">
 <div class="max-w-7xl mx-auto space-y-6">
 
-<!-- ================= SUMMARY ================= -->
+<!-- ===== SUMMARY ===== -->
 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-  <div class="summary green">
-    <div>สมาชิก</div>
-    <div id="count-member" class="num">0</div>
-  </div>
-  <div class="summary orange">
-    <div>ลาออก</div>
-    <div id="count-resign" class="num">0</div>
-  </div>
-  <div class="summary red">
-    <div>เสียชีวิต</div>
-    <div id="count-dead" class="num">0</div>
-  </div>
+  <div class="summary green"><div>สมาชิก</div><div id="count-member" class="num">0</div></div>
+  <div class="summary orange"><div>ลาออก</div><div id="count-resign" class="num">0</div></div>
+  <div class="summary red"><div>เสียชีวิต</div><div id="count-dead" class="num">0</div></div>
 </div>
 
-<!-- ================= FORM (ครบทุกช่อง) ================= -->
+<!-- ===== FORM ===== -->
 <form id="memberForm" class="box space-y-4">
 <h2 class="title">บันทึกข้อมูลสมาชิก</h2>
 
 <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
-
   <div class="field"><label>รหัสสมาชิก</label><input id="member_id" type="number" required></div>
   <div class="field"><label>วันที่สมัคร</label><input id="join_date" type="date"></div>
   <div class="field"><label>คำนำหน้า</label>
-    <select id="title">
-      <option value="">--</option>
-      <option>นาย</option><option>นาง</option><option>นางสาว</option>
-    </select>
+    <select id="title"><option value="">--</option><option>นาย</option><option>นาง</option><option>นางสาว</option></select>
   </div>
   <div class="field"><label>กลุ่ม</label><input id="group"></div>
 
@@ -47,11 +34,7 @@
   <div class="field"><label>วันเกิด</label><input id="birthday" type="date"></div>
 
   <div class="field"><label>เพศ</label>
-    <select id="gender">
-      <option value="">--</option>
-      <option>ชาย</option>
-      <option>หญิง</option>
-    </select>
+    <select id="gender"><option value="">--</option><option>ชาย</option><option>หญิง</option></select>
   </div>
   <div class="field"><label>อายุ</label><input id="age" type="number"></div>
 
@@ -78,11 +61,7 @@
   </div>
 
   <div class="field"><label>สถานภาพ</label>
-    <select id="marital_status">
-      <option value="">--</option>
-      <option>โสด</option>
-      <option>สมรส</option>
-    </select>
+    <select id="marital_status"><option value="">--</option><option>โสด</option><option>สมรส</option></select>
   </div>
 
   <div class="field"><label>คู่สมรส</label><input id="spouse_name"></div>
@@ -90,7 +69,6 @@
   <div class="field"><label>เลข กยท.</label><input id="kyot_member_id"></div>
   <div class="field"><label>บิดา</label><input id="father_name"></div>
   <div class="field"><label>มารดา</label><input id="mother_name"></div>
-
 </div>
 
 <div class="flex gap-4">
@@ -99,51 +77,29 @@
 </div>
 </form>
 
-<!-- ================= FILTER ================= -->
+<!-- ===== FILTER ===== -->
 <div class="box space-y-3">
 <h2 class="title">ค้นหารายชื่อสมาชิก</h2>
-
 <div class="grid grid-cols-1 md:grid-cols-7 gap-3">
   <input id="f_member_id" class="input" placeholder="รหัสสมาชิก">
   <input id="f_first_name" class="input" placeholder="ชื่อ">
   <input id="f_last_name" class="input" placeholder="นามสกุล">
   <input id="f_group" class="input" placeholder="กลุ่ม">
   <input id="f_phone" class="input" placeholder="เบอร์โทร">
-  <select id="f_gender" class="input">
-    <option value="">เพศ</option>
-    <option>ชาย</option>
-    <option>หญิง</option>
-  </select>
-  <select id="f_status" class="input">
-    <option value="">สถานะ</option>
-    <option>สมาชิก</option>
-    <option>ลาออก</option>
-    <option>เสียชีวิต</option>
-  </select>
+  <select id="f_gender" class="input"><option value="">เพศ</option><option>ชาย</option><option>หญิง</option></select>
+  <select id="f_status" class="input"><option value="">สถานะ</option><option>สมาชิก</option><option>ลาออก</option><option>เสียชีวิต</option></select>
+</div>
+<div>พบ <b><span id="resultCount">0</span></b> รายการ</div>
 </div>
 
-<div>
-  พบ <b><span id="resultCount">0</span></b> รายการ
-</div>
-</div>
-
-<!-- ================= TABLE ================= -->
+<!-- ===== TABLE ===== -->
 <div class="box">
 <table class="w-full text-sm">
 <thead>
-<tr>
-  <th>รหัส</th>
-  <th>ชื่อ</th>
-  <th>กลุ่ม</th>
-  <th>โทร</th>
-  <th>เพศ</th>
-  <th>สถานะ</th>
-  <th>จัดการ</th>
-</tr>
+<tr><th>รหัส</th><th>ชื่อ</th><th>กลุ่ม</th><th>โทร</th><th>เพศ</th><th>สถานะ</th><th>จัดการ</th></tr>
 </thead>
 <tbody id="rows"></tbody>
 </table>
-
 <div class="flex justify-between mt-4">
   <button onclick="prevPage()" class="btn gray">◀</button>
   <span id="pageInfo"></span>
@@ -153,7 +109,6 @@
 
 </div>
 
-<!-- ================= SCRIPT ================= -->
 <script type="module">
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -177,7 +132,6 @@ const fPhone = document.getElementById('f_phone')
 const fGender= document.getElementById('f_gender')
 const fStatus= document.getElementById('f_status')
 
-/* ===== SUMMARY ===== */
 async function loadSummary(){
   document.getElementById('count-member').innerText =
     (await db.from('members').select('member_id',{count:'exact',head:true}).eq('member_status','สมาชิก')).count||0
@@ -187,38 +141,26 @@ async function loadSummary(){
     (await db.from('members').select('member_id',{count:'exact',head:true}).eq('member_status','เสียชีวิต')).count||0
 }
 
-/* ===== SUBMIT ===== */
-form.addEventListener('submit', async e=>{
+form.addEventListener('submit',async e=>{
   e.preventDefault()
   const data={}
-  Array.from(form.elements).forEach(el=>{
-    if(el.id) data[el.id]=el.value||null
-  })
+  Array.from(form.elements).forEach(el=>{ if(el.id) data[el.id]=el.value||null })
   await db.from('members').upsert([data],{onConflict:'member_id'})
-  resetForm()
-  loadMembers()
-  loadSummary()
+  resetForm(); loadMembers(); loadSummary()
 })
 
-window.resetForm = ()=>{
-  form.reset()
-  Array.from(form.elements).forEach(el=>el.disabled=false)
-}
+window.resetForm=()=>{ form.reset() }
 
-/* ===== LOAD MEMBERS ===== */
 async function loadMembers(){
   let q=db.from('members')
-    .select(
-      'member_id,first_name,last_name,group,phone,gender,member_status',
-      {count:'exact'}
-    )
+    .select('member_id,first_name,last_name,group,phone,gender,member_status',{count:'exact'})
     .order('member_id')
 
   if(fMemberId.value) q=q.eq('member_id',fMemberId.value)
-  if(fFirst.value)  q=q.ilike('first_name','%'+fFirst.value+'%')
-  if(fLast.value)   q=q.ilike('last_name','%'+fLast.value+'%')
-  if(fGroup.value)  q=q.ilike('group','%'+fGroup.value+'%')
-  if(fPhone.value)  q=q.ilike('phone','%'+fPhone.value+'%')
+  if(fFirst.value) q=q.ilike('first_name','%'+fFirst.value+'%')
+  if(fLast.value) q=q.ilike('last_name','%'+fLast.value+'%')
+  if(fGroup.value) q=q.ilike('group','%'+fGroup.value+'%')
+  if(fPhone.value) q=q.ilike('phone','%'+fPhone.value+'%')
   if(fGender.value) q=q.eq('gender',fGender.value)
   if(fStatus.value) q=q.eq('member_status',fStatus.value)
 
@@ -241,56 +183,43 @@ async function loadMembers(){
       <td>${m.phone||''}</td>
       <td>${m.gender||''}</td>
       <td>${m.member_status||''}</td>
-      <td><button class="link" onclick="editMember(${m.member_id})">แก้ไข</button></td>
+      <td>
+        <button class="link" onclick="editMember(${m.member_id})">แก้ไข</button>
+        <button class="link text-red-600" onclick="deleteMember(${m.member_id})">ลบ</button>
+      </td>
     </tr>`
   })
 }
 
 window.editMember = async id=>{
   const {data}=await db.from('members').select('*').eq('member_id',id).single()
-  Array.from(form.elements).forEach(el=>{
-    if(el.id) el.value=data[el.id]||''
-  })
+  Array.from(form.elements).forEach(el=>{ if(el.id) el.value=data[el.id]||'' })
 }
 
-/* ===== PAGINATION ===== */
-window.nextPage = ()=>{
-  if(page*PAGE_SIZE<totalCount){page++;loadMembers()}
-}
-window.prevPage = ()=>{
-  if(page>1){page--;loadMembers()}
+window.deleteMember = async id=>{
+  if(!confirm('ยืนยันการลบสมาชิก รหัส '+id)) return
+  await db.from('members').delete().eq('member_id',id)
+  loadMembers(); loadSummary()
 }
 
-/* ===== AUTO FILTER ===== */
-[
-  fMemberId,
-  fFirst,
-  fLast,
-  fGroup,
-  fPhone,
-  fGender,
-  fStatus
-].forEach(el=>{
+window.nextPage=()=>{ if(page*PAGE_SIZE<totalCount){page++;loadMembers()} }
+window.prevPage=()=>{ if(page>1){page--;loadMembers()} }
+
+;[fMemberId,fFirst,fLast,fGroup,fPhone,fGender,fStatus].forEach(el=>{
   el.addEventListener('input',()=>{
     clearTimeout(debounceTimer)
-    debounceTimer=setTimeout(()=>{
-      page=1
-      loadMembers()
-    },300)
+    debounceTimer=setTimeout(()=>{page=1;loadMembers()},300)
   })
 })
 
-loadMembers()
-loadSummary()
+loadMembers(); loadSummary()
 </script>
 
 <style>
 .box{background:#fff;border:2px solid #93c5fd;border-radius:12px;padding:16px}
 .field{display:flex;align-items:center;gap:6px}
 .field label{width:120px}
-.field input,.field select,.input{
-  flex:1;border:2px solid #94a3b8;border-radius:6px;padding:6px
-}
+.field input,.field select,.input{flex:1;border:2px solid #94a3b8;border-radius:6px;padding:6px}
 .summary{background:#fff;border:2px solid;border-radius:12px;padding:12px;text-align:center}
 .summary .num{font-size:28px;font-weight:700}
 .green{border-color:#22c55e;color:#15803d}
