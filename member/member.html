@@ -326,7 +326,7 @@ loadSummary()
 </script>
 
 <style>
-.box{background:#fff;border:2px solid #93c5fd;border-radius:12px;padding:16px}
+/* .box{background:#fff;border:2px solid #93c5fd;border-radius:12px;padding:16px}
 .field{display:flex;align-items:center;gap:6px}
 .field label{width:120px}
 .field input,.field select,.input{flex:1;border:2px solid #94a3b8;border-radius:6px;padding:6px}
@@ -339,7 +339,113 @@ loadSummary()
 .btn.blue{background:#2563eb;color:#fff}
 .btn.gray{background:#e5e7eb}
 .btn.green{background:#16a34a;color:#fff}
-.link{color:#2563eb;cursor:pointer}
+.link{color:#2563eb;cursor:pointer} */
+  /* ===== THEME : memberexit style ===== */
+body{
+  background:#020617;
+  color:#e5e7eb;
+}
+
+/* ===== BOX / CARD ===== */
+.box{
+  background:#0f172a;
+  border:1px solid #334155;
+  border-radius:16px;
+  padding:16px;
+}
+
+/* ===== TITLE ===== */
+.title{
+  color:#38bdf8;
+  font-weight:700;
+  font-size:20px;
+  text-align:center;
+}
+
+/* ===== INPUT / SELECT ===== */
+.input,
+.field input,
+.field select{
+  background:#020617;
+  border:1px solid #334155;
+  color:#fff;
+  border-radius:8px;
+  padding:6px 8px;
+}
+
+.input:focus,
+.field input:focus,
+.field select:focus{
+  outline:none;
+  border-color:#38bdf8;
+}
+
+/* ===== FIELD LAYOUT ===== */
+.field{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.field label{
+  width:120px;
+  font-size:13px;
+  color:#cbd5f5;
+}
+
+/* ===== BUTTON ===== */
+.btn{
+  padding:6px 16px;
+  border-radius:10px;
+  font-weight:500;
+}
+.btn.blue{background:#2563eb;color:#fff}
+.btn.gray{background:#475569;color:#fff}
+.btn.green{background:#16a34a;color:#fff}
+
+/* ===== LINK ===== */
+.link{
+  color:#60a5fa;
+  cursor:pointer;
+}
+.link:hover{color:#93c5fd}
+.link.text-red-600{color:#f87171}
+
+/* ===== SUMMARY ===== */
+.summary{
+  background:#0f172a;
+  border:1px solid;
+  border-radius:16px;
+  padding:12px;
+  text-align:center;
+}
+.summary .num{
+  font-size:28px;
+  font-weight:700;
+}
+.green{border-color:#22c55e;color:#22c55e}
+.orange{border-color:#f97316;color:#fb923c}
+.red{border-color:#ef4444;color:#f87171}
+
+/* ===== TABLE ===== */
+table{
+  color:#e5e7eb;
+}
+thead{
+  background:#020617;
+}
+tbody tr{
+  border-bottom:1px solid #334155;
+}
+tbody tr:hover{
+  background:#020617;
+}
+
+/* ===== HIGHLIGHT ROW (ตอนแก้ไข) ===== */
+tr.highlight{
+  background:#0c4a6e !important;
+  box-shadow: inset 0 0 0 2px #38bdf8;
+}
+
 </style>
 
 </body>
