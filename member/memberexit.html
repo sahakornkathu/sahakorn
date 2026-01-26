@@ -120,124 +120,142 @@ const COOP_LOGO_URL = 'https://ttottijljxoinptmhgtu.supabase.co/storage/v1/objec
 const db = createClient(SUPABASE_URL, SUPABASE_KEY)
 
 /* ===== STATE ===== */
-let allData=[], currentPage=1
-const pageSize=10
-let editingMode=false, editingKey=null
-let editMemberId=null, editMeetingDate=null
+let allData = [], currentPage = 1
+const pageSize = 10
+let editingMode = false, editingKey = null
+let editMemberId = null, editMeetingDate = null
 
 /* ===== LOAD MEMBER ===== */
 member_id.addEventListener('blur', async ()=>{
-  const {data}=await db.from('members')
+  const {data} = await db.from('members')
     .select('title,first_name,last_name,group')
-    .eq('member_id',member_id.value).single()
-  if(!data){ alert('ไม่พบสมาชิก'); clearEdit(); return }
-  title.value=data.title
-  first_name.value=data.first_name
-  last_name.value=data.last_name
-  group.value=data.group
+    .eq('member_id', member_id.value)
+    .single()
+
+  if(!data){
+    alert('ไม่พบสมาชิก')
+    clearEdit()
+    return
+  }
+
+  title.value = data.title
+  first_name.value = data.first_name
+  last_name.value = data.last_name
+  group.value = data.group
 })
 
 /* ===== LOAD HISTORY ===== */
 async function loadHistory(){
-  let q=db.from('member_exit').select('*')
-  if(f_member_id.value) q=q.eq('member_id',f_member_id.value)
-  if(f_first_name.value) q=q.ilike('first_name','%'+f_first_name.value+'%')
-  if(f_last_name.value) q=q.ilike('last_name','%'+f_last_name.value+'%')
-  if(f_group.value) q=q.ilike('group','%'+f_group.value+'%')
-  if(f_status.value) q=q.eq('member_status',f_status.value)
-  if(f_date_from.value) q=q.gte('meeting_date',f_date_from.value)
-  if(f_date_to.value) q=q.lte('meeting_date',f_date_to.value)
+  let q = db.from('member_exit').select('*')
 
-  const {data}=await q.order('meeting_date',{ascending:false})
-  allData=data||[]
-  resultCount.innerText=allData.length
+  if(f_member_id.value) q = q.eq('member_id', f_member_id.value)
+  if(f_first_name.value) q = q.ilike('first_name', '%' + f_first_name.value + '%')
+  if(f_last_name.value) q = q.ilike('last_name', '%' + f_last_name.value + '%')
+  if(f_group.value) q = q.ilike('group', '%' + f_group.value + '%')
+  if(f_status.value) q = q.eq('member_status', f_status.value)
+  if(f_date_from.value) q = q.gte('meeting_date', f_date_from.value)
+  if(f_date_to.value) q = q.lte('meeting_date', f_date_to.value)
+
+  const {data} = await q.order('meeting_date', {ascending:false})
+  allData = data || []
+  resultCount.innerText = allData.length
   renderTable()
 }
 
 function renderTable(){
-  rows.innerHTML=''
-  const start=(currentPage-1)*pageSize
-  allData.slice(start,start+pageSize).forEach(r=>{
-    const key=r.member_id+r.meeting_date
-    const hl=key===editingKey?'bg-sky-900 border-2 border-sky-400':''
-    rows.innerHTML+=`
+  rows.innerHTML = ''
+  const start = (currentPage - 1) * pageSize
+
+  allData.slice(start, start + pageSize).forEach(r=>{
+    const key = r.member_id + r.meeting_date
+    const hl = key === editingKey ? 'bg-sky-900 border-2 border-sky-400' : ''
+
+    rows.innerHTML += `
 <tr class="border-b border-slate-700 hover:bg-slate-700 ${hl}">
 <td>${r.member_id}</td>
 <td>${r.first_name} ${r.last_name}</td>
-<td>${r.group||''}</td>
+<td>${r.group || ''}</td>
 <td>${r.member_status}</td>
 <td>${r.meeting_date}</td>
-<td>${r.share_amount||''}</td>
-<td>${r.receive_date||''}</td>
+<td>${r.share_amount || ''}</td>
+<td>${r.receive_date || ''}</td>
 <td>
 <button class="text-blue-400" onclick='editRow(${JSON.stringify(r)})'>แก้ไข</button>
 <button class="text-red-500" onclick="deleteRow('${r.member_id}','${r.meeting_date}')">ลบ</button>
 </td>
 </tr>`
   })
-  pageInfo.innerText=`หน้า ${currentPage}/${Math.max(1,Math.ceil(allData.length/pageSize))}`
+
+  pageInfo.innerText =
+    `หน้า ${currentPage} / ${Math.max(1, Math.ceil(allData.length / pageSize))}`
 }
 
 /* ===== PAGINATION ===== */
-function nextPage(){ if(currentPage*pageSize<allData.length){currentPage++;renderTable()} }
-function prevPage(){ if(currentPage>1){currentPage--;renderTable()} }
+function nextPage(){ if(currentPage * pageSize < allData.length){ currentPage++; renderTable() } }
+function prevPage(){ if(currentPage > 1){ currentPage--; renderTable() } }
 
 /* ===== EDIT / DELETE ===== */
-window.editRow=r=>{
-  editingMode=true
-  editingKey=r.member_id+r.meeting_date
-  editMemberId=r.member_id
-  editMeetingDate=r.meeting_date
+window.editRow = r=>{
+  editingMode = true
+  editingKey = r.member_id + r.meeting_date
+  editMemberId = r.member_id
+  editMeetingDate = r.meeting_date
 
-  member_id.value=r.member_id
-  title.value=r.title
-  first_name.value=r.first_name
-  last_name.value=r.last_name
-  group.value=r.group
-  member_status.value=r.member_status
-  meeting_date.value=r.meeting_date
-  share_amount.value=r.share_amount||''
-  receive_date.value=r.receive_date||''
+  member_id.value = r.member_id
+  title.value = r.title
+  first_name.value = r.first_name
+  last_name.value = r.last_name
+  group.value = r.group
+  member_status.value = r.member_status
+  meeting_date.value = r.meeting_date
+  share_amount.value = r.share_amount || ''
+  receive_date.value = r.receive_date || ''
 }
 
-window.deleteRow=async(mid,md)=>{
+window.deleteRow = async(mid, md)=>{
   if(!confirm('ยืนยันการลบ ?')) return
-  await db.from('member_exit').delete().eq('member_id',mid).eq('meeting_date',md)
+  await db.from('member_exit').delete()
+    .eq('member_id', mid)
+    .eq('meeting_date', md)
+
   await syncMemberStatus(mid)
   clearEdit()
   loadHistory()
 }
 
 async function syncMemberStatus(mid){
-  const {data}=await db.from('member_exit')
-    .select('member_status').eq('member_id',mid)
-    .order('meeting_date',{ascending:false}).limit(1)
-  await db.from('members').update({
-    member_status:data?.[0]?.member_status || 'สมาชิก'
-  }).eq('member_id',mid)
+  const {data} = await db.from('member_exit')
+    .select('member_status')
+    .eq('member_id', mid)
+    .order('meeting_date', {ascending:false})
+    .limit(1)
+
+  await db.from('members')
+    .update({ member_status: data?.[0]?.member_status || 'สมาชิก' })
+    .eq('member_id', mid)
 }
 
 /* ===== SUBMIT ===== */
-exitForm.onsubmit=async e=>{
+exitForm.onsubmit = async e=>{
   e.preventDefault()
 
-  const payload={
-    member_id:member_id.value,
-    title:title.value,
-    first_name:first_name.value,
-    last_name:last_name.value,
-    group:group.value,
-    member_status:member_status.value,
-    meeting_date:meeting_date.value,
-    share_amount:share_amount.value||null,
-    receive_date:receive_date.value||null
+  const payload = {
+    member_id: member_id.value,
+    title: title.value,
+    first_name: first_name.value,
+    last_name: last_name.value,
+    group: group.value,
+    member_status: member_status.value,
+    meeting_date: meeting_date.value,
+    share_amount: share_amount.value || null,
+    receive_date: receive_date.value || null
   }
 
   if(editingMode){
     await db.from('member_exit')
       .update(payload)
-      .eq('member_id',editMemberId)
-      .eq('meeting_date',editMeetingDate)
+      .eq('member_id', editMemberId)
+      .eq('meeting_date', editMeetingDate)
   }else{
     await db.from('member_exit').insert([payload])
   }
@@ -247,98 +265,124 @@ exitForm.onsubmit=async e=>{
   loadHistory()
 }
 
-window.clearEdit=()=>{
-  editingMode=false
-  editingKey=null
-  editMemberId=null
-  editMeetingDate=null
+window.clearEdit = ()=>{
+  editingMode = false
+  editingKey = null
+  editMemberId = null
+  editMeetingDate = null
   exitForm.reset()
 }
 
 /* ===== FILTER ===== */
 ;[f_member_id,f_first_name,f_last_name,f_group,f_status,f_date_from,f_date_to]
-.forEach(el=>el.addEventListener('input',()=>{currentPage=1;loadHistory()}))
+.forEach(el => el.addEventListener('input', ()=>{
+  currentPage = 1
+  loadHistory()
+}))
 
-window.clearFilter=()=>{
-  f_member_id.value=''
-  f_first_name.value=''
-  f_last_name.value=''
-  f_group.value=''
-  f_status.value=''
-  f_date_from.value=''
-  f_date_to.value=''
-  currentPage=1
+window.clearFilter = ()=>{
+  f_member_id.value = ''
+  f_first_name.value = ''
+  f_last_name.value = ''
+  f_group.value = ''
+  f_status.value = ''
+  f_date_from.value = ''
+  f_date_to.value = ''
+  currentPage = 1
   loadHistory()
 }
 
 /* ===== EXPORT ===== */
 function buildFileName(){
-  let p=['รายชื่อสมาชิก']
+  let p = ['รายชื่อสมาชิก']
   if(f_status.value) p.push(f_status.value)
-  if(f_group.value) p.push('กลุ่ม'+f_group.value)
-  if(f_date_from.value&&f_date_to.value) p.push(f_date_from.value+'_ถึง_'+f_date_to.value)
-  return p.join('_')+'.xlsx'
+  if(f_group.value) p.push('กลุ่ม' + f_group.value)
+  if(f_date_from.value && f_date_to.value)
+    p.push(f_date_from.value + '_ถึง_' + f_date_to.value)
+  return p.join('_') + '.xlsx'
 }
 
-window.exportExcel=()=>{
+window.exportExcel = ()=>{
   if(!allData.length){ alert('ไม่มีข้อมูล'); return }
-  const ws=XLSX.utils.json_to_sheet(allData.map(r=>({
-    'รหัสสมาชิก':r.member_id,
-    'คำนำหน้า':r.title,
-    'ชื่อ':r.first_name,
-    'นามสกุล':r.last_name,
-    'กลุ่ม':r.group,
-    'สถานะ':r.member_status,
-    'วันที่ประชุม':r.meeting_date,
-    'หุ้นคงเหลือ':r.share_amount,
-    'วันที่รับเงิน':r.receive_date
+
+  const ws = XLSX.utils.json_to_sheet(allData.map(r=>({
+    'รหัสสมาชิก': r.member_id,
+    'คำนำหน้า': r.title,
+    'ชื่อ': r.first_name,
+    'นามสกุล': r.last_name,
+    'กลุ่ม': r.group,
+    'สถานะ': r.member_status,
+    'วันที่ประชุม': r.meeting_date,
+    'หุ้นคงเหลือ': r.share_amount,
+    'วันที่รับเงิน': r.receive_date
   })))
-  const wb=XLSX.utils.book_new()
-  XLSX.utils.book_append_sheet(wb,ws,'ข้อมูล')
-  XLSX.writeFile(wb,buildFileName())
+
+  const wb = XLSX.utils.book_new()
+  XLSX.utils.book_append_sheet(wb, ws, 'ข้อมูล')
+  XLSX.writeFile(wb, buildFileName())
 }
 
-/* ===== FISCAL YEAR (EXACT) ===== */
-function getFiscalYearFromExactRange(dateFrom,dateTo){
-  if(!dateFrom||!dateTo) return null
-  const f=new Date(dateFrom), t=new Date(dateTo)
-  if(f.getDate()!==1||f.getMonth()!==3) return null
-  if(t.getDate()!==31||t.getMonth()!==2) return null
-  return f.getFullYear()+543
+/* ===== FISCAL YEAR (STRING SAFE) ===== */
+function getFiscalYearFromExactRange(dateFrom, dateTo){
+  if(!dateFrom || !dateTo) return null
+
+  const [fy, fm, fd] = dateFrom.split('-').map(Number)
+  const [ty, tm, td] = dateTo.split('-').map(Number)
+
+  if(fd !== 1 || fm !== 4) return null
+  if(td !== 31 || tm !== 3) return null
+
+  return fy + 543
 }
 
-function buildThaiExactRange(dateFrom,dateTo){
-  const fmt=d=>`${d.getDate()} ${d.toLocaleString('th-TH',{month:'long'})} ${d.getFullYear()+543}`
-  return `${fmt(new Date(dateFrom))} – ${fmt(new Date(dateTo))}`
+function buildThaiExactRange(dateFrom, dateTo){
+  const fmt = (y,m,d)=>
+    `${d} ${new Date(y, m-1).toLocaleString('th-TH',{month:'long'})} ${y+543}`
+
+  const [fy,fm,fd] = dateFrom.split('-').map(Number)
+  const [ty,tm,td] = dateTo.split('-').map(Number)
+
+  return `${fmt(fy,fm,fd)} – ${fmt(ty,tm,td)}`
 }
 
 /* ===== PRINT ===== */
-window.printReport=()=>{
-  if(!allData.length){ alert('ไม่มีข้อมูล'); return }
+window.printReport = ()=>{
+  if(!allData.length){
+    alert('ไม่มีข้อมูลสำหรับพิมพ์')
+    return
+  }
 
-  let title='รายงานสมาชิก '+(f_status.value||'ลาออก / เสียชีวิต')
-  let sub=[]
+  let title = 'รายงานสมาชิก ' + (f_status.value || 'ลาออก / เสียชีวิต')
+  let sub = []
 
-  if(f_group.value) sub.push('กลุ่ม '+f_group.value)
+  if(f_group.value) sub.push('กลุ่ม ' + f_group.value)
 
-  const fy=getFiscalYearFromExactRange(f_date_from.value,f_date_to.value)
-  if(fy) sub.push('ประจำปี '+fy)
+  const fy = getFiscalYearFromExactRange(
+    f_date_from.value,
+    f_date_to.value
+  )
 
-  if(f_date_from.value&&f_date_to.value)
-    sub.push(buildThaiExactRange(f_date_from.value,f_date_to.value))
+  if(fy){
+    sub.push('ประจำปี ' + fy)
+    sub.push(buildThaiExactRange(
+      f_date_from.value,
+      f_date_to.value
+    ))
+  }
 
-  const rowsHtml=allData.map((r,i)=>`
+  const rowsHtml = allData.map((r,i)=>`
 <tr>
 <td>${i+1}</td>
 <td>${r.member_id}</td>
 <td>${r.title}${r.first_name} ${r.last_name}</td>
-<td>${r.group||''}</td>
+<td>${r.group || ''}</td>
 <td>${r.member_status}</td>
 <td>${r.meeting_date}</td>
 </tr>`).join('')
 
-  const html=`
-<html><body>
+  const html = `
+<html>
+<head>
 <style>
 body{font-family:"TH Sarabun New",sans-serif;font-size:16px}
 .header{display:flex;align-items:center}
@@ -347,20 +391,34 @@ body{font-family:"TH Sarabun New",sans-serif;font-size:16px}
 table{width:100%;border-collapse:collapse;margin-top:20px}
 th,td{border:1px solid #000;padding:6px;text-align:center}
 </style>
+</head>
+<body>
+
 <div class="header">
-<img src="${COOP_LOGO_URL}" class="logo">
-<div class="center">
-<h2>${title}</h2>
-${sub.map(s=>`<div>${s}</div>`).join('')}
+  <img src="${COOP_LOGO_URL}" class="logo">
+  <div class="center">
+    <h2>${title}</h2>
+    ${sub.map(s=>`<div>${s}</div>`).join('')}
+  </div>
 </div>
-</div>
+
 <table>
-<tr><th>ลำดับ</th><th>รหัสสมาชิก</th><th>ชื่อ-นามสกุล</th><th>กลุ่ม</th><th>สถานะ</th><th>วันที่ประชุม</th></tr>
+<tr>
+<th>ลำดับ</th>
+<th>รหัสสมาชิก</th>
+<th>ชื่อ-นามสกุล</th>
+<th>กลุ่ม</th>
+<th>สถานะ</th>
+<th>วันที่ประชุม</th>
+</tr>
 ${rowsHtml}
 </table>
-</body></html>`
 
-  const w=window.open('')
+</body>
+</html>
+`
+
+  const w = window.open('')
   w.document.write(html)
   w.document.close()
   w.print()
