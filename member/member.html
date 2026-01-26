@@ -458,6 +458,32 @@ tr.highlight .link{
   color:#000 !important;
   text-decoration:underline;
 }
+  /* ===== FIX จริง : แถวที่ถูกเลือก ===== */
+tr.highlight,
+tr.bg-white {
+  background: #7c2d12 !important;   /* ส้มเข้ม */
+}
+
+/* บังคับตัวหนังสือทุกช่องในแถวไฮไลต์ */
+tr.highlight td,
+tr.bg-white td {
+  color: #000 !important;           /* ดำ */
+  font-weight: 600;
+}
+
+/* ลิงก์ แก้ไข / ลบ ในแถวไฮไลต์ */
+tr.highlight td .link,
+tr.bg-white td .link {
+  color: #000 !important;
+  text-decoration: underline;
+}
+
+/* กัน Tailwind ใส่สีจาง */
+tr.highlight td *,
+tr.bg-white td * {
+  color: #000 !important;
+}
+
 </style>
 
 </body>
