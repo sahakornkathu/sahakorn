@@ -2,19 +2,54 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<title>ประวัติสมาชิกลาออก / เสียชีวิต</title>
+<title>จัดการสมาชิกลาออก / เสียชีวิต</title>
 <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
 <body class="bg-slate-900 text-slate-100 p-6">
-<div class="max-w-6xl mx-auto space-y-6">
+<div class="max-w-6xl mx-auto space-y-8">
 
-<h1 class="text-xl font-bold text-center text-orange-400">
-  ประวัติลาออก / เสียชีวิต (แก้ไขย้อนหลังได้)
+<h1 class="text-xl font-bold text-center text-red-400">
+จัดการสมาชิกลาออก / เสียชีวิต
 </h1>
 
-<!-- ===== TABLE ===== -->
-<div class="bg-slate-800 border border-slate-700 rounded-xl p-4">
+<!-- ================= FORM ================= -->
+<div class="bg-slate-800 border border-slate-700 rounded-xl p-6">
+<h2 class="text-lg font-bold text-yellow-400 mb-4">บันทึกข้อมูล</h2>
+
+<form id="exitForm" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+
+<input id="member_id" placeholder="รหัสสมาชิก" class="input" required>
+
+<input id="title" placeholder="คำนำหน้า" class="input" readonly>
+<input id="first_name" placeholder="ชื่อ" class="input" readonly>
+<input id="last_name" placeholder="นามสกุล" class="input" readonly>
+<input id="group" placeholder="กลุ่ม" class="input" readonly>
+
+<select id="member_status" class="input" required>
+  <option value="">-- สถานะ --</option>
+  <option value="ลาออก">ลาออก</option>
+  <option value="เสียชีวิต">เสียชีวิต</option>
+</select>
+
+<input id="meeting_date" type="date" class="input">
+<input id="share_amount" type="number" placeholder="หุ้นคงเหลือ" class="input">
+<input id="receive_date" type="date" class="input">
+
+<div class="col-span-full flex gap-4 justify-center pt-4">
+  <button class="btn red">บันทึก</button>
+  <button type="reset" class="btn gray" onclick="clearEdit()">ล้าง</button>
+</div>
+
+</form>
+</div>
+
+<!-- ================= HISTORY ================= -->
+<div class="bg-slate-800 border border-slate-700 rounded-xl p-6">
+<h2 class="text-lg font-bold text-orange-400 mb-4">
+รายการย้อนหลัง (แก้ไขได้)
+</h2>
+
 <table class="w-full text-sm text-center">
 <thead class="bg-slate-700">
 <tr>
@@ -24,49 +59,12 @@
   <th>สถานะ</th>
   <th>วันที่ประชุม</th>
   <th>หุ้น</th>
-  <th>วันที่รับเงิน</th>
+  <th>รับเงิน</th>
   <th>จัดการ</th>
 </tr>
 </thead>
 <tbody id="rows"></tbody>
 </table>
-</div>
-
-<!-- ===== EDIT MODAL ===== -->
-<div id="modal" class="fixed inset-0 bg-black/60 hidden items-center justify-center">
-  <div class="bg-slate-800 p-6 rounded-xl w-full max-w-md space-y-4">
-    <h2 class="text-lg font-bold text-yellow-400 text-center">แก้ไขรายการย้อนหลัง</h2>
-
-    <input type="hidden" id="exit_id">
-
-    <div>
-      <label class="label">สถานะ</label>
-      <select id="edit_status" class="input">
-        <option value="ลาออก">ลาออก</option>
-        <option value="เสียชีวิต">เสียชีวิต</option>
-      </select>
-    </div>
-
-    <div>
-      <label class="label">วันที่ประชุม</label>
-      <input id="edit_meeting" type="date" class="input">
-    </div>
-
-    <div>
-      <label class="label">จำนวนหุ้น</label>
-      <input id="edit_share" type="number" class="input">
-    </div>
-
-    <div>
-      <label class="label">วันที่รับเงิน</label>
-      <input id="edit_receive" type="date" class="input">
-    </div>
-
-    <div class="flex justify-center gap-4 pt-2">
-      <button class="btn yellow" onclick="saveEdit()">บันทึก</button>
-      <button class="btn gray" onclick="closeModal()">ยกเลิก</button>
-    </div>
-  </div>
 </div>
 
 </div>
@@ -78,90 +76,128 @@ const SUPABASE_URL = 'https://ttottijljxoinptmhgtu.supabase.co'
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'
 const db = createClient(SUPABASE_URL, SUPABASE_KEY)
 
-let currentMemberId = null
+let editingExitId = null
+let editingMemberId = null
 
+/* ===== โหลดข้อมูลสมาชิก ===== */
+member_id.addEventListener('blur', async ()=>{
+  if(!member_id.value) return
+  const {data} = await db.from('members')
+    .select('title,first_name,last_name,group')
+    .eq('member_id',member_id.value)
+    .single()
+
+  if(!data){
+    alert('ไม่พบสมาชิก')
+    clearEdit()
+    return
+  }
+
+  title.value=data.title
+  first_name.value=data.first_name
+  last_name.value=data.last_name
+  group.value=data.group
+})
+
+/* ===== SUBMIT ===== */
+exitForm.onsubmit = async e=>{
+  e.preventDefault()
+
+  const payload={
+    member_id:member_id.value,
+    title:title.value,
+    first_name:first_name.value,
+    last_name:last_name.value,
+    group:group.value,
+    member_status:member_status.value,
+    meeting_date:meeting_date.value||null,
+    share_amount:share_amount.value||null,
+    receive_date:receive_date.value||null
+  }
+
+  if(editingExitId){
+    await db.from('member_exit').update(payload).eq('id',editingExitId)
+  }else{
+    await db.from('member_exit').insert([payload])
+  }
+
+  await syncMemberStatus(member_id.value)
+  clearEdit()
+  loadHistory()
+}
+
+/* ===== HISTORY ===== */
 async function loadHistory(){
-  const { data } = await db
-    .from('member_exit')
+  const {data} = await db.from('member_exit')
     .select('*')
-    .order('meeting_date', { ascending: false })
+    .order('meeting_date',{ascending:false})
 
-  const rows = document.getElementById('rows')
-  rows.innerHTML = ''
-
+  rows.innerHTML=''
   data.forEach(r=>{
-    rows.innerHTML += `
-    <tr class="border-b border-slate-700 hover:bg-slate-700">
-      <td>${r.member_id}</td>
-      <td>${r.title || ''}${r.first_name} ${r.last_name}</td>
-      <td>${r.group || ''}</td>
-      <td class="${r.member_status==='เสียชีวิต'?'text-red-400':'text-orange-400'}">
-        ${r.member_status}
-      </td>
-      <td>${r.meeting_date || '-'}</td>
-      <td>${r.share_amount || '-'}</td>
-      <td>${r.receive_date || '-'}</td>
-      <td>
-        <button class="text-blue-400" onclick='openEdit(${JSON.stringify(r)})'>
-          แก้ไข
-        </button>
-      </td>
-    </tr>`
+    rows.innerHTML+=`
+<tr class="border-b border-slate-700 hover:bg-slate-700">
+<td>${r.member_id}</td>
+<td>${r.first_name} ${r.last_name}</td>
+<td>${r.group||''}</td>
+<td class="${r.member_status==='เสียชีวิต'?'text-red-400':'text-orange-400'}">
+${r.member_status}</td>
+<td>${r.meeting_date||''}</td>
+<td>${r.share_amount||''}</td>
+<td>${r.receive_date||''}</td>
+<td>
+<button class="text-blue-400"
+onclick='editRow(${JSON.stringify(r)})'>แก้ไข</button>
+</td>
+</tr>`
   })
 }
 
-window.openEdit = r=>{
-  exit_id.value = r.id
-  edit_status.value = r.member_status
-  edit_meeting.value = r.meeting_date || ''
-  edit_share.value = r.share_amount || ''
-  edit_receive.value = r.receive_date || ''
-  currentMemberId = r.member_id
-  modal.classList.remove('hidden')
-  modal.classList.add('flex')
+window.editRow = r=>{
+  editingExitId = r.id
+  editingMemberId = r.member_id
+
+  member_id.value = r.member_id
+  title.value = r.title
+  first_name.value = r.first_name
+  last_name.value = r.last_name
+  group.value = r.group
+  member_status.value = r.member_status
+  meeting_date.value = r.meeting_date||''
+  share_amount.value = r.share_amount||''
+  receive_date.value = r.receive_date||''
 }
 
-window.closeModal = ()=>{
-  modal.classList.add('hidden')
-}
-
-/* ===== SAVE EDIT + SYNC STATUS ===== */
-window.saveEdit = async ()=>{
-  await db.from('member_exit').update({
-    member_status: edit_status.value,
-    meeting_date: edit_meeting.value || null,
-    share_amount: edit_share.value || null,
-    receive_date: edit_receive.value || null
-  }).eq('id', exit_id.value)
-
-  // ดึง record ล่าสุดของ member
-  const { data: latest } = await db
-    .from('member_exit')
+/* ===== SYNC STATUS ===== */
+async function syncMemberStatus(mid){
+  const {data:last} = await db.from('member_exit')
     .select('member_status')
-    .eq('member_id', currentMemberId)
-    .order('meeting_date', { ascending: false })
+    .eq('member_id',mid)
+    .order('meeting_date',{ascending:false})
     .limit(1)
     .single()
 
-  if(latest){
+  if(last){
     await db.from('members')
-      .update({ member_status: latest.member_status })
-      .eq('member_id', currentMemberId)
+      .update({member_status:last.member_status})
+      .eq('member_id',mid)
   }
+}
 
-  closeModal()
-  loadHistory()
+/* ===== CLEAR ===== */
+window.clearEdit = ()=>{
+  editingExitId=null
+  editingMemberId=null
+  exitForm.reset()
 }
 
 loadHistory()
 </script>
 
 <style>
-.input{width:100%;padding:8px;border-radius:6px;background:#020617;border:1px solid #334155}
-.label{font-size:14px;color:#cbd5f5}
-.btn{padding:6px 16px;border-radius:8px}
-.btn.yellow{background:#ca8a04}
-.btn.gray{background:#475569}
+.input{background:#020617;border:1px solid #334155;padding:8px;border-radius:6px}
+.btn{padding:8px 20px;border-radius:8px}
+.red{background:#dc2626}
+.gray{background:#475569}
 </style>
 
 </body>
