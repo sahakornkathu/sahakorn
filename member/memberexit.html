@@ -21,29 +21,60 @@
 
 <form id="exitForm" class="grid grid-cols-1 md:grid-cols-4 gap-4">
 
-<div><label class="label">รหัสสมาชิก</label><input id="member_id" class="input" required></div>
-<div><label class="label">คำนำหน้า</label><input id="title" class="input" readonly></div>
-<div><label class="label">ชื่อ</label><input id="first_name" class="input" readonly></div>
-<div><label class="label">นามสกุล</label><input id="last_name" class="input" readonly></div>
-<div><label class="label">กลุ่ม</label><input id="group" class="input" readonly></div>
+<div>
+  <label class="label">รหัสสมาชิก</label>
+  <input id="member_id" class="input" required>
+</div>
 
 <div>
-<label class="label">สถานะสมาชิก</label>
-<select id="member_status" class="input" required>
-<option value="">-- เลือก --</option>
-<option value="ลาออก">ลาออก</option>
-<option value="เสียชีวิต">เสียชีวิต</option>
-</select>
+  <label class="label">คำนำหน้า</label>
+  <input id="title" class="input" readonly>
 </div>
 
-<div><label class="label">วันที่ประชุม</label><input id="meeting_date" type="date" class="input" required></div>
-<div><label class="label">หุ้นคงเหลือ</label><input id="share_amount" type="number" class="input"></div>
-<div><label class="label">วันที่รับเงิน</label><input id="receive_date" type="date" class="input"></div>
+<div>
+  <label class="label">ชื่อ</label>
+  <input id="first_name" class="input" readonly>
+</div>
+
+<div>
+  <label class="label">นามสกุล</label>
+  <input id="last_name" class="input" readonly>
+</div>
+
+<div>
+  <label class="label">กลุ่ม</label>
+  <input id="group" class="input" readonly>
+</div>
+
+<div>
+  <label class="label">สถานะสมาชิก</label>
+  <select id="member_status" class="input" required>
+    <option value="">-- เลือก --</option>
+    <option value="ลาออก">ลาออก</option>
+    <option value="เสียชีวิต">เสียชีวิต</option>
+  </select>
+</div>
+
+<div>
+  <label class="label">วันที่ประชุม</label>
+  <input id="meeting_date" type="date" class="input" required>
+</div>
+
+<div>
+  <label class="label">หุ้นคงเหลือ</label>
+  <input id="share_amount" type="number" class="input">
+</div>
+
+<div>
+  <label class="label">วันที่รับเงิน</label>
+  <input id="receive_date" type="date" class="input">
+</div>
 
 <div class="col-span-full flex justify-center gap-4">
-<button class="btn red">บันทึก</button>
-<button type="reset" class="btn gray" onclick="clearEdit()">ล้างฟอร์ม</button>
+  <button class="btn red">บันทึก</button>
+  <button type="reset" class="btn gray" onclick="clearEdit()">ล้างฟอร์ม</button>
 </div>
+
 </form>
 </div>
 
@@ -52,25 +83,52 @@
 <h2 class="font-bold text-sky-400 mb-4">ค้นหา / กรองข้อมูล</h2>
 
 <div class="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-7 gap-4">
-<input id="f_member_id" class="input" placeholder="รหัสสมาชิก">
-<input id="f_first_name" class="input" placeholder="ชื่อ">
-<input id="f_last_name" class="input" placeholder="นามสกุล">
-<input id="f_group" class="input" placeholder="กลุ่ม">
 
-<select id="f_status" class="input">
-<option value="">สถานะทั้งหมด</option>
-<option value="ลาออก">ลาออก</option>
-<option value="เสียชีวิต">เสียชีวิต</option>
-</select>
+<div>
+  <label class="label">รหัสสมาชิก</label>
+  <input id="f_member_id" class="input">
+</div>
 
-<input id="f_date_from" type="date" class="input">
-<input id="f_date_to" type="date" class="input">
+<div>
+  <label class="label">ชื่อ</label>
+  <input id="f_first_name" class="input">
+</div>
+
+<div>
+  <label class="label">นามสกุล</label>
+  <input id="f_last_name" class="input">
+</div>
+
+<div>
+  <label class="label">กลุ่ม</label>
+  <input id="f_group" class="input">
+</div>
+
+<div>
+  <label class="label">สถานะ</label>
+  <select id="f_status" class="input">
+    <option value="">ทั้งหมด</option>
+    <option value="ลาออก">ลาออก</option>
+    <option value="เสียชีวิต">เสียชีวิต</option>
+  </select>
+</div>
+
+<div>
+  <label class="label">วันที่ (จาก)</label>
+  <input id="f_date_from" type="date" class="input">
+</div>
+
+<div>
+  <label class="label">วันที่ (ถึง)</label>
+  <input id="f_date_to" type="date" class="input">
+</div>
+
 </div>
 
 <div class="flex justify-end gap-3 mt-4">
-<button class="btn gray" onclick="clearFilter()">ล้างตัวกรอง</button>
-<button class="btn green" onclick="exportExcel()">Export</button>
-<button class="btn blue" onclick="printReport()">Print</button>
+  <button class="btn gray" onclick="clearFilter()">ล้างตัวกรอง</button>
+  <button class="btn green" onclick="exportExcel()">Export</button>
+  <button class="btn blue" onclick="printReport()">Print</button>
 </div>
 </div>
 
@@ -97,9 +155,9 @@
 </table>
 
 <div class="flex justify-center gap-4 mt-4">
-<button class="btn gray" onclick="prevPage()">ก่อนหน้า</button>
-<span id="pageInfo"></span>
-<button class="btn gray" onclick="nextPage()">ถัดไป</button>
+  <button class="btn gray" onclick="prevPage()">ก่อนหน้า</button>
+  <span id="pageInfo"></span>
+  <button class="btn gray" onclick="nextPage()">ถัดไป</button>
 </div>
 </div>
 
@@ -108,14 +166,12 @@
 <script type="module">
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-/* ===== CONFIG ===== */
 const SUPABASE_URL = 'https://ttottijljxoinptmhgtu.supabase.co'
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'
 const COOP_LOGO_URL = 'https://ttottijljxoinptmhgtu.supabase.co/storage/v1/object/public/slips/logo.png'
 
 const db = createClient(SUPABASE_URL, SUPABASE_KEY)
 
-/* ===== STATE ===== */
 let allData = [], page = 1, pageSize = 10
 let editing = false, editKey = null
 
@@ -277,7 +333,6 @@ window.exportExcel = ()=>{
     alert('ไม่มีข้อมูล')
     return
   }
-
   const ws = XLSX.utils.json_to_sheet(allData)
   const wb = XLSX.utils.book_new()
   XLSX.utils.book_append_sheet(wb, ws, 'data')
@@ -299,6 +354,7 @@ window.printReport = ()=>{
   }
 
   const fy = getCurrentFiscalYearThai()
+  const total = allData.length
 
   const rowsHtml = allData.map((r,i)=>`
 <tr>
@@ -312,27 +368,57 @@ window.printReport = ()=>{
 `).join('')
 
   const html = `
+<!DOCTYPE html>
 <html>
 <head>
+<meta charset="UTF-8">
 <style>
-body{font-family:"TH Sarabun New",sans-serif;font-size:16px}
-.header{display:flex;align-items:center}
+@page{
+  margin:20mm;
+  @bottom-center{
+    content:"หน้า " counter(page) " / " counter(pages);
+    font-size:14px;
+  }
+}
+body{
+  font-family:"TH Sarabun New",sans-serif;
+  font-size:16px;
+}
+.header-grid{
+  display:grid;
+  grid-template-columns:100px 1fr 100px;
+  align-items:center;
+  margin-bottom:10px;
+}
 .logo{width:80px}
-.center{text-align:center;flex:1}
-table{width:100%;border-collapse:collapse;margin-top:20px}
-th,td{border:1px solid #000;padding:6px;text-align:center}
+.title-box{text-align:center}
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:14px;
+}
+th,td{
+  border:1px solid #000;
+  padding:6px;
+  text-align:center;
+}
 </style>
 </head>
+
 <body>
 
-<div class="header">
-  <img src="${COOP_LOGO_URL}" class="logo">
-  <div class="center">
+<div class="header-grid">
+  <div><img src="${COOP_LOGO_URL}" class="logo"></div>
+
+  <div class="title-box">
     <h2>รายงานสมาชิก ${f_status.value || 'ลาออก / เสียชีวิต'}</h2>
     ${f_group.value ? `<div>กลุ่ม ${f_group.value}</div>` : ''}
     <div><b>ประจำปี ${fy}</b></div>
     <div>1 เมษายน ${fy} – 31 มีนาคม ${fy+1}</div>
+    <div>รวม ${total} ราย</div>
   </div>
+
+  <div></div>
 </div>
 
 <table>
@@ -365,9 +451,22 @@ load()
 </script>
 
 <style>
-.input{background:#020617;border:1px solid #334155;padding:6px;border-radius:6px}
-.label{font-size:12px}
-.btn{padding:6px 16px;border-radius:6px}
+.input{
+  background:#020617;
+  border:1px solid #334155;
+  padding:6px;
+  border-radius:6px;
+}
+.label{
+  font-size:12px;
+  color:#cbd5f5;
+  display:block;
+  margin-bottom:4px;
+}
+.btn{
+  padding:6px 16px;
+  border-radius:6px;
+}
 .red{background:#dc2626}
 .gray{background:#475569}
 .green{background:#16a34a}
