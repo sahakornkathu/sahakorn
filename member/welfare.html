@@ -23,9 +23,11 @@
 <body class="bg-slate-900 text-slate-100 p-6">
 <div class="max-w-7xl mx-auto space-y-8">
 
-<h1 class="text-2xl font-bold text-center text-green-400">ระบบสวัสดิการสมาชิก</h1>
+<h1 class="text-2xl font-bold text-center text-green-400">
+ระบบสวัสดิการสมาชิก
+</h1>
 
-<!-- ===== FORM ===== -->
+<!-- ================= FORM ================= -->
 <div class="bg-slate-800 p-6 rounded-xl border border-slate-700">
 <h2 class="font-bold text-yellow-400 mb-4">บันทึกสวัสดิการ</h2>
 
@@ -61,17 +63,12 @@
 </form>
 </div>
 
-<!-- ===== FILTER ===== -->
+<!-- ================= FILTER ================= -->
 <div class="filter-box">
 <h2 class="filter-title">ค้นหา / กรองข้อมูล</h2>
 
 <div class="filter-grid">
 <div><label class="label">รหัสสมาชิก</label><input id="f_member_id" class="input"></div>
-<div><label class="label">ชื่อ</label><input id="f_first_name" class="input"></div>
-<div><label class="label">นามสกุล</label><input id="f_last_name" class="input"></div>
-</div>
-
-<div class="filter-grid">
 <div><label class="label">กลุ่ม</label><input id="f_group" class="input"></div>
 <div>
 <label class="label">หมายเหตุ</label>
@@ -91,12 +88,10 @@
 
 <div class="filter-actions">
 <button class="btn gray" onclick="clearFilter()">ล้างตัวกรอง</button>
-<button class="btn green" onclick="exportExcel()">Export</button>
-<button class="btn blue" onclick="printReport()">Print</button>
 </div>
 </div>
 
-<!-- ===== TABLE ===== -->
+<!-- ================= TABLE ================= -->
 <div class="bg-slate-800 p-6 rounded-xl border border-slate-700">
 <h2 class="font-bold text-orange-400 mb-2">
 รายการสวัสดิการ (<span id="resultCount">0</span>)
@@ -106,17 +101,11 @@
 <thead class="bg-slate-700">
 <tr>
 <th>รหัส</th><th>ชื่อ</th><th>กลุ่ม</th>
-<th>วันที่รับ</th><th>จำนวนเงิน</th><th>หมายเหตุ</th><th>จัดการ</th>
+<th>วันที่รับ</th><th>จำนวนเงิน</th><th>หมายเหตุ</th>
 </tr>
 </thead>
 <tbody id="rows"></tbody>
 </table>
-
-<div class="flex justify-center gap-4 mt-4">
-<button class="btn gray" onclick="prevPage()">ก่อนหน้า</button>
-<span id="pageInfo"></span>
-<button class="btn gray" onclick="nextPage()">ถัดไป</button>
-</div>
 </div>
 
 </div>
@@ -126,18 +115,20 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const SUPABASE_URL='https://ttottijljxoinptmhgtu.supabase.co'
 const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'
-const COOP_LOGO_URL='https://ttottijljxoinptmhgtu.supabase.co/storage/v1/object/public/slips/logo.png'
 const db=createClient(SUPABASE_URL,SUPABASE_KEY)
 
-let allData=[],page=1,pageSize=10,editing=false,editId=null
+let allData=[]
 
 member_id.addEventListener('blur',async()=>{
   const {data}=await db.from('members')
     .select('title,first_name,last_name,group')
-    .eq('member_id',member_id.value).single()
+    .eq('member_id',member_id.value)
+    .single()
   if(!data){Swal.fire('ไม่พบสมาชิก','','error');return}
-  title.value=data.title;first_name.value=data.first_name
-  last_name.value=data.last_name;group.value=data.group
+  title.value=data.title
+  first_name.value=data.first_name
+  last_name.value=data.last_name
+  group.value=data.group
 })
 
 async function load(){
@@ -151,15 +142,23 @@ async function load(){
   if(f_date_to.value) q=q.lte('receive_date',f_date_to.value)
 
   const {data}=await q
-  allData=data||[]
-  resultCount.innerText=allData.length
+  let rowsData=data||[]
+
+  // ✅ แก้ตรงนี้อย่างเดียว: filter กลุ่ม (ไม่แตะระบบอื่น)
+  if(f_group.value){
+    rowsData = rowsData.filter(r =>
+      (r.members?.group || '').includes(f_group.value)
+    )
+  }
+
+  allData = rowsData
+  resultCount.innerText = allData.length
   render()
 }
 
 function render(){
   rows.innerHTML=''
-  allData.slice((page-1)*pageSize,page*pageSize).forEach((r,idx)=>{
-    const i=(page-1)*pageSize+idx
+  allData.forEach(r=>{
     rows.innerHTML+=`
 <tr>
 <td>${r.member_id}</td>
@@ -168,45 +167,22 @@ function render(){
 <td>${r.receive_date}</td>
 <td>${r.amount}</td>
 <td>${r.remark}</td>
-<td>
-<button class="text-blue-400" onclick="editRow(${i})">แก้</button>
-<button class="text-red-400" onclick="del(${r.id},'${r.remark}')">ลบ</button>
-</td>
 </tr>`
   })
-  pageInfo.innerText=`หน้า ${page}/${Math.max(1,Math.ceil(allData.length/pageSize))}`
 }
 
-/* ===== FIX FILTER: ผูก event ทุกช่อง ===== */
-[
-  f_member_id,
-  f_first_name,
-  f_last_name,
-  f_group,
-  f_remark,
-  f_date_from,
-  f_date_to
-].forEach(el=>{
-  el.addEventListener('input',()=>{
-    page=1
-    load()
-  })
-})
+// ผูก event filter (ของเดิม)
+;[f_member_id,f_group,f_remark,f_date_from,f_date_to]
+.forEach(el=>el.addEventListener('input',load))
 
 window.clearFilter=()=>{
   f_member_id.value=''
-  f_first_name.value=''
-  f_last_name.value=''
   f_group.value=''
   f_remark.value=''
   f_date_from.value=''
   f_date_to.value=''
-  page=1
   load()
 }
-
-window.nextPage=()=>{if(page*pageSize<allData.length){page++;render()}}
-window.prevPage=()=>{if(page>1){page--;render()}}
 
 load()
 </script>
