@@ -2,41 +2,37 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<title>จัดการข้อมูลสมาชิก</title>
+<title>ระบบจัดการข้อมูลสมาชิก</title>
 <style>
 body { font-family:sans-serif; background:#f3f4f6; padding:20px }
 form, table { background:#fff; padding:15px; border-radius:6px }
 input, select { padding:6px; margin:4px; width:200px }
 table { width:100%; border-collapse:collapse; margin-top:20px }
 th, td { border:1px solid #ddd; padding:8px }
+th { background:#eee }
 </style>
 </head>
 <body>
 
-<h2>📋 จัดการข้อมูลสมาชิก</h2>
+<h2>📋 ระบบจัดการข้อมูลสมาชิก</h2>
 
 <form id="memberForm">
   <input type="number" id="member_id" placeholder="รหัสสมาชิก" required>
-
   <input type="date" id="join_date">
   <input id="title" placeholder="คำนำหน้า">
   <input id="first_name" placeholder="ชื่อ" required>
   <input id="last_name" placeholder="นามสกุล" required>
-
   <input id="id_card" placeholder="เลขบัตรประชาชน">
   <input type="date" id="birthday">
-
   <input id="group" placeholder="กลุ่ม">
   <input id="house_no" placeholder="บ้านเลขที่">
   <input id="moo" placeholder="หมู่">
   <input id="street" placeholder="ถนน">
   <input id="village" placeholder="หมู่บ้าน">
-
   <input id="subdistrict" placeholder="ตำบล">
   <input id="district" placeholder="อำเภอ">
   <input id="province" placeholder="จังหวัด">
   <input id="postal_code" placeholder="รหัสไปรษณีย์">
-
   <input id="phone" placeholder="โทรศัพท์">
   <input id="phone_alt" placeholder="โทรศัพท์สำรอง">
 
@@ -54,7 +50,7 @@ th, td { border:1px solid #ddd; padding:8px }
 
   <input id="spouse_name" placeholder="ชื่อคู่สมรส">
 
-  <br>
+  <br><br>
   <button type="submit">💾 บันทึก</button>
   <button type="button" onclick="resetForm()">ยกเลิก</button>
 </form>
@@ -63,7 +59,7 @@ th, td { border:1px solid #ddd; padding:8px }
 <thead>
 <tr>
   <th>รหัส</th>
-  <th>ชื่อ</th>
+  <th>ชื่อ-สกุล</th>
   <th>โทร</th>
   <th>สถานะ</th>
   <th>จัดการ</th>
@@ -76,24 +72,34 @@ th, td { border:1px solid #ddd; padding:8px }
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const SUPABASE_URL = 'https://ttottijljxoinptmhgtu.supabase.co'
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'
-const db = createClient(SUPABASE_URL, SUPABASE_KEY)
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'
+
+const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
 const form = document.getElementById('memberForm')
 const rows = document.getElementById('rows')
 
+/* ================= LOAD ================= */
 async function loadMembers() {
-  const { data } = await db
+  const { data, error } = await db
     .from('members')
-    .select('member_id, first_name, last_name, phone, member_status')
+    .select('*')
     .order('member_id')
+
+  console.log('LOAD DATA:', data)
+  console.log('LOAD ERROR:', error)
+
+  if (error) {
+    alert('โหลดข้อมูลไม่สำเร็จ ดู console')
+    return
+  }
 
   rows.innerHTML = ''
   data.forEach(m => {
     rows.innerHTML += `
       <tr>
         <td>${m.member_id}</td>
-        <td>${m.first_name} ${m.last_name}</td>
+        <td>${m.first_name ?? ''} ${m.last_name ?? ''}</td>
         <td>${m.phone ?? ''}</td>
         <td>${m.member_status ?? ''}</td>
         <td>
@@ -104,6 +110,7 @@ async function loadMembers() {
   })
 }
 
+/* ================= SAVE / UPDATE ================= */
 form.addEventListener('submit', async e => {
   e.preventDefault()
 
@@ -113,33 +120,59 @@ form.addEventListener('submit', async e => {
       .map(el => [el.id, el.value || null])
   )
 
-  await db.from('members')
+  console.log('SAVE DATA:', data)
+
+  const { error } = await db
+    .from('members')
     .upsert([data], { onConflict: 'member_id' })
+
+  if (error) {
+    console.error('SAVE ERROR:', error)
+    alert('บันทึกไม่สำเร็จ ดู console')
+    return
+  }
 
   resetForm()
   loadMembers()
 })
 
+/* ================= EDIT ================= */
 window.editMember = m => {
   member_id.value = m.member_id
   member_id.disabled = true
-  first_name.value = m.first_name
-  last_name.value = m.last_name
-  phone.value = m.phone ?? ''
-  member_status.value = m.member_status ?? ''
+
+  for (const key in m) {
+    if (document.getElementById(key)) {
+      document.getElementById(key).value = m[key] ?? ''
+    }
+  }
 }
 
+/* ================= DELETE ================= */
 window.deleteMember = async id => {
   if (!confirm('ยืนยันลบสมาชิกนี้?')) return
-  await db.from('members').delete().eq('member_id', id)
+
+  const { error } = await db
+    .from('members')
+    .delete()
+    .eq('member_id', id)
+
+  if (error) {
+    console.error('DELETE ERROR:', error)
+    alert('ลบไม่สำเร็จ ดู console')
+    return
+  }
+
   loadMembers()
 }
 
+/* ================= RESET ================= */
 window.resetForm = () => {
   form.reset()
   member_id.disabled = false
 }
 
+/* ================= INIT ================= */
 loadMembers()
 </script>
 
