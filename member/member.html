@@ -2,26 +2,30 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<title>ระบบจัดการสมาชิก</title>
+<title>ระบบจัดการข้อมูลสมาชิก</title>
 <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
-<body class="bg-zinc-900 text-zinc-200 p-6">
+<body class="bg-slate-100 p-6 text-slate-800">
 
 <div class="max-w-7xl mx-auto space-y-6">
 
   <!-- Header -->
-  <div class="rounded-xl border border-zinc-700 p-6 bg-zinc-800">
-    <h1 class="text-2xl font-semibold">ระบบจัดการข้อมูลสมาชิก</h1>
-    <p class="text-sm text-zinc-400">เพิ่ม แก้ไข และจัดการข้อมูลสมาชิก</p>
+  <div class="bg-white border border-blue-200 rounded-xl p-6">
+    <h1 class="text-2xl font-semibold text-blue-700">
+      ระบบจัดการข้อมูลสมาชิก
+    </h1>
+    <p class="text-sm text-slate-500">
+      เพิ่ม แก้ไข และจัดการข้อมูลสมาชิก
+    </p>
   </div>
 
-  <!-- FORM -->
+  <!-- ================= FORM ================= -->
   <form id="memberForm" class="space-y-6">
 
     <!-- Section: Member -->
-    <section class="border border-zinc-700 rounded-xl p-6 bg-zinc-850">
-      <h2 class="section-title">ข้อมูลสมาชิก</h2>
+    <section class="bg-white border border-blue-100 rounded-xl p-6">
+      <h2 class="section-title text-blue-600">ข้อมูลสมาชิก</h2>
 
       <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div>
@@ -61,8 +65,8 @@
     </section>
 
     <!-- Section: Address -->
-    <section class="border border-zinc-700 rounded-xl p-6 bg-zinc-850">
-      <h2 class="section-title">ที่อยู่</h2>
+    <section class="bg-white border border-blue-100 rounded-xl p-6">
+      <h2 class="section-title text-blue-600">ที่อยู่</h2>
 
       <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div>
@@ -102,8 +106,8 @@
     </section>
 
     <!-- Section: Contact -->
-    <section class="border border-zinc-700 rounded-xl p-6 bg-zinc-850">
-      <h2 class="section-title">ข้อมูลติดต่อ</h2>
+    <section class="bg-white border border-blue-100 rounded-xl p-6">
+      <h2 class="section-title text-blue-600">ข้อมูลติดต่อ</h2>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
@@ -118,8 +122,8 @@
     </section>
 
     <!-- Section: Status -->
-    <section class="border border-zinc-700 rounded-xl p-6 bg-zinc-850">
-      <h2 class="section-title">สถานะ</h2>
+    <section class="bg-white border border-blue-100 rounded-xl p-6">
+      <h2 class="section-title text-blue-600">สถานะ</h2>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
@@ -155,12 +159,12 @@
 
   </form>
 
-  <!-- TABLE -->
-  <div class="border border-zinc-700 rounded-xl p-6 bg-zinc-800">
-    <h2 class="section-title mb-4">รายชื่อสมาชิก</h2>
+  <!-- ================= TABLE ================= -->
+  <div class="bg-white border border-blue-200 rounded-xl p-6">
+    <h2 class="section-title text-blue-700 mb-4">รายชื่อสมาชิก</h2>
 
     <table class="w-full text-sm">
-      <thead class="border-b border-zinc-700 text-zinc-400">
+      <thead class="bg-blue-50 text-blue-700">
         <tr>
           <th class="th">รหัส</th>
           <th class="th">ชื่อ-สกุล</th>
@@ -169,12 +173,13 @@
           <th class="th text-center">จัดการ</th>
         </tr>
       </thead>
-      <tbody id="rows" class="divide-y divide-zinc-800"></tbody>
+      <tbody id="rows" class="divide-y"></tbody>
     </table>
   </div>
 
 </div>
 
+<!-- ================= SCRIPT ================= -->
 <script type="module">
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -191,14 +196,16 @@ async function loadMembers() {
   rows.innerHTML = ''
   data.forEach(m => {
     rows.innerHTML += `
-      <tr class="hover:bg-zinc-800">
+      <tr class="hover:bg-blue-50">
         <td class="td">${m.member_id}</td>
         <td class="td">${m.first_name} ${m.last_name}</td>
         <td class="td">${m.phone ?? ''}</td>
         <td class="td">${m.member_status ?? ''}</td>
         <td class="td text-center">
-          <button onclick='editMember(${JSON.stringify(m)})' class="text-blue-400">แก้ไข</button>
-          <button onclick="deleteMember(${m.member_id})" class="text-red-400 ml-3">ลบ</button>
+          <button onclick='editMember(${JSON.stringify(m)})'
+            class="text-blue-600 hover:underline">แก้ไข</button>
+          <button onclick="deleteMember(${m.member_id})"
+            class="text-red-600 hover:underline ml-3">ลบ</button>
         </td>
       </tr>`
   })
@@ -217,7 +224,9 @@ form.addEventListener('submit', async e => {
 window.editMember = m => {
   member_id.value = m.member_id
   member_id.disabled = true
-  for (const k in m) if (document.getElementById(k)) document.getElementById(k).value = m[k] ?? ''
+  for (const k in m)
+    if (document.getElementById(k))
+      document.getElementById(k).value = m[k] ?? ''
 }
 
 window.deleteMember = async id => {
@@ -236,18 +245,18 @@ loadMembers()
 
 <style>
 .section-title { @apply text-lg font-semibold mb-4 }
-.label { @apply text-sm text-zinc-400 mb-1 block }
+.label { @apply text-sm text-slate-600 mb-1 block }
 .input {
-  @apply w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2
-         text-zinc-200 focus:outline-none focus:ring-1 focus:ring-blue-500
+  @apply w-full border border-slate-300 rounded-lg px-3 py-2
+         focus:outline-none focus:ring-2 focus:ring-blue-400
 }
-.th { @apply px-3 py-2 text-left }
+.th { @apply px-3 py-2 text-left font-semibold }
 .td { @apply px-3 py-2 }
 .btn-primary {
   @apply bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg
 }
 .btn-secondary {
-  @apply bg-zinc-700 hover:bg-zinc-600 text-zinc-200 px-6 py-2 rounded-lg
+  @apply bg-slate-300 hover:bg-slate-400 text-slate-800 px-6 py-2 rounded-lg
 }
 </style>
 
