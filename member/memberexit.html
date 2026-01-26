@@ -133,11 +133,11 @@ member_id.addEventListener('blur', async ()=>{
   group.value = data.group
 })
 
-/* ===== บันทึก / แก้ไข (มีป้องกันซ้ำ) ===== */
+/* ===== บันทึก / แก้ไข (ป้องกันซ้ำ) ===== */
 exitForm.onsubmit = async e=>{
   e.preventDefault()
 
-  // 🔒 ป้องกันบันทึกซ้ำ (member_id + meeting_date)
+  // ป้องกันบันทึกซ้ำ (member + วันที่ประชุม)
   if(!editingExitId){
     const { data: exists } = await db
       .from('member_exit')
@@ -147,7 +147,7 @@ exitForm.onsubmit = async e=>{
       .maybeSingle()
 
     if(exists){
-      alert('มีการบันทึกข้อมูลสมาชิกในวันที่นี้แล้ว')
+      alert('มีการบันทึกข้อมูลในวันที่นี้แล้ว')
       return
     }
   }
@@ -195,10 +195,8 @@ async function loadHistory(){
   <td>${r.share_amount || ''}</td>
   <td>${r.receive_date || ''}</td>
   <td class="space-x-2">
-    <button class="text-blue-400"
-      onclick='editRow(${JSON.stringify(r)})'>แก้ไข</button>
-    <button class="text-red-500"
-      onclick="deleteRow(${r.id},'${r.member_id}')">ลบ</button>
+    <button class="text-blue-400" onclick='editRow(${JSON.stringify(r)})'>แก้ไข</button>
+    <button class="text-red-500" onclick="deleteRow(${r.id}, '${r.member_id}')">ลบ</button>
   </td>
 </tr>`
   })
@@ -217,37 +215,42 @@ window.editRow = r=>{
   receive_date.value = r.receive_date || ''
 }
 
-/* ===== ลบรายการ + sync สถานะ ===== */
-window.deleteRow = async (id, mid)=>{
+/* ===== ลบข้อมูล + คืนสถานะสมาชิก ===== */
+window.deleteRow = async (id, memberId)=>{
   if(!confirm('ยืนยันการลบรายการนี้ ?')) return
 
+  // ลบ record
   await db.from('member_exit').delete().eq('id', id)
 
-  const { data:last } = await db.from('member_exit')
+  // หา record ล่าสุดที่ยังเหลือ
+  const { data:last } = await db
+    .from('member_exit')
     .select('member_status')
-    .eq('member_id', mid)
+    .eq('member_id', memberId)
     .order('meeting_date', { ascending: false })
     .limit(1)
 
-  if(last && last.length){
+  if(last && last.length > 0){
     await db.from('members')
       .update({ member_status: last[0].member_status })
-      .eq('member_id', mid)
+      .eq('member_id', memberId)
   }else{
+    // ไม่มี history แล้ว → คืนเป็นสมาชิก
     await db.from('members')
       .update({ member_status: 'สมาชิก' })
-      .eq('member_id', mid)
+      .eq('member_id', memberId)
   }
 
   clearEdit()
   loadHistory()
 }
 
-/* ===== sync สถานะไป members ===== */
-async function syncMemberStatus(mid){
-  const { data:last } = await db.from('member_exit')
+/* ===== sync สถานะจาก history ล่าสุด ===== */
+async function syncMemberStatus(memberId){
+  const { data:last } = await db
+    .from('member_exit')
     .select('member_status')
-    .eq('member_id', mid)
+    .eq('member_id', memberId)
     .order('meeting_date', { ascending: false })
     .limit(1)
     .single()
@@ -255,7 +258,7 @@ async function syncMemberStatus(mid){
   if(last){
     await db.from('members')
       .update({ member_status: last.member_status })
-      .eq('member_id', mid)
+      .eq('member_id', memberId)
   }
 }
 
