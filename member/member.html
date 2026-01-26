@@ -2,12 +2,10 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<title>ระบบจัดการสมาชิก</title>
-
-<!-- Tailwind CDN -->
+<title>ระบบจัดการข้อมูลสมาชิก</title>
 <script src="https://cdn.tailwindcss.com"></script>
-
 </head>
+
 <body class="bg-gray-100 p-6">
 
 <div class="max-w-7xl mx-auto space-y-6">
@@ -15,88 +13,176 @@
   <!-- Header -->
   <div class="bg-white rounded-xl shadow p-6">
     <h1 class="text-2xl font-bold text-gray-800">📋 ระบบจัดการข้อมูลสมาชิก</h1>
-    <p class="text-sm text-gray-500">เพิ่ม / แก้ไข / ลบ ข้อมูลสมาชิก</p>
+    <p class="text-gray-500 text-sm">เพิ่ม แก้ไข และจัดการข้อมูลสมาชิกสหกรณ์</p>
   </div>
 
-  <!-- Form -->
-  <div class="bg-white rounded-xl shadow p-6">
-    <form id="memberForm" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+  <!-- ================= FORM ================= -->
+  <form id="memberForm" class="space-y-6">
 
-      <input type="number" id="member_id" placeholder="รหัสสมาชิก *"
-        class="input" required>
+    <!-- Section 1 -->
+    <div class="bg-white rounded-xl shadow p-6">
+      <h2 class="text-lg font-semibold mb-4">🪪 ข้อมูลสมาชิก</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
 
-      <input type="date" id="join_date" class="input">
+        <div>
+          <label class="label">รหัสสมาชิก</label>
+          <input id="member_id" type="number" class="input" required>
+        </div>
 
-      <input id="title" placeholder="คำนำหน้า" class="input">
+        <div>
+          <label class="label">วันที่สมัคร</label>
+          <input id="join_date" type="date" class="input">
+        </div>
 
-      <input id="first_name" placeholder="ชื่อ *" class="input" required>
+        <div>
+          <label class="label">คำนำหน้า</label>
+          <input id="title" class="input">
+        </div>
 
-      <input id="last_name" placeholder="นามสกุล *" class="input" required>
+        <div>
+          <label class="label">ชื่อ</label>
+          <input id="first_name" class="input" required>
+        </div>
 
-      <input id="id_card" placeholder="เลขบัตรประชาชน" class="input">
+        <div>
+          <label class="label">นามสกุล</label>
+          <input id="last_name" class="input" required>
+        </div>
 
-      <input type="date" id="birthday" class="input">
+        <div>
+          <label class="label">เลขบัตรประชาชน</label>
+          <input id="id_card" class="input">
+        </div>
 
-      <input id="group" placeholder="กลุ่ม" class="input">
+        <div>
+          <label class="label">วันเกิด</label>
+          <input id="birthday" type="date" class="input">
+        </div>
 
-      <input id="house_no" placeholder="บ้านเลขที่" class="input">
+        <div>
+          <label class="label">กลุ่มสมาชิก</label>
+          <input id="group" class="input">
+        </div>
 
-      <input id="moo" placeholder="หมู่" class="input">
-
-      <input id="street" placeholder="ถนน" class="input">
-
-      <input id="village" placeholder="หมู่บ้าน" class="input">
-
-      <input id="subdistrict" placeholder="ตำบล" class="input">
-
-      <input id="district" placeholder="อำเภอ" class="input">
-
-      <input id="province" placeholder="จังหวัด" class="input">
-
-      <input id="postal_code" placeholder="รหัสไปรษณีย์" class="input">
-
-      <input id="phone" placeholder="โทรศัพท์" class="input">
-
-      <input id="phone_alt" placeholder="โทรศัพท์สำรอง" class="input">
-
-      <select id="member_status" class="input">
-        <option value="">สถานะสมาชิก</option>
-        <option value="active">ปกติ</option>
-        <option value="inactive">พ้นสภาพ</option>
-      </select>
-
-      <select id="marital_status" class="input">
-        <option value="">สถานภาพ</option>
-        <option value="single">โสด</option>
-        <option value="married">สมรส</option>
-      </select>
-
-      <input id="spouse_name" placeholder="ชื่อคู่สมรส" class="input">
-
-      <div class="md:col-span-3 flex gap-3 pt-4">
-        <button type="submit"
-          class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">
-          💾 บันทึก
-        </button>
-        <button type="button" onclick="resetForm()"
-          class="bg-gray-300 px-6 py-2 rounded-lg hover:bg-gray-400">
-          ยกเลิก
-        </button>
       </div>
+    </div>
 
-    </form>
-  </div>
+    <!-- Section 2 -->
+    <div class="bg-white rounded-xl shadow p-6">
+      <h2 class="text-lg font-semibold mb-4">🏠 ที่อยู่</h2>
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
 
-  <!-- Table -->
-  <div class="bg-white rounded-xl shadow p-6 overflow-x-auto">
+        <div>
+          <label class="label">บ้านเลขที่</label>
+          <input id="house_no" class="input">
+        </div>
+
+        <div>
+          <label class="label">หมู่</label>
+          <input id="moo" class="input">
+        </div>
+
+        <div>
+          <label class="label">ถนน</label>
+          <input id="street" class="input">
+        </div>
+
+        <div>
+          <label class="label">หมู่บ้าน</label>
+          <input id="village" class="input">
+        </div>
+
+        <div>
+          <label class="label">ตำบล</label>
+          <input id="subdistrict" class="input">
+        </div>
+
+        <div>
+          <label class="label">อำเภอ</label>
+          <input id="district" class="input">
+        </div>
+
+        <div>
+          <label class="label">จังหวัด</label>
+          <input id="province" class="input">
+        </div>
+
+        <div>
+          <label class="label">รหัสไปรษณีย์</label>
+          <input id="postal_code" class="input">
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Section 3 -->
+    <div class="bg-white rounded-xl shadow p-6">
+      <h2 class="text-lg font-semibold mb-4">📞 ข้อมูลติดต่อ</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+        <div>
+          <label class="label">โทรศัพท์</label>
+          <input id="phone" class="input">
+        </div>
+
+        <div>
+          <label class="label">โทรศัพท์สำรอง</label>
+          <input id="phone_alt" class="input">
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Section 4 -->
+    <div class="bg-white rounded-xl shadow p-6">
+      <h2 class="text-lg font-semibold mb-4">⚙️ สถานะ</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+        <div>
+          <label class="label">สถานะสมาชิก</label>
+          <select id="member_status" class="input">
+            <option value="">-- เลือก --</option>
+            <option value="active">ปกติ</option>
+            <option value="inactive">พ้นสภาพ</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="label">สถานภาพสมรส</label>
+          <select id="marital_status" class="input">
+            <option value="">-- เลือก --</option>
+            <option value="single">โสด</option>
+            <option value="married">สมรส</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="label">ชื่อคู่สมรส</label>
+          <input id="spouse_name" class="input">
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="flex gap-3">
+      <button type="submit" class="btn-primary">💾 บันทึกข้อมูล</button>
+      <button type="button" onclick="resetForm()" class="btn-secondary">ยกเลิก</button>
+    </div>
+
+  </form>
+
+  <!-- ================= TABLE ================= -->
+  <div class="bg-white rounded-xl shadow p-6">
+    <h2 class="text-lg font-semibold mb-4">📑 รายชื่อสมาชิก</h2>
     <table class="min-w-full text-sm">
       <thead class="bg-gray-100">
         <tr>
-          <th class="px-4 py-2 text-left">รหัส</th>
-          <th class="px-4 py-2 text-left">ชื่อ-สกุล</th>
-          <th class="px-4 py-2 text-left">โทร</th>
-          <th class="px-4 py-2 text-left">สถานะ</th>
-          <th class="px-4 py-2 text-center">จัดการ</th>
+          <th class="th">รหัส</th>
+          <th class="th">ชื่อ-สกุล</th>
+          <th class="th">โทร</th>
+          <th class="th">สถานะ</th>
+          <th class="th text-center">จัดการ</th>
         </tr>
       </thead>
       <tbody id="rows" class="divide-y"></tbody>
@@ -105,13 +191,14 @@
 
 </div>
 
-<!-- Supabase -->
+<!-- ================= SCRIPT ================= -->
 <script type="module">
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-const SUPABASE_URL = 'https://ttottijljxoinptmhgtu.supabase.co'
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'
-const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+const db = createClient(
+  'https://ttottijljxoinptmhgtu.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'
+)
 
 const form = document.getElementById('memberForm')
 const rows = document.getElementById('rows')
@@ -122,15 +209,13 @@ async function loadMembers() {
   data.forEach(m => {
     rows.innerHTML += `
       <tr class="hover:bg-gray-50">
-        <td class="px-4 py-2">${m.member_id}</td>
-        <td class="px-4 py-2">${m.first_name} ${m.last_name}</td>
-        <td class="px-4 py-2">${m.phone ?? ''}</td>
-        <td class="px-4 py-2">${m.member_status ?? ''}</td>
-        <td class="px-4 py-2 text-center space-x-2">
-          <button onclick='editMember(${JSON.stringify(m)})'
-            class="px-3 py-1 bg-yellow-400 rounded hover:bg-yellow-500">✏️</button>
-          <button onclick="deleteMember(${m.member_id})"
-            class="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600">🗑</button>
+        <td class="td">${m.member_id}</td>
+        <td class="td">${m.first_name} ${m.last_name}</td>
+        <td class="td">${m.phone ?? ''}</td>
+        <td class="td">${m.member_status ?? ''}</td>
+        <td class="td text-center">
+          <button onclick='editMember(${JSON.stringify(m)})' class="text-blue-600">แก้ไข</button>
+          <button onclick="deleteMember(${m.member_id})" class="text-red-600 ml-2">ลบ</button>
         </td>
       </tr>`
   })
@@ -167,9 +252,12 @@ loadMembers()
 </script>
 
 <style>
-.input {
-  @apply border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400;
-}
+.label { @apply text-sm text-gray-600 mb-1 block }
+.input { @apply w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-400 }
+.th { @apply px-3 py-2 text-left text-gray-600 font-semibold }
+.td { @apply px-3 py-2 }
+.btn-primary { @apply bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 }
+.btn-secondary { @apply bg-gray-300 px-6 py-2 rounded-lg hover:bg-gray-400 }
 </style>
 
 </body>
