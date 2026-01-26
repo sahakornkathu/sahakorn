@@ -6,8 +6,8 @@
 
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
-
 </head>
+
 <body class="bg-slate-900 text-slate-100 p-6">
 
 <div class="max-w-7xl mx-auto space-y-8">
@@ -217,7 +217,7 @@ async function syncMemberStatus(mid){
   }).eq('member_id',mid)
 }
 
-/* ===== SUBMIT (UPDATE OK) ===== */
+/* ===== SUBMIT ===== */
 exitForm.onsubmit=async e=>{
   e.preventDefault()
 
@@ -298,14 +298,34 @@ window.exportExcel=()=>{
   XLSX.writeFile(wb,buildFileName())
 }
 
-/* ===== PRINT REPORT ===== */
+/* ===== FISCAL YEAR (EXACT) ===== */
+function getFiscalYearFromExactRange(dateFrom,dateTo){
+  if(!dateFrom||!dateTo) return null
+  const f=new Date(dateFrom), t=new Date(dateTo)
+  if(f.getDate()!==1||f.getMonth()!==3) return null
+  if(t.getDate()!==31||t.getMonth()!==2) return null
+  return f.getFullYear()+543
+}
+
+function buildThaiExactRange(dateFrom,dateTo){
+  const fmt=d=>`${d.getDate()} ${d.toLocaleString('th-TH',{month:'long'})} ${d.getFullYear()+543}`
+  return `${fmt(new Date(dateFrom))} – ${fmt(new Date(dateTo))}`
+}
+
+/* ===== PRINT ===== */
 window.printReport=()=>{
   if(!allData.length){ alert('ไม่มีข้อมูล'); return }
 
   let title='รายงานสมาชิก '+(f_status.value||'ลาออก / เสียชีวิต')
   let sub=[]
+
   if(f_group.value) sub.push('กลุ่ม '+f_group.value)
-  sub.push('ปีงบประมาณ 1 เมษายน 2568 – 31 มีนาคม 2569')
+
+  const fy=getFiscalYearFromExactRange(f_date_from.value,f_date_to.value)
+  if(fy) sub.push('ประจำปี '+fy)
+
+  if(f_date_from.value&&f_date_to.value)
+    sub.push(buildThaiExactRange(f_date_from.value,f_date_to.value))
 
   const rowsHtml=allData.map((r,i)=>`
 <tr>
@@ -318,15 +338,15 @@ window.printReport=()=>{
 </tr>`).join('')
 
   const html=`
-<html><head><style>
+<html><body>
+<style>
 body{font-family:"TH Sarabun New",sans-serif;font-size:16px}
 .header{display:flex;align-items:center}
 .logo{width:80px}
 .center{text-align:center;flex:1}
 table{width:100%;border-collapse:collapse;margin-top:20px}
 th,td{border:1px solid #000;padding:6px;text-align:center}
-</style></head>
-<body>
+</style>
 <div class="header">
 <img src="${COOP_LOGO_URL}" class="logo">
 <div class="center">
