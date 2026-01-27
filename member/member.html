@@ -127,292 +127,74 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 const COOP_LOGO_URL = 'https://ttottijljxoinptmhgtu.supabase.co/storage/v1/object/public/slips/logo.png'
 const db = createClient(SUPABASE_URL, SUPABASE_KEY)
 
-const PAGE_SIZE = 15
-let page = 1
-let totalCount = 0
-let debounceTimer = null
-let editingMemberId = null
-
-const form = document.getElementById('memberForm')
-const rows = document.getElementById('rows')
-
-const fMemberId = document.getElementById('f_member_id')
-const fFirst = document.getElementById('f_first_name')
-const fLast  = document.getElementById('f_last_name')
-const fGroup = document.getElementById('f_group')
-const fPhone = document.getElementById('f_phone')
-const fGender= document.getElementById('f_gender')
-const fStatus= document.getElementById('f_status')
-
-function getCurrentFiscalYearThai(){
-  const d=new Date()
-  const y=d.getFullYear()
-  const m=d.getMonth()+1
-  return (m<4?y-1:y)+543
-}
-
-/* ===== SUBMIT (เพิ่ม error handling อย่างเดียว) ===== */
-form.addEventListener('submit',async e=>{
-  e.preventDefault()
-  const data={}
-  Array.from(form.elements).forEach(el=>{ if(el.id) data[el.id]=el.value||null })
-
-  const { error } = await db.from('members').upsert([data],{onConflict:'member_id'})
-  if(error){ alert(error.message); return }
-
-  resetForm()
-  loadMembers()
-  loadSummary()
-})
-
-/* ===== AUTO FILTER ===== */
-;[fMemberId,fFirst,fLast,fGroup,fPhone,fGender,fStatus].forEach(el=>{
-  el.addEventListener('input',()=>{
-    clearTimeout(debounceTimer)
-    debounceTimer=setTimeout(()=>{ page=1; loadMembers() },300)
-  })
-})
-
-window.resetForm = ()=>{
-  form.reset()
-  editingMemberId = null
-  loadMembers()
-}
-
-window.clearFilters = ()=>{
-  fMemberId.value=''
-  fFirst.value=''
-  fLast.value=''
-  fGroup.value=''
-  fPhone.value=''
-  fGender.value=''
-  fStatus.value=''
-  page=1
-  loadMembers()
-}
-
-/* ===== SUMMARY ===== */
-async function loadSummary(){
-  document.getElementById('count-member').innerText =
-    (await db.from('members').select('member_id',{count:'exact',head:true}).eq('member_status','สมาชิก')).count||0
-  document.getElementById('count-resign').innerText =
-    (await db.from('members').select('member_id',{count:'exact',head:true}).eq('member_status','ลาออก')).count||0
-  document.getElementById('count-dead').innerText =
-    (await db.from('members').select('member_id',{count:'exact',head:true}).eq('member_status','เสียชีวิต')).count||0
-}
-
-/* ===== LOAD MEMBERS ===== */
-async function loadMembers(){
-  let q=db.from('members')
-    .select('member_id,first_name,last_name,group,phone,gender,member_status',{count:'exact'})
-    .order('member_id')
-
-  if(fMemberId.value) q=q.eq('member_id',fMemberId.value)
-  if(fFirst.value) q=q.ilike('first_name','%'+fFirst.value+'%')
-  if(fLast.value) q=q.ilike('last_name','%'+fLast.value+'%')
-  if(fGroup.value) q=q.ilike('group','%'+fGroup.value+'%')
-  if(fPhone.value) q=q.ilike('phone','%'+fPhone.value+'%')
-  if(fGender.value) q=q.eq('gender',fGender.value)
-  if(fStatus.value) q=q.eq('member_status',fStatus.value)
-
-  const from=(page-1)*PAGE_SIZE
-  const to=from+PAGE_SIZE-1
-  const {data,count}=await q.range(from,to)
-
-  totalCount=count||0
-  document.getElementById('resultCount').innerText=totalCount
-  document.getElementById('pageInfo').innerText=
-    `หน้า ${page} / ${Math.max(1,Math.ceil(totalCount/PAGE_SIZE))}`
-
-  rows.innerHTML=''
-  data.forEach(m=>{
-    rows.innerHTML+=`
-<tr class="border-b hover:bg-blue-50">
-<td>${m.member_id}</td>
-<td>${m.first_name||''} ${m.last_name||''}</td>
-<td>${m.group||''}</td>
-<td>${m.phone||''}</td>
-<td>${m.gender||''}</td>
-<td>${m.member_status||''}</td>
-<td>
-<button class="link" onclick="editMember(${m.member_id})">แก้ไข</button>
-<button class="link text-red-600" onclick="deleteMember(${m.member_id})">ลบ</button>
-</td>
-</tr>`
-  })
-}
-
-/* ===== EDIT / DELETE ===== */
-window.editMember = async id=>{
-  editingMemberId = id
-  const {data}=await db.from('members').select('*').eq('member_id',id).single()
-  Array.from(form.elements).forEach(el=>{ if(el.id) el.value=data[el.id]||'' })
-}
-
-window.deleteMember = async id=>{
-  if(!confirm('ยืนยันการลบสมาชิก รหัส '+id)) return
-  await db.from('members').delete().eq('member_id',id)
-  editingMemberId = null
-  loadMembers()
-  loadSummary()
-}
-
-/* ===== PAGINATION ===== */
-window.nextPage=()=>{ if(page*PAGE_SIZE<totalCount){page++;loadMembers()} }
-window.prevPage=()=>{ if(page>1){page--;loadMembers()} }
-
-/* ===== EXPORT EXCEL ===== */
-window.exportExcel = async ()=>{
-  let q=db.from('members').select('*').order('member_id')
-  if(fMemberId.value) q=q.eq('member_id',fMemberId.value)
-  if(fFirst.value) q=q.ilike('first_name','%'+fFirst.value+'%')
-  if(fLast.value) q=q.ilike('last_name','%'+fLast.value+'%')
-  if(fGroup.value) q=q.ilike('group','%'+fGroup.value+'%')
-  if(fPhone.value) q=q.ilike('phone','%'+fPhone.value+'%')
-  if(fGender.value) q=q.eq('gender',fGender.value)
-  if(fStatus.value) q=q.eq('member_status',fStatus.value)
-
-  const {data}=await q
-  if(!data||!data.length){alert('ไม่มีข้อมูลให้ export');return}
-
-  const ws=XLSX.utils.json_to_sheet(data)
-  const wb=XLSX.utils.book_new()
-  XLSX.utils.book_append_sheet(wb,ws,'สมาชิก')
-  XLSX.writeFile(wb,'รายชื่อสมาชิก.xlsx')
-}
-
-/* ===== PRINT ===== */
+/* ===== PRINT REPORT (แก้เฉพาะส่วนนี้) ===== */
 window.printMemberReport = async ()=>{
   const pageSize = 1000
   let from = 0
   let allData = []
 
-  while (true) {
-    let q = db
+  while(true){
+    const { data } = await db
       .from('members')
       .select('*')
       .order('member_id')
       .range(from, from + pageSize - 1)
 
-    if(fMemberId.value) q = q.eq('member_id', fMemberId.value)
-    if(fFirst.value) q = q.ilike('first_name','%'+fFirst.value+'%')
-    if(fLast.value) q = q.ilike('last_name','%'+fLast.value+'%')
-    if(fGroup.value) q = q.ilike('group','%'+fGroup.value+'%')
-    if(fPhone.value) q = q.ilike('phone','%'+fPhone.value+'%')
-    if(fGender.value) q = q.eq('gender', fGender.value)
-    if(fStatus.value) q = q.eq('member_status', fStatus.value)
-
-    const { data, error } = await q
-    if(error){ alert(error.message); return }
-
-    if(!data || data.length === 0) break
-
+    if(!data || !data.length) break
     allData = allData.concat(data)
-
     if(data.length < pageSize) break
     from += pageSize
   }
 
-  if(!allData.length){
-    alert('ไม่มีข้อมูลสำหรับพิมพ์')
-    return
-  }
+  const today = new Date().toLocaleDateString('th-TH',{year:'numeric',month:'long',day:'numeric'})
 
-  const today = new Date().toLocaleDateString('th-TH',{
-    year:'numeric',month:'long',day:'numeric'
-  })
-
-  const rowsHtml = allData.map((r,i)=>`
-<tr>
-  <td>${i+1}</td>
-  <td>${r.member_id}</td>
-  <td>${r.title||''}${r.first_name||''} ${r.last_name||''}</td>
-  <td style="text-align:left">
-    ${r.house_no||''} หมู่ ${r.moo||''}
-    ${r.village||''} ${r.subdistrict||''}
-    ${r.district||''} ${r.province||''}
-  </td>
-  <td>${r.phone||''}</td>
-  <td></td>
-</tr>
-`).join('')
-
- 
-const html = `
+  const html = `
 <html>
 <head>
 <meta charset="UTF-8">
 <style>
 @page{
-  size:A4 landscape;          /* ✅ แนวนอน */
+  size:A4 landscape;
   margin:15mm;
-  @bottom-center{
-    content:"หน้า " counter(page) " / " counter(pages);
-  }
+  @bottom-center{content:"หน้า " counter(page) " / " counter(pages);}
 }
 body{
   font-family:"TH Sarabun New",sans-serif;
-  font-size:16px;
+  font-size:15px;
 }
-.header-grid{
-  display:grid;
-  grid-template-columns:100px 1fr 100px;
-  align-items:center;
-}
-.logo{width:80px}
-.title-box{text-align:center}
-
-/* ===== TABLE ===== */
 table{
   width:100%;
   border-collapse:collapse;
-  margin-top:14px;
-  table-layout:fixed;         /* 🔑 สำคัญมาก */
+  table-layout:fixed;
 }
 th,td{
   border:1px solid #000;
   padding:6px 8px;
-  vertical-align:top;
-}
-th{
-  background:#f0f0f0;
   text-align:center;
-  font-weight:600;
+  vertical-align:middle;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
 }
-
-/* alignment */
-td.center{text-align:center}
-td.address{text-align:left}
-
-/* ช่องลายเซ็น */
-td.signature{
-  height:55px;               /* ✍️ เซ็นได้จริง */
-}
+th{background:#f0f0f0}
+td.signature{height:55px}
 </style>
 </head>
 
 <body>
-<div class="header-grid">
-  <div><img src="${COOP_LOGO_URL}" class="logo"></div>
-  <div class="title-box">
-    <h2>รายงานสมาชิก</h2>
-    ${fGroup.value ? `<div>กลุ่ม ${fGroup.value}</div>` : ''}
-    <div>ณ วันที่ ${today}</div>
-    <div>รวม ${allData.length} ราย</div>
-  </div>
-  <div></div>
-</div>
+<h2 style="text-align:center">รายงานสมาชิก</h2>
+<div style="text-align:center">ณ วันที่ ${today}</div>
+<div style="text-align:center">รวม ${allData.length} ราย</div>
 
 <table>
 <colgroup>
-  <col style="width:4%">    <!-- ลำดับ -->
-  <col style="width:8%">    <!-- เลขสมาชิก -->
-  <col style="width:16%">   <!-- ชื่อ -->
-  <col style="width:42%">   <!-- ที่อยู่ (กว้างสุด) -->
-  <col style="width:10%">   <!-- โทร -->
-  <col style="width:20%">   <!-- ลายเซ็น -->
+  <col style="width:4%">
+  <col style="width:8%">
+  <col style="width:16%">
+  <col style="width:42%">
+  <col style="width:10%">
+  <col style="width:20%">
 </colgroup>
-
 <thead>
 <tr>
   <th>ลำดับ</th>
@@ -423,56 +205,44 @@ td.signature{
   <th>ลายเซ็น</th>
 </tr>
 </thead>
-
 <tbody>
 ${allData.map((r,i)=>`
 <tr>
-  <td class="center">${i+1}</td>
-  <td class="center">${r.member_id}</td>
+  <td>${i+1}</td>
+  <td>${r.member_id}</td>
   <td>${r.title||''}${r.first_name||''} ${r.last_name||''}</td>
-  <td class="address">
-    ${r.house_no||''} หมู่ ${r.moo||''}
-    ${r.village||''} ${r.subdistrict||''}
-    ${r.district||''} ${r.province||''}
-  </td>
-  <td class="center">${r.phone||''}</td>
+  <td>${r.house_no||''} ${r.village||''} ${r.district||''}</td>
+  <td>${r.phone||''}</td>
   <td class="signature"></td>
 </tr>
 `).join('')}
 </tbody>
 </table>
 </body>
-</html>
-`
-
-
+</html>`
 
   const w = window.open('')
   w.document.write(html)
   w.document.close()
   w.print()
 }
-
-
-loadMembers()
-loadSummary()
 </script>
 
 <style>
 .box{background:#fff;border:2px solid #93c5fd;border-radius:12px;padding:16px}
-.field{display:flex;align-items:center;gap:6px}
+.field{display:flex;gap:6px}
 .field label{width:120px}
 .field input,.field select,.input{flex:1;border:2px solid #94a3b8;border-radius:6px;padding:6px}
-.summary{background:#fff;border:2px solid;border-radius:12px;padding:12px;text-align:center}
+.summary{background:#fff;border:2px solid;border-radius:12px;padding:12px}
 .summary .num{font-size:28px;font-weight:700}
-.green{border-color:#22c55e;color:#15803d}
-.orange{border-color:#f97316;color:#c2410c}
-.red{border-color:#ef4444;color:#b91c1c}
+.green{border-color:#22c55e}
+.orange{border-color:#f97316}
+.red{border-color:#ef4444}
 .btn{padding:6px 16px;border-radius:8px}
 .btn.blue{background:#2563eb;color:#fff}
 .btn.gray{background:#e5e7eb}
 .btn.green{background:#16a34a;color:#fff}
-.link{color:#2563eb;cursor:pointer}
+.link{color:#2563eb}
 </style>
 
 </body>
