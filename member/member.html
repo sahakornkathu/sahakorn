@@ -283,7 +283,12 @@ window.exportExcel = async ()=>{
 
 /* ===== PRINT ===== */
 window.printMemberReport = async ()=>{
-  let q = db.from('members').select('*').order('member_id')
+  let q = db
+  .from('members')
+  .select('*')
+  .order('member_id')
+  .range(0, 9999)   // ✅ ดึงเกิน 1000
+
 
   if(fMemberId.value) q = q.eq('member_id', fMemberId.value)
   if(fFirst.value) q = q.ilike('first_name','%'+fFirst.value+'%')
