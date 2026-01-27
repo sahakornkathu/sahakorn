@@ -283,64 +283,115 @@ window.exportExcel = async ()=>{
 
 /* ===== PRINT ===== */
 window.printMemberReport = async ()=>{
-  let q=db.from('members').select('*').order('member_id')
-  if(fMemberId.value) q=q.eq('member_id',fMemberId.value)
-  if(fFirst.value) q=q.ilike('first_name','%'+fFirst.value+'%')
-  if(fLast.value) q=q.ilike('last_name','%'+fLast.value+'%')
-  if(fGroup.value) q=q.ilike('group','%'+fGroup.value+'%')
-  if(fPhone.value) q=q.ilike('phone','%'+fPhone.value+'%')
-  if(fGender.value) q=q.eq('gender',fGender.value)
-  if(fStatus.value) q=q.eq('member_status',fStatus.value)
+  let q = db.from('members').select('*').order('member_id')
 
-  const {data}=await q
-  if(!data||!data.length){alert('ไม่มีข้อมูลสำหรับพิมพ์');return}
+  if(fMemberId.value) q = q.eq('member_id', fMemberId.value)
+  if(fFirst.value) q = q.ilike('first_name','%'+fFirst.value+'%')
+  if(fLast.value) q = q.ilike('last_name','%'+fLast.value+'%')
+  if(fGroup.value) q = q.ilike('group','%'+fGroup.value+'%')
+  if(fPhone.value) q = q.ilike('phone','%'+fPhone.value+'%')
+  if(fGender.value) q = q.eq('gender', fGender.value)
+  if(fStatus.value) q = q.eq('member_status', fStatus.value)
 
-  const fy=getCurrentFiscalYearThai()
-  const rowsHtml=data.map((r,i)=>`
+  const { data, error } = await q
+  if(error){ alert(error.message); return }
+  if(!data || !data.length){ alert('ไม่มีข้อมูลสำหรับพิมพ์'); return }
+
+  const today = new Date().toLocaleDateString('th-TH', {
+    year:'numeric', month:'long', day:'numeric'
+  })
+
+  const rowsHtml = data.map((r,i)=>`
 <tr>
-<td>${i+1}</td>
-<td>${r.member_id}</td>
-<td>${r.title||''}${r.first_name||''} ${r.last_name||''}</td>
-<td>${r.group||''}</td>
-<td>${r.gender||''}</td>
-<td>${r.phone||''}</td>
-<td>${r.member_status||''}</td>
-</tr>`).join('')
+  <td>${i+1}</td>
+  <td>${r.member_id}</td>
+  <td>${r.title||''}${r.first_name||''} ${r.last_name||''}</td>
+  <td style="text-align:left">
+    ${r.house_no||''} หมู่ ${r.moo||''}
+    ${r.village||''} ${r.subdistrict||''}
+    ${r.district||''} ${r.province||''}
+  </td>
+  <td>${r.phone||''}</td>
+  <td></td>
+</tr>
+`).join('')
 
-  const html=`<html><head><meta charset="UTF-8">
+  const html = `
+<html>
+<head>
+<meta charset="UTF-8">
 <style>
-@page{margin:20mm;@bottom-center{content:"หน้า " counter(page) " / " counter(pages);}}
-body{font-family:"TH Sarabun New",sans-serif;font-size:16px}
-.header-grid{display:grid;grid-template-columns:100px 1fr 100px;align-items:center}
-.logo{width:80px}
-.title-box{text-align:center}
-table{width:100%;border-collapse:collapse;margin-top:14px}
-th,td{border:1px solid #000;padding:6px;text-align:center}
-</style></head>
+@page{
+  margin:20mm;
+  @bottom-center{
+    content:"หน้า " counter(page) " / " counter(pages);
+  }
+}
+body{
+  font-family:"TH Sarabun New",sans-serif;
+  font-size:16px;
+}
+.header-grid{
+  display:grid;
+  grid-template-columns:100px 1fr 100px;
+  align-items:center;
+}
+.logo{ width:80px }
+.title-box{ text-align:center }
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:14px;
+}
+th,td{
+  border:1px solid #000;
+  padding:6px;
+  text-align:center;
+}
+th{ background:#f0f0f0 }
+td:nth-child(4){ text-align:left }
+td:last-child{ height:40px }
+</style>
+</head>
+
 <body>
 <div class="header-grid">
   <div><img src="${COOP_LOGO_URL}" class="logo"></div>
   <div class="title-box">
-    <h2>รายชื่อสมาชิก</h2>
-    ${fGroup.value?`<div>กลุ่ม ${fGroup.value}</div>`:''}
-    <div><b>ประจำปี ${fy}</b></div>
+    <h2>รายงานสมาชิก</h2>
+    ${fGroup.value ? `<div>กลุ่ม ${fGroup.value}</div>` : ''}
+    <div>ณ วันที่ ${today}</div>
     <div>รวม ${data.length} ราย</div>
   </div>
   <div></div>
 </div>
+
 <table>
 <thead>
-<tr><th>ลำดับ</th><th>รหัส</th><th>ชื่อ-นามสกุล</th><th>กลุ่ม</th><th>เพศ</th><th>โทร</th><th>สถานะ</th></tr>
+<tr>
+  <th>ลำดับ</th>
+  <th>เลขสมาชิก</th>
+  <th>ชื่อ-นามสกุล</th>
+  <th>ที่อยู่</th>
+  <th>เบอร์โทร</th>
+  <th>ลายเซ็น</th>
+</tr>
 </thead>
-<tbody>${rowsHtml}</tbody>
+<tbody>
+${rowsHtml}
+</tbody>
 </table>
-</body></html>`
 
-  const w=window.open('')
+</body>
+</html>
+`
+
+  const w = window.open('')
   w.document.write(html)
   w.document.close()
   w.print()
 }
+
 
 loadMembers()
 loadSummary()
