@@ -20,8 +20,57 @@
 <!-- ===== FORM ===== -->
 <form id="memberForm" class="box space-y-4">
 <h2 class="title">บันทึกข้อมูลสมาชิก</h2>
-<!-- (ฟอร์มเหมือนเดิมทุกบรรทัด) -->
-<!-- ====== ตัดออกในคำอธิบายนี้ แต่โค้ดของคุณยังอยู่ครบ ====== -->
+
+<div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+  <div class="field"><label>รหัสสมาชิก</label><input id="member_id" type="number" required></div>
+  <div class="field"><label>วันที่สมัคร</label><input id="join_date" type="date"></div>
+  <div class="field"><label>คำนำหน้า</label>
+    <select id="title"><option value="">--</option><option>นาย</option><option>นาง</option><option>นางสาว</option></select>
+  </div>
+  <div class="field"><label>กลุ่ม</label><input id="group"></div>
+
+  <div class="field"><label>ชื่อ</label><input id="first_name"></div>
+  <div class="field"><label>นามสกุล</label><input id="last_name"></div>
+  <div class="field"><label>เลขบัตรประชาชน</label><input id="id_card"></div>
+  <div class="field"><label>วันเกิด</label><input id="birthday" type="date"></div>
+
+  <div class="field"><label>เพศ</label>
+    <select id="gender"><option value="">--</option><option>ชาย</option><option>หญิง</option></select>
+  </div>
+  <div class="field"><label>อายุ</label><input id="age" type="number"></div>
+
+  <div class="field"><label>บ้านเลขที่</label><input id="house_no"></div>
+  <div class="field"><label>หมู่</label><input id="moo"></div>
+  <div class="field"><label>ถนน</label><input id="street"></div>
+  <div class="field"><label>หมู่บ้าน</label><input id="village"></div>
+
+  <div class="field"><label>ตำบล</label><input id="subdistrict"></div>
+  <div class="field"><label>อำเภอ</label><input id="district"></div>
+  <div class="field"><label>จังหวัด</label><input id="province"></div>
+  <div class="field"><label>รหัสไปรษณีย์</label><input id="postal_code"></div>
+
+  <div class="field"><label>โทรศัพท์</label><input id="phone"></div>
+  <div class="field"><label>โทรศัพท์สำรอง</label><input id="phone_alt"></div>
+
+  <div class="field"><label>สถานะสมาชิก</label>
+    <select id="member_status"><option value="">--</option><option>สมาชิก</option><option>ลาออก</option><option>เสียชีวิต</option></select>
+  </div>
+
+  <div class="field"><label>สถานภาพสมรส</label>
+    <select id="marital_status"><option value="">--</option><option>โสด</option><option>สมรส</option></select>
+  </div>
+
+  <div class="field"><label>ชื่อคู่สมรส</label><input id="spouse_name"></div>
+  <div class="field"><label>เป็นสมาชิก กยท.</label><input id="kyot_member"></div>
+  <div class="field"><label>เลขสมาชิก กยท.</label><input id="kyot_member_id"></div>
+  <div class="field"><label>ชื่อบิดา</label><input id="father_name"></div>
+  <div class="field"><label>ชื่อมารดา</label><input id="mother_name"></div>
+</div>
+
+<div class="flex gap-4">
+  <button class="btn blue" type="submit">บันทึก</button>
+  <button class="btn gray" type="button" onclick="resetForm()">ยกเลิก</button>
+</div>
 </form>
 
 <!-- ===== FILTER + EXPORT ===== -->
@@ -44,7 +93,7 @@
 <div class="text-center">พบ <b><span id="resultCount">0</span></b> รายการ</div>
 </div>
 
-<!-- ===== TABLE (เดิม) ===== -->
+<!-- ===== TABLE ===== -->
 <div class="box">
 <table class="w-full text-sm text-center">
 <thead class="bg-blue-100">
@@ -72,7 +121,9 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 const COOP_LOGO_URL = 'https://ttottijljxoinptmhgtu.supabase.co/storage/v1/object/public/slips/logo.png'
 const db = createClient(SUPABASE_URL, SUPABASE_KEY)
 
-/* ===== PRINT (FINAL) ===== */
+/* ===========================================================
+   ===== PRINT PATCH (LANDSCAPE + FLEXIBLE TABLE) =====
+   =========================================================== */
 window.printMemberReport = async ()=>{
   const pageSize = 1000
   let from = 0
@@ -89,6 +140,11 @@ window.printMemberReport = async ()=>{
     allData = allData.concat(data)
     if(data.length < pageSize) break
     from += pageSize
+  }
+
+  if(!allData.length){
+    alert('ไม่มีข้อมูลสำหรับพิมพ์')
+    return
   }
 
   const today = new Date().toLocaleDateString('th-TH',{
@@ -116,7 +172,8 @@ window.printMemberReport = async ()=>{
 <meta charset="UTF-8">
 <style>
 @page{
-  margin:20mm;
+  size:A4 landscape;
+  margin:15mm;
   @bottom-center{content:"หน้า " counter(page) " / " counter(pages);}
 }
 body{font-family:"TH Sarabun New",sans-serif;font-size:16px}
@@ -131,7 +188,7 @@ body{font-family:"TH Sarabun New",sans-serif;font-size:16px}
 table{
   width:100%;
   border-collapse:collapse;
-  margin-top:14px;
+  margin-top:12px;
   table-layout:fixed;
 }
 th,td{
@@ -160,12 +217,12 @@ td.signature{height:55px}
 
 <table>
 <colgroup>
-  <col style="width:5%">
+  <col style="width:4%">
+  <col style="width:8%">
+  <col style="width:16%">
+  <col style="width:42%">
   <col style="width:10%">
-  <col style="width:18%">
-  <col style="width:37%">
-  <col style="width:12%">
-  <col style="width:18%">
+  <col style="width:20%">
 </colgroup>
 <thead>
 <tr>
@@ -202,6 +259,7 @@ ${rowsHtml}
 .btn.blue{background:#2563eb;color:#fff}
 .btn.gray{background:#e5e7eb}
 .btn.green{background:#16a34a;color:#fff}
+.link{color:#2563eb;cursor:pointer}
 </style>
 
 </body>
