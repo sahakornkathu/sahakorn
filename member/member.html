@@ -31,14 +31,40 @@
 
   <div class="field"><label>ชื่อ</label><input id="first_name"></div>
   <div class="field"><label>นามสกุล</label><input id="last_name"></div>
+  <div class="field"><label>เลขบัตรประชาชน</label><input id="id_card"></div>
+  <div class="field"><label>วันเกิด</label><input id="birthday" type="date"></div>
+
   <div class="field"><label>เพศ</label>
     <select id="gender"><option value="">--</option><option>ชาย</option><option>หญิง</option></select>
   </div>
+  <div class="field"><label>อายุ</label><input id="age" type="number"></div>
+
+  <div class="field"><label>บ้านเลขที่</label><input id="house_no"></div>
+  <div class="field"><label>หมู่</label><input id="moo"></div>
+  <div class="field"><label>ถนน</label><input id="street"></div>
+  <div class="field"><label>หมู่บ้าน</label><input id="village"></div>
+
+  <div class="field"><label>ตำบล</label><input id="subdistrict"></div>
+  <div class="field"><label>อำเภอ</label><input id="district"></div>
+  <div class="field"><label>จังหวัด</label><input id="province"></div>
+  <div class="field"><label>รหัสไปรษณีย์</label><input id="postal_code"></div>
+
   <div class="field"><label>โทรศัพท์</label><input id="phone"></div>
+  <div class="field"><label>โทรศัพท์สำรอง</label><input id="phone_alt"></div>
 
   <div class="field"><label>สถานะสมาชิก</label>
     <select id="member_status"><option value="">--</option><option>สมาชิก</option><option>ลาออก</option><option>เสียชีวิต</option></select>
   </div>
+
+  <div class="field"><label>สถานภาพสมรส</label>
+    <select id="marital_status"><option value="">--</option><option>โสด</option><option>สมรส</option></select>
+  </div>
+
+  <div class="field"><label>ชื่อคู่สมรส</label><input id="spouse_name"></div>
+  <div class="field"><label>เป็นสมาชิก กยท.</label><input id="kyot_member"></div>
+  <div class="field"><label>เลขสมาชิก กยท.</label><input id="kyot_member_id"></div>
+  <div class="field"><label>ชื่อบิดา</label><input id="father_name"></div>
+  <div class="field"><label>ชื่อมารดา</label><input id="mother_name"></div>
 </div>
 
 <div class="flex gap-4">
@@ -51,7 +77,7 @@
 <div class="box space-y-3">
 <h2 class="title text-center">ค้นหา / Export</h2>
 
-<div class="grid grid-cols-1 md:grid-cols-10 gap-3">
+<div class="grid grid-cols-1 md:grid-cols-9 gap-3">
   <input id="f_member_id" class="input" placeholder="รหัสสมาชิก">
   <input id="f_first_name" class="input" placeholder="ชื่อ">
   <input id="f_last_name" class="input" placeholder="นามสกุล">
@@ -99,7 +125,6 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 const SUPABASE_URL = 'https://ttottijljxoinptmhgtu.supabase.co'
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'
 const COOP_LOGO_URL = 'https://ttottijljxoinptmhgtu.supabase.co/storage/v1/object/public/slips/logo.png'
-
 const db = createClient(SUPABASE_URL, SUPABASE_KEY)
 
 const PAGE_SIZE = 15
@@ -126,7 +151,7 @@ function getCurrentFiscalYearThai(){
   return (m<4?y-1:y)+543
 }
 
-/* ===== SUBMIT ===== */
+/* ===== SUBMIT (เพิ่ม error handling อย่างเดียว) ===== */
 form.addEventListener('submit',async e=>{
   e.preventDefault()
   const data={}
@@ -140,26 +165,33 @@ form.addEventListener('submit',async e=>{
   loadSummary()
 })
 
-/* ===== AUTO FILTER (สำคัญ) ===== */
+/* ===== AUTO FILTER ===== */
 ;[fMemberId,fFirst,fLast,fGroup,fPhone,fGender,fStatus].forEach(el=>{
   el.addEventListener('input',()=>{
     clearTimeout(debounceTimer)
-    debounceTimer=setTimeout(()=>{
-      page=1
-      loadMembers()
-    },300)
+    debounceTimer=setTimeout(()=>{ page=1; loadMembers() },300)
   })
 })
 
-window.resetForm=()=>{ form.reset(); editingMemberId=null; loadMembers() }
+window.resetForm = ()=>{
+  form.reset()
+  editingMemberId = null
+  loadMembers()
+}
 
-window.clearFilters=()=>{
-  fMemberId.value=fFirst.value=fLast.value=fGroup.value=fPhone.value=fGender.value=fStatus.value=''
+window.clearFilters = ()=>{
+  fMemberId.value=''
+  fFirst.value=''
+  fLast.value=''
+  fGroup.value=''
+  fPhone.value=''
+  fGender.value=''
+  fStatus.value=''
   page=1
   loadMembers()
 }
 
-/* ===== LOAD SUMMARY ===== */
+/* ===== SUMMARY ===== */
 async function loadSummary(){
   document.getElementById('count-member').innerText =
     (await db.from('members').select('member_id',{count:'exact',head:true}).eq('member_status','สมาชิก')).count||0
@@ -211,15 +243,16 @@ async function loadMembers(){
 }
 
 /* ===== EDIT / DELETE ===== */
-window.editMember=async id=>{
-  editingMemberId=id
+window.editMember = async id=>{
+  editingMemberId = id
   const {data}=await db.from('members').select('*').eq('member_id',id).single()
   Array.from(form.elements).forEach(el=>{ if(el.id) el.value=data[el.id]||'' })
 }
 
-window.deleteMember=async id=>{
-  if(!confirm('ยืนยันการลบสมาชิก '+id)) return
+window.deleteMember = async id=>{
+  if(!confirm('ยืนยันการลบสมาชิก รหัส '+id)) return
   await db.from('members').delete().eq('member_id',id)
+  editingMemberId = null
   loadMembers()
   loadSummary()
 }
