@@ -3,26 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <title>ระบบจัดการข้อมูลสมาชิก</title>
-
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-
-<style>
-.box{background:#fff;border:2px solid #93c5fd;border-radius:12px;padding:16px}
-.field{display:flex;align-items:center;gap:6px}
-.field label{width:120px}
-.field input,.field select,.input{flex:1;border:2px solid #94a3b8;border-radius:6px;padding:6px}
-.summary{background:#fff;border:2px solid;border-radius:12px;padding:12px;text-align:center}
-.summary .num{font-size:28px;font-weight:700}
-.green{border-color:#22c55e;color:#15803d}
-.orange{border-color:#f97316;color:#c2410c}
-.red{border-color:#ef4444;color:#b91c1c}
-.btn{padding:6px 16px;border-radius:8px}
-.btn.blue{background:#2563eb;color:#fff}
-.btn.gray{background:#e5e7eb}
-.btn.green{background:#16a34a;color:#fff}
-.link{color:#2563eb;cursor:pointer}
-</style>
 </head>
 
 <body class="bg-blue-50 p-6 text-slate-800">
@@ -95,7 +77,7 @@
 <div class="box space-y-3">
 <h2 class="title text-center">ค้นหา / Export</h2>
 
-<div class="grid grid-cols-1 md:grid-cols-10 gap-3">
+<div class="grid grid-cols-1 md:grid-cols-9 gap-3">
   <input id="f_member_id" class="input" placeholder="รหัสสมาชิก">
   <input id="f_first_name" class="input" placeholder="ชื่อ">
   <input id="f_last_name" class="input" placeholder="นามสกุล">
@@ -105,7 +87,6 @@
   <select id="f_status" class="input"><option value="">สถานะ</option><option>สมาชิก</option><option>ลาออก</option><option>เสียชีวิต</option></select>
   <button class="btn gray" onclick="clearFilters()">ล้างกรอง</button>
   <button class="btn green" onclick="exportExcel()">Export Excel</button>
-  <button class="btn blue" onclick="printMemberReport()">Print</button>
 </div>
 
 <div class="text-center">พบ <b><span id="resultCount">0</span></b> รายการ</div>
@@ -142,15 +123,13 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const SUPABASE_URL = 'https://ttottijljxoinptmhgtu.supabase.co'
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'
-const COOP_LOGO_URL = 'https://ttottijljxoinptmhgtu.supabase.co/storage/v1/object/public/slips/logo.png'
-
 const db = createClient(SUPABASE_URL, SUPABASE_KEY)
 
 const PAGE_SIZE = 15
 let page = 1
 let totalCount = 0
 let debounceTimer = null
-let editingMemberId = null
+let editingMemberId = null   // ⭐ ตัวแปรไฮไลต์แถว
 
 const form = document.getElementById('memberForm')
 const rows = document.getElementById('rows')
@@ -342,84 +321,26 @@ window.exportExcel = async ()=>{
   XLSX.writeFile(wb, buildExportFileName())
 }
 
-/* ===== PRINT REPORT ===== */
-function getCurrentFiscalYearThai(){
-  const d=new Date()
-  const y=d.getFullYear()
-  const m=d.getMonth()+1
-  return (m<4?y-1:y)+543
-}
-
-window.printMemberReport = async ()=>{
-  let q=db.from('members').select('*').order('member_id')
-  if(fMemberId.value) q=q.eq('member_id',fMemberId.value)
-  if(fFirst.value) q=q.ilike('first_name','%'+fFirst.value+'%')
-  if(fLast.value) q=q.ilike('last_name','%'+fLast.value+'%')
-  if(fGroup.value) q=q.ilike('group','%'+fGroup.value+'%')
-  if(fPhone.value) q=q.ilike('phone','%'+fPhone.value+'%')
-  if(fGender.value) q=q.eq('gender',fGender.value)
-  if(fStatus.value) q=q.eq('member_status',fStatus.value)
-
-  const {data}=await q
-  if(!data||!data.length){alert('ไม่มีข้อมูลสำหรับพิมพ์');return}
-
-  const fy=getCurrentFiscalYearThai()
-
-  const rowsHtml=data.map((r,i)=>`
-<tr>
-<td>${i+1}</td>
-<td>${r.member_id}</td>
-<td>${r.title||''}${r.first_name||''} ${r.last_name||''}</td>
-<td>${r.group||''}</td>
-<td>${r.gender||''}</td>
-<td>${r.phone||''}</td>
-<td>${r.member_status||''}</td>
-</tr>`).join('')
-
-  const html=`<html><head><meta charset="UTF-8">
-<style>
-@page{margin:20mm;@bottom-center{content:"หน้า " counter(page) " / " counter(pages);}}
-body{font-family:"TH Sarabun New",sans-serif;font-size:16px}
-.header-grid{display:grid;grid-template-columns:100px 1fr 100px;align-items:center}
-.logo{width:80px}
-.title-box{text-align:center}
-table{width:100%;border-collapse:collapse;margin-top:14px}
-th,td{border:1px solid #000;padding:6px;text-align:center}
-</style></head><body>
-
-<div class="header-grid">
-  <div><img src="${COOP_LOGO_URL}" class="logo"></div>
-  <div class="title-box">
-    <h2>รายชื่อสมาชิก</h2>
-    ${fGroup.value?`<div>กลุ่ม ${fGroup.value}</div>`:''}
-    <div><b>ประจำปี ${fy}</b></div>
-    <div>1 เมษายน ${fy} – 31 มีนาคม ${fy+1}</div>
-    <div>รวม ${data.length} ราย</div>
-  </div>
-  <div></div>
-</div>
-
-<table>
-<thead>
-<tr>
-<th>ลำดับ</th><th>รหัสสมาชิก</th><th>ชื่อ-นามสกุล</th>
-<th>กลุ่ม</th><th>เพศ</th><th>โทรศัพท์</th><th>สถานะ</th>
-</tr>
-</thead>
-<tbody>${rowsHtml}</tbody>
-</table>
-
-</body></html>`
-
-  const w=window.open('')
-  w.document.write(html)
-  w.document.close()
-  w.print()
-}
-
 loadMembers()
 loadSummary()
 </script>
+
+<style>
+.box{background:#fff;border:2px solid #93c5fd;border-radius:12px;padding:16px}
+.field{display:flex;align-items:center;gap:6px}
+.field label{width:120px}
+.field input,.field select,.input{flex:1;border:2px solid #94a3b8;border-radius:6px;padding:6px}
+.summary{background:#fff;border:2px solid;border-radius:12px;padding:12px;text-align:center}
+.summary .num{font-size:28px;font-weight:700}
+.green{border-color:#22c55e;color:#15803d}
+.orange{border-color:#f97316;color:#c2410c}
+.red{border-color:#ef4444;color:#b91c1c}
+.btn{padding:6px 16px;border-radius:8px}
+.btn.blue{background:#2563eb;color:#fff}
+.btn.gray{background:#e5e7eb}
+.btn.green{background:#16a34a;color:#fff}
+.link{color:#2563eb;cursor:pointer}
+</style>
 
 </body>
 </html>
