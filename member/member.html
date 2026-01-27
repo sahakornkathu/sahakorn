@@ -3,7 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <title>ระบบจัดการข้อมูลสมาชิก</title>
-
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
@@ -28,14 +27,14 @@
 <body class="bg-blue-50 p-6 text-slate-800">
 <div class="max-w-7xl mx-auto space-y-6">
 
-<!-- ===== SUMMARY ===== -->
+<!-- SUMMARY -->
 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
   <div class="summary green"><div>สมาชิก</div><div id="count-member" class="num">0</div></div>
   <div class="summary orange"><div>ลาออก</div><div id="count-resign" class="num">0</div></div>
   <div class="summary red"><div>เสียชีวิต</div><div id="count-dead" class="num">0</div></div>
 </div>
 
-<!-- ===== FORM ===== -->
+<!-- FORM -->
 <form id="memberForm" class="box space-y-4">
 <h2 class="title">บันทึกข้อมูลสมาชิก</h2>
 
@@ -49,90 +48,59 @@
 
   <div class="field"><label>ชื่อ</label><input id="first_name"></div>
   <div class="field"><label>นามสกุล</label><input id="last_name"></div>
-  <div class="field"><label>เลขบัตรประชาชน</label><input id="id_card"></div>
-  <div class="field"><label>วันเกิด</label><input id="birthday" type="date"></div>
-
   <div class="field"><label>เพศ</label>
     <select id="gender"><option value="">--</option><option>ชาย</option><option>หญิง</option></select>
   </div>
-  <div class="field"><label>อายุ</label><input id="age" type="number"></div>
-
-  <div class="field"><label>บ้านเลขที่</label><input id="house_no"></div>
-  <div class="field"><label>หมู่</label><input id="moo"></div>
-  <div class="field"><label>ถนน</label><input id="street"></div>
-  <div class="field"><label>หมู่บ้าน</label><input id="village"></div>
-
-  <div class="field"><label>ตำบล</label><input id="subdistrict"></div>
-  <div class="field"><label>อำเภอ</label><input id="district"></div>
-  <div class="field"><label>จังหวัด</label><input id="province"></div>
-  <div class="field"><label>รหัสไปรษณีย์</label><input id="postal_code"></div>
-
   <div class="field"><label>โทรศัพท์</label><input id="phone"></div>
-  <div class="field"><label>โทรศัพท์สำรอง</label><input id="phone_alt"></div>
 
-  <div class="field"><label>สถานะสมาชิก</label>
-    <select id="member_status"><option value="">--</option><option>สมาชิก</option><option>ลาออก</option><option>เสียชีวิต</option></select>
+  <div class="field"><label>สถานะ</label>
+    <select id="member_status">
+      <option value="">--</option>
+      <option>สมาชิก</option>
+      <option>ลาออก</option>
+      <option>เสียชีวิต</option>
+    </select>
   </div>
-
-  <div class="field"><label>สถานภาพสมรส</label>
-    <select id="marital_status"><option value="">--</option><option>โสด</option><option>สมรส</option></select>
-  </div>
-
-  <div class="field"><label>ชื่อคู่สมรส</label><input id="spouse_name"></div>
-  <div class="field"><label>เป็นสมาชิก กยท.</label><input id="kyot_member"></div>
-  <div class="field"><label>เลขสมาชิก กยท.</label><input id="kyot_member_id"></div>
-  <div class="field"><label>ชื่อบิดา</label><input id="father_name"></div>
-  <div class="field"><label>ชื่อมารดา</label><input id="mother_name"></div>
 </div>
 
 <div class="flex gap-4">
-  <!-- ✅ แก้ไขตรงนี้ -->
-  <button class="btn blue" type="submit">บันทึก</button>
-  <button class="btn gray" type="button" onclick="resetForm()">ยกเลิก</button>
+  <button type="submit" class="btn blue">บันทึก</button>
+  <button type="button" class="btn gray" onclick="resetForm()">ยกเลิก</button>
 </div>
 </form>
 
-<!-- ===== FILTER + EXPORT ===== -->
-<div class="box space-y-3">
-<h2 class="title text-center">ค้นหา / Export</h2>
-
-<div class="grid grid-cols-1 md:grid-cols-10 gap-3">
-  <input id="f_member_id" class="input" placeholder="รหัสสมาชิก">
-  <input id="f_first_name" class="input" placeholder="ชื่อ">
-  <input id="f_last_name" class="input" placeholder="นามสกุล">
-  <input id="f_group" class="input" placeholder="กลุ่ม">
-  <input id="f_phone" class="input" placeholder="เบอร์โทร">
-  <select id="f_gender" class="input"><option value="">เพศ</option><option>ชาย</option><option>หญิง</option></select>
-  <select id="f_status" class="input"><option value="">สถานะ</option><option>สมาชิก</option><option>ลาออก</option><option>เสียชีวิต</option></select>
-  <button class="btn gray" onclick="clearFilters()">ล้างกรอง</button>
-  <button class="btn green" onclick="exportExcel()">Export Excel</button>
-</div>
-
-<div class="text-center">พบ <b><span id="resultCount">0</span></b> รายการ</div>
-</div>
-
-<!-- ===== TABLE ===== -->
+<!-- FILTER -->
 <div class="box">
-<table class="w-full text-sm text-center">
+<div class="grid grid-cols-1 md:grid-cols-6 gap-3">
+  <input id="f_member_id" class="input" placeholder="รหัส">
+  <input id="f_first_name" class="input" placeholder="ชื่อ">
+  <input id="f_last_name" class="input" placeholder="สกุล">
+  <input id="f_group" class="input" placeholder="กลุ่ม">
+  <select id="f_status" class="input">
+    <option value="">สถานะ</option>
+    <option>สมาชิก</option>
+    <option>ลาออก</option>
+    <option>เสียชีวิต</option>
+  </select>
+  <button class="btn gray" onclick="clearFilters()">ล้าง</button>
+</div>
+</div>
+
+<!-- TABLE -->
+<div class="box">
+<table class="w-full text-center">
 <thead class="bg-blue-100">
 <tr>
   <th>รหัส</th>
-  <th>ชื่อ-นามสกุล</th>
+  <th>ชื่อ</th>
   <th>กลุ่ม</th>
   <th>โทร</th>
-  <th>เพศ</th>
   <th>สถานะ</th>
   <th>จัดการ</th>
 </tr>
 </thead>
 <tbody id="rows"></tbody>
 </table>
-
-<div class="flex justify-between mt-4">
-  <button onclick="prevPage()" class="btn gray">◀</button>
-  <span id="pageInfo"></span>
-  <button onclick="nextPage()" class="btn gray">▶</button>
-</div>
 </div>
 
 </div>
@@ -140,90 +108,104 @@
 <script type="module">
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-const SUPABASE_URL = 'https://ttottijljxoinptmhgtu.supabase.co'
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'
-const db = createClient(SUPABASE_URL, SUPABASE_KEY)
-
-const PAGE_SIZE = 15
-let page = 1
-let totalCount = 0
-let debounceTimer = null
-let editingMemberId = null
+const db = createClient(
+  'https://ttottijljxoinptmhgtu.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'
+)
 
 const form = document.getElementById('memberForm')
 const rows = document.getElementById('rows')
 
 const fMemberId = document.getElementById('f_member_id')
 const fFirst = document.getElementById('f_first_name')
-const fLast  = document.getElementById('f_last_name')
+const fLast = document.getElementById('f_last_name')
 const fGroup = document.getElementById('f_group')
-const fPhone = document.getElementById('f_phone')
-const fGender= document.getElementById('f_gender')
-const fStatus= document.getElementById('f_status')
+const fStatus = document.getElementById('f_status')
 
-/* ===== SUBMIT ===== */
+let editingId = null
+
 form.addEventListener('submit', async e=>{
   e.preventDefault()
 
-  const data={}
+  const data = {}
   Array.from(form.elements).forEach(el=>{
-    if(el.id) data[el.id]=el.value||null
+    if(el.id) data[el.id] = el.value || null
   })
 
   const { error } = await db
     .from('members')
-    .upsert([data],{ onConflict:'member_id' })
+    .upsert([data], { onConflict:'member_id' })
 
-  if(error){
-    console.error(error)
-    alert(error.message)
-    return
-  }
+  if(error){ alert(error.message); return }
 
   resetForm()
   loadMembers()
   loadSummary()
 })
 
-/* ===== LOAD MEMBERS ===== */
 async function loadMembers(){
-  let q=db.from('members')
-    .select('member_id,first_name,last_name,group,phone,gender,member_status',{count:'exact'})
+  let q = db.from('members')
+    .select('member_id,first_name,last_name,group,phone,member_status')
     .order('member_id')
 
-  if(fMemberId.value) q=q.eq('member_id',fMemberId.value)
-  if(fFirst.value) q=q.ilike('first_name','%'+fFirst.value+'%')
-  if(fLast.value) q=q.ilike('last_name','%'+fLast.value+'%')
-  if(fGroup.value) q=q.ilike('group','%'+fGroup.value+'%')
-  if(fPhone.value) q=q.ilike('phone','%'+fPhone.value+'%')
-  if(fGender.value) q=q.eq('gender',fGender.value)
-  if(fStatus.value) q=q.eq('member_status',fStatus.value)
+  if(fMemberId.value) q = q.eq('member_id', fMemberId.value)
+  if(fFirst.value) q = q.ilike('first_name','%'+fFirst.value+'%')
+  if(fLast.value) q = q.ilike('last_name','%'+fLast.value+'%')
+  if(fGroup.value) q = q.ilike('group','%'+fGroup.value+'%')
+  if(fStatus.value) q = q.eq('member_status', fStatus.value)
 
-  const from=(page-1)*PAGE_SIZE
-  const to=from+PAGE_SIZE-1
-  const {data,count}=await q.range(from,to)
-
-  totalCount=count||0
-  document.getElementById('resultCount').innerText=totalCount
-  document.getElementById('pageInfo').innerText=
-    `หน้า ${page} / ${Math.max(1,Math.ceil(totalCount/PAGE_SIZE))}`
-
-  rows.innerHTML=''
+  const { data } = await q
+  rows.innerHTML = ''
   data.forEach(m=>{
-    rows.innerHTML+=`
-    <tr class="border-b hover:bg-blue-50">
+    rows.innerHTML += `
+    <tr>
       <td>${m.member_id}</td>
-      <td>${m.first_name||''} ${m.last_name||''}</td>
+      <td>${m.first_name} ${m.last_name}</td>
       <td>${m.group||''}</td>
       <td>${m.phone||''}</td>
-      <td>${m.gender||''}</td>
       <td>${m.member_status||''}</td>
-      <td>-</td>
+      <td>
+        <button class="link" onclick="editMember(${m.member_id})">แก้</button>
+        <button class="link text-red-600" onclick="deleteMember(${m.member_id})">ลบ</button>
+      </td>
     </tr>`
   })
 }
 
+window.editMember = async id=>{
+  const { data } = await db.from('members').select('*').eq('member_id',id).single()
+  Array.from(form.elements).forEach(el=>{
+    if(el.id) el.value = data[el.id] || ''
+  })
+}
+
+window.deleteMember = async id=>{
+  if(!confirm('ลบสมาชิก '+id+' ?')) return
+  await db.from('members').delete().eq('member_id',id)
+  loadMembers()
+  loadSummary()
+}
+
+window.resetForm = ()=>{
+  form.reset()
+}
+
+window.clearFilters = ()=>{
+  fMemberId.value=fFirst.value=fLast.value=fGroup.value=fStatus.value=''
+  loadMembers()
+}
+
+async function loadSummary(){
+  document.getElementById('count-member').innerText =
+    (await db.from('members').select('member_id',{count:'exact',head:true}).eq('member_status','สมาชิก')).count||0
+  document.getElementById('count-resign').innerText =
+    (await db.from('members').select('member_id',{count:'exact',head:true}).eq('member_status','ลาออก')).count||0
+  document.getElementById('count-dead').innerText =
+    (await db.from('members').select('member_id',{count:'exact',head:true}).eq('member_status','เสียชีวิต')).count||0
+}
+
 loadMembers()
+loadSummary()
 </script>
 
 </body>
