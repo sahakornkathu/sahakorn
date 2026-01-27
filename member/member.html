@@ -338,35 +338,56 @@ window.printMemberReport = async ()=>{
 `).join('')
 
   const html = `
+const html = `
 <html>
 <head>
 <meta charset="UTF-8">
 <style>
 @page{
-  margin:20mm;
-  @bottom-center{content:"หน้า " counter(page) " / " counter(pages);}
+  size:A4 landscape;          /* ✅ แนวนอน */
+  margin:15mm;
+  @bottom-center{
+    content:"หน้า " counter(page) " / " counter(pages);
+  }
 }
-body{font-family:"TH Sarabun New",sans-serif;font-size:16px}
+body{
+  font-family:"TH Sarabun New",sans-serif;
+  font-size:16px;
+}
 .header-grid{
   display:grid;
   grid-template-columns:100px 1fr 100px;
-  align-items:center
+  align-items:center;
 }
 .logo{width:80px}
 .title-box{text-align:center}
+
+/* ===== TABLE ===== */
 table{
   width:100%;
   border-collapse:collapse;
-  margin-top:14px
+  margin-top:14px;
+  table-layout:fixed;         /* 🔑 สำคัญมาก */
 }
 th,td{
   border:1px solid #000;
-  padding:6px;
-  text-align:center
+  padding:6px 8px;
+  vertical-align:top;
 }
-th{background:#f0f0f0}
-td:nth-child(4){text-align:left}
-td:last-child{height:40px}
+th{
+  background:#f0f0f0;
+  text-align:center;
+  font-weight:600;
+}
+
+/* alignment */
+td.center{text-align:center}
+td.address{text-align:left}
+
+/* ช่องลายเซ็น */
+td.signature{
+  height:55px;               /* ✍️ เซ็นได้จริง */
+}
 </style>
 </head>
 
@@ -383,6 +404,15 @@ td:last-child{height:40px}
 </div>
 
 <table>
+<colgroup>
+  <col style="width:4%">    <!-- ลำดับ -->
+  <col style="width:8%">    <!-- เลขสมาชิก -->
+  <col style="width:16%">   <!-- ชื่อ -->
+  <col style="width:42%">   <!-- ที่อยู่ (กว้างสุด) -->
+  <col style="width:10%">   <!-- โทร -->
+  <col style="width:20%">   <!-- ลายเซ็น -->
+</colgroup>
+
 <thead>
 <tr>
   <th>ลำดับ</th>
@@ -393,12 +423,28 @@ td:last-child{height:40px}
   <th>ลายเซ็น</th>
 </tr>
 </thead>
+
 <tbody>
-${rowsHtml}
+${allData.map((r,i)=>`
+<tr>
+  <td class="center">${i+1}</td>
+  <td class="center">${r.member_id}</td>
+  <td>${r.title||''}${r.first_name||''} ${r.last_name||''}</td>
+  <td class="address">
+    ${r.house_no||''} หมู่ ${r.moo||''}
+    ${r.village||''} ${r.subdistrict||''}
+    ${r.district||''} ${r.province||''}
+  </td>
+  <td class="center">${r.phone||''}</td>
+  <td class="signature"></td>
+</tr>
+`).join('')}
 </tbody>
 </table>
 </body>
 </html>
+`
+
 `
 
   const w = window.open('')
