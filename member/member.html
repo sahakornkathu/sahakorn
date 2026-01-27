@@ -163,6 +163,186 @@ const fPhone = document.getElementById('f_phone')
 const fGender= document.getElementById('f_gender')
 const fStatus= document.getElementById('f_status')
 
+/* ===== helper ตั้งชื่อไฟล์ ===== */
+function buildExportFileName(){
+  const parts=[]
+  if(fMemberId.value) parts.push(`รหัส${fMemberId.value}`)
+  if(fFirst.value) parts.push(`ชื่อ${fFirst.value}`)
+  if(fLast.value) parts.push(`สกุล${fLast.value}`)
+  if(fGroup.value) parts.push(`กลุ่ม${fGroup.value}`)
+  if(fPhone.value) parts.push(`โทร${fPhone.value}`)
+  if(fGender.value) parts.push(`เพศ${fGender.value}`)
+  if(fStatus.value) parts.push(`สถานะ${fStatus.value}`)
+  if(parts.length===0) return 'รายชื่อสมาชิก_ทั้งหมด.xlsx'
+  return `รายชื่อสมาชิก_${parts.join('_').replace(/[^\u0E00-\u0E7Fa-zA-Z0-9_]/g,'')}.xlsx`
+}
+
+/* ===== CLEAR FILTER ===== */
+window.clearFilters = ()=>{
+  fMemberId.value=''
+  fFirst.value=''
+  fLast.value=''
+  fGroup.value=''
+  fPhone.value=''
+  fGender.value=''
+  fStatus.value=''
+  page=1
+  loadMembers()
+}
+
+/* ===== SUMMARY ===== */
+async function loadSummary(){
+  document.getElementById('count-member').innerText =
+    (await db.from('members').select('member_id',{count:'exact',head:true}).eq('member_status','สมาชิก')).count||0
+  document.getElementById('count-resign').innerText =
+    (await db.from('members').select('member_id',{count:'exact',head:true}).eq('member_status','ลาออก')).count||0
+  document.getElementById('count-dead').innerText =
+    (await db.from('members').select('member_id',{count:'exact',head:true}).eq('member_status','เสียชีวิต')).count||0
+}
+
+/* ===== SUBMIT ===== */
+form.addEventListener('submit',async e=>{
+  e.preventDefault()
+  const data={}
+  Array.from(form.elements).forEach(el=>{ if(el.id) data[el.id]=el.value||null })
+  await db.from('members').upsert([data],{onConflict:'member_id'})
+  resetForm()
+  loadMembers()
+  loadSummary()
+})
+
+window.resetForm = ()=>{
+  form.reset()
+  editingMemberId = null
+  loadMembers()
+}
+
+/* ===== LOAD MEMBERS ===== */
+async function loadMembers(){
+  let q=db.from('members')
+    .select('member_id,first_name,last_name,group,phone,gender,member_status',{count:'exact'})
+    .order('member_id')
+
+  if(fMemberId.value) q=q.eq('member_id',fMemberId.value)
+  if(fFirst.value) q=q.ilike('first_name','%'+fFirst.value+'%')
+  if(fLast.value) q=q.ilike('last_name','%'+fLast.value+'%')
+  if(fGroup.value) q=q.ilike('group','%'+fGroup.value+'%')
+  if(fPhone.value) q=q.ilike('phone','%'+fPhone.value+'%')
+  if(fGender.value) q=q.eq('gender',fGender.value)
+  if(fStatus.value) q=q.eq('member_status',fStatus.value)
+
+  const from=(page-1)*PAGE_SIZE
+  const to=from+PAGE_SIZE-1
+  const {data,count}=await q.range(from,to)
+
+  totalCount=count||0
+  document.getElementById('resultCount').innerText=totalCount
+  document.getElementById('pageInfo').innerText=
+    `หน้า ${page} / ${Math.max(1,Math.ceil(totalCount/PAGE_SIZE))}`
+
+  rows.innerHTML=''
+  data.forEach(m=>{
+    const isEditing = m.member_id === editingMemberId
+    rows.innerHTML+=`
+    <tr class="border-b ${isEditing ? 'bg-yellow-100 ring-2 ring-yellow-400' : 'hover:bg-blue-50'}">
+      <td class="py-2">${m.member_id}</td>
+      <td>${m.first_name||''} ${m.last_name||''}</td>
+      <td>${m.group||''}</td>
+      <td>${m.phone||''}</td>
+      <td>${m.gender||''}</td>
+      <td>${m.member_status||''}</td>
+      <td class="space-x-2">
+        <button class="link" onclick="editMember(${m.member_id})">แก้ไข</button>
+        <button class="link text-red-600" onclick="deleteMember(${m.member_id})">ลบ</button>
+      </td>
+    </tr>`
+  })
+}
+
+/* ===== EDIT / DELETE ===== */
+window.editMember = async id=>{
+  editingMemberId = id
+  const {data}=await db.from('members').select('*').eq('member_id',id).single()
+  Array.from(form.elements).forEach(el=>{ if(el.id) el.value=data[el.id]||'' })
+  loadMembers()
+}
+
+window.deleteMember = async id=>{
+  if(!confirm('ยืนยันการลบสมาชิก รหัส '+id)) return
+  await db.from('members').delete().eq('member_id',id)
+  editingMemberId = null
+  loadMembers()
+  loadSummary()
+}
+
+/* ===== PAGINATION ===== */
+window.nextPage=()=>{ if(page*PAGE_SIZE<totalCount){page++;loadMembers()} }
+window.prevPage=()=>{ if(page>1){page--;loadMembers()} }
+
+/* ===== AUTO FILTER ===== */
+;[fMemberId,fFirst,fLast,fGroup,fPhone,fGender,fStatus].forEach(el=>{
+  el.addEventListener('input',()=>{
+    clearTimeout(debounceTimer)
+    debounceTimer=setTimeout(()=>{page=1;loadMembers()},300)
+  })
+})
+
+/* ===== EXPORT EXCEL ===== */
+window.exportExcel = async ()=>{
+  let q=db.from('members').select('*').order('member_id')
+  if(fMemberId.value) q=q.eq('member_id',fMemberId.value)
+  if(fFirst.value) q=q.ilike('first_name','%'+fFirst.value+'%')
+  if(fLast.value) q=q.ilike('last_name','%'+fLast.value+'%')
+  if(fGroup.value) q=q.ilike('group','%'+fGroup.value+'%')
+  if(fPhone.value) q=q.ilike('phone','%'+fPhone.value+'%')
+  if(fGender.value) q=q.eq('gender',fGender.value)
+  if(fStatus.value) q=q.eq('member_status',fStatus.value)
+
+  const {data}=await q
+  if(!data||!data.length){alert('ไม่มีข้อมูลให้ export');return}
+
+  const thaiData=data.map(r=>({
+    'รหัสสมาชิก':r.member_id,
+    'วันที่สมัคร':r.join_date,
+    'คำนำหน้า':r.title,
+    'ชื่อ':r.first_name,
+    'นามสกุล':r.last_name,
+    'เลขบัตรประชาชน':r.id_card,
+    'วันเกิด':r.birthday,
+    'กลุ่ม':r.group,
+    'บ้านเลขที่':r.house_no,
+    'หมู่':r.moo,
+    'ถนน':r.street,
+    'หมู่บ้าน':r.village,
+    'ตำบล':r.subdistrict,
+    'อำเภอ':r.district,
+    'จังหวัด':r.province,
+    'รหัสไปรษณีย์':r.postal_code,
+    'โทรศัพท์':r.phone,
+    'โทรศัพท์สำรอง':r.phone_alt,
+    'สถานะสมาชิก':r.member_status,
+    'สถานภาพสมรส':r.marital_status,
+    'ชื่อคู่สมรส':r.spouse_name,
+    'เป็นสมาชิก กยท.':r.kyot_member,
+    'เลขสมาชิก กยท.':r.kyot_member_id,
+    'ชื่อบิดา':r.father_name,
+    'ชื่อมารดา':r.mother_name,
+    'เพศ':r.gender,
+    'อายุ':r.age,
+    'วันที่สร้าง':r.created_at,
+    'วันที่แก้ไขล่าสุด':r.updated_at,
+    'LINE User ID':r.line_user_id,
+    'ชื่อ LINE':r.line_display_name,
+    'รูปโปรไฟล์ LINE':r.line_picture
+  }))
+
+  const ws=XLSX.utils.json_to_sheet(thaiData)
+  const wb=XLSX.utils.book_new()
+  XLSX.utils.book_append_sheet(wb,ws,'สมาชิก')
+  XLSX.writeFile(wb, buildExportFileName())
+}
+
+/* ===== PRINT REPORT ===== */
 function getCurrentFiscalYearThai(){
   const d=new Date()
   const y=d.getFullYear()
@@ -170,10 +350,8 @@ function getCurrentFiscalYearThai(){
   return (m<4?y-1:y)+543
 }
 
-/* ===== PRINT REPORT ===== */
 window.printMemberReport = async ()=>{
   let q=db.from('members').select('*').order('member_id')
-
   if(fMemberId.value) q=q.eq('member_id',fMemberId.value)
   if(fFirst.value) q=q.ilike('first_name','%'+fFirst.value+'%')
   if(fLast.value) q=q.ilike('last_name','%'+fLast.value+'%')
@@ -224,8 +402,8 @@ th,td{border:1px solid #000;padding:6px;text-align:center}
 <table>
 <thead>
 <tr>
-<th>ลำดับ</th><th>รหัส</th><th>ชื่อ-นามสกุล</th>
-<th>กลุ่ม</th><th>เพศ</th><th>โทร</th><th>สถานะ</th>
+<th>ลำดับ</th><th>รหัสสมาชิก</th><th>ชื่อ-นามสกุล</th>
+<th>กลุ่ม</th><th>เพศ</th><th>โทรศัพท์</th><th>สถานะ</th>
 </tr>
 </thead>
 <tbody>${rowsHtml}</tbody>
@@ -239,9 +417,8 @@ th,td{border:1px solid #000;padding:6px;text-align:center}
   w.print()
 }
 
-/* ===== LOAD / CRUD / EXPORT (โค้ดเดิม) ===== */
-/* โค้ดส่วนนี้ยังทำงานเหมือนเดิมทุกอย่าง */
-
+loadMembers()
+loadSummary()
 </script>
 
 </body>
