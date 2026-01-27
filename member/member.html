@@ -3,8 +3,26 @@
 <head>
 <meta charset="UTF-8">
 <title>ระบบจัดการข้อมูลสมาชิก</title>
+
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+<style>
+.box{background:#fff;border:2px solid #93c5fd;border-radius:12px;padding:16px}
+.field{display:flex;align-items:center;gap:6px}
+.field label{width:120px}
+.field input,.field select,.input{flex:1;border:2px solid #94a3b8;border-radius:6px;padding:6px}
+.summary{background:#fff;border:2px solid;border-radius:12px;padding:12px;text-align:center}
+.summary .num{font-size:28px;font-weight:700}
+.green{border-color:#22c55e;color:#15803d}
+.orange{border-color:#f97316;color:#c2410c}
+.red{border-color:#ef4444;color:#b91c1c}
+.btn{padding:6px 16px;border-radius:8px}
+.btn.blue{background:#2563eb;color:#fff}
+.btn.gray{background:#e5e7eb}
+.btn.green{background:#16a34a;color:#fff}
+.link{color:#2563eb;cursor:pointer}
+</style>
 </head>
 
 <body class="bg-blue-50 p-6 text-slate-800">
@@ -68,6 +86,7 @@
 </div>
 
 <div class="flex gap-4">
+  <!-- ✅ แก้ไขตรงนี้ -->
   <button class="btn blue" type="submit">บันทึก</button>
   <button class="btn gray" type="button" onclick="resetForm()">ยกเลิก</button>
 </div>
@@ -77,7 +96,7 @@
 <div class="box space-y-3">
 <h2 class="title text-center">ค้นหา / Export</h2>
 
-<div class="grid grid-cols-1 md:grid-cols-9 gap-3">
+<div class="grid grid-cols-1 md:grid-cols-10 gap-3">
   <input id="f_member_id" class="input" placeholder="รหัสสมาชิก">
   <input id="f_first_name" class="input" placeholder="ชื่อ">
   <input id="f_last_name" class="input" placeholder="นามสกุล">
@@ -129,7 +148,7 @@ const PAGE_SIZE = 15
 let page = 1
 let totalCount = 0
 let debounceTimer = null
-let editingMemberId = null   // ⭐ ตัวแปรไฮไลต์แถว
+let editingMemberId = null
 
 const form = document.getElementById('memberForm')
 const rows = document.getElementById('rows')
@@ -142,59 +161,29 @@ const fPhone = document.getElementById('f_phone')
 const fGender= document.getElementById('f_gender')
 const fStatus= document.getElementById('f_status')
 
-/* ===== helper ตั้งชื่อไฟล์ ===== */
-function buildExportFileName(){
-  const parts=[]
-  if(fMemberId.value) parts.push(`รหัส${fMemberId.value}`)
-  if(fFirst.value) parts.push(`ชื่อ${fFirst.value}`)
-  if(fLast.value) parts.push(`สกุล${fLast.value}`)
-  if(fGroup.value) parts.push(`กลุ่ม${fGroup.value}`)
-  if(fPhone.value) parts.push(`โทร${fPhone.value}`)
-  if(fGender.value) parts.push(`เพศ${fGender.value}`)
-  if(fStatus.value) parts.push(`สถานะ${fStatus.value}`)
-  if(parts.length===0) return 'รายชื่อสมาชิก_ทั้งหมด.xlsx'
-  return `รายชื่อสมาชิก_${parts.join('_').replace(/[^\u0E00-\u0E7Fa-zA-Z0-9_]/g,'')}.xlsx`
-}
-
-/* ===== CLEAR FILTER ===== */
-window.clearFilters = ()=>{
-  fMemberId.value=''
-  fFirst.value=''
-  fLast.value=''
-  fGroup.value=''
-  fPhone.value=''
-  fGender.value=''
-  fStatus.value=''
-  page=1
-  loadMembers()
-}
-
-/* ===== SUMMARY ===== */
-async function loadSummary(){
-  document.getElementById('count-member').innerText =
-    (await db.from('members').select('member_id',{count:'exact',head:true}).eq('member_status','สมาชิก')).count||0
-  document.getElementById('count-resign').innerText =
-    (await db.from('members').select('member_id',{count:'exact',head:true}).eq('member_status','ลาออก')).count||0
-  document.getElementById('count-dead').innerText =
-    (await db.from('members').select('member_id',{count:'exact',head:true}).eq('member_status','เสียชีวิต')).count||0
-}
-
 /* ===== SUBMIT ===== */
-form.addEventListener('submit',async e=>{
+form.addEventListener('submit', async e=>{
   e.preventDefault()
+
   const data={}
-  Array.from(form.elements).forEach(el=>{ if(el.id) data[el.id]=el.value||null })
-  await db.from('members').upsert([data],{onConflict:'member_id'})
+  Array.from(form.elements).forEach(el=>{
+    if(el.id) data[el.id]=el.value||null
+  })
+
+  const { error } = await db
+    .from('members')
+    .upsert([data],{ onConflict:'member_id' })
+
+  if(error){
+    console.error(error)
+    alert(error.message)
+    return
+  }
+
   resetForm()
   loadMembers()
   loadSummary()
 })
-
-window.resetForm = ()=>{
-  form.reset()
-  editingMemberId = null
-  loadMembers()
-}
 
 /* ===== LOAD MEMBERS ===== */
 async function loadMembers(){
@@ -221,126 +210,21 @@ async function loadMembers(){
 
   rows.innerHTML=''
   data.forEach(m=>{
-    const isEditing = m.member_id === editingMemberId
     rows.innerHTML+=`
-    <tr class="border-b ${isEditing ? 'bg-yellow-100 ring-2 ring-yellow-400' : 'hover:bg-blue-50'}">
-      <td class="py-2">${m.member_id}</td>
+    <tr class="border-b hover:bg-blue-50">
+      <td>${m.member_id}</td>
       <td>${m.first_name||''} ${m.last_name||''}</td>
       <td>${m.group||''}</td>
       <td>${m.phone||''}</td>
       <td>${m.gender||''}</td>
       <td>${m.member_status||''}</td>
-      <td class="space-x-2">
-        <button class="link" onclick="editMember(${m.member_id})">แก้ไข</button>
-        <button class="link text-red-600" onclick="deleteMember(${m.member_id})">ลบ</button>
-      </td>
+      <td>-</td>
     </tr>`
   })
 }
 
-/* ===== EDIT / DELETE ===== */
-window.editMember = async id=>{
-  editingMemberId = id
-  const {data}=await db.from('members').select('*').eq('member_id',id).single()
-  Array.from(form.elements).forEach(el=>{ if(el.id) el.value=data[el.id]||'' })
-  loadMembers()
-}
-
-window.deleteMember = async id=>{
-  if(!confirm('ยืนยันการลบสมาชิก รหัส '+id)) return
-  await db.from('members').delete().eq('member_id',id)
-  editingMemberId = null
-  loadMembers()
-  loadSummary()
-}
-
-/* ===== PAGINATION ===== */
-window.nextPage=()=>{ if(page*PAGE_SIZE<totalCount){page++;loadMembers()} }
-window.prevPage=()=>{ if(page>1){page--;loadMembers()} }
-
-/* ===== AUTO FILTER ===== */
-;[fMemberId,fFirst,fLast,fGroup,fPhone,fGender,fStatus].forEach(el=>{
-  el.addEventListener('input',()=>{
-    clearTimeout(debounceTimer)
-    debounceTimer=setTimeout(()=>{page=1;loadMembers()},300)
-  })
-})
-
-/* ===== EXPORT EXCEL ===== */
-window.exportExcel = async ()=>{
-  let q=db.from('members').select('*').order('member_id')
-  if(fMemberId.value) q=q.eq('member_id',fMemberId.value)
-  if(fFirst.value) q=q.ilike('first_name','%'+fFirst.value+'%')
-  if(fLast.value) q=q.ilike('last_name','%'+fLast.value+'%')
-  if(fGroup.value) q=q.ilike('group','%'+fGroup.value+'%')
-  if(fPhone.value) q=q.ilike('phone','%'+fPhone.value+'%')
-  if(fGender.value) q=q.eq('gender',fGender.value)
-  if(fStatus.value) q=q.eq('member_status',fStatus.value)
-
-  const {data}=await q
-  if(!data||!data.length){alert('ไม่มีข้อมูลให้ export');return}
-
-  const thaiData=data.map(r=>({
-    'รหัสสมาชิก':r.member_id,
-    'วันที่สมัคร':r.join_date,
-    'คำนำหน้า':r.title,
-    'ชื่อ':r.first_name,
-    'นามสกุล':r.last_name,
-    'เลขบัตรประชาชน':r.id_card,
-    'วันเกิด':r.birthday,
-    'กลุ่ม':r.group,
-    'บ้านเลขที่':r.house_no,
-    'หมู่':r.moo,
-    'ถนน':r.street,
-    'หมู่บ้าน':r.village,
-    'ตำบล':r.subdistrict,
-    'อำเภอ':r.district,
-    'จังหวัด':r.province,
-    'รหัสไปรษณีย์':r.postal_code,
-    'โทรศัพท์':r.phone,
-    'โทรศัพท์สำรอง':r.phone_alt,
-    'สถานะสมาชิก':r.member_status,
-    'สถานภาพสมรส':r.marital_status,
-    'ชื่อคู่สมรส':r.spouse_name,
-    'เป็นสมาชิก กยท.':r.kyot_member,
-    'เลขสมาชิก กยท.':r.kyot_member_id,
-    'ชื่อบิดา':r.father_name,
-    'ชื่อมารดา':r.mother_name,
-    'เพศ':r.gender,
-    'อายุ':r.age,
-    'วันที่สร้าง':r.created_at,
-    'วันที่แก้ไขล่าสุด':r.updated_at,
-    'LINE User ID':r.line_user_id,
-    'ชื่อ LINE':r.line_display_name,
-    'รูปโปรไฟล์ LINE':r.line_picture
-  }))
-
-  const ws=XLSX.utils.json_to_sheet(thaiData)
-  const wb=XLSX.utils.book_new()
-  XLSX.utils.book_append_sheet(wb,ws,'สมาชิก')
-  XLSX.writeFile(wb, buildExportFileName())
-}
-
 loadMembers()
-loadSummary()
 </script>
-
-<style>
-.box{background:#fff;border:2px solid #93c5fd;border-radius:12px;padding:16px}
-.field{display:flex;align-items:center;gap:6px}
-.field label{width:120px}
-.field input,.field select,.input{flex:1;border:2px solid #94a3b8;border-radius:6px;padding:6px}
-.summary{background:#fff;border:2px solid;border-radius:12px;padding:12px;text-align:center}
-.summary .num{font-size:28px;font-weight:700}
-.green{border-color:#22c55e;color:#15803d}
-.orange{border-color:#f97316;color:#c2410c}
-.red{border-color:#ef4444;color:#b91c1c}
-.btn{padding:6px 16px;border-radius:8px}
-.btn.blue{background:#2563eb;color:#fff}
-.btn.gray{background:#e5e7eb}
-.btn.green{background:#16a34a;color:#fff}
-.link{color:#2563eb;cursor:pointer}
-</style>
 
 </body>
 </html>
