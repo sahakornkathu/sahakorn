@@ -104,6 +104,8 @@
   <input id="f_phone" class="input" placeholder="เบอร์โทร">
   <select id="f_gender" class="input"><option value="">เพศ</option><option>ชาย</option><option>หญิง</option></select>
   <select id="f_status" class="input"><option value="">สถานะ</option><option>สมาชิก</option><option>ลาออก</option><option>เสียชีวิต</option></select>
+  <input id="f_join_from" type="date" class="input" placeholder="วันที่สมัคร (จาก)">
+  <input id="f_join_to" type="date" class="input" placeholder="วันที่สมัคร (ถึง)">
   <button class="btn gray" onclick="clearFilters()">ล้างกรอง</button>
   <button class="btn green" onclick="exportExcel()">Export Excel</button>
   <button class="btn blue" onclick="printMemberReport()">Print</button>
@@ -164,6 +166,9 @@ const fGroup = document.getElementById('f_group')
 const fPhone = document.getElementById('f_phone')
 const fGender= document.getElementById('f_gender')
 const fStatus= document.getElementById('f_status')
+const fJoinFrom = document.getElementById('f_join_from')
+const fJoinTo   = document.getElementById('f_join_to')
+
 
 function getCurrentFiscalYearThai(){
   const d=new Date()
@@ -187,7 +192,17 @@ form.addEventListener('submit',async e=>{
 })
 
 /* ===== AUTO FILTER ===== */
-;[fMemberId,fFirst,fLast,fGroup,fPhone,fGender,fStatus].forEach(el=>{
+;[
+  fMemberId,
+  fFirst,
+  fLast,
+  fGroup,
+  fPhone,
+  fGender,
+  fStatus,
+  fJoinFrom,
+  fJoinTo
+].forEach(el=>{
   el.addEventListener('input',()=>{
     clearTimeout(debounceTimer)
     debounceTimer=setTimeout(()=>{ page=1; loadMembers() },300)
@@ -208,11 +223,14 @@ window.clearFilters = ()=>{
   fPhone.value=''
   fGender.value=''
   fStatus.value=''
+  fJoinFrom.value=''
+  fJoinTo.value=''
   page=1
   loadMembers()
 }
 
-/* ===== SUMMARY ===== */
+
+
 /* ===== SUMMARY ===== */
 async function loadSummary(){
   document.getElementById('count-member').innerText =
@@ -256,6 +274,9 @@ async function loadMembers(){
   if(fPhone.value) q=q.ilike('phone','%'+fPhone.value+'%')
   if(fGender.value) q=q.eq('gender',fGender.value)
   if(fStatus.value) q=q.eq('member_status',fStatus.value)
+  if(fJoinFrom.value) q = q.gte('join_date', fJoinFrom.value)
+  if(fJoinTo.value)   q = q.lte('join_date', fJoinTo.value)
+
 
   const from=(page-1)*PAGE_SIZE
   const to=from+PAGE_SIZE-1
