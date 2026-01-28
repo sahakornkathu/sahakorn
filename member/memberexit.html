@@ -242,11 +242,15 @@ function render(){
 window.nextPage = ()=>{ if(page*pageSize < allData.length){ page++; render() } }
 window.prevPage = ()=>{ if(page > 1){ page--; render() } }
 
-window.editRowByIndex = index=>{
+window.editRowByIndex = async index=>{
+  if(!(await window.checkPassword())) return
+
   const r = allData[index]
   if(!r) return
+
   editing = true
   editKey = r.member_id + r.meeting_date
+
   member_id.value = r.member_id
   title.value = r.title
   first_name.value = r.first_name
@@ -257,6 +261,7 @@ window.editRowByIndex = index=>{
   share_amount.value = r.share_amount || ''
   receive_date.value = r.receive_date || ''
 }
+
 
 exitForm.onsubmit = async e=>{
   e.preventDefault()
@@ -407,6 +412,28 @@ th,td{border:1px solid #000;padding:6px;text-align:center}
 }
 
 load()
+
+  // 🔐 ตรวจสอบรหัสผ่านก่อนแก้ไข / ลบ
+window.checkPassword = async function () {
+  const { value, isConfirmed } = await Swal.fire({
+    title: 'กรุณาใส่รหัสผ่าน',
+    input: 'password',
+    inputPlaceholder: 'รหัสผ่าน',
+    showCancelButton: true,
+    confirmButtonText: 'ยืนยัน',
+    cancelButtonText: 'ยกเลิก'
+  })
+
+  if (!isConfirmed) return false
+
+  if (value !== '159357') {
+    await Swal.fire('รหัสผ่านไม่ถูกต้อง', '', 'error')
+    return false
+  }
+
+  return true
+}
+
 </script>
 
 </body>
