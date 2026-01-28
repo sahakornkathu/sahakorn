@@ -5,6 +5,8 @@
 <title>ระบบจัดการข้อมูลสมาชิก</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 </head>
 
 <body class="bg-blue-50 p-6 text-slate-800">
@@ -284,18 +286,31 @@ async function loadMembers(){
 
 /* ===== EDIT / DELETE ===== */
 window.editMember = async id=>{
+  if(!(await window.checkPassword())) return
+
   editingMemberId = id
-  const {data}=await db.from('members').select('*').eq('member_id',id).single()
-  Array.from(form.elements).forEach(el=>{ if(el.id) el.value=data[el.id]||'' })
+  const {data}=await db.from('members')
+    .select('*')
+    .eq('member_id',id)
+    .single()
+
+  Array.from(form.elements).forEach(el=>{
+    if(el.id) el.value = data[el.id] || ''
+  })
 }
 
+
 window.deleteMember = async id=>{
+  if(!(await window.checkPassword())) return
+
   if(!confirm('ยืนยันการลบสมาชิก รหัส '+id)) return
+
   await db.from('members').delete().eq('member_id',id)
   editingMemberId = null
   loadMembers()
   loadSummary()
 }
+
 
 /* ===== PAGINATION ===== */
 window.nextPage=()=>{ if(page*PAGE_SIZE<totalCount){page++;loadMembers()} }
@@ -540,6 +555,29 @@ ${allData.map(r=>`
 
 loadMembers()
 loadSummary()
+
+
+  // 🔐 ตรวจสอบรหัสผ่านก่อนแก้ไข / ลบ
+window.checkPassword = async function () {
+  const { value, isConfirmed } = await Swal.fire({
+    title: 'กรุณาใส่รหัสผ่าน',
+    input: 'password',
+    inputPlaceholder: 'รหัสผ่าน',
+    showCancelButton: true,
+    confirmButtonText: 'ยืนยัน',
+    cancelButtonText: 'ยกเลิก'
+  })
+
+  if (!isConfirmed) return false
+
+  if (value !== '159357') {
+    await Swal.fire('รหัสผ่านไม่ถูกต้อง', '', 'error')
+    return false
+  }
+
+  return true
+}
+
 </script>
 
 <style>
