@@ -409,34 +409,28 @@ ${rowsHtml}
   w.print()
 }
 
-
-loadMembers()
-loadSummary()
-</script>
-<!-- จดหมาย -->
-<script>
+  /* ===== PRINT LETTER (ADD ONLY) ===== */
 window.printMemberLetter = async ()=>{
   const pageSize = 1000
   let from = 0
   let allData = []
 
-  while (true) {
-    let q = db
-      .from('members')
+  while(true){
+    let q = db.from('members')
       .select('member_id,title,first_name,last_name,house_no,moo,village,subdistrict,district,province,phone')
       .order('member_id')
       .range(from, from + pageSize - 1)
 
-    if(fMemberId.value) q = q.eq('member_id', fMemberId.value)
-    if(fFirst.value) q = q.ilike('first_name','%'+fFirst.value+'%')
-    if(fLast.value) q = q.ilike('last_name','%'+fLast.value+'%')
-    if(fGroup.value) q = q.ilike('group','%'+fGroup.value+'%')
-    if(fPhone.value) q = q.ilike('phone','%'+fPhone.value+'%')
+    if(fMemberId.value) q=q.eq('member_id',fMemberId.value)
+    if(fFirst.value)   q=q.ilike('first_name','%'+fFirst.value+'%')
+    if(fLast.value)    q=q.ilike('last_name','%'+fLast.value+'%')
+    if(fGroup.value)   q=q.ilike('group','%'+fGroup.value+'%')
+    if(fPhone.value)   q=q.ilike('phone','%'+fPhone.value+'%')
 
     const { data, error } = await q
     if(error){ alert(error.message); return }
+    if(!data || data.length===0) break
 
-    if(!data || data.length === 0) break
     allData = allData.concat(data)
     if(data.length < pageSize) break
     from += pageSize
@@ -451,16 +445,26 @@ window.printMemberLetter = async ()=>{
     year:'numeric',month:'long',day:'numeric'
   })
 
-  const rowsHtml = allData.map(r=>`
+  const html = `
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+@page{ size:A4; margin:25mm }
+body{ font-family:"TH Sarabun New",sans-serif; font-size:15px }
+.letter{ page-break-inside:avoid; margin-bottom:40px }
+</style>
+</head>
+<body>
+${allData.map(r=>`
   <div class="letter">
-    <div>เรื่อง ขอแจ้งข้อมูลสมาชิก</div>
-    <div style="margin-top:12px">
-      เลขสมาชิก ${r.member_id}<br>
-      ชื่อ ${r.title||''}${r.first_name||''} ${r.last_name||''}<br>
+    <div>เลขสมาชิก ${r.member_id}</div>
+    <div>ชื่อ ${r.title||''}${r.first_name||''} ${r.last_name||''}</div>
+    <div>
       ที่อยู่ ${r.house_no||''} หมู่ ${r.moo||''} ${r.village||''}
-      ${r.subdistrict||''} ${r.district||''} ${r.province||''}<br>
-      โทรศัพท์ ${r.phone||''}
+      ${r.subdistrict||''} ${r.district||''} ${r.province||''}
     </div>
+    <div>โทรศัพท์ ${r.phone||''}</div>
 
     <div style="margin-top:40px;text-align:right">
       ลงชื่อ ___________________________<br>
@@ -468,37 +472,20 @@ window.printMemberLetter = async ()=>{
     </div>
     <hr style="margin:40px 0">
   </div>
-  `).join('')
-
-  const html = `
-<html>
-<head>
-<meta charset="UTF-8">
-<style>
-@page{
-  size:A4;
-  margin:25mm;
-}
-body{
-  font-family:"TH Sarabun New",sans-serif;
-  font-size:15px;
-}
-.letter{
-  page-break-inside:avoid;
-}
-</style>
-</head>
-<body>
-${rowsHtml}
+`).join('')}
 </body>
 </html>
-`
+  `
 
   const w = window.open('')
   w.document.write(html)
   w.document.close()
   w.print()
 }
+
+
+loadMembers()
+loadSummary()
 </script>
 
 <style>
@@ -515,6 +502,8 @@ ${rowsHtml}
 .btn.blue{background:#2563eb;color:#fff}
 .btn.gray{background:#e5e7eb}
 .btn.green{background:#16a34a;color:#fff}
+.btn.purple{background:#7c3aed;color:#fff;}
+
 .link{color:#2563eb;cursor:pointer}
 </style>
 
