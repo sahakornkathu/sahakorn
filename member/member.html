@@ -194,31 +194,28 @@ window.clearFilters = ()=>{
 }
 
 /* ===== SUMMARY ===== */
-async function loadSummary(){
-  document.getElementById('count-member').innerText =
-    (await db.from('members')
-      .select('member_id',{count:'exact',head:true})
-      .eq('member_status','สมาชิก')
-    ).count || 0
+<div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-center">
+  <div class="summary green">
+    <div>สมาชิก</div>
+    <div id="count-member" class="num">0</div>
+  </div>
 
-  document.getElementById('count-associate').innerText =
-    (await db.from('members')
-      .select('member_id',{count:'exact',head:true})
-      .eq('member_status','สมาชิกสมทบ')
-    ).count || 0
+  <div class="summary purple">
+    <div>สมาชิกสมทบ</div>
+    <div id="count-associate" class="num">0</div>
+  </div>
 
-  document.getElementById('count-resign').innerText =
-    (await db.from('members')
-      .select('member_id',{count:'exact',head:true})
-      .eq('member_status','ลาออก')
-    ).count || 0
+  <div class="summary orange">
+    <div>ลาออก</div>
+    <div id="count-resign" class="num">0</div>
+  </div>
 
-  document.getElementById('count-dead').innerText =
-    (await db.from('members')
-      .select('member_id',{count:'exact',head:true})
-      .eq('member_status','เสียชีวิต')
-    ).count || 0
-}
+  <div class="summary red">
+    <div>เสียชีวิต</div>
+    <div id="count-dead" class="num">0</div>
+  </div>
+</div>
+
 
 
 /* ===== LOAD MEMBERS ===== */
