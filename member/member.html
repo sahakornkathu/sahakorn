@@ -339,23 +339,37 @@ window.prevPage=()=>{ if(page>1){page--;loadMembers()} }
 
 /* ===== EXPORT EXCEL ===== */
 window.exportExcel = async ()=>{
-  let q=db.from('members').select('*').order('member_id')
+  let q = db.from('members').select('*')
+
+  // ✅ FILTER ต้องมาก่อน
   if(fMemberId.value) q=q.eq('member_id',fMemberId.value)
-  if(fFirst.value) q=q.ilike('first_name','%'+fFirst.value+'%')
-  if(fLast.value) q=q.ilike('last_name','%'+fLast.value+'%')
-  if(fGroup.value) q=q.ilike('group','%'+fGroup.value+'%')
-  if(fPhone.value) q=q.ilike('phone','%'+fPhone.value+'%')
-  if(fGender.value) q=q.eq('gender',fGender.value)
-  if(fStatus.value) q=q.eq('member_status',fStatus.value)
+  if(fFirst.value)    q=q.ilike('first_name','%'+fFirst.value+'%')
+  if(fLast.value)     q=q.ilike('last_name','%'+fLast.value+'%')
+  if(fGroup.value)    q=q.ilike('group','%'+fGroup.value+'%')
+  if(fPhone.value)    q=q.ilike('phone','%'+fPhone.value+'%')
+  if(fGender.value)   q=q.eq('gender',fGender.value)
+  if(fStatus.value)   q=q.eq('member_status',fStatus.value)
 
-  const {data}=await q
-  if(!data||!data.length){alert('ไม่มีข้อมูลให้ export');return}
+  // ✅ BETWEEN วันที่สมัคร
+  if(fJoinFrom.value) q=q.gte('join_date', fJoinFrom.value)
+  if(fJoinTo.value)   q=q.lte('join_date', fJoinTo.value)
 
-  const ws=XLSX.utils.json_to_sheet(data)
-  const wb=XLSX.utils.book_new()
-  XLSX.utils.book_append_sheet(wb,ws,'สมาชิก')
-  XLSX.writeFile(wb,'รายชื่อสมาชิก.xlsx')
+  // ✅ order ไว้ท้าย
+  q = q.order('member_id')
+
+  const { data, error } = await q
+  if(error){ alert(error.message); return }
+  if(!data || !data.length){
+    alert('ไม่มีข้อมูลให้ export')
+    return
+  }
+
+  const ws = XLSX.utils.json_to_sheet(data)
+  const wb = XLSX.utils.book_new()
+  XLSX.utils.book_append_sheet(wb, ws, 'สมาชิก')
+  XLSX.writeFile(wb, 'รายชื่อสมาชิก.xlsx')
 }
+
 
 /* ===== PRINT ===== */
 window.printMemberReport = async ()=>{
