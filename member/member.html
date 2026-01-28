@@ -539,6 +539,8 @@ window.printMemberLetter = async ()=>{
     alert('ไม่มีข้อมูลสำหรับพิมพ์')
     return
   }
+  // ✅ เรียงเลขสมาชิกจากน้อย → มาก
+allData.sort((a, b) => Number(a.member_id) - Number(b.member_id))
 
   const html = `
 <html>
