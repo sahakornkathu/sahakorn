@@ -409,22 +409,36 @@ ${rowsHtml}
   w.print()
 }
 
-  /* ===== PRINT LETTER (ADD ONLY) ===== */
-/* ===== PRINT LETTER (1 คน / 1 หน้า) ===== */
+  /* ===== PRINT LETTER (รองรับเกิน 1000 คน / 1 คน 1 หน้า) ===== */
 window.printMemberLetter = async ()=>{
-  let q = db.from('members')
-    .select('member_id,title,first_name,last_name,group,house_no,moo,village,subdistrict,district,province,phone')
-    .order('member_id')
+  const pageSize = 1000
+  let from = 0
+  let allData = []
 
-  if(fMemberId.value) q=q.eq('member_id',fMemberId.value)
-  if(fFirst.value)    q=q.ilike('first_name','%'+fFirst.value+'%')
-  if(fLast.value)     q=q.ilike('last_name','%'+fLast.value+'%')
-  if(fGroup.value)    q=q.ilike('group','%'+fGroup.value+'%')
-  if(fPhone.value)    q=q.ilike('phone','%'+fPhone.value+'%')
+  while (true) {
+    let q = db.from('members')
+      .select('member_id,title,first_name,last_name,group,house_no,moo,village,subdistrict,district,province,phone')
+      .order('member_id')
+      .range(from, from + pageSize - 1)
 
-  const { data, error } = await q
-  if(error){ alert(error.message); return }
-  if(!data || !data.length){
+    if(fMemberId.value) q=q.eq('member_id',fMemberId.value)
+    if(fFirst.value)    q=q.ilike('first_name','%'+fFirst.value+'%')
+    if(fLast.value)     q=q.ilike('last_name','%'+fLast.value+'%')
+    if(fGroup.value)    q=q.ilike('group','%'+fGroup.value+'%')
+    if(fPhone.value)    q=q.ilike('phone','%'+fPhone.value+'%')
+
+    const { data, error } = await q
+    if(error){ alert(error.message); return }
+
+    if(!data || data.length === 0) break
+
+    allData = allData.concat(data)
+
+    if(data.length < pageSize) break
+    from += pageSize
+  }
+
+  if(!allData.length){
     alert('ไม่มีข้อมูลสำหรับพิมพ์')
     return
   }
@@ -463,35 +477,20 @@ body{
 </head>
 
 <body>
-${data.map(r=>`
+${allData.map(r=>`
   <div class="letter">
     <div class="header">หนังสือแจ้งประชุมกลุ่ม</div>
 
-    <div class="row">
-      <span class="label">กลุ่ม :</span>
-      ${r.group||''}
-    </div>
-
-    <div class="row">
-      <span class="label">เลขสมาชิก :</span>
-      ${r.member_id}
-    </div>
-
-    <div class="row">
-      <span class="label">ชื่อ-นามสกุล :</span>
+    <div class="row"><span class="label">กลุ่ม :</span> ${r.group||''}</div>
+    <div class="row"><span class="label">เลขสมาชิก :</span> ${r.member_id}</div>
+    <div class="row"><span class="label">ชื่อ-นามสกุล :</span>
       ${r.title||''}${r.first_name||''} ${r.last_name||''}
     </div>
-
-    <div class="row">
-      <span class="label">ที่อยู่ :</span>
+    <div class="row"><span class="label">ที่อยู่ :</span>
       ${r.house_no||''} หมู่ ${r.moo||''} ${r.village||''}
       ${r.subdistrict||''} ${r.district||''} ${r.province||''}
     </div>
-
-    <div class="row">
-      <span class="label">โทรศัพท์ :</span>
-      ${r.phone||''}
-    </div>
+    <div class="row"><span class="label">โทรศัพท์ :</span> ${r.phone||''}</div>
   </div>
 `).join('')}
 </body>
@@ -504,8 +503,7 @@ ${data.map(r=>`
   w.print()
 }
 
-
-
+  
 
 loadMembers()
 loadSummary()
