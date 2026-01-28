@@ -308,11 +308,18 @@ exitForm.onsubmit = async e=>{
 }
 
 window.del = async(id,date)=>{
+  if(!(await window.checkPassword())) return
   if(!confirm('ลบข้อมูลนี้ ?')) return
-  await db.from('member_exit').delete().eq('member_id', id).eq('meeting_date', date)
+
+  await db.from('member_exit')
+    .delete()
+    .eq('member_id', id)
+    .eq('meeting_date', date)
+
   await syncStatus(id)
   load()
 }
+
 
 async function syncStatus(id){
   const { data } = await db.from('member_exit')
