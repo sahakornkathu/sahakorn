@@ -40,7 +40,16 @@
 <div><label class="label">กลุ่ม</label><input id="group" class="input" readonly></div>
 
 <div><label class="label">วันที่รับสวัสดิการ</label><input id="receive_date" type="date" class="input" required></div>
-<div><label class="label">จำนวนเงิน</label><input id="amount" type="number" class="input" required></div>
+<!-- <div><label class="label">จำนวนเงิน</label><input id="amount" type="number" class="input" required></div> -->
+<div>
+  <label class="label">จำนวนเงิน</label>
+  <select id="amount" class="input" required>
+    <option value="">-- เลือกจำนวนเงิน --</option>
+    <option value="500">500</option>
+    <option value="2000">2,000</option>
+    <option value="5000">5,000</option>
+  </select>
+</div>
 
 <div>
   <label class="label">หมายเหตุ</label>
@@ -49,6 +58,7 @@
     <option value="ตนเองเสียชีวิต">ตนเองเสียชีวิต</option>
     <option value="บิดาเสียชีวิต">บิดาเสียชีวิต</option>
     <option value="มารดาเสียชีวิต">มารดาเสียชีวิต</option>
+    <option value="คู่สมรสเสียชีวิต">คู่สมรสเสียชีวิต</option>
   </select>
 </div>
 
