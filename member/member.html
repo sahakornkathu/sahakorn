@@ -413,7 +413,7 @@ window.printMemberReport = async ()=>{
   }
 allData.sort((a, b) => Number(a.member_id) - Number(b.member_id))
 const today = new Date().toLocaleDateString('th-TH',{year:'numeric',month:'long',day:'numeric'})
-const today = new Date().toLocaleDateString('th-TH',{year:'numeric',month:'long',day:'numeric'})
+
 
   
   const rowsHtml = allData.map((r,i)=>`
