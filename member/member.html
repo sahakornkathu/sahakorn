@@ -416,7 +416,7 @@ const today = new Date().toLocaleDateString('th-TH',{year:'numeric',month:'long'
 
 
   
-  const rowsHtml = allData.map((r,i)=>`
+ const rowsHtml = allData.map((r,i)=>`
 <tr>
   <td>${i+1}</td>
   <td>${r.member_id}</td>
@@ -427,9 +427,11 @@ const today = new Date().toLocaleDateString('th-TH',{year:'numeric',month:'long'
     ${r.district||''} ${r.province||''}
   </td>
   <td>${r.phone||''}</td>
-  <td></td>
+  <td>${r.group||''}</td>
+  <td class="sign-cell"></td>
 </tr>
 `).join('')
+
 
   const html = `
 <html>
@@ -479,13 +481,15 @@ td:last-child{height:40px}
 <table>
 <thead>
 <tr>
-  <th>ลำดับ</th>
-  <th>เลขสมาชิก</th>
-  <th>ชื่อ-นามสกุล</th>
+  <th style="width:40px">ลำดับ</th>
+  <th style="width:80px">เลขสมาชิก</th>
+  <th style="width:160px">ชื่อ-นามสกุล</th>
   <th>ที่อยู่</th>
-  <th>เบอร์โทร</th>
-  <th>ลายเซ็น</th>
+  <th style="width:90px">เบอร์โทร</th>
+  <th style="width:40px">กลุ่ม</th>
+  <th style="width:180px">ลายเซ็น</th>
 </tr>
+
 </thead>
 <tbody>
 ${rowsHtml}
