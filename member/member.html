@@ -409,7 +409,7 @@ ${rowsHtml}
   w.print()
 }
 
-  /* ===== PRINT LETTER (รองรับเกิน 1000 คน / 1 คน 1 หน้า) ===== */
+/* ===== PRINT LETTER (FILTER + >1000 + 1 คน 1 หน้า) ===== */
 window.printMemberLetter = async ()=>{
   const pageSize = 1000
   let from = 0
@@ -418,14 +418,19 @@ window.printMemberLetter = async ()=>{
   while (true) {
     let q = db.from('members')
       .select('member_id,title,first_name,last_name,group,house_no,moo,village,subdistrict,district,province,phone')
-      .order('member_id')
-      .range(from, from + pageSize - 1)
 
+    // ✅ FILTER ต้องมาก่อน
     if(fMemberId.value) q=q.eq('member_id',fMemberId.value)
     if(fFirst.value)    q=q.ilike('first_name','%'+fFirst.value+'%')
     if(fLast.value)     q=q.ilike('last_name','%'+fLast.value+'%')
     if(fGroup.value)    q=q.ilike('group','%'+fGroup.value+'%')
     if(fPhone.value)    q=q.ilike('phone','%'+fPhone.value+'%')
+    if(fGender.value)   q=q.eq('gender',fGender.value)
+    if(fStatus.value)   q=q.eq('member_status',fStatus.value)
+
+    // ✅ order + range ต้องอยู่ท้าย
+    q = q.order('member_id')
+         .range(from, from + pageSize - 1)
 
     const { data, error } = await q
     if(error){ alert(error.message); return }
@@ -433,8 +438,8 @@ window.printMemberLetter = async ()=>{
     if(!data || data.length === 0) break
 
     allData = allData.concat(data)
-
     if(data.length < pageSize) break
+
     from += pageSize
   }
 
@@ -448,31 +453,21 @@ window.printMemberLetter = async ()=>{
 <head>
 <meta charset="UTF-8">
 <style>
-@page{
-  size:A4;
-  margin:20mm;
-}
+@page{ size:A4; margin:20mm; }
 body{
   font-family:"TH Sarabun New",sans-serif;
   font-size:20px;
   line-height:1.6;
 }
-.letter{
-  width:100%;
-  page-break-after:always;
-}
+.letter{ page-break-after:always; }
 .header{
   font-size:26px;
-  text-align:center;
   font-weight:bold;
+  text-align:center;
   margin-bottom:28px;
 }
-.row{
-  margin-bottom:18px;
-}
-.label{
-  font-weight:bold;
-}
+.row{ margin-bottom:18px; }
+.label{ font-weight:bold; }
 </style>
 </head>
 
@@ -502,7 +497,7 @@ ${allData.map(r=>`
   w.document.close()
   w.print()
 }
-
+ 
   
 
 loadMembers()
