@@ -364,19 +364,24 @@ window.printMemberReport = async ()=>{
   let allData = []
 
   while (true) {
-    let q = db
-      .from('members')
-      .select('*')
-      .order('member_id')
-      .range(from, from + pageSize - 1)
+    let q = db.from('members').select('*')
 
-    if(fMemberId.value) q = q.eq('member_id', fMemberId.value)
-    if(fFirst.value) q = q.ilike('first_name','%'+fFirst.value+'%')
-    if(fLast.value) q = q.ilike('last_name','%'+fLast.value+'%')
-    if(fGroup.value) q = q.ilike('group','%'+fGroup.value+'%')
-    if(fPhone.value) q = q.ilike('phone','%'+fPhone.value+'%')
-    if(fGender.value) q = q.eq('gender', fGender.value)
-    if(fStatus.value) q = q.eq('member_status', fStatus.value)
+    // ✅ FILTER ต้องมาก่อน
+    if(fMemberId.value) q=q.eq('member_id', fMemberId.value)
+    if(fFirst.value)    q=q.ilike('first_name','%'+fFirst.value+'%')
+    if(fLast.value)     q=q.ilike('last_name','%'+fLast.value+'%')
+    if(fGroup.value)    q=q.ilike('group','%'+fGroup.value+'%')
+    if(fPhone.value)    q=q.ilike('phone','%'+fPhone.value+'%')
+    if(fGender.value)   q=q.eq('gender', fGender.value)
+    if(fStatus.value)   q=q.eq('member_status', fStatus.value)
+
+    // ✅ filter วันที่สมัคร (between)
+    if(fJoinFrom.value) q=q.gte('join_date', fJoinFrom.value)
+    if(fJoinTo.value)   q=q.lte('join_date', fJoinTo.value)
+
+    // ✅ order + range ไว้ท้ายสุด
+    q = q.order('member_id')
+         .range(from, from + pageSize - 1)
 
     const { data, error } = await q
     if(error){ alert(error.message); return }
@@ -384,7 +389,6 @@ window.printMemberReport = async ()=>{
     if(!data || data.length === 0) break
 
     allData = allData.concat(data)
-
     if(data.length < pageSize) break
     from += pageSize
   }
