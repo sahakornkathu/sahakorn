@@ -22,7 +22,7 @@
 <h2 class="title">บันทึกข้อมูลสมาชิก</h2>
 
 <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
-  <div class="field"><label>รหัสสมาชิก</label><input id="member_id" type="number" required></div>
+  <div class="field"><label>รหัสสมาชิก</label> <input id="member_id" type="number" required oninput="if(this.value.length > 8) this.value = this.value.slice(0,8)"></div>
   <div class="field"><label>วันที่สมัคร</label><input id="join_date" type="date"></div>
   <div class="field"><label>คำนำหน้า</label>
     <select id="title"><option value="">--</option><option>นาย</option><option>นาง</option><option>นางสาว</option></select>
@@ -31,9 +31,8 @@
 
   <div class="field"><label>ชื่อ</label><input id="first_name"></div>
   <div class="field"><label>นามสกุล</label><input id="last_name"></div>
-  <div class="field"><label>เลขบัตรประชาชน</label><input id="id_card"></div>
+  <div class="field"><label>เลขบัตรประชาชน</label><input id="id_card" type="number" inputmode="numeric" oninput="if(this.value.length > 13) this.value = this.value.slice(0,13)"></div>
   <div class="field"><label>วันเกิด</label><input id="birthday" type="date"></div>
-
   <div class="field"><label>เพศ</label>
     <select id="gender"><option value="">--</option><option>ชาย</option><option>หญิง</option></select>
   </div>
