@@ -410,33 +410,21 @@ ${rowsHtml}
 }
 
   /* ===== PRINT LETTER (ADD ONLY) ===== */
+
 window.printMemberLetter = async ()=>{
-  const pageSize = 1000
-  let from = 0
-  let allData = []
+  let q = db.from('members')
+    .select('member_id,title,first_name,last_name,house_no,moo,village,subdistrict,district,province,phone')
+    .order('member_id')
 
-  while(true){
-    let q = db.from('members')
-      .select('member_id,title,first_name,last_name,house_no,moo,village,subdistrict,district,province,phone')
-      .order('member_id')
-      .range(from, from + pageSize - 1)
+  if(fMemberId.value) q=q.eq('member_id',fMemberId.value)
+  if(fFirst.value)    q=q.ilike('first_name','%'+fFirst.value+'%')
+  if(fLast.value)     q=q.ilike('last_name','%'+fLast.value+'%')
+  if(fGroup.value)    q=q.ilike('group','%'+fGroup.value+'%')
+  if(fPhone.value)    q=q.ilike('phone','%'+fPhone.value+'%')
 
-    if(fMemberId.value) q=q.eq('member_id',fMemberId.value)
-    if(fFirst.value)   q=q.ilike('first_name','%'+fFirst.value+'%')
-    if(fLast.value)    q=q.ilike('last_name','%'+fLast.value+'%')
-    if(fGroup.value)   q=q.ilike('group','%'+fGroup.value+'%')
-    if(fPhone.value)   q=q.ilike('phone','%'+fPhone.value+'%')
-
-    const { data, error } = await q
-    if(error){ alert(error.message); return }
-    if(!data || data.length===0) break
-
-    allData = allData.concat(data)
-    if(data.length < pageSize) break
-    from += pageSize
-  }
-
-  if(!allData.length){
+  const { data, error } = await q
+  if(error){ alert(error.message); return }
+  if(!data || !data.length){
     alert('ไม่มีข้อมูลสำหรับพิมพ์')
     return
   }
@@ -450,38 +438,76 @@ window.printMemberLetter = async ()=>{
 <head>
 <meta charset="UTF-8">
 <style>
-@page{ size:A4; margin:25mm }
-body{ font-family:"TH Sarabun New",sans-serif; font-size:15px }
-.letter{ page-break-inside:avoid; margin-bottom:40px }
+@page{
+  size:A4;
+  margin:20mm;
+}
+body{
+  font-family:"TH Sarabun New",sans-serif;
+  font-size:20px;              /* 🔥 ตัวใหญ่ขึ้น */
+  line-height:1.6;
+}
+.letter{
+  width:100%;
+  page-break-after:always;     /* 🔥 1 คน / 1 หน้า */
+}
+.header{
+  font-size:24px;
+  text-align:center;
+  font-weight:bold;
+  margin-bottom:24px;
+}
+.row{
+  margin-bottom:16px;
+}
+.label{
+  font-weight:bold;
+}
 </style>
 </head>
+
 <body>
-${allData.map(r=>`
+${data.map(r=>`
   <div class="letter">
-    <div>เลขสมาชิก ${r.member_id}</div>
-    <div>ชื่อ ${r.title||''}${r.first_name||''} ${r.last_name||''}</div>
-    <div>
-      ที่อยู่ ${r.house_no||''} หมู่ ${r.moo||''} ${r.village||''}
+    <div class="header">จดหมายแจ้งข้อมูลสมาชิก</div>
+
+    <div class="row">
+      <span class="label">เลขสมาชิก :</span>
+      ${r.member_id}
+    </div>
+
+    <div class="row">
+      <span class="label">ชื่อ-นามสกุล :</span>
+      ${r.title||''}${r.first_name||''} ${r.last_name||''}
+    </div>
+
+    <div class="row">
+      <span class="label">ที่อยู่ :</span>
+      ${r.house_no||''} หมู่ ${r.moo||''} ${r.village||''}
       ${r.subdistrict||''} ${r.district||''} ${r.province||''}
     </div>
-    <div>โทรศัพท์ ${r.phone||''}</div>
 
-    <div style="margin-top:40px;text-align:right">
+    <div class="row">
+      <span class="label">โทรศัพท์ :</span>
+      ${r.phone||''}
+    </div>
+
+    <div style="margin-top:60px;text-align:right">
       ลงชื่อ ___________________________<br>
       วันที่ ${today}
     </div>
-    <hr style="margin:40px 0">
   </div>
 `).join('')}
 </body>
 </html>
-  `
+`
 
   const w = window.open('')
   w.document.write(html)
   w.document.close()
   w.print()
 }
+
 
 
 loadMembers()
