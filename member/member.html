@@ -410,10 +410,10 @@ ${rowsHtml}
 }
 
   /* ===== PRINT LETTER (ADD ONLY) ===== */
-
+/* ===== PRINT LETTER (1 คน / 1 หน้า) ===== */
 window.printMemberLetter = async ()=>{
   let q = db.from('members')
-    .select('member_id,title,first_name,last_name,house_no,moo,village,subdistrict,district,province,phone')
+    .select('member_id,title,first_name,last_name,group,house_no,moo,village,subdistrict,district,province,phone')
     .order('member_id')
 
   if(fMemberId.value) q=q.eq('member_id',fMemberId.value)
@@ -429,10 +429,6 @@ window.printMemberLetter = async ()=>{
     return
   }
 
-  const today = new Date().toLocaleDateString('th-TH',{
-    year:'numeric',month:'long',day:'numeric'
-  })
-
   const html = `
 <html>
 <head>
@@ -444,21 +440,21 @@ window.printMemberLetter = async ()=>{
 }
 body{
   font-family:"TH Sarabun New",sans-serif;
-  font-size:20px;              /* 🔥 ตัวใหญ่ขึ้น */
+  font-size:20px;
   line-height:1.6;
 }
 .letter{
   width:100%;
-  page-break-after:always;     /* 🔥 1 คน / 1 หน้า */
+  page-break-after:always;
 }
 .header{
-  font-size:24px;
+  font-size:26px;
   text-align:center;
   font-weight:bold;
-  margin-bottom:24px;
+  margin-bottom:28px;
 }
 .row{
-  margin-bottom:16px;
+  margin-bottom:18px;
 }
 .label{
   font-weight:bold;
@@ -469,7 +465,12 @@ body{
 <body>
 ${data.map(r=>`
   <div class="letter">
-    <div class="header">จดหมายแจ้งข้อมูลสมาชิก</div>
+    <div class="header">หนังสือแจ้งประชุมกลุ่ม</div>
+
+    <div class="row">
+      <span class="label">กลุ่ม :</span>
+      ${r.group||''}
+    </div>
 
     <div class="row">
       <span class="label">เลขสมาชิก :</span>
@@ -491,11 +492,6 @@ ${data.map(r=>`
       <span class="label">โทรศัพท์ :</span>
       ${r.phone||''}
     </div>
-
-    <div style="margin-top:60px;text-align:right">
-      ลงชื่อ ___________________________<br>
-      วันที่ ${today}
-    </div>
   </div>
 `).join('')}
 </body>
@@ -507,6 +503,7 @@ ${data.map(r=>`
   w.document.close()
   w.print()
 }
+
 
 
 
