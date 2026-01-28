@@ -196,14 +196,30 @@ window.clearFilters = ()=>{
 /* ===== SUMMARY ===== */
 async function loadSummary(){
   document.getElementById('count-member').innerText =
-    (await db.from('members').select('member_id',{count:'exact',head:true}).eq('member_status','สมาชิก')).count||0
-  document.getElementById('count-member').innerText =
-    (await db.from('members').select('member_id',{count:'exact',head:true}).eq('member_status','สมาชิกสมทบ')).count||0
+    (await db.from('members')
+      .select('member_id',{count:'exact',head:true})
+      .eq('member_status','สมาชิก')
+    ).count || 0
+
+  document.getElementById('count-associate').innerText =
+    (await db.from('members')
+      .select('member_id',{count:'exact',head:true})
+      .eq('member_status','สมาชิกสมทบ')
+    ).count || 0
+
   document.getElementById('count-resign').innerText =
-    (await db.from('members').select('member_id',{count:'exact',head:true}).eq('member_status','ลาออก')).count||0
+    (await db.from('members')
+      .select('member_id',{count:'exact',head:true})
+      .eq('member_status','ลาออก')
+    ).count || 0
+
   document.getElementById('count-dead').innerText =
-    (await db.from('members').select('member_id',{count:'exact',head:true}).eq('member_status','เสียชีวิต')).count||0
+    (await db.from('members')
+      .select('member_id',{count:'exact',head:true})
+      .eq('member_status','เสียชีวิต')
+    ).count || 0
 }
+
 
 /* ===== LOAD MEMBERS ===== */
 async function loadMembers(){
