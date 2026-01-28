@@ -208,22 +208,34 @@ window.nextPage=()=>{if(page*pageSize<allData.length){page++;render()}}
 window.prevPage=()=>{if(page>1){page--;render()}}
 
 /* ===== EDIT / DELETE ===== */
-window.editRow=i=>{
+window.editRow = async i=>{
+  if(!(await checkPassword())) return
+
   const r=allData[i]
-  editing=true; editId=r.id
+  editing=true
+  editId=r.id
+
   member_id.value=r.member_id
   receive_date.value=r.receive_date
   amount.value=r.amount
   remark.value=r.remark
   note.value=r.note||''
 }
-window.del=async id=>{
-  const ok=await Swal.fire({title:'ลบข้อมูล?',showCancelButton:true})
+
+window.del = async id=>{
+  if(!(await checkPassword())) return
+
+  const ok = await Swal.fire({
+    title:'ยืนยันการลบ?',
+    showCancelButton:true
+  })
   if(!ok.isConfirmed) return
+
   await db.from('welfare').delete().eq('id',id)
   Swal.fire('ลบแล้ว','','success')
   load()
 }
+
 window.clearEdit=()=>{editing=false;editId=null;welfareForm.reset()}
 
 /* ===== SUBMIT (กันซ้ำ member_id + remark) ===== */
@@ -309,6 +321,27 @@ window.printReport=()=>{
 }
 
 load()
+// ตรวจสอบ password แก้ไขและลบ
+  async function checkPassword(){
+  const { value } = await Swal.fire({
+    title: 'กรุณาใส่รหัสผ่าน',
+    input: 'password',
+    inputPlaceholder: 'รหัสผ่าน',
+    showCancelButton: true,
+    confirmButtonText: 'ยืนยัน',
+    cancelButtonText: 'ยกเลิก'
+  })
+
+  if (!value) return false
+
+  if (value !== '159357') {
+    Swal.fire('รหัสผ่านไม่ถูกต้อง','','error')
+    return false
+  }
+
+  return true
+}
+
 </script>
 
 </body>
