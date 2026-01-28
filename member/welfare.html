@@ -33,7 +33,14 @@
 
 <form id="welfareForm" class="grid grid-cols-1 md:grid-cols-4 gap-4">
 
-<input id="member_id" class="input"type="number" inputmode="numeric" oninput="if(this.value.length>8)this.value=this.value.slice(0,8)"required>
+<div>
+  <label class="label">รหัสสมาชิก</label>
+  <input id="member_id" class="input" type="number"
+    inputmode="numeric"
+    oninput="if(this.value.length>8)this.value=this.value.slice(0,8)"
+    required>
+</div>
+
 <div><label class="label">คำนำหน้า</label><input id="title" class="input" readonly></div>
 <div><label class="label">ชื่อ</label><input id="first_name" class="input" readonly></div>
 <div><label class="label">นามสกุล</label><input id="last_name" class="input" readonly></div>
@@ -322,8 +329,8 @@ window.printReport=()=>{
 
 load()
 // ตรวจสอบ password แก้ไขและลบ
-  async function checkPassword(){
-  const { value } = await Swal.fire({
+ window.checkPassword = async function(){
+  const { value, isConfirmed } = await Swal.fire({
     title: 'กรุณาใส่รหัสผ่าน',
     input: 'password',
     inputPlaceholder: 'รหัสผ่าน',
@@ -332,15 +339,16 @@ load()
     cancelButtonText: 'ยกเลิก'
   })
 
-  if (!value) return false
+  if (!isConfirmed) return false
 
   if (value !== '159357') {
-    Swal.fire('รหัสผ่านไม่ถูกต้อง','','error')
+    await Swal.fire('รหัสผ่านไม่ถูกต้อง','','error')
     return false
   }
 
   return true
 }
+
 
 </script>
 
