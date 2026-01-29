@@ -12,11 +12,14 @@
 
   <!-- LINE LIFF -->
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+
+  <!-- SheetJS -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 </head>
 
 <body class="bg-gray-100 min-h-screen p-6">
 
-<div id="loading" class="text-center text-lg">
+<div id="loading" class="text-center text-lg font-bold">
   ⏳ กำลังตรวจสอบสิทธิ์...
 </div>
 
@@ -24,36 +27,64 @@
   ❌ คุณไม่มีสิทธิ์เข้าถึงข้อมูลนี้
 </div>
 
-<div id="content" class="hidden max-w-7xl mx-auto bg-white p-6 rounded-xl shadow">
+<div id="content" class="hidden max-w-7xl mx-auto space-y-4">
 
-  <h1 class="text-2xl font-bold mb-4">
-    📋 รายชื่อสมาชิก (เฉพาะกลุ่มของคุณ)
-  </h1>
-
-  <!-- Search -->
-  <div class="mb-4">
-    <input
-      id="searchInput"
-      placeholder="ค้นหา รหัส / ชื่อ / นามสกุล"
-      class="border rounded px-3 py-2 w-full max-w-md"
-      oninput="renderTable()" />
+  <!-- Summary Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div class="bg-white p-4 rounded shadow text-center">
+      <div class="text-gray-500">สมาชิกทั้งหมด</div>
+      <div id="totalCount" class="text-3xl font-bold">0</div>
+    </div>
+    <div class="bg-white p-4 rounded shadow text-center">
+      <div class="text-gray-500">สมาชิก</div>
+      <div id="memberCount" class="text-3xl font-bold text-green-600">0</div>
+    </div>
+    <div class="bg-white p-4 rounded shadow text-center">
+      <div class="text-gray-500">สมาชิกสมทบ</div>
+      <div id="associateCount" class="text-3xl font-bold text-blue-600">0</div>
+    </div>
   </div>
 
-  <!-- Table -->
-  <div class="overflow-x-auto">
-    <table class="w-full border text-sm">
-      <thead class="bg-gray-200">
-        <tr>
-          <th class="border p-2">รหัสสมาชิก</th>
-          <th class="border p-2">กลุ่ม</th>
-          <th class="border p-2">ชื่อ</th>
-          <th class="border p-2">นามสกุล</th>
-          <th class="border p-2">ที่อยู่</th>
-          <th class="border p-2">เบอร์โทรศัพท์</th>
-        </tr>
-      </thead>
-      <tbody id="tableBody"></tbody>
-    </table>
+  <!-- Table Card -->
+  <div class="bg-white p-6 rounded-xl shadow">
+
+    <h1 class="text-2xl font-bold mb-4">
+      📋 รายชื่อสมาชิก (เฉพาะกลุ่มของคุณ)
+    </h1>
+
+    <!-- Search + Export -->
+    <div class="flex flex-wrap gap-2 mb-4">
+      <input
+        id="searchInput"
+        placeholder="ค้นหา รหัส / ชื่อ / นามสกุล"
+        class="border rounded px-3 py-2 w-full md:w-64"
+        oninput="renderTable()" />
+
+      <button
+        onclick="exportExcel()"
+        class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+        Export Excel
+      </button>
+    </div>
+
+    <!-- Table -->
+    <div class="overflow-x-auto">
+      <table class="w-full border text-sm">
+        <thead class="bg-gray-200">
+          <tr>
+            <th class="border p-2">ลำดับ</th>
+            <th class="border p-2">รหัสสมาชิก</th>
+            <th class="border p-2">กลุ่ม</th>
+            <th class="border p-2">ชื่อ</th>
+            <th class="border p-2">นามสกุล</th>
+            <th class="border p-2">ที่อยู่</th>
+            <th class="border p-2">เบอร์โทร</th>
+            <th class="border p-2">สถานะ</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
   </div>
 </div>
 
@@ -68,7 +99,8 @@ const supabaseClient = supabase.createClient(
   SUPABASE_ANON_KEY
 )
 
-let members = []
+let allMembers = []
+let filteredMembers = []
 let myGroup = null
 
 /* ================= INIT ================= */
@@ -84,7 +116,7 @@ async function init() {
   const lineUserId = profile.userId
 
   /* ---- ตรวจสิทธิ์กรรมการ ---- */
-  const { data: admin, error } = await supabaseClient
+  const { data: admin } = await supabaseClient
     .from('adminmember')
     .select('position, approve_status')
     .eq('line_user_id', lineUserId)
@@ -97,7 +129,6 @@ async function init() {
     return
   }
 
-  /* ---- แยกกลุ่มจากตำแหน่ง ---- */
   myGroup = admin.position.match(/\d+/)?.[0]
 
   if (!myGroup) {
@@ -120,12 +151,10 @@ async function loadMembers() {
       last_name,
       house_no,
       moo,
-      street,
       village,
       subdistrict,
       district,
       province,
-      postal_code,
       phone,
       member_status
     `)
@@ -138,48 +167,77 @@ async function loadMembers() {
     return
   }
 
-  members = data
+  allMembers = data
   renderTable()
-}
-
-/* ================= ADDRESS ================= */
-function buildAddress(m) {
-  return [
-    m.house_no && `บ้านเลขที่ ${m.house_no}`,
-    m.moo && `หมู่ ${m.moo}`,
-    m.village,
-    m.street,
-    m.subdistrict,
-    m.district,
-    m.province,
-    m.postal_code
-  ].filter(Boolean).join(' ')
 }
 
 /* ================= RENDER ================= */
 function renderTable() {
   const keyword = document.getElementById('searchInput').value.toLowerCase()
+
+  filteredMembers = allMembers.filter(m =>
+    m.member_id.toString().includes(keyword) ||
+    m.first_name.toLowerCase().includes(keyword) ||
+    m.last_name.toLowerCase().includes(keyword)
+  )
+
+  updateSummary(filteredMembers)
+
   const tbody = document.getElementById('tableBody')
   tbody.innerHTML = ''
 
-  members
-    .filter(m =>
-      m.member_id.toString().includes(keyword) ||
-      (m.first_name || '').toLowerCase().includes(keyword) ||
-      (m.last_name || '').toLowerCase().includes(keyword)
-    )
-    .forEach(m => {
-      tbody.innerHTML += `
-        <tr class="hover:bg-gray-50">
-          <td class="border p-2 text-center">${m.member_id}</td>
-          <td class="border p-2 text-center">${m.group}</td>
-          <td class="border p-2">${m.first_name ?? ''}</td>
-          <td class="border p-2">${m.last_name ?? ''}</td>
-          <td class="border p-2 text-left">${buildAddress(m)}</td>
-          <td class="border p-2">${m.phone ?? ''}</td>
-        </tr>
-      `
-    })
+  filteredMembers.forEach((m, i) => {
+    const address = [
+      m.house_no ? `บ้านเลขที่ ${m.house_no}` : '',
+      m.moo ? `หมู่ ${m.moo}` : '',
+      m.village || '',
+      m.subdistrict || '',
+      m.district || '',
+      m.province || ''
+    ].filter(Boolean).join(' ')
+
+    tbody.innerHTML += `
+      <tr class="text-center hover:bg-gray-50">
+        <td class="border p-2">${i + 1}</td>
+        <td class="border p-2">${m.member_id}</td>
+        <td class="border p-2">${m.group}</td>
+        <td class="border p-2">${m.first_name}</td>
+        <td class="border p-2">${m.last_name}</td>
+        <td class="border p-2 text-left">${address}</td>
+        <td class="border p-2">${m.phone ?? ''}</td>
+        <td class="border p-2">${m.member_status}</td>
+      </tr>
+    `
+  })
+}
+
+/* ================= SUMMARY ================= */
+function updateSummary(list) {
+  document.getElementById('totalCount').textContent = list.length
+  document.getElementById('memberCount').textContent =
+    list.filter(m => m.member_status === 'สมาชิก').length
+  document.getElementById('associateCount').textContent =
+    list.filter(m => m.member_status === 'สมาชิกสมทบ').length
+}
+
+/* ================= EXPORT ================= */
+function exportExcel() {
+  const rows = filteredMembers.map((m, i) => ({
+    'ลำดับ': i + 1,
+    'รหัสสมาชิก': m.member_id,
+    'กลุ่ม': m.group,
+    'ชื่อ': m.first_name,
+    'นามสกุล': m.last_name,
+    'ที่อยู่': `${m.house_no ?? ''} ${m.moo ?? ''} ${m.village ?? ''} ${m.subdistrict ?? ''} ${m.district ?? ''} ${m.province ?? ''}`,
+    'เบอร์โทร': m.phone ?? '',
+    'สถานะ': m.member_status
+  }))
+
+  const ws = XLSX.utils.json_to_sheet(rows)
+  const wb = XLSX.utils.book_new()
+  XLSX.utils.book_append_sheet(wb, ws, 'Members')
+
+  XLSX.writeFile(wb, `members_group_${myGroup}.xlsx`)
 }
 
 init()
