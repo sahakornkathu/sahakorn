@@ -113,7 +113,7 @@ async function init() {
 /* ================= LOAD MEMBERS ================= */
 async function loadMembers() {
   const { data, error } = await supabaseClient
-    .from('member')
+    .from('members')
     .select(`
       idcustomer,
       group,
