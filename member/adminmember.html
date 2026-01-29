@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <title>Admin - อนุมัติกรรมการ</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body class="bg-gray-100 min-h-screen p-6">
+
+  <div class="max-w-6xl mx-auto bg-white rounded-xl shadow p-6">
+    <h1 class="text-2xl font-bold mb-6">🧑‍💼 ระบบอนุมัติกรรมการ</h1>
+
+    <!-- Filter -->
+    <div class="mb-4 flex gap-2">
+      <select id="filterStatus" class="border rounded px-3 py-2">
+        <option value="">ทั้งหมด</option>
+        <option value="pending">รออนุมัติ</option>
+        <option value="approved">อนุมัติแล้ว</option>
+        <option value="rejected">ไม่อนุมัติ</option>
+      </select>
+
+      <button onclick="loadData()" class="bg-blue-600 text-white px-4 py-2 rounded">
+        ค้นหา
+      </button>
+    </div>
+
+    <!-- Table -->
+    <div class="overflow-x-auto">
+      <table class="w-full border text-sm">
+        <thead class="bg-gray-200">
+          <tr>
+            <th class="border p-2">ชื่อ</th>
+            <th class="border p-2">นามสกุล</th>
+            <th class="border p-2">ตำแหน่ง</th>
+            <th class="border p-2">สถานะ</th>
+            <th class="border p-2">จัดการ</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+<script>
+  const supabase = supabase.createClient(
+    'https://ttottijljxoinptmhgtu.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'
+  )
+
+  async function loadData() {
+    const status = document.getElementById('filterStatus').value
+    let query = supabase.from('adminmember').select('*').order('created_at', { ascending: false })
+
+    if (status) {
+      query = query.eq('approve_status', status)
+    }
+
+    const { data, error } = await query
+    if (error) {
+      alert(error.message)
+      return
+    }
+
+    const tbody = document.getElementById('tableBody')
+    tbody.innerHTML = ''
+
+    data.forEach(row => {
+      tbody.innerHTML += `
+        <tr class="text-center">
+          <td class="border p-2">${row.first_name}</td>
+          <td class="border p-2">${row.last_name}</td>
+          <td class="border p-2">${row.position}</td>
+          <td class="border p-2">
+            <span class="${statusColor(row.approve_status)} px-2 py-1 rounded text-white">
+              ${row.approve_status}
+            </span>
+          </td>
+          <td class="border p-2">
+            <select onchange="updateStatus(${row.id}, this.value)"
+              class="border rounded px-2 py-1">
+              <option value="">เลือก</option>
+              <option value="approved">อนุมัติ</option>
+              <option value="rejected">ไม่อนุมัติ</option>
+            </select>
+          </td>
+        </tr>
+      `
+    })
+  }
+
+  function statusColor(status) {
+    if (status === 'approved') return 'bg-green-600'
+    if (status === 'rejected') return 'bg-red-600'
+    return 'bg-yellow-500'
+  }
+
+  async function updateStatus(id, status) {
+    if (!status) return
+
+    const confirmMsg = status === 'approved'
+      ? 'ยืนยันการอนุมัติ?'
+      : 'ยืนยันการไม่อนุมัติ?'
+
+    if (!confirm(confirmMsg)) return
+
+    const { error } = await supabase
+      .from('adminmember')
+      .update({ approve_status: status })
+      .eq('id', id)
+
+    if (error) {
+      alert(error.message)
+    } else {
+      loadData()
+    }
+  }
+
+  loadData()
+</script>
+
+</body>
+</html>
