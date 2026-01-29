@@ -214,18 +214,63 @@ function renderMore(){
 }
 
 /* GPS */
-function pinGPS(id){
-  navigator.geolocation.getCurrentPosition(async pos => {
-    await supabaseClient
-      .from('members')
-      .update({
-        lat: pos.coords.latitude,
-        lng: pos.coords.longitude
-      })
-      .eq('member_id', id)
+async function pinGPS(memberId){
 
-    loadMembers(allMembers[0].group)
-  })
+  if (!navigator.geolocation) {
+    alert('อุปกรณ์นี้ไม่รองรับ GPS')
+    return
+  }
+
+  // สำหรับ LIFF (มือถือ)
+  try {
+    if (liff.isInClient()) {
+      const permission = await liff.permission.query('geolocation')
+      if (permission.state !== 'granted') {
+        alert('กรุณาอนุญาตการเข้าถึงตำแหน่ง (Location)')
+        return
+      }
+    }
+  } catch(e){
+    console.warn('LIFF permission check skipped')
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    async (pos) => {
+      const lat = pos.coords.latitude
+      const lng = pos.coords.longitude
+
+      const { error } = await supabaseClient
+        .from('members')
+        .update({ lat, lng })
+        .eq('member_id', memberId)
+
+      if (error) {
+        alert('บันทึกพิกัดไม่สำเร็จ')
+        console.error(error)
+        return
+      }
+
+      alert('📍 ปักพิกัดเรียบร้อย')
+      loadMembers(allMembers[0].group)
+    },
+
+    (err) => {
+      console.error(err)
+      if (err.code === 1) {
+        alert('คุณปฏิเสธการใช้ตำแหน่ง')
+      } else if (err.code === 2) {
+        alert('ไม่สามารถระบุตำแหน่งได้')
+      } else {
+        alert('GPS ใช้งานไม่ได้')
+      }
+    },
+
+    {
+      enableHighAccuracy: true,
+      timeout: 15000,
+      maximumAge: 0
+    }
+  )
 }
 
 /* MODAL MAP */
