@@ -15,9 +15,19 @@
 
   <!-- SheetJS -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
+  <!-- Print mode -->
+  <style>
+    @media print {
+      input, button, .sticky { display: none !important; }
+      body { background: white; }
+      table { font-size: 12px; }
+      tr { page-break-inside: avoid; }
+    }
+  </style>
 </head>
 
-<body class="bg-gray-100 min-h-screen p-6">
+<body class="bg-gray-100 min-h-screen p-4">
 
 <div id="loading" class="text-center text-lg font-bold">
   ⏳ กำลังตรวจสอบสิทธิ์...
@@ -29,8 +39,8 @@
 
 <div id="content" class="hidden max-w-7xl mx-auto space-y-4">
 
-  <!-- Summary Cards -->
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+  <!-- Summary -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
     <div class="bg-white p-4 rounded shadow text-center">
       <div class="text-gray-500">สมาชิกทั้งหมด</div>
       <div id="totalCount" class="text-3xl font-bold">0</div>
@@ -45,51 +55,47 @@
     </div>
   </div>
 
-  <!-- Table Card -->
-  <div class="bg-white p-6 rounded-xl shadow">
+  <!-- Search -->
+  <div class="sticky top-0 z-20 bg-white p-3 rounded shadow flex flex-col sm:flex-row gap-2">
+    <input
+      id="searchInput"
+      placeholder="ค้นหา รหัส / ชื่อ / นามสกุล"
+      class="border rounded px-3 py-2 w-full sm:w-64"
+      oninput="resetAndRender()" />
 
-    <h1 class="text-2xl font-bold mb-4">
-      📋 รายชื่อสมาชิก (เฉพาะกลุ่มของคุณ)
-    </h1>
-
-    <!-- Search + Export -->
-    <div class="flex flex-wrap gap-2 mb-4">
-      <input
-        id="searchInput"
-        placeholder="ค้นหา รหัส / ชื่อ / นามสกุล"
-        class="border rounded px-3 py-2 w-full md:w-64"
-        oninput="renderTable()" />
-
-      <button
-        onclick="exportExcel()"
-        class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
-        Export Excel
-      </button>
-    </div>
-
-    <!-- Table -->
-    <div class="overflow-x-auto">
-      <table class="w-full border text-sm">
-        <thead class="bg-gray-200">
-          <tr>
-            <th class="border p-2">ลำดับ</th>
-            <th class="border p-2">รหัสสมาชิก</th>
-            <th class="border p-2">กลุ่ม</th>
-            <th class="border p-2">ชื่อ</th>
-            <th class="border p-2">นามสกุล</th>
-            <th class="border p-2">ที่อยู่</th>
-            <th class="border p-2">เบอร์โทร</th>
-            <th class="border p-2">สถานะ</th>
-          </tr>
-        </thead>
-        <tbody id="tableBody"></tbody>
-      </table>
-    </div>
+    <button
+      onclick="exportExcel()"
+      class="w-full sm:w-auto bg-green-600 text-white px-4 py-2 rounded">
+      Export Excel
+    </button>
   </div>
+
+  <!-- Desktop Table -->
+  <div class="bg-white p-4 rounded shadow hidden sm:block overflow-x-auto">
+    <table class="w-full border text-sm">
+      <thead class="bg-gray-200">
+        <tr>
+          <th class="border p-2">ลำดับ</th>
+          <th class="border p-2">รหัส</th>
+          <th class="border p-2">กลุ่ม</th>
+          <th class="border p-2">ชื่อ</th>
+          <th class="border p-2">นามสกุล</th>
+          <th class="border p-2">ที่อยู่</th>
+          <th class="border p-2">โทร</th>
+          <th class="border p-2">สถานะ</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+
+  <!-- Mobile Cards -->
+  <div id="mobileList" class="sm:hidden space-y-3"></div>
+
 </div>
 
 <script>
-/* ================= CONFIG ================= */
+/* CONFIG */
 const SUPABASE_URL = 'https://ttottijljxoinptmhgtu.supabase.co'
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'
 const LIFF_ID = '1661506692-nVNGOHNm'
@@ -102,20 +108,17 @@ const supabaseClient = supabase.createClient(
 let allMembers = []
 let filteredMembers = []
 let myGroup = null
+let pageSize = 20
+let currentPage = 1
 
-/* ================= INIT ================= */
+/* INIT */
 async function init() {
   await liff.init({ liffId: LIFF_ID })
-
-  if (!liff.isLoggedIn()) {
-    liff.login()
-    return
-  }
+  if (!liff.isLoggedIn()) return liff.login()
 
   const profile = await liff.getProfile()
   const lineUserId = profile.userId
 
-  /* ---- ตรวจสิทธิ์กรรมการ ---- */
   const { data: admin } = await supabaseClient
     .from('adminmember')
     .select('position, approve_status')
@@ -130,17 +133,16 @@ async function init() {
   }
 
   myGroup = admin.position.match(/\d+/)?.[0]
-
   if (!myGroup) {
     document.getElementById('noAccess').classList.remove('hidden')
     return
   }
 
   document.getElementById('content').classList.remove('hidden')
-  await loadMembers()
+  loadMembers()
 }
 
-/* ================= LOAD MEMBERS ================= */
+/* LOAD MEMBERS */
 async function loadMembers() {
   const { data, error } = await supabaseClient
     .from('members')
@@ -159,19 +161,21 @@ async function loadMembers() {
       member_status
     `)
     .eq('group', myGroup)
-    .in('member_status', ['สมาชิก', 'สมาชิกสมทบ'])
+    .in('member_status', ['สมาชิก','สมาชิกสมทบ'])
     .order('member_id', { ascending: true })
 
-  if (error) {
-    alert(error.message)
-    return
-  }
+  if (error) return alert(error.message)
 
   allMembers = data
+  resetAndRender()
+}
+
+/* RENDER */
+function resetAndRender() {
+  currentPage = 1
   renderTable()
 }
 
-/* ================= RENDER ================= */
 function renderTable() {
   const keyword = document.getElementById('searchInput').value.toLowerCase()
 
@@ -183,77 +187,87 @@ function renderTable() {
 
   updateSummary(filteredMembers)
 
-  const tbody = document.getElementById('tableBody')
-  tbody.innerHTML = ''
+  const show = filteredMembers.slice(0, currentPage * pageSize)
+  document.getElementById('tableBody').innerHTML = ''
+  document.getElementById('mobileList').innerHTML = ''
 
-  filteredMembers.forEach((m, i) => {
+  show.forEach((m, i) => {
     const address = [
-      m.house_no ? `บ้านเลขที่ ${m.house_no}` : '',
-      m.moo ? `หมู่ ${m.moo}` : '',
-      m.village || '',
-      m.subdistrict || '',
-      m.district || '',
-      m.province || ''
+      m.house_no, m.moo, m.village,
+      m.subdistrict, m.district, m.province
     ].filter(Boolean).join(' ')
 
-    tbody.innerHTML += `
-      <tr class="text-center hover:bg-gray-50">
-        <td class="border p-2">${i + 1}</td>
+    tableBody.innerHTML += `
+      <tr class="text-center">
+        <td class="border p-2">${i+1}</td>
         <td class="border p-2">${m.member_id}</td>
         <td class="border p-2">${m.group}</td>
         <td class="border p-2">${m.first_name}</td>
         <td class="border p-2">${m.last_name}</td>
         <td class="border p-2 text-left">${address}</td>
-        <td class="border p-2">${m.phone ?? ''}</td>
+        <td class="border p-2">
+          <a href="tel:${m.phone}" class="text-blue-600 underline">${m.phone}</a>
+        </td>
         <td class="border p-2">${m.member_status}</td>
       </tr>
+    `
+
+    mobileList.innerHTML += `
+      <div class="bg-white p-4 rounded shadow">
+        <div class="font-bold">${m.first_name} ${m.last_name}</div>
+        <div class="text-sm">รหัส ${m.member_id} | กลุ่ม ${m.group}</div>
+        <div class="text-sm mt-1">${address}</div>
+        <a href="tel:${m.phone}" class="block mt-2 text-blue-600 font-bold">
+          📞 ${m.phone}
+        </a>
+        <div class="mt-2 text-xs inline-block px-2 py-1 rounded
+          ${m.member_status==='สมาชิก'
+            ? 'bg-green-100 text-green-700'
+            : 'bg-blue-100 text-blue-700'}">
+          ${m.member_status}
+        </div>
+      </div>
     `
   })
 }
 
-/* ================= SUMMARY ================= */
+/* SUMMARY */
 function updateSummary(list) {
-  document.getElementById('totalCount').textContent = list.length
-  document.getElementById('memberCount').textContent =
-    list.filter(m => m.member_status === 'สมาชิก').length
-  document.getElementById('associateCount').textContent =
-    list.filter(m => m.member_status === 'สมาชิกสมทบ').length
+  totalCount.textContent = list.length
+  memberCount.textContent = list.filter(m=>m.member_status==='สมาชิก').length
+  associateCount.textContent = list.filter(m=>m.member_status==='สมาชิกสมทบ').length
 }
 
-/* ================= EXPORT ================= */
+/* INFINITE SCROLL */
+window.addEventListener('scroll', () => {
+  if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 200) {
+    if (currentPage * pageSize < filteredMembers.length) {
+      currentPage++
+      renderTable()
+    }
+  }
+})
+
+/* EXPORT */
 function exportExcel() {
-  // clone + sort ก่อน export
-  const sorted = [...filteredMembers].sort(
-    (a, b) => a.member_id - b.member_id
-  )
-
-  const rows = sorted.map((m, i) => ({
-    'ลำดับ': i + 1,
-    'รหัสสมาชิก': m.member_id,
-    'กลุ่ม': m.group,
-    'ชื่อ': m.first_name,
-    'นามสกุล': m.last_name,
-    'ที่อยู่': [
-      m.house_no ? `บ้านเลขที่ ${m.house_no}` : '',
-      m.moo ? `หมู่ ${m.moo}` : '',
-      m.village || '',
-      m.subdistrict || '',
-      m.district || '',
-      m.province || ''
-    ].filter(Boolean).join(' '),
-    'เบอร์โทร': m.phone ?? '',
-    'สถานะ': m.member_status
+  const sorted = [...filteredMembers].sort((a,b)=>a.member_id-b.member_id)
+  const rows = sorted.map((m,i)=>({
+    ลำดับ:i+1,
+    รหัสสมาชิก:m.member_id,
+    กลุ่ม:m.group,
+    ชื่อ:m.first_name,
+    นามสกุล:m.last_name,
+    ที่อยู่:`${m.house_no||''} ${m.moo||''} ${m.village||''} ${m.subdistrict||''} ${m.district||''} ${m.province||''}`,
+    เบอร์โทร:m.phone,
+    สถานะ:m.member_status
   }))
-
   const ws = XLSX.utils.json_to_sheet(rows)
   const wb = XLSX.utils.book_new()
   XLSX.utils.book_append_sheet(wb, ws, 'Members')
-
   XLSX.writeFile(wb, `members_group_${myGroup}.xlsx`)
 }
 
 init()
 </script>
-
 </body>
 </html>
