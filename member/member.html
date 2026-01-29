@@ -192,14 +192,13 @@ form.addEventListener('submit',async e=>{
 })
 
 /* ===== AUTO FILTER ===== */
+// input fields → ใช้ input
 ;[
   fMemberId,
   fFirst,
   fLast,
   fGroup,
   fPhone,
-  fGender,
-  fStatus,
   fJoinFrom,
   fJoinTo
 ].forEach(el=>{
@@ -208,6 +207,18 @@ form.addEventListener('submit',async e=>{
     debounceTimer=setTimeout(()=>{ page=1; loadMembers() },300)
   })
 })
+
+// select fields → ใช้ change
+;[
+  fGender,
+  fStatus
+].forEach(el=>{
+  el.addEventListener('change',()=>{
+    page = 1
+    loadMembers()
+  })
+})
+
 
 window.resetForm = ()=>{
   form.reset()
