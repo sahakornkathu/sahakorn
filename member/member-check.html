@@ -129,25 +129,27 @@ function renderMarkers(){
 /* ================= LOAD MEMBERS ================= */
 async function loadMembers(){
   let q = supabaseClient
-    .from('members')
-    .select(`
-      member_id,
-      title,
-      first_name,
-      last_name,
-      group,
-      house_no,
-      moo,
-      subdistrict,
-      district,
-      province,
-      phone,
-      member_status,
-      lat,
-      lng
-    `)
-    .in('member_status',['สมาชิก','สมาชิกสมทบ'])
-    .order('member_id',{ascending:true})
+  .from('members')
+  .select(`
+    member_id,
+    title,
+    first_name,
+    last_name,
+    group,
+    house_no,
+    moo,
+    subdistrict,
+    district,
+    province,
+    phone,
+    member_status,
+    lat,
+    lng
+  `)
+  .in('member_status',['สมาชิก','สมาชิกสมทบ'])
+  .order('member_id',{ ascending: true })
+  .range(0, 9999)   // ⭐ แก้ตรงนี้
+
 
   if (!isSuperAdmin) q = q.eq('group', adminGroup)
 
