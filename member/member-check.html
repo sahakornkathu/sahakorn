@@ -131,11 +131,14 @@ function resetAndRender() {
 
 function renderMore() {
   const keyword = document.getElementById('searchInput').value.toLowerCase()
-  const list = allMembers.filter(m =>
+ const list = allMembers
+  .filter(m =>
     m.member_id.toString().includes(keyword) ||
     m.first_name.toLowerCase().includes(keyword) ||
     m.last_name.toLowerCase().includes(keyword)
   )
+  .sort((a, b) => a.member_id - b.member_id)
+
 
   list.slice(renderIndex, renderIndex + PAGE_SIZE).forEach(m => {
     document.getElementById('cardList').innerHTML += `
@@ -173,7 +176,9 @@ window.addEventListener('scroll', () => {
 
 /* EXPORT */
 function exportExcel() {
-  const rows = allMembers.map((m, i) => ({
+  const sorted = [...allMembers].sort((a, b) => a.member_id - b.member_id)
+
+  const rows = sorted.map((m, i) => ({
     ลำดับ: i + 1,
     รหัสสมาชิก: m.member_id,
     ชื่อ: `${m.title}${m.first_name} ${m.last_name}`,
@@ -186,6 +191,7 @@ function exportExcel() {
   XLSX.utils.book_append_sheet(wb, ws, 'Members')
   XLSX.writeFile(wb, 'members.xlsx')
 }
+
 
 init()
 </script>
