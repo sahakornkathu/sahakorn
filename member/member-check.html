@@ -137,26 +137,44 @@ function renderMarkers(){
 }
 
 /* ================= LOAD ================= */
-async function loadMembers(role, group){
+function renderMore(){
+  const kw = searchInput.value.toLowerCase()
 
-  let query = supabaseClient
-    .from('members')
-    .select('*')
-    .in('member_status', ['สมาชิก','สมาชิกสมทบ'])
-    .order('member_id', { ascending: true })
+  const list = allMembers
+    .filter(m =>
+      m.member_id.toString().includes(kw) ||
+      m.first_name.toLowerCase().includes(kw) ||
+      m.last_name.toLowerCase().includes(kw)
+    )
+    // ⭐ บังคับเรียงเลขสมาชิกจากน้อย → มาก
+    .sort((a, b) => a.member_id - b.member_id)
 
-  if (role !== 'super') {
-    query = query.eq('group', group)
-  }
+  list.slice(renderIndex, renderIndex + PAGE_SIZE).forEach(m => {
+    cardList.innerHTML += `
+      <div class="bg-slate-800 rounded-xl p-4 space-y-2">
+        <div class="flex justify-between items-center">
+          <div class="font-bold text-lg">
+            ${m.member_id} · ${m.title}${m.first_name} ${m.last_name}
+          </div>
+          <span class="text-xs px-2 py-1 rounded bg-slate-700">
+            ${m.lat && m.lng ? '📍 ปักแล้ว' : '❌ ยังไม่ปัก'}
+          </span>
+        </div>
 
-  const { data, error } = await query
-  if(error) return alert(error.message)
+        <div class="text-sm text-slate-400">
+          กลุ่ม ${m.group} · ${m.member_status}
+        </div>
 
-  allMembers = data
-  updateSummary()
-  renderMarkers()
-  resetAndRender()
+        <a href="tel:${m.phone}" class="block text-green-400 font-bold">
+          📞 ${m.phone}
+        </a>
+      </div>
+    `
+  })
+
+  renderIndex += PAGE_SIZE
 }
+
 
 /* ================= SUMMARY ================= */
 function updateSummary(){
