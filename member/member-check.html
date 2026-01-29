@@ -8,6 +8,7 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -255,28 +256,63 @@ function renderMore(){
 
 /* ================= GPS ================= */
 function pinGPS(memberId){
-  if(!navigator.geolocation){
-    alert('อุปกรณ์ไม่รองรับ GPS')
-    return
-  }
 
-  navigator.geolocation.getCurrentPosition(async pos=>{
-    const { error } = await supabaseClient
-      .from('members')
-      .update({
-        lat: pos.coords.latitude,
-        lng: pos.coords.longitude
-      })
-      .eq('member_id', memberId)
+  Swal.fire({
+    title: 'ยืนยันการปักพิกัด',
+    html: `
+      <div class="text-sm text-slate-500">
+        ระบบจะใช้ตำแหน่งปัจจุบันของคุณ<br>
+        แน่ใจหรือไม่ว่าต้องการปักพิกัดให้สมาชิกนี้
+      </div>
+    `,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: '📍 ปักพิกัด',
+    cancelButtonText: 'ยกเลิก',
+    confirmButtonColor: '#2563eb',
+    cancelButtonColor: '#475569'
+  }).then(result => {
 
-    if(error){
-      alert('บันทึกพิกัดไม่สำเร็จ')
+    if (!result.isConfirmed) return
+
+    if (!navigator.geolocation) {
+      Swal.fire('ผิดพลาด', 'อุปกรณ์ไม่รองรับ GPS', 'error')
       return
     }
 
-    loadMembers()
+    navigator.geolocation.getCurrentPosition(
+      async pos => {
+
+        const { error } = await supabaseClient
+          .from('members')
+          .update({
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude
+          })
+          .eq('member_id', memberId)
+
+        if (error) {
+          Swal.fire('ผิดพลาด', 'บันทึกพิกัดไม่สำเร็จ', 'error')
+          return
+        }
+
+        Swal.fire({
+          icon: 'success',
+          title: 'บันทึกพิกัดแล้ว',
+          timer: 1200,
+          showConfirmButton: false
+        })
+
+        loadMembers()
+      },
+      () => {
+        Swal.fire('ผิดพลาด', 'ไม่สามารถดึงตำแหน่งได้', 'error')
+      }
+    )
+
   })
 }
+
 
 /* ================= MODAL MAP ================= */
 let singleMap
