@@ -235,18 +235,55 @@ function renderMore(){
 }
 
 /* GPS */
-function pinGPS(memberId){
-  navigator.geolocation.getCurrentPosition(async pos => {
-    await supabaseClient
-      .from('members')
-      .update({
-        lat: pos.coords.latitude,
-        lng: pos.coords.longitude
-      })
-      .eq('member_id', memberId)
+function pinGPS(memberId) {
 
-    loadMembers()
-  })
+  if (!navigator.geolocation) {
+    alert('อุปกรณ์นี้ไม่รองรับ GPS')
+    return
+  }
+
+  // ✅ เรียกตรงจากปุ่ม (สำคัญมากสำหรับมือถือ)
+  navigator.geolocation.getCurrentPosition(
+    function (pos) {
+
+      const lat = pos.coords.latitude
+      const lng = pos.coords.longitude
+
+      supabaseClient
+        .from('members')
+        .update({ lat, lng })
+        .eq('member_id', memberId)
+        .then(({ error }) => {
+
+          if (error) {
+            alert('บันทึกพิกัดไม่สำเร็จ')
+            console.error(error)
+            return
+          }
+
+          alert('📍 ปักพิกัดเรียบร้อย')
+          loadMembers() // ใช้ group เดิม
+        })
+    },
+
+    function (err) {
+      console.error(err)
+
+      if (err.code === 1) {
+        alert('❌ กรุณาอนุญาตการใช้ตำแหน่ง')
+      } else if (err.code === 2) {
+        alert('❌ ไม่สามารถระบุตำแหน่งได้')
+      } else {
+        alert('❌ GPS ใช้งานไม่ได้')
+      }
+    },
+
+    {
+      timeout: 10000,
+      maximumAge: 0
+      // ❌ ไม่ใช้ enableHighAccuracy
+    }
+  )
 }
 
 /* MODAL MAP */
