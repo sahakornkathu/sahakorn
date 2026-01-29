@@ -1,217 +1,212 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8">
 <title>รายชื่อสมาชิก</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 
-<style>
-body{
-  margin:0;
-  font-family: system-ui;
-  background:#0f172a;
-  color:#e5e7eb;
-}
-header{
-  position:sticky;
-  top:0;
-  z-index:10;
-  background:#020617;
-  padding:10px;
-}
-input{
-  width:100%;
-  padding:10px;
-  border-radius:10px;
-  border:none;
-  background:#020617;
-  color:#fff;
-}
-.grid{
-  padding:10px;
-  display:grid;
-  gap:10px;
-}
-.card{
-  background:#020617;
-  border-radius:14px;
-  padding:12px;
-}
-.badge{
-  font-size:12px;
-  padding:4px 8px;
-  border-radius:999px;
-}
-.yes{background:#065f46}
-.no{background:#7c2d12}
-.btn{
-  padding:6px 10px;
-  border-radius:10px;
-  border:none;
-  cursor:pointer;
-}
-.btn-gps{background:#2563eb;color:white}
-.btn-nav{background:#16a34a;color:white}
-.hidden{display:none}
-.counts{
-  display:flex;
-  gap:10px;
-  padding:10px;
-}
-.count{
-  flex:1;
-  background:#020617;
-  border-radius:14px;
-  padding:10px;
-  text-align:center;
-}
-</style>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 
-<body>
+<body class="bg-slate-900 text-slate-100">
 
-<header>
-  <input id="search" placeholder="ค้นหาชื่อ / นามสกุล / เลขสมาชิก">
-</header>
-
-<div class="counts">
-  <div class="count" id="count-member">สมาชิก: 0</div>
-  <div class="count" id="count-assoc">สมาชิกสมทบ: 0</div>
+<!-- SEARCH -->
+<div class="sticky top-0 z-50 bg-slate-800 p-3">
+  <input id="searchInput"
+    oninput="resetAndRender()"
+    class="w-full rounded-xl px-4 py-2 text-black"
+    placeholder="🔍 ค้นหาเลขสมาชิก / ชื่อ / นามสกุล">
 </div>
 
-<div class="grid" id="list"></div>
+<!-- SUMMARY -->
+<div class="grid grid-cols-3 gap-3 p-4">
+  <div class="bg-slate-800 p-3 rounded text-center">
+    <div id="totalCount" class="text-xl font-bold">0</div>ทั้งหมด
+  </div>
+  <div class="bg-slate-800 p-3 rounded text-center">
+    <div id="memberCount" class="text-xl font-bold text-green-400">0</div>สมาชิก
+  </div>
+  <div class="bg-slate-800 p-3 rounded text-center">
+    <div id="associateCount" class="text-xl font-bold text-blue-400">0</div>สมทบ
+  </div>
+</div>
+
+<!-- MAP -->
+<div class="px-4">
+  <div id="map" class="h-72 rounded-xl"></div>
+</div>
+
+<!-- CARDS -->
+<div id="cardList" class="p-4 space-y-3"></div>
+
+<!-- MODAL MAP -->
+<div id="mapModal" class="fixed inset-0 hidden bg-black/70 z-50 flex items-center justify-center">
+  <div class="bg-slate-800 w-[90%] h-[70%] rounded-xl p-3">
+    <div class="flex justify-between mb-2">
+      <div id="modalTitle" class="font-bold"></div>
+      <button onclick="closeMap()" class="text-red-400">✕</button>
+    </div>
+    <div id="singleMap" class="h-full rounded"></div>
+  </div>
+</div>
 
 <script>
-/* ================= CONFIG ================= */
-const LIFF_ID = "1661506692-nVNGOHNm";
-const SUPABASE_URL = "https://ttottijljxoinptmhgtu.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y";
-/* ========================================= */
+/* CONFIG */
+const SUPABASE_URL = 'https://ttottijljxoinptmhgtu.supabase.co'
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'
+const LIFF_ID = '1661506692-nVNGOHNm'
 
-const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
 
-let page = 0;
-const PAGE_SIZE = 20;
-let members = [];
-let allowGroups = [];
-let isSuper = false;
+let allMembers = []
+let renderIndex = 0
+const PAGE_SIZE = 10
+let map, markers = []
+let isSuperAdmin = false
+let adminGroup = null
 
-/* ============ BLOCK DIRECT BROWSER ============ */
-if(!navigator.userAgent.includes("Line")){
-  document.body.innerHTML = "<h3 style='padding:20px'>❌ ต้องเปิดผ่าน LINE เท่านั้น</h3>";
-  throw new Error("Not LINE");
-}
-
-/* ================= LIFF INIT ================= */
+/* INIT */
 async function init(){
-  await liff.init({ liffId: LIFF_ID });
-  if(!liff.isLoggedIn()) liff.login();
+  await liff.init({ liffId: LIFF_ID })
 
-  const profile = await liff.getProfile();
-  await checkPermission(profile.userId);
-  await loadMembers();
-  render();
-}
-
-async function checkPermission(uid){
-  const { data } = await supabase
-    .from("committee")
-    .select("group,role")
-    .eq("line_uid", uid)
-    .single();
-
-  if(!data) throw alert("ไม่มีสิทธิ์เข้าถึง");
-
-  if(data.role === "superadmin"){
-    isSuper = true;
-  }else{
-    allowGroups = [data.group];
+  if (!liff.isInClient()) {
+    document.body.innerHTML = '<h1 class="text-center mt-20">❌ กรุณาเปิดผ่าน LINE เท่านั้น</h1>'
+    return
   }
+
+  if (!liff.isLoggedIn()) return liff.login()
+
+  const profile = await liff.getProfile()
+
+  const { data: admin } = await supabaseClient
+    .from('adminmember')
+    .select('position, approve_status')
+    .eq('line_user_id', profile.userId)
+    .maybeSingle()
+
+  if (!admin || admin.approve_status !== 'approved') {
+    alert('❌ ไม่มีสิทธิ์เข้าถึง')
+    return
+  }
+
+  isSuperAdmin = admin.position === 'superadmin'
+  adminGroup = isSuperAdmin ? null : admin.position.match(/\d+/)?.[0]
+
+  initMap()
+  loadMembers()
 }
 
-/* ================= LOAD DATA ================= */
+/* MAP */
+function initMap(){
+  map = L.map('map').setView([13.7,100.5],12)
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map)
+}
+
+function renderMarkers(){
+  markers.forEach(m=>map.removeLayer(m))
+  markers=[]
+
+  allMembers.forEach(m=>{
+    if(m.lat && m.lng){
+      markers.push(
+        L.marker([m.lat,m.lng]).addTo(map)
+          .bindPopup(`${m.member_id}<br>${m.first_name} ${m.last_name}`)
+      )
+    }
+  })
+}
+
+/* LOAD */
 async function loadMembers(){
-  let query = supabase
-    .from("members")
-    .select("member_id,first_name,last_name,phone,group,member_status,lat,lng")
-    .in("member_status",["สมาชิก","สมาชิกสมทบ"])
-    .order("member_id",{ ascending:true })
-    .range(page*PAGE_SIZE,(page+1)*PAGE_SIZE-1);
+  let q = supabaseClient.from('members')
+    .select(`member_id,title,first_name,last_name,group,
+      house_no,moo,subdistrict,district,province,
+      phone,member_status,lat,lng`)
+    .in('member_status',['สมาชิก','สมาชิกสมทบ'])
+    .order('member_id',{ascending:true})
 
-  if(!isSuper){
-    query = query.in("group", allowGroups);
-  }
+  if (!isSuperAdmin) q = q.eq('group', adminGroup)
 
-  const { data } = await query;
-  members.push(...data);
-  page++;
+  const { data, error } = await q
+  if(error) return alert(error.message)
+
+  allMembers = data
+  updateSummary()
+  renderMarkers()
+  resetAndRender()
 }
 
-/* ================= RENDER ================= */
-function render(){
-  const list = document.getElementById("list");
-  list.innerHTML = "";
+/* SUMMARY */
+function updateSummary(){
+  totalCount.innerText = allMembers.length
+  memberCount.innerText = allMembers.filter(m=>m.member_status==='สมาชิก').length
+  associateCount.innerText = allMembers.filter(m=>m.member_status==='สมาชิกสมทบ').length
+}
 
-  let countMember = 0, countAssoc = 0;
+/* RENDER */
+function resetAndRender(){
+  renderIndex=0
+  cardList.innerHTML=''
+  renderMore()
+}
 
-  members.forEach(m=>{
-    if(m.member_status==="สมาชิก") countMember++;
-    else countAssoc++;
+function renderMore(){
+  const kw = searchInput.value.toLowerCase()
+  const list = allMembers.filter(m=>
+    m.member_id.toString().includes(kw) ||
+    m.first_name.toLowerCase().includes(kw) ||
+    m.last_name.toLowerCase().includes(kw)
+  )
 
-    const hasGPS = m.lat && m.lng;
-
-    list.innerHTML += `
-      <div class="card">
-        <b>${m.member_id}</b> ${m.first_name} ${m.last_name}<br>
-        📞 <a href="tel:${m.phone}" style="color:#93c5fd">${m.phone}</a><br>
-        <span class="badge ${hasGPS?'yes':'no'}">
-          ${hasGPS?'📍 ปักแล้ว':'❌ ยังไม่ปัก'}
-        </span><br><br>
-
-        <button class="btn btn-gps" onclick="pinGPS('${m.member_id}')">📍 ปัก GPS</button>
-        <button class="btn btn-nav ${hasGPS?'':'hidden'}"
-          onclick="nav(${m.lat},${m.lng})">🧭 นำทาง</button>
+  list.slice(renderIndex,renderIndex+PAGE_SIZE).forEach(m=>{
+    cardList.innerHTML+=`
+    <div class="bg-slate-800 rounded-xl p-4 space-y-2">
+      <div class="flex justify-between">
+        <div class="font-bold">${m.member_id} · ${m.first_name} ${m.last_name}</div>
+        <span class="text-xs px-2 py-1 rounded ${m.lat&&m.lng?'bg-green-600':'bg-red-600'}">
+          ${m.lat&&m.lng?'📍 ปักแล้ว':'❌ ยังไม่ปัก'}
+        </span>
       </div>
-    `;
-  });
 
-  document.getElementById("count-member").innerText =
-    `สมาชิก: ${countMember}`;
-  document.getElementById("count-assoc").innerText =
-    `สมาชิกสมทบ: ${countAssoc}`;
+      <div class="text-sm text-slate-400">
+        📍 ${m.house_no||'-'} ม.${m.moo||'-'} ${m.subdistrict} ${m.district} ${m.province}
+      </div>
+
+      <button onclick="pinGPS(${m.member_id})"
+        class="w-full bg-blue-600 rounded py-1">📍 ปักพิกัด</button>
+
+      ${m.lat&&m.lng?`
+      <a href="https://www.google.com/maps/dir/?api=1&destination=${m.lat},${m.lng}"
+        target="_blank"
+        class="block bg-slate-700 rounded py-1 text-center">🧭 นำทาง</a>`:''}
+
+      <a href="tel:${m.phone}" class="block text-green-400 font-bold">📞 ${m.phone}</a>
+    </div>`
+  })
+
+  renderIndex+=PAGE_SIZE
 }
 
-/* ================= GPS ================= */
+/* GPS */
 function pinGPS(id){
   navigator.geolocation.getCurrentPosition(async pos=>{
-    await supabase.from("members")
-      .update({
-        lat: pos.coords.latitude,
-        lng: pos.coords.longitude
-      })
-      .eq("member_id", id);
-
-    alert("บันทึกพิกัดแล้ว");
-    location.reload();
-  });
+    await supabaseClient.from('members')
+      .update({lat:pos.coords.latitude,lng:pos.coords.longitude})
+      .eq('member_id',id)
+    loadMembers()
+  })
 }
 
-function nav(lat,lng){
-  window.open(`https://maps.google.com/?q=${lat},${lng}`);
-}
+window.addEventListener('scroll',()=>{
+  if(innerHeight+scrollY>=document.body.offsetHeight-200) renderMore()
+})
 
-/* ============ INFINITE SCROLL ============ */
-window.addEventListener("scroll", async ()=>{
-  if(window.innerHeight + window.scrollY >= document.body.offsetHeight - 200){
-    await loadMembers();
-    render();
-  }
-});
-
-init();
+init()
 </script>
 </body>
 </html>
