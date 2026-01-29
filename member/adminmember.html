@@ -22,6 +22,12 @@
       <button onclick="loadData()" class="bg-blue-600 text-white px-4 py-2 rounded">
         ค้นหา
       </button>
+      <button
+  onclick="deleteAdminMember(${row.id})"
+  class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm">
+  ลบ
+</button>
+
     </div>
 
     <div class="overflow-x-auto">
@@ -124,6 +130,25 @@
   }
 
   loadData()
+</script>
+<script>
+async function deleteAdminMember(id) {
+  const confirmDelete = confirm('คุณแน่ใจหรือไม่ว่าต้องการลบกรรมการคนนี้?');
+  if (!confirmDelete) return;
+
+  const { error } = await supabase
+    .from('adminmember')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    alert('ลบไม่สำเร็จ ❌');
+    console.error(error);
+  } else {
+    alert('ลบข้อมูลเรียบร้อย ✅');
+    loadAdminMembers(); // โหลดข้อมูลใหม่
+  }
+}
 </script>
 
 </body>
