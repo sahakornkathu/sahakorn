@@ -39,7 +39,7 @@
   </div>
 </div>
 
-<!-- MAP -->
+<!-- MAP OVERVIEW -->
 <div class="px-4">
   <div id="map" class="h-72 rounded-xl"></div>
 </div>
@@ -59,7 +59,7 @@
 </div>
 
 <script>
-/* CONFIG */
+/* ================= CONFIG ================= */
 const SUPABASE_URL = 'https://ttottijljxoinptmhgtu.supabase.co'
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'
 const LIFF_ID = '1661506692-nVNGOHNm'
@@ -70,20 +70,15 @@ let allMembers = []
 let renderIndex = 0
 const PAGE_SIZE = 10
 let map, markers = []
-let currentGroup = null   // ⭐ FIX: เก็บ group ไว้ชัด ๆ
-let isSuperAdmin = false  // ⭐ FIX
 
-/* INIT */
-async function init(){
+/* ================= INIT ================= */
+async function init() {
+  await liff.init({ liffId: LIFF_ID })
 
-  // ⭐ กันเปิดจาก browser
-  if (!liff.isInClient()) {
-    alert('กรุณาเปิดผ่าน LINE เท่านั้น')
+  if (!liff.isLoggedIn()) {
+    liff.login()
     return
   }
-
-  await liff.init({ liffId: LIFF_ID })
-  if(!liff.isLoggedIn()) return liff.login()
 
   const profile = await liff.getProfile()
 
@@ -93,35 +88,33 @@ async function init(){
     .eq('line_user_id', profile.userId)
     .maybeSingle()
 
-  if(!admin || admin.approve_status !== 'approved'){
-    alert('ไม่มีสิทธิ์เข้าถึง')
+  if (!admin || admin.approve_status !== 'approved') {
+    alert('❌ ไม่มีสิทธิ์เข้าถึง')
     return
   }
 
-  // ⭐ Super Admin
-  if (admin.position === 'superadmin') {
-    isSuperAdmin = true
-    currentGroup = null
-  } else {
-    currentGroup = admin.position.match(/\d+/)?.[0]
+  const group = admin.position.match(/\d+/)?.[0]
+  if (!group) {
+    alert('ไม่พบกลุ่มกรรมการ')
+    return
   }
 
   initMap()
-  loadMembers()
+  loadMembers(group)
 }
 
-/* MAP */
-function initMap(){
-  map = L.map('map').setView([13.7, 100.5], 11)
+/* ================= MAP ================= */
+function initMap() {
+  map = L.map('map').setView([13.7, 100.5], 12)
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map)
 }
 
-function renderMarkers(){
+function renderMarkers() {
   markers.forEach(m => map.removeLayer(m))
   markers = []
 
   allMembers.forEach(m => {
-    if(m.lat && m.lng){
+    if (m.lat && m.lng) {
       const mk = L.marker([m.lat, m.lng])
         .addTo(map)
         .bindPopup(`${m.member_id}<br>${m.first_name} ${m.last_name}`)
@@ -130,10 +123,9 @@ function renderMarkers(){
   })
 }
 
-/* LOAD */
-async function loadMembers(){
-
-  let query = supabaseClient
+/* ================= LOAD MEMBERS ================= */
+async function loadMembers(group) {
+  const { data, error } = await supabaseClient
     .from('members')
     .select(`
       member_id,
@@ -151,46 +143,45 @@ async function loadMembers(){
       lat,
       lng
     `)
+    .eq('group', group)
     .in('member_status', ['สมาชิก','สมาชิกสมทบ'])
-    .order('member_id', { ascending: true }) // ⭐ FIX
+    .order('member_id', { ascending: true })   /* ✅ เรียงจากน้อยไปมาก */
 
-  if (!isSuperAdmin && currentGroup) {
-    query = query.eq('group', currentGroup)
+  if (error) {
+    alert(error.message)
+    return
   }
 
-  const { data, error } = await query
-  if(error) return alert(error.message)
-
-  // ⭐ กันกรณี Supabase เรียงไม่ตรง
-  allMembers = data.sort((a,b) => a.member_id - b.member_id)
-
+  allMembers = data
   updateSummary()
   renderMarkers()
   resetAndRender()
 }
 
-/* SUMMARY */
-function updateSummary(){
+/* ================= SUMMARY ================= */
+function updateSummary() {
   totalCount.innerText = allMembers.length
   memberCount.innerText = allMembers.filter(m => m.member_status === 'สมาชิก').length
   associateCount.innerText = allMembers.filter(m => m.member_status === 'สมาชิกสมทบ').length
 }
 
-/* RENDER */
-function resetAndRender(){
+/* ================= RENDER ================= */
+function resetAndRender() {
   renderIndex = 0
   cardList.innerHTML = ''
   renderMore()
 }
 
-function renderMore(){
+function renderMore() {
   const kw = searchInput.value.toLowerCase()
 
-  const list = allMembers.filter(m =>
-    m.member_id.toString().includes(kw) ||
-    m.first_name.toLowerCase().includes(kw) ||
-    m.last_name.toLowerCase().includes(kw)
-  )
+  const list = allMembers
+    .filter(m =>
+      m.member_id.toString().includes(kw) ||
+      m.first_name.toLowerCase().includes(kw) ||
+      m.last_name.toLowerCase().includes(kw)
+    )
+    .sort((a,b) => a.member_id - b.member_id) /* ✅ กันพลาด เรียงซ้ำ */
 
   list.slice(renderIndex, renderIndex + PAGE_SIZE).forEach(m => {
     cardList.innerHTML += `
@@ -205,7 +196,7 @@ function renderMore(){
       </div>
 
       <div class="text-sm text-slate-400">
-        📍 กลุ่ม ${m.group} · ${m.house_no || '-'} ม.${m.moo || '-'} ${m.subdistrict}
+        📍 ${m.house_no || '-'} ม.${m.moo || '-'} ${m.subdistrict} ${m.district} ${m.province}
       </div>
 
       <div class="flex gap-2">
@@ -220,9 +211,13 @@ function renderMore(){
         </button>
       </div>
 
-      <div class="text-xs">
-        ${m.lat && m.lng ? '📍 ปักแล้ว' : '❌ ยังไม่ปัก'}
-      </div>
+      <button
+        onclick="${m.lat && m.lng
+          ? `window.open('https://www.google.com/maps/dir/?api=1&destination=${m.lat},${m.lng}','_blank')`
+          : `alert('❌ สมาชิกคนนี้ยังไม่มีพิกัด')`}"
+        class="w-full bg-slate-700 rounded py-1">
+        🧭 นำทาง
+      </button>
 
       <a href="tel:${m.phone}" class="block text-green-400 font-bold">
         📞 ${m.phone}
@@ -234,62 +229,49 @@ function renderMore(){
   renderIndex += PAGE_SIZE
 }
 
-/* GPS */
-function pinGPS(memberId) {
+/* ================= GPS ================= */
+async function pinGPS(memberId) {
 
   if (!navigator.geolocation) {
     alert('อุปกรณ์นี้ไม่รองรับ GPS')
     return
   }
 
-  // ✅ เรียกตรงจากปุ่ม (สำคัญมากสำหรับมือถือ)
   navigator.geolocation.getCurrentPosition(
-    function (pos) {
-
+    async pos => {
       const lat = pos.coords.latitude
       const lng = pos.coords.longitude
 
-      supabaseClient
+      const { error } = await supabaseClient
         .from('members')
         .update({ lat, lng })
         .eq('member_id', memberId)
-        .then(({ error }) => {
 
-          if (error) {
-            alert('บันทึกพิกัดไม่สำเร็จ')
-            console.error(error)
-            return
-          }
-
-          alert('📍 ปักพิกัดเรียบร้อย')
-          loadMembers() // ใช้ group เดิม
-        })
-    },
-
-    function (err) {
-      console.error(err)
-
-      if (err.code === 1) {
-        alert('❌ กรุณาอนุญาตการใช้ตำแหน่ง')
-      } else if (err.code === 2) {
-        alert('❌ ไม่สามารถระบุตำแหน่งได้')
-      } else {
-        alert('❌ GPS ใช้งานไม่ได้')
+      if (error) {
+        alert('บันทึกพิกัดไม่สำเร็จ')
+        console.error(error)
+        return
       }
-    },
 
-    {
-      timeout: 10000,
-      maximumAge: 0
-      // ❌ ไม่ใช้ enableHighAccuracy
-    }
+      alert('📍 ปักพิกัดเรียบร้อย')
+      loadMembers(allMembers[0].group)
+    },
+    err => {
+      alert('❌ ไม่สามารถใช้ GPS ได้')
+      console.error(err)
+    },
+    { enableHighAccuracy: true, timeout: 15000 }
   )
 }
 
-/* MODAL MAP */
+/* ================= MODAL MAP ================= */
 let singleMap
-function openMap(lat, lng, name){
-  if(!lat || !lng) return alert('ยังไม่มีพิกัด')
+function openMap(lat, lng, name) {
+  if (!lat || !lng) {
+    alert('ยังไม่มีพิกัด')
+    return
+  }
+
   mapModal.classList.remove('hidden')
   modalTitle.innerText = name
 
@@ -300,14 +282,14 @@ function openMap(lat, lng, name){
   }, 100)
 }
 
-function closeMap(){
+function closeMap() {
   mapModal.classList.add('hidden')
-  singleMap.remove()
+  if (singleMap) singleMap.remove()
 }
 
-/* INFINITE */
+/* ================= INFINITE ================= */
 window.addEventListener('scroll', () => {
-  if(innerHeight + scrollY >= document.body.offsetHeight - 200){
+  if (innerHeight + scrollY >= document.body.offsetHeight - 200) {
     renderMore()
   }
 })
