@@ -9,8 +9,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
-
 </head>
+
 <body class="bg-slate-900 text-slate-100 min-h-screen">
 
 <!-- Sticky Search -->
@@ -49,6 +49,7 @@
 <div id="cardList" class="p-4 space-y-3"></div>
 
 <script>
+/* ================= CONFIG ================= */
 const SUPABASE_URL = 'https://ttottijljxoinptmhgtu.supabase.co'
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'
 const LIFF_ID = '1661506692-nVNGOHNm'
@@ -59,7 +60,7 @@ let allMembers = []
 let renderIndex = 0
 const PAGE_SIZE = 20
 
-/* INIT */
+/* ================= INIT ================= */
 async function init() {
   await liff.init({ liffId: LIFF_ID })
   if (!liff.isLoggedIn()) return liff.login()
@@ -82,7 +83,7 @@ async function init() {
   loadMembers(myGroup)
 }
 
-/* LOAD DATA */
+/* ================= LOAD MEMBERS ================= */
 async function loadMembers(group) {
   const { data, error } = await supabaseClient
     .from('members')
@@ -100,7 +101,9 @@ async function loadMembers(group) {
       district,
       province,
       phone,
-      member_status
+      member_status,
+      lat,
+      lng
     `)
     .eq('group', group)
     .in('member_status', ['สมาชิก', 'สมาชิกสมทบ'])
@@ -113,7 +116,7 @@ async function loadMembers(group) {
   resetAndRender()
 }
 
-/* SUMMARY */
+/* ================= SUMMARY ================= */
 function updateSummary() {
   document.getElementById('totalCount').innerText = allMembers.length
   document.getElementById('memberCount').innerText =
@@ -122,7 +125,7 @@ function updateSummary() {
     allMembers.filter(m => m.member_status === 'สมาชิกสมทบ').length
 }
 
-/* RENDER */
+/* ================= RENDER ================= */
 function resetAndRender() {
   renderIndex = 0
   document.getElementById('cardList').innerHTML = ''
@@ -131,35 +134,52 @@ function resetAndRender() {
 
 function renderMore() {
   const keyword = document.getElementById('searchInput').value.toLowerCase()
- const list = allMembers
-  .filter(m =>
-    m.member_id.toString().includes(keyword) ||
-    m.first_name.toLowerCase().includes(keyword) ||
-    m.last_name.toLowerCase().includes(keyword)
-  )
-  .sort((a, b) => a.member_id - b.member_id)
 
+  const list = allMembers
+    .filter(m =>
+      m.member_id.toString().includes(keyword) ||
+      m.first_name.toLowerCase().includes(keyword) ||
+      m.last_name.toLowerCase().includes(keyword)
+    )
+    .sort((a, b) => a.member_id - b.member_id)
 
   list.slice(renderIndex, renderIndex + PAGE_SIZE).forEach(m => {
     document.getElementById('cardList').innerHTML += `
-      <div class="bg-slate-800 rounded-xl p-4">
-        <div class="flex justify-between">
+      <div class="bg-slate-800 rounded-xl p-4 space-y-2">
+        <div class="flex justify-between items-center">
           <div class="font-bold text-lg">
             ${m.member_id} · ${m.title}${m.first_name} ${m.last_name}
           </div>
-          <span class="text-xs px-2 py-1 rounded bg-slate-700">
-            ${m.member_status}
+          <span class="text-xs px-2 py-1 rounded ${
+            m.lat ? 'bg-green-700' : 'bg-red-700'
+          }">
+            ${m.lat ? '📍 มีพิกัด' : '❌ ไม่มีพิกัด'}
           </span>
         </div>
 
-        <div class="text-sm text-slate-400 mt-1">
+        <div class="text-sm text-slate-400">
           📍 ${m.house_no} ม.${m.moo} ${m.street || ''} ${m.village || ''}
           ${m.subdistrict} ${m.district} ${m.province}
         </div>
 
-        <a href="tel:${m.phone}" class="block mt-2 text-emerald-400 font-bold">
+        <a href="tel:${m.phone}" class="block text-emerald-400 font-bold">
           📞 ${m.phone}
         </a>
+
+        <button onclick="saveLocation(${m.member_id})"
+          class="w-full bg-blue-600 hover:bg-blue-700 rounded-lg py-2 text-sm">
+          📍 บันทึกพิกัดบ้าน
+        </button>
+
+        ${
+          m.lat
+            ? `<a target="_blank"
+                href="https://www.google.com/maps?q=${m.lat},${m.lng}"
+                class="block text-center bg-emerald-600 hover:bg-emerald-700 rounded-lg py-2 text-sm">
+                🗺 เปิดแผนที่
+              </a>`
+            : ''
+        }
       </div>
     `
   })
@@ -167,14 +187,38 @@ function renderMore() {
   renderIndex += PAGE_SIZE
 }
 
-/* Infinite Scroll */
+/* ================= GPS SAVE ================= */
+function saveLocation(memberId) {
+  if (!navigator.geolocation) {
+    alert('อุปกรณ์ไม่รองรับ GPS')
+    return
+  }
+
+  navigator.geolocation.getCurrentPosition(async pos => {
+    const { latitude, longitude } = pos.coords
+
+    const { error } = await supabaseClient
+      .from('members')
+      .update({ lat: latitude, lng: longitude })
+      .eq('member_id', memberId)
+
+    if (error) {
+      alert('บันทึกพิกัดไม่สำเร็จ')
+    } else {
+      alert('✅ บันทึกพิกัดเรียบร้อย')
+      init()
+    }
+  })
+}
+
+/* ================= SCROLL ================= */
 window.addEventListener('scroll', () => {
   if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 200) {
     renderMore()
   }
 })
 
-/* EXPORT */
+/* ================= EXPORT ================= */
 function exportExcel() {
   const sorted = [...allMembers].sort((a, b) => a.member_id - b.member_id)
 
@@ -183,7 +227,8 @@ function exportExcel() {
     รหัสสมาชิก: m.member_id,
     ชื่อ: `${m.title}${m.first_name} ${m.last_name}`,
     สถานะ: m.member_status,
-    เบอร์โทร: m.phone
+    เบอร์โทร: m.phone,
+    แผนที่: m.lat ? `https://maps.google.com/?q=${m.lat},${m.lng}` : ''
   }))
 
   const ws = XLSX.utils.json_to_sheet(rows)
@@ -191,7 +236,6 @@ function exportExcel() {
   XLSX.utils.book_append_sheet(wb, ws, 'Members')
   XLSX.writeFile(wb, 'members.xlsx')
 }
-
 
 init()
 </script>
