@@ -54,37 +54,13 @@
     <div class="flex justify-between mb-2">
       <div id="modalTitle" class="font-bold"></div>
       <button onclick="closeMap()" class="text-red-400">✕</button>
+      <button onclick="loadMembers()"class="w-full bg-emerald-600 text-white py-2 rounded-xl mt-2">🔄 โหลดข้อมูลใหม่จากฐานข้อมูล</button>
     </div>
     <div id="singleMap" class="h-full rounded"></div>
   </div>
 </div>
 
 <script>
-// เคลียร์ แคชทุกครั้งที่เปิด
-
-(async () => {
-  // กัน loop
-  if (sessionStorage.getItem('__LIFF_HARD_REFRESH__')) return;
-
-  sessionStorage.setItem('__LIFF_HARD_REFRESH__', '1');
-
-  // ล้าง memory cache
-  try {
-    localStorage.clear();
-    sessionStorage.clear();
-    indexedDB.databases && indexedDB.databases().then(dbs => {
-      dbs.forEach(db => indexedDB.deleteDatabase(db.name));
-    });
-  } catch (e) {}
-
-  // reload แบบตัด cache LINE
-  const url = new URL(location.href);
-  url.searchParams.set('_ts', Date.now());
-  location.replace(url.toString());
-})();
-
-
-
 
 /* ================= CONFIG ================= */
 const SUPABASE_URL = 'https://ttottijljxoinptmhgtu.supabase.co'
