@@ -222,13 +222,25 @@ function updateSummary(list) {
 
 /* ================= EXPORT ================= */
 function exportExcel() {
-  const rows = filteredMembers.map((m, i) => ({
+  // clone + sort ก่อน export
+  const sorted = [...filteredMembers].sort(
+    (a, b) => a.member_id - b.member_id
+  )
+
+  const rows = sorted.map((m, i) => ({
     'ลำดับ': i + 1,
     'รหัสสมาชิก': m.member_id,
     'กลุ่ม': m.group,
     'ชื่อ': m.first_name,
     'นามสกุล': m.last_name,
-    'ที่อยู่': `${m.house_no ?? ''} ${m.moo ?? ''} ${m.village ?? ''} ${m.subdistrict ?? ''} ${m.district ?? ''} ${m.province ?? ''}`,
+    'ที่อยู่': [
+      m.house_no ? `บ้านเลขที่ ${m.house_no}` : '',
+      m.moo ? `หมู่ ${m.moo}` : '',
+      m.village || '',
+      m.subdistrict || '',
+      m.district || '',
+      m.province || ''
+    ].filter(Boolean).join(' '),
     'เบอร์โทร': m.phone ?? '',
     'สถานะ': m.member_status
   }))
