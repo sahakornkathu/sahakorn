@@ -128,43 +128,57 @@ function renderMarkers(){
 
 /* ================= LOAD MEMBERS ================= */
 async function loadMembers(){
-  let q = supabaseClient
-    .from('members')
-    .select(`
-      member_id,
-      title,
-      first_name,
-      last_name,
-      group,
-      house_no,
-      moo,
-      subdistrict,
-      district,
-      province,
-      phone,
-      member_status,
-      lat,
-      lng
-    `)
-    .in('member_status',['สมาชิก','สมาชิกสมทบ'])
-    .order('member_id',{ ascending: true })
-    .range(0, 99999)   // ⭐ สำคัญมาก ต้องอยู่ตรงนี้เสมอ
+  allMembers = []
+  let from = 0
+  const STEP = 1000
+  let finished = false
 
-  if (!isSuperAdmin) {
-    q = q.eq('group', adminGroup)
+  while (!finished) {
+    let q = supabaseClient
+      .from('members')
+      .select(`
+        member_id,
+        title,
+        first_name,
+        last_name,
+        group,
+        house_no,
+        moo,
+        subdistrict,
+        district,
+        province,
+        phone,
+        member_status,
+        lat,
+        lng
+      `)
+      .in('member_status', ['สมาชิก','สมาชิกสมทบ'])
+      .order('member_id', { ascending: true })
+      .range(from, from + STEP - 1)
+
+    if (!isSuperAdmin) {
+      q = q.eq('group', adminGroup)
+    }
+
+    const { data, error } = await q
+    if (error) {
+      alert(error.message)
+      return
+    }
+
+    if (!data || data.length === 0) {
+      finished = true
+    } else {
+      allMembers = allMembers.concat(data)
+      from += STEP
+    }
   }
 
-  const { data, error } = await q
-  if (error) {
-    alert(error.message)
-    return
-  }
-
-  allMembers = data
   updateSummary()
   renderMarkers()
   resetAndRender()
 }
+
 
 
 /* ================= SUMMARY ================= */
