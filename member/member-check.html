@@ -129,38 +129,43 @@ function renderMarkers(){
 /* ================= LOAD MEMBERS ================= */
 async function loadMembers(){
   let q = supabaseClient
-  .from('members')
-  .select(`
-    member_id,
-    title,
-    first_name,
-    last_name,
-    group,
-    house_no,
-    moo,
-    subdistrict,
-    district,
-    province,
-    phone,
-    member_status,
-    lat,
-    lng
-  `)
-  .in('member_status',['สมาชิก','สมาชิกสมทบ'])
-  .order('member_id',{ ascending: true })
-  .range(0, 9999)   // ⭐ แก้ตรงนี้
+    .from('members')
+    .select(`
+      member_id,
+      title,
+      first_name,
+      last_name,
+      group,
+      house_no,
+      moo,
+      subdistrict,
+      district,
+      province,
+      phone,
+      member_status,
+      lat,
+      lng
+    `)
+    .in('member_status',['สมาชิก','สมาชิกสมทบ'])
+    .order('member_id',{ ascending: true })
+    .range(0, 99999)   // ⭐ สำคัญมาก ต้องอยู่ตรงนี้เสมอ
 
-
-  if (!isSuperAdmin) q = q.eq('group', adminGroup)
+  if (!isSuperAdmin) {
+    q = q.eq('group', adminGroup)
+  }
 
   const { data, error } = await q
-  if(error) return alert(error.message)
+  if (error) {
+    alert(error.message)
+    return
+  }
 
   allMembers = data
   updateSummary()
   renderMarkers()
   resetAndRender()
 }
+
 
 /* ================= SUMMARY ================= */
 function updateSummary(){
