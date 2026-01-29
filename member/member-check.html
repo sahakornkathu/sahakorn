@@ -62,12 +62,26 @@
 <script>
 // เคลียร์ แคชทุกครั้งที่เปิด
 
-if (!sessionStorage.getItem('liff_cache_bypass')) {
-  sessionStorage.setItem('liff_cache_bypass', '1')
-  const url = new URL(window.location.href)
-  url.searchParams.set('v', Date.now())
-  window.location.replace(url.toString())
-}
+(async () => {
+  // กัน loop
+  if (sessionStorage.getItem('__LIFF_HARD_REFRESH__')) return;
+
+  sessionStorage.setItem('__LIFF_HARD_REFRESH__', '1');
+
+  // ล้าง memory cache
+  try {
+    localStorage.clear();
+    sessionStorage.clear();
+    indexedDB.databases && indexedDB.databases().then(dbs => {
+      dbs.forEach(db => indexedDB.deleteDatabase(db.name));
+    });
+  } catch (e) {}
+
+  // reload แบบตัด cache LINE
+  const url = new URL(location.href);
+  url.searchParams.set('_ts', Date.now());
+  location.replace(url.toString());
+})();
 
 
 
