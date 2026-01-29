@@ -5,20 +5,10 @@
 <title>รายชื่อสมาชิก</title>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-<!-- Tailwind -->
 <script src="https://cdn.tailwindcss.com"></script>
-
-<!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-<!-- LIFF -->
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-
-<!-- Excel -->
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
-
-<!-- Google Maps -->
-<script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_KEY"></script>
 </head>
 
 <body class="bg-slate-900 text-slate-100 min-h-screen">
@@ -48,32 +38,15 @@
 </div>
 
 <!-- Export -->
-<div class="px-4 mb-3">
+<div class="px-4 mb-2">
   <button onclick="exportExcel()"
     class="w-full bg-emerald-600 hover:bg-emerald-700 rounded-xl py-2 font-bold">
     📤 Export Excel
   </button>
 </div>
 
-<!-- Group Map -->
-<div class="p-4">
-  <div id="groupMap" class="w-full h-[380px] rounded-xl overflow-hidden"></div>
-</div>
-
 <!-- Cards -->
 <div id="cardList" class="p-4 space-y-3"></div>
-
-<!-- Pin Modal -->
-<div id="pinModal"
- class="fixed inset-0 bg-black/60 hidden items-center justify-center z-50">
-  <div class="bg-white rounded-xl w-[90%] max-w-lg p-3">
-    <div id="pinMap" class="w-full h-[300px] rounded-lg"></div>
-    <button onclick="closePinMap()"
-      class="mt-2 w-full bg-red-600 text-white py-2 rounded">
-      ปิด
-    </button>
-  </div>
-</div>
 
 <script>
 /* ================= CONFIG ================= */
@@ -81,18 +54,11 @@ const SUPABASE_URL = 'https://ttottijljxoinptmhgtu.supabase.co'
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'
 const LIFF_ID = '1661506692-nVNGOHNm'
 
-const supabaseClient = supabase.createClient(
-  SUPABASE_URL,
-  SUPABASE_ANON_KEY
-)
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
-/* ================= STATE ================= */
 let allMembers = []
 let renderIndex = 0
 const PAGE_SIZE = 20
-
-let map, markers = []
-let pinMap, pinMarker, pinMemberId = null
 
 /* ================= INIT ================= */
 async function init() {
@@ -147,53 +113,27 @@ async function loadMembers(group) {
 
   allMembers = data
   updateSummary()
-  initGroupMap()
   resetAndRender()
 }
 
 /* ================= SUMMARY ================= */
 function updateSummary() {
-  totalCount.innerText = allMembers.length
-  memberCount.innerText = allMembers.filter(m => m.member_status === 'สมาชิก').length
-  associateCount.innerText = allMembers.filter(m => m.member_status === 'สมาชิกสมทบ').length
-}
-
-/* ================= MAP GROUP ================= */
-function initGroupMap() {
-  map = new google.maps.Map(document.getElementById("groupMap"), {
-    zoom: 13,
-    center: { lat: 13.736717, lng: 100.523186 },
-    mapTypeControl: false,
-    streetViewControl: false
-  })
-
-  markers.forEach(m => m.setMap(null))
-  markers = []
-
-  allMembers.filter(m => m.lat && m.lng).forEach(m => {
-    const marker = new google.maps.Marker({
-      position: { lat: m.lat, lng: m.lng },
-      map
-    })
-
-    const info = new google.maps.InfoWindow({
-      content: `<b>${m.member_id}</b><br>${m.title}${m.first_name} ${m.last_name}`
-    })
-
-    marker.addListener("click", () => info.open(map, marker))
-    markers.push(marker)
-  })
+  document.getElementById('totalCount').innerText = allMembers.length
+  document.getElementById('memberCount').innerText =
+    allMembers.filter(m => m.member_status === 'สมาชิก').length
+  document.getElementById('associateCount').innerText =
+    allMembers.filter(m => m.member_status === 'สมาชิกสมทบ').length
 }
 
 /* ================= RENDER ================= */
 function resetAndRender() {
   renderIndex = 0
-  cardList.innerHTML = ''
+  document.getElementById('cardList').innerHTML = ''
   renderMore()
 }
 
 function renderMore() {
-  const keyword = searchInput.value.toLowerCase()
+  const keyword = document.getElementById('searchInput').value.toLowerCase()
 
   const list = allMembers
     .filter(m =>
@@ -204,31 +144,42 @@ function renderMore() {
     .sort((a, b) => a.member_id - b.member_id)
 
   list.slice(renderIndex, renderIndex + PAGE_SIZE).forEach(m => {
-    cardList.innerHTML += `
+    document.getElementById('cardList').innerHTML += `
       <div class="bg-slate-800 rounded-xl p-4 space-y-2">
-        <div class="flex justify-between">
+        <div class="flex justify-between items-center">
           <div class="font-bold text-lg">
             ${m.member_id} · ${m.title}${m.first_name} ${m.last_name}
           </div>
-          <span class="text-xs px-2 py-1 rounded ${m.lat ? 'bg-green-700' : 'bg-red-700'}">
-            ${m.member_status}
+          <span class="text-xs px-2 py-1 rounded ${
+            m.lat ? 'bg-green-700' : 'bg-red-700'
+          }">
+            ${m.lat ? '📍 มีพิกัด' : '❌ ไม่มีพิกัด'}
           </span>
         </div>
 
         <div class="text-sm text-slate-400">
-          📍 ${m.house_no} ม.${m.moo} ${m.village || ''} ${m.subdistrict} ${m.district}
+          📍 ${m.house_no} ม.${m.moo} ${m.street || ''} ${m.village || ''}
+          ${m.subdistrict} ${m.district} ${m.province}
         </div>
 
         <a href="tel:${m.phone}" class="block text-emerald-400 font-bold">
           📞 ${m.phone}
         </a>
 
-        <div class="grid grid-cols-2 gap-2">
-          <button onclick="saveGPS(${m.member_id})"
-            class="bg-blue-600 rounded-lg py-2 text-sm">📡 GPS</button>
-          <button onclick="openPinMap(${m.member_id})"
-            class="bg-purple-600 rounded-lg py-2 text-sm">📍 ปักหมุด</button>
-        </div>
+        <button onclick="saveLocation(${m.member_id})"
+          class="w-full bg-blue-600 hover:bg-blue-700 rounded-lg py-2 text-sm">
+          📍 บันทึกพิกัดบ้าน
+        </button>
+
+        ${
+          m.lat
+            ? `<a target="_blank"
+                href="https://www.google.com/maps?q=${m.lat},${m.lng}"
+                class="block text-center bg-emerald-600 hover:bg-emerald-700 rounded-lg py-2 text-sm">
+                🗺 เปิดแผนที่
+              </a>`
+            : ''
+        }
       </div>
     `
   })
@@ -236,44 +187,28 @@ function renderMore() {
   renderIndex += PAGE_SIZE
 }
 
-/* ================= GPS ================= */
-function saveGPS(memberId) {
+/* ================= GPS SAVE ================= */
+function saveLocation(memberId) {
+  if (!navigator.geolocation) {
+    alert('อุปกรณ์ไม่รองรับ GPS')
+    return
+  }
+
   navigator.geolocation.getCurrentPosition(async pos => {
     const { latitude, longitude } = pos.coords
-    await supabaseClient.from('members')
+
+    const { error } = await supabaseClient
+      .from('members')
       .update({ lat: latitude, lng: longitude })
       .eq('member_id', memberId)
-    init()
+
+    if (error) {
+      alert('บันทึกพิกัดไม่สำเร็จ')
+    } else {
+      alert('✅ บันทึกพิกัดเรียบร้อย')
+      init()
+    }
   })
-}
-
-/* ================= PIN MAP ================= */
-function openPinMap(memberId) {
-  pinMemberId = memberId
-  pinModal.classList.remove('hidden')
-
-  pinMap = new google.maps.Map(document.getElementById("pinMap"), {
-    zoom: 16,
-    center: map.getCenter()
-  })
-
-  pinMap.addListener("click", e => {
-    if (pinMarker) pinMarker.setMap(null)
-    pinMarker = new google.maps.Marker({ position: e.latLng, map: pinMap })
-    savePin(memberId, e.latLng.lat(), e.latLng.lng())
-  })
-}
-
-function closePinMap() {
-  pinModal.classList.add('hidden')
-}
-
-async function savePin(memberId, lat, lng) {
-  await supabaseClient.from('members')
-    .update({ lat, lng })
-    .eq('member_id', memberId)
-  closePinMap()
-  init()
 }
 
 /* ================= SCROLL ================= */
@@ -285,16 +220,16 @@ window.addEventListener('scroll', () => {
 
 /* ================= EXPORT ================= */
 function exportExcel() {
-  const rows = [...allMembers]
-    .sort((a, b) => a.member_id - b.member_id)
-    .map((m, i) => ({
-      ลำดับ: i + 1,
-      รหัสสมาชิก: m.member_id,
-      ชื่อ: `${m.title}${m.first_name} ${m.last_name}`,
-      สถานะ: m.member_status,
-      เบอร์โทร: m.phone,
-      แผนที่: m.lat ? `https://maps.google.com/?q=${m.lat},${m.lng}` : ''
-    }))
+  const sorted = [...allMembers].sort((a, b) => a.member_id - b.member_id)
+
+  const rows = sorted.map((m, i) => ({
+    ลำดับ: i + 1,
+    รหัสสมาชิก: m.member_id,
+    ชื่อ: `${m.title}${m.first_name} ${m.last_name}`,
+    สถานะ: m.member_status,
+    เบอร์โทร: m.phone,
+    แผนที่: m.lat ? `https://maps.google.com/?q=${m.lat},${m.lng}` : ''
+  }))
 
   const ws = XLSX.utils.json_to_sheet(rows)
   const wb = XLSX.utils.book_new()
