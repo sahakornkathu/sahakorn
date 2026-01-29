@@ -13,10 +13,10 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 
-<body class="bg-slate-900 text-slate-100">
+<body class="bg-slate-900 text-slate-100 min-h-screen">
 
 <!-- SEARCH -->
-<div class="sticky top-0 z-50 bg-slate-800 p-3">
+<div class="sticky top-0 z-50 bg-slate-800 p-3 shadow">
   <input id="searchInput"
     oninput="resetAndRender()"
     class="w-full rounded-xl px-4 py-2 text-black"
@@ -25,23 +25,26 @@
 
 <!-- SUMMARY -->
 <div class="grid grid-cols-3 gap-3 p-4">
-  <div class="bg-slate-800 p-3 rounded text-center">
-    <div id="totalCount" class="text-xl font-bold">0</div>ทั้งหมด
+  <div class="bg-slate-800 p-3 rounded-xl text-center">
+    <div id="totalCount" class="text-2xl font-bold">0</div>
+    <div class="text-sm text-slate-400">ทั้งหมด</div>
   </div>
-  <div class="bg-slate-800 p-3 rounded text-center">
-    <div id="memberCount" class="text-xl font-bold text-green-400">0</div>สมาชิก
+  <div class="bg-slate-800 p-3 rounded-xl text-center">
+    <div id="memberCount" class="text-2xl font-bold text-green-400">0</div>
+    <div class="text-sm text-slate-400">สมาชิก</div>
   </div>
-  <div class="bg-slate-800 p-3 rounded text-center">
-    <div id="associateCount" class="text-xl font-bold text-blue-400">0</div>สมทบ
+  <div class="bg-slate-800 p-3 rounded-xl text-center">
+    <div id="associateCount" class="text-2xl font-bold text-blue-400">0</div>
+    <div class="text-sm text-slate-400">สมาชิกสมทบ</div>
   </div>
 </div>
 
-<!-- MAP -->
+<!-- MAP OVERVIEW -->
 <div class="px-4">
   <div id="map" class="h-72 rounded-xl"></div>
 </div>
 
-<!-- CARDS -->
+<!-- CARD LIST -->
 <div id="cardList" class="p-4 space-y-3"></div>
 
 <!-- MODAL MAP -->
@@ -56,7 +59,7 @@
 </div>
 
 <script>
-/* CONFIG */
+/* ================= CONFIG ================= */
 const SUPABASE_URL = 'https://ttottijljxoinptmhgtu.supabase.co'
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'
 const LIFF_ID = '1661506692-nVNGOHNm'
@@ -70,12 +73,13 @@ let map, markers = []
 let isSuperAdmin = false
 let adminGroup = null
 
-/* INIT */
+/* ================= INIT ================= */
 async function init(){
   await liff.init({ liffId: LIFF_ID })
 
   if (!liff.isInClient()) {
-    document.body.innerHTML = '<h1 class="text-center mt-20">❌ กรุณาเปิดผ่าน LINE เท่านั้น</h1>'
+    document.body.innerHTML =
+      '<div class="text-center mt-20 text-xl">❌ กรุณาเปิดผ่าน LINE เท่านั้น</div>'
     return
   }
 
@@ -101,7 +105,7 @@ async function init(){
   loadMembers()
 }
 
-/* MAP */
+/* ================= MAP ================= */
 function initMap(){
   map = L.map('map').setView([13.7,100.5],12)
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map)
@@ -109,24 +113,39 @@ function initMap(){
 
 function renderMarkers(){
   markers.forEach(m=>map.removeLayer(m))
-  markers=[]
+  markers = []
 
   allMembers.forEach(m=>{
     if(m.lat && m.lng){
       markers.push(
-        L.marker([m.lat,m.lng]).addTo(map)
+        L.marker([m.lat,m.lng])
+          .addTo(map)
           .bindPopup(`${m.member_id}<br>${m.first_name} ${m.last_name}`)
       )
     }
   })
 }
 
-/* LOAD */
+/* ================= LOAD MEMBERS ================= */
 async function loadMembers(){
-  let q = supabaseClient.from('members')
-    .select(`member_id,title,first_name,last_name,group,
-      house_no,moo,subdistrict,district,province,
-      phone,member_status,lat,lng`)
+  let q = supabaseClient
+    .from('members')
+    .select(`
+      member_id,
+      title,
+      first_name,
+      last_name,
+      group,
+      house_no,
+      moo,
+      subdistrict,
+      district,
+      province,
+      phone,
+      member_status,
+      lat,
+      lng
+    `)
     .in('member_status',['สมาชิก','สมาชิกสมทบ'])
     .order('member_id',{ascending:true})
 
@@ -141,69 +160,115 @@ async function loadMembers(){
   resetAndRender()
 }
 
-/* SUMMARY */
+/* ================= SUMMARY ================= */
 function updateSummary(){
   totalCount.innerText = allMembers.length
-  memberCount.innerText = allMembers.filter(m=>m.member_status==='สมาชิก').length
-  associateCount.innerText = allMembers.filter(m=>m.member_status==='สมาชิกสมทบ').length
+  memberCount.innerText =
+    allMembers.filter(m=>m.member_status==='สมาชิก').length
+  associateCount.innerText =
+    allMembers.filter(m=>m.member_status==='สมาชิกสมทบ').length
 }
 
-/* RENDER */
+/* ================= RENDER ================= */
 function resetAndRender(){
-  renderIndex=0
-  cardList.innerHTML=''
+  renderIndex = 0
+  cardList.innerHTML = ''
   renderMore()
 }
 
 function renderMore(){
   const kw = searchInput.value.toLowerCase()
-  const list = allMembers.filter(m=>
-    m.member_id.toString().includes(kw) ||
-    m.first_name.toLowerCase().includes(kw) ||
-    m.last_name.toLowerCase().includes(kw)
-  )
 
-  list.slice(renderIndex,renderIndex+PAGE_SIZE).forEach(m=>{
-    cardList.innerHTML+=`
+  const list = allMembers
+    .filter(m =>
+      m.member_id.toString().includes(kw) ||
+      m.first_name.toLowerCase().includes(kw) ||
+      m.last_name.toLowerCase().includes(kw)
+    )
+    .sort((a,b)=>a.member_id-b.member_id)
+
+  list.slice(renderIndex, renderIndex+PAGE_SIZE).forEach(m=>{
+    cardList.innerHTML += `
     <div class="bg-slate-800 rounded-xl p-4 space-y-2">
-      <div class="flex justify-between">
-        <div class="font-bold">${m.member_id} · ${m.first_name} ${m.last_name}</div>
+      <div class="flex justify-between items-start">
+        <div>
+          <div class="font-bold text-lg">
+            ${m.member_id} · ${m.title||''}${m.first_name} ${m.last_name}
+          </div>
+          <div class="text-xs text-slate-400">
+            กลุ่ม ${m.group}
+          </div>
+        </div>
+
         <span class="text-xs px-2 py-1 rounded ${m.lat&&m.lng?'bg-green-600':'bg-red-600'}">
           ${m.lat&&m.lng?'📍 ปักแล้ว':'❌ ยังไม่ปัก'}
         </span>
       </div>
 
       <div class="text-sm text-slate-400">
-        📍 ${m.house_no||'-'} ม.${m.moo||'-'} ${m.subdistrict} ${m.district} ${m.province}
+        📍 ${m.house_no||'-'} ม.${m.moo||'-'}
+        ${m.subdistrict||''} ${m.district||''} ${m.province||''}
       </div>
 
       <button onclick="pinGPS(${m.member_id})"
-        class="w-full bg-blue-600 rounded py-1">📍 ปักพิกัด</button>
+        class="w-full bg-blue-600 rounded py-1">
+        📍 ปักพิกัด
+      </button>
 
-      ${m.lat&&m.lng?`
+      ${m.lat&&m.lng ? `
       <a href="https://www.google.com/maps/dir/?api=1&destination=${m.lat},${m.lng}"
         target="_blank"
-        class="block bg-slate-700 rounded py-1 text-center">🧭 นำทาง</a>`:''}
+        class="block bg-slate-700 rounded py-1 text-center">
+        🧭 นำทาง
+      </a>` : ``}
 
-      <a href="tel:${m.phone}" class="block text-green-400 font-bold">📞 ${m.phone}</a>
+      <a href="tel:${m.phone}"
+        class="block text-green-400 font-bold">
+        📞 ${m.phone||'-'}
+      </a>
     </div>`
   })
 
-  renderIndex+=PAGE_SIZE
+  renderIndex += PAGE_SIZE
 }
 
-/* GPS */
-function pinGPS(id){
+/* ================= GPS ================= */
+function pinGPS(memberId){
+  if(!navigator.geolocation){
+    alert('อุปกรณ์ไม่รองรับ GPS')
+    return
+  }
+
   navigator.geolocation.getCurrentPosition(async pos=>{
-    await supabaseClient.from('members')
-      .update({lat:pos.coords.latitude,lng:pos.coords.longitude})
-      .eq('member_id',id)
+    const { error } = await supabaseClient
+      .from('members')
+      .update({
+        lat: pos.coords.latitude,
+        lng: pos.coords.longitude
+      })
+      .eq('member_id', memberId)
+
+    if(error){
+      alert('บันทึกพิกัดไม่สำเร็จ')
+      return
+    }
+
     loadMembers()
   })
 }
 
+/* ================= MODAL MAP ================= */
+let singleMap
+function closeMap(){
+  mapModal.classList.add('hidden')
+  if(singleMap) singleMap.remove()
+}
+
+/* ================= INFINITE ================= */
 window.addEventListener('scroll',()=>{
-  if(innerHeight+scrollY>=document.body.offsetHeight-200) renderMore()
+  if(innerHeight + scrollY >= document.body.offsetHeight - 200){
+    renderMore()
+  }
 })
 
 init()
