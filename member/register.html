@@ -7,7 +7,7 @@
   <!-- Tailwind -->
   <script src="https://cdn.tailwindcss.com"></script>
 
-  <!-- Supabase -->
+  <!-- Supabase v2 -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <!-- LINE LIFF -->
@@ -50,6 +50,7 @@
       </div>
 
       <button
+        type="submit"
         class="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700">
         ลงทะเบียน
       </button>
@@ -59,13 +60,20 @@
   </div>
 
 <script>
+  /* ================= CONFIG ================= */
   const SUPABASE_URL = 'https://ttottijljxoinptmhgtu.supabase.co'
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'
   const LIFF_ID = '1661506692-2FqTmqz9'
 
-  const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+  /* ============== INIT CLIENT ============== */
+  const supabaseClient = supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_ANON_KEY
+  )
+
   let lineUserId = null
 
+  /* ================= LIFF ================= */
   async function initLIFF() {
     await liff.init({ liffId: LIFF_ID })
 
@@ -77,37 +85,45 @@
     const profile = await liff.getProfile()
     lineUserId = profile.userId
 
-    checkDuplicate()
+    await checkDuplicate()
   }
 
+  /* ========== CHECK DUPLICATE ========== */
   async function checkDuplicate() {
-    const { data } = await supabase
+    const { data, error } = await supabaseClient
       .from('adminmember')
-      .select('id, approve_status')
+      .select('approve_status')
       .eq('line_user_id', lineUserId)
-      .single()
+      .maybeSingle()
 
     if (data) {
       document.getElementById('registerForm').remove()
       document.getElementById('statusMsg').innerHTML =
-        `คุณได้ลงทะเบียนแล้ว<br>สถานะ: <b>${data.approve_status}</b>`
+        `คุณได้ลงทะเบียนแล้ว<br>
+         สถานะ: <b class="text-blue-600">${data.approve_status}</b>`
     }
   }
 
+  /* ============== SUBMIT ============== */
   document.getElementById('registerForm').addEventListener('submit', async (e) => {
     e.preventDefault()
 
-    const first_name = first_name.value
-    const last_name = last_name.value
-    const position = position.value
+    const firstName = document.getElementById('first_name').value.trim()
+    const lastName = document.getElementById('last_name').value.trim()
+    const position = document.getElementById('position').value
 
-    const { error } = await supabase
+    if (!lineUserId) {
+      alert('ไม่พบ LINE User ID')
+      return
+    }
+
+    const { error } = await supabaseClient
       .from('adminmember')
       .insert([{
         line_user_id: lineUserId,
-        first_name,
-        last_name,
-        position
+        first_name: firstName,
+        last_name: lastName,
+        position: position
       }])
 
     const msg = document.getElementById('statusMsg')
@@ -116,9 +132,9 @@
       msg.textContent = error.message
       msg.className = 'text-center mt-4 text-red-600'
     } else {
-      msg.textContent = '✅ ลงทะเบียนสำเร็จ รอการอนุมัติจาก Admin'
+      document.getElementById('registerForm').remove()
+      msg.innerHTML = '✅ ลงทะเบียนสำเร็จ<br>รอการอนุมัติจาก Admin'
       msg.className = 'text-center mt-4 text-green-600'
-      document.getElementById('registerForm').reset()
     }
   })
 
