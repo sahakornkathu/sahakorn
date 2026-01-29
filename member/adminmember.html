@@ -2,153 +2,237 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8" />
-  <title>Admin - อนุมัติกรรมการ</title>
+  <title>Admin - จัดการกรรมการ</title>
+
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
 <body class="bg-gray-100 min-h-screen p-6">
 
-  <div class="max-w-6xl mx-auto bg-white rounded-xl shadow p-6">
-    <h1 class="text-2xl font-bold mb-6">🧑‍💼 ระบบอนุมัติกรรมการ</h1>
+<div class="max-w-7xl mx-auto bg-white rounded-xl shadow p-6">
+  <h1 class="text-2xl font-bold mb-4">🧑‍💼 ระบบจัดการกรรมการ</h1>
 
-    <div class="mb-4 flex gap-2">
-      <select id="filterStatus" class="border rounded px-3 py-2">
-        <option value="">ทั้งหมด</option>
-        <option value="pending">รออนุมัติ</option>
-        <option value="approved">อนุมัติแล้ว</option>
-        <option value="rejected">ไม่อนุมัติ</option>
-      </select>
-      <button onclick="loadData()" class="bg-blue-600 text-white px-4 py-2 rounded">
-        ค้นหา
-      </button>
-      <button
-  onclick="deleteAdminMember(${row.id})"
-  class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm">
-  ลบ
-</button>
+  <!-- Search -->
+  <div class="grid md:grid-cols-4 gap-2 mb-4">
+    <input id="searchName"
+      placeholder="ค้นหาชื่อ / นามสกุล"
+      class="border px-3 py-2 rounded">
 
-    </div>
+    <select id="searchPosition" class="border px-3 py-2 rounded">
+      <option value="">ทุกตำแหน่ง</option>
+      <option value="1">กรรมการกลุ่มที่ 1</option>
+      <option value="2">กรรมการกลุ่มที่ 2</option>
+      <option value="3">กรรมการกลุ่มที่ 3</option>
+      <option value="4">กรรมการกลุ่มที่ 4</option>
+      <option value="5">กรรมการกลุ่มที่ 5</option>
+      <option value="6">กรรมการกลุ่มที่ 6</option>
+      <option value="7">กรรมการกลุ่มที่ 7</option>
+      <option value="8">กรรมการกลุ่มที่ 8</option>
+      <option value="9">กรรมการกลุ่มที่ 9</option>
+    </select>
 
-    <div class="overflow-x-auto">
-      <table class="w-full border text-sm">
-        <thead class="bg-gray-200">
-          <tr>
-            <th class="border p-2">ชื่อ</th>
-            <th class="border p-2">นามสกุล</th>
-            <th class="border p-2">ตำแหน่ง</th>
-            <th class="border p-2">สถานะ</th>
-            <th class="border p-2">จัดการ</th>
-          </tr>
-        </thead>
-        <tbody id="tableBody"></tbody>
-      </table>
-    </div>
+    <select id="filterStatus" class="border px-3 py-2 rounded">
+      <option value="">ทุกสถานะ</option>
+      <option value="pending">รออนุมัติ</option>
+      <option value="approved">อนุมัติแล้ว</option>
+      <option value="rejected">ไม่อนุมัติ</option>
+    </select>
+
+    <button onclick="loadData()"
+      class="bg-blue-600 text-white rounded px-4">
+      ค้นหา
+    </button>
   </div>
 
-<script>
-  /* ====== CONFIG ====== */
-  const SUPABASE_URL = 'https://ttottijljxoinptmhgtu.supabase.co'
-  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'
-
-  /* ====== INIT CLIENT ====== */
-  const supabaseClient = supabase.createClient(
-    SUPABASE_URL,
-    SUPABASE_ANON_KEY
-  )
-
-  async function loadData() {
-    const status = document.getElementById('filterStatus').value
-
-    let query = supabaseClient
-      .from('adminmember')
-      .select('*')
-      .order('created_at', { ascending: false })
-
-    if (status) query = query.eq('approve_status', status)
-
-    const { data, error } = await query
-
-    if (error) {
-      alert(error.message)
-      return
-    }
-
-    const tbody = document.getElementById('tableBody')
-    tbody.innerHTML = ''
-
-    if (!data || data.length === 0) {
-      tbody.innerHTML = `
+  <!-- Table -->
+  <div class="overflow-x-auto">
+    <table class="w-full border text-sm">
+      <thead class="bg-gray-200">
         <tr>
-          <td colspan="5" class="p-4 text-center text-gray-500">
-            ไม่มีข้อมูล
-          </td>
-        </tr>`
-      return
+          <th class="border p-2">ชื่อ</th>
+          <th class="border p-2">นามสกุล</th>
+          <th class="border p-2">ตำแหน่ง</th>
+          <th class="border p-2">สถานะ</th>
+          <th class="border p-2">จัดการ</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Edit Modal -->
+<div id="editModal"
+ class="fixed inset-0 bg-black bg-opacity-40 hidden items-center justify-center">
+  <div class="bg-white p-6 rounded w-full max-w-md">
+    <h2 class="text-lg font-bold mb-4">✏️ แก้ไขกรรมการ</h2>
+
+    <input type="hidden" id="editId">
+
+    <input id="editFirstName"
+      class="border p-2 rounded w-full mb-2"
+      placeholder="ชื่อ">
+
+    <input id="editLastName"
+      class="border p-2 rounded w-full mb-2"
+      placeholder="นามสกุล">
+
+    <select id="editPosition"
+      class="border p-2 rounded w-full mb-4">
+      <option value="1">กรรมการกลุ่มที่ 1</option>
+      <option value="2">กรรมการกลุ่มที่ 2</option>
+      <option value="3">กรรมการกลุ่มที่ 3</option>
+      <option value="4">กรรมการกลุ่มที่ 4</option>
+      <option value="5">กรรมการกลุ่มที่ 5</option>
+      <option value="6">กรรมการกลุ่มที่ 6</option>
+      <option value="7">กรรมการกลุ่มที่ 7</option>
+      <option value="8">กรรมการกลุ่มที่ 8</option>
+      <option value="9">กรรมการกลุ่มที่ 9</option>
+    </select>
+
+    <div class="flex justify-end gap-2">
+      <button onclick="closeEdit()"
+        class="px-4 py-2 border rounded">
+        ยกเลิก
+      </button>
+      <button onclick="saveEdit()"
+        class="px-4 py-2 bg-green-600 text-white rounded">
+        บันทึก
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ================= CONFIG ================= */
+const SUPABASE_URL = 'https://ttottijljxoinptmhgtu.supabase.co'
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'
+
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+
+/* ================= LOAD DATA ================= */
+async function loadData() {
+  const name = searchName.value.trim()
+  const position = searchPosition.value
+  const status = filterStatus.value
+
+  let q = sb.from('adminmember')
+    .select('*')
+    .order('created_at', { ascending: false })
+
+  if (name) {
+    q = q.or(`first_name.ilike.%${name}%,last_name.ilike.%${name}%`)
+  }
+  if (position) q = q.eq('position', position)
+  if (status) q = q.eq('approve_status', status)
+
+  const { data, error } = await q
+  if (error) {
+    alert(error.message)
+    return
+  }
+
+  tableBody.innerHTML = ''
+
+  data.forEach(row => {
+    tableBody.innerHTML += `
+      <tr class="text-center">
+        <td class="border p-2">${row.first_name}</td>
+        <td class="border p-2">${row.last_name}</td>
+        <td class="border p-2">กลุ่ม ${row.position}</td>
+        <td class="border p-2">${thaiStatus(row.approve_status)}</td>
+        <td class="border p-2 space-x-1">
+          <button
+            class="editBtn bg-yellow-500 text-white px-2 py-1 rounded"
+            data-id="${row.id}"
+            data-first="${row.first_name}"
+            data-last="${row.last_name}"
+            data-position="${row.position}">
+            แก้ไข
+          </button>
+
+          <button onclick="approve(${row.id})"
+            class="bg-green-600 text-white px-2 py-1 rounded">
+            อนุมัติ
+          </button>
+
+          <button onclick="removeMember(${row.id})"
+            class="bg-red-600 text-white px-2 py-1 rounded">
+            ลบ
+          </button>
+        </td>
+      </tr>
+    `
+  })
+
+  bindEditButtons()
+}
+
+/* ================= EDIT ================= */
+function bindEditButtons() {
+  document.querySelectorAll('.editBtn').forEach(btn => {
+    btn.onclick = () => {
+      openEdit(
+        btn.dataset.id,
+        btn.dataset.first,
+        btn.dataset.last,
+        btn.dataset.position
+      )
     }
+  })
+}
 
-    data.forEach(row => {
-      tbody.innerHTML += `
-        <tr class="text-center">
-          <td class="border p-2">${row.first_name}</td>
-          <td class="border p-2">${row.last_name}</td>
-          <td class="border p-2">${row.position}</td>
-          <td class="border p-2">
-            <span class="px-2 py-1 rounded text-white ${statusColor(row.approve_status)}">
-              ${row.approve_status}
-            </span>
-          </td>
-          <td class="border p-2">
-            <select class="border rounded px-2 py-1"
-              onchange="updateStatus(${row.id}, this.value)">
-              <option value="">เลือก</option>
-              <option value="approved">อนุมัติ</option>
-              <option value="rejected">ไม่อนุมัติ</option>
-            </select>
-          </td>
-        </tr>`
+function openEdit(id, first, last, position) {
+  editModal.classList.remove('hidden')
+  editModal.classList.add('flex')
+
+  editId.value = id
+  editFirstName.value = first
+  editLastName.value = last
+  editPosition.value = position
+}
+
+function closeEdit() {
+  editModal.classList.add('hidden')
+}
+
+async function saveEdit() {
+  await sb.from('adminmember')
+    .update({
+      first_name: editFirstName.value.trim(),
+      last_name: editLastName.value.trim(),
+      position: editPosition.value
     })
-  }
+    .eq('id', editId.value)
 
-  function statusColor(status) {
-    if (status === 'approved') return 'bg-green-600'
-    if (status === 'rejected') return 'bg-red-600'
-    return 'bg-yellow-500'
-  }
+  closeEdit()
+  loadData()
+}
 
-  async function updateStatus(id, status) {
-    if (!status) return
-    if (!confirm('ยืนยันการเปลี่ยนสถานะ?')) return
-
-    const { error } = await supabaseClient
-      .from('adminmember')
-      .update({ approve_status: status })
-      .eq('id', id)
-
-    if (error) alert(error.message)
-    else loadData()
-  }
+/* ================= ACTIONS ================= */
+async function approve(id) {
+  await sb.from('adminmember')
+    .update({ approve_status: 'approved' })
+    .eq('id', id)
 
   loadData()
-</script>
-<script>
-async function deleteAdminMember(id) {
-  const confirmDelete = confirm('คุณแน่ใจหรือไม่ว่าต้องการลบกรรมการคนนี้?');
-  if (!confirmDelete) return;
-
-  const { error } = await supabase
-    .from('adminmember')
-    .delete()
-    .eq('id', id);
-
-  if (error) {
-    alert('ลบไม่สำเร็จ ❌');
-    console.error(error);
-  } else {
-    alert('ลบข้อมูลเรียบร้อย ✅');
-    loadAdminMembers(); // โหลดข้อมูลใหม่
-  }
 }
+
+async function removeMember(id) {
+  if (!confirm('ยืนยันการลบกรรมการ?')) return
+  await sb.from('adminmember').delete().eq('id', id)
+  loadData()
+}
+
+/* ================= UTIL ================= */
+function thaiStatus(s) {
+  if (s === 'approved') return '✅ อนุมัติ'
+  if (s === 'rejected') return '❌ ไม่อนุมัติ'
+  return '⏳ รออนุมัติ'
+}
+
+loadData()
 </script>
 
 </body>
