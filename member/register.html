@@ -4,141 +4,124 @@
   <meta charset="UTF-8" />
   <title>ลงทะเบียนกรรมการ</title>
 
-  <!-- Tailwind -->
   <script src="https://cdn.tailwindcss.com"></script>
-
-  <!-- Supabase v2 -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-  <!-- LINE LIFF -->
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 </head>
 
 <body class="bg-gray-100 min-h-screen flex items-center justify-center">
 
-  <div class="bg-white p-6 rounded-xl shadow w-full max-w-md">
-    <h1 class="text-2xl font-bold mb-4 text-center">📝 ลงทะเบียนกรรมการ</h1>
+<div class="bg-white p-6 rounded-xl shadow w-full max-w-md">
+  <h1 class="text-2xl font-bold mb-4 text-center">📝 ลงทะเบียนกรรมการ</h1>
 
-    <form id="registerForm" class="space-y-4">
-      <div>
-        <label class="block text-sm mb-1">ชื่อ</label>
-        <input id="first_name" required
-          class="w-full border rounded px-3 py-2" />
-      </div>
+  <form id="registerForm" class="space-y-4">
+    <div>
+      <label class="block text-sm mb-1">ชื่อ</label>
+      <input id="first_name" required class="w-full border rounded px-3 py-2">
+    </div>
 
-      <div>
-        <label class="block text-sm mb-1">นามสกุล</label>
-        <input id="last_name" required
-          class="w-full border rounded px-3 py-2" />
-      </div>
+    <div>
+      <label class="block text-sm mb-1">นามสกุล</label>
+      <input id="last_name" required class="w-full border rounded px-3 py-2">
+    </div>
 
-      <div>
-        <label class="block text-sm mb-1">ตำแหน่ง</label>
-        <select id="position" required
-          class="w-full border rounded px-3 py-2">
-          <option value="">-- เลือกตำแหน่ง --</option>
-          <option>กรรมการกลุ่มที่ 1</option>
-          <option>กรรมการกลุ่มที่ 2</option>
-          <option>กรรมการกลุ่มที่ 3</option>
-          <option>กรรมการกลุ่มที่ 4</option>
-          <option>กรรมการกลุ่มที่ 5</option>
-          <option>กรรมการกลุ่มที่ 6</option>
-          <option>กรรมการกลุ่มที่ 7</option>
-          <option>กรรมการกลุ่มที่ 8</option>
-          <option>กรรมการกลุ่มที่ 9</option>
-        </select>
-      </div>
+    <div>
+      <label class="block text-sm mb-1">ตำแหน่ง</label>
+      <select id="position" required class="w-full border rounded px-3 py-2">
+        <option value="">-- เลือกตำแหน่ง --</option>
+        <option value="1">กรรมการกลุ่มที่ 1</option>
+        <option value="2">กรรมการกลุ่มที่ 2</option>
+        <option value="3">กรรมการกลุ่มที่ 3</option>
+        <option value="4">กรรมการกลุ่มที่ 4</option>
+        <option value="5">กรรมการกลุ่มที่ 5</option>
+        <option value="6">กรรมการกลุ่มที่ 6</option>
+        <option value="7">กรรมการกลุ่มที่ 7</option>
+        <option value="8">กรรมการกลุ่มที่ 8</option>
+        <option value="9">กรรมการกลุ่มที่ 9</option>
+      </select>
+    </div>
 
-      <button
-        type="submit"
-        class="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700">
-        ลงทะเบียน
-      </button>
-    </form>
+    <button type="submit"
+      class="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700">
+      ลงทะเบียน
+    </button>
+  </form>
 
-    <p id="statusMsg" class="text-center mt-4 text-sm"></p>
-  </div>
+  <p id="statusMsg" class="text-center mt-4 text-sm"></p>
+</div>
 
 <script>
-  /* ================= CONFIG ================= */
-  const SUPABASE_URL = 'https://ttottijljxoinptmhgtu.supabase.co'
-  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'
-  const LIFF_ID = '1661506692-2FqTmqz9'
+/* ================= CONFIG ================= */
+const SUPABASE_URL = 'https://ttottijljxoinptmhgtu.supabase.co'
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'
+const LIFF_ID = '1661506692-2FqTmqz9'
 
-  /* ============== INIT CLIENT ============== */
-  const supabaseClient = supabase.createClient(
-    SUPABASE_URL,
-    SUPABASE_ANON_KEY
-  )
+/* ============== INIT CLIENT ============== */
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
-  let lineUserId = null
+let lineUserId = null
 
-  /* ================= LIFF ================= */
-  async function initLIFF() {
-    await liff.init({ liffId: LIFF_ID })
+/* ================= LIFF ================= */
+async function initLIFF() {
+  await liff.init({ liffId: LIFF_ID })
 
-    if (!liff.isLoggedIn()) {
-      liff.login()
-      return
-    }
-
-    const profile = await liff.getProfile()
-    lineUserId = profile.userId
-
-    await checkDuplicate()
+  if (!liff.isLoggedIn()) {
+    liff.login()
+    return
   }
 
-  /* ========== CHECK DUPLICATE ========== */
-  async function checkDuplicate() {
-    const { data, error } = await supabaseClient
-      .from('adminmember')
-      .select('approve_status')
-      .eq('line_user_id', lineUserId)
-      .maybeSingle()
+  const profile = await liff.getProfile()
+  lineUserId = profile.userId
 
-    if (data) {
-      document.getElementById('registerForm').remove()
-      document.getElementById('statusMsg').innerHTML =
-        `คุณได้ลงทะเบียนแล้ว<br>
-         สถานะ: <b class="text-blue-600">${data.approve_status}</b>`
-    }
+  checkDuplicate()
+}
+
+/* ========== CHECK DUPLICATE ========== */
+async function checkDuplicate() {
+  const { data } = await sb
+    .from('adminmember')
+    .select('approve_status')
+    .eq('line_user_id', lineUserId)
+    .maybeSingle()
+
+  if (data) {
+    registerForm.remove()
+    statusMsg.innerHTML = `
+      คุณได้ลงทะเบียนแล้ว<br>
+      สถานะ: <b class="text-blue-600">${thaiStatus(data.approve_status)}</b>
+    `
   }
+}
 
-  /* ============== SUBMIT ============== */
-  document.getElementById('registerForm').addEventListener('submit', async (e) => {
-    e.preventDefault()
+/* ============== SUBMIT ============== */
+registerForm.addEventListener('submit', async (e) => {
+  e.preventDefault()
 
-    const firstName = document.getElementById('first_name').value.trim()
-    const lastName = document.getElementById('last_name').value.trim()
-    const position = document.getElementById('position').value
-
-    if (!lineUserId) {
-      alert('ไม่พบ LINE User ID')
-      return
-    }
-
-    const { error } = await supabaseClient
-      .from('adminmember')
-      .insert([{
-        line_user_id: lineUserId,
-        first_name: firstName,
-        last_name: lastName,
-        position: position
-      }])
-
-    const msg = document.getElementById('statusMsg')
-
-    if (error) {
-      msg.textContent = error.message
-      msg.className = 'text-center mt-4 text-red-600'
-    } else {
-      document.getElementById('registerForm').remove()
-      msg.innerHTML = '✅ ลงทะเบียนสำเร็จ<br>รอการอนุมัติจาก Admin'
-      msg.className = 'text-center mt-4 text-green-600'
-    }
+  const { error } = await sb.from('adminmember').insert({
+    line_user_id: lineUserId,
+    first_name: first_name.value.trim(),
+    last_name: last_name.value.trim(),
+    position: position.value,
+    approve_status: 'pending' // 🔒 รออนุมัติทันที
   })
 
-  initLIFF()
+  if (error) {
+    statusMsg.textContent = error.message
+    statusMsg.className = 'text-red-600'
+  } else {
+    registerForm.remove()
+    statusMsg.innerHTML = '⏳ ลงทะเบียนสำเร็จ<br>รอการอนุมัติจาก Admin'
+    statusMsg.className = 'text-green-600'
+  }
+})
+
+function thaiStatus(s) {
+  if (s === 'approved') return 'อนุมัติแล้ว'
+  if (s === 'rejected') return 'ไม่อนุมัติ'
+  return 'รออนุมัติ'
+}
+
+initLIFF()
 </script>
 
 </body>
