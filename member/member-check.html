@@ -61,14 +61,14 @@
 
 <script>
 // เคลียร์ แคชทุกครั้งที่เปิด
-<script>
+
 if (!sessionStorage.getItem('liff_cache_bypass')) {
   sessionStorage.setItem('liff_cache_bypass', '1')
   const url = new URL(window.location.href)
   url.searchParams.set('v', Date.now())
   window.location.replace(url.toString())
 }
-</script>
+
 
 
 
