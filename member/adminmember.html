@@ -12,7 +12,6 @@
   <div class="max-w-6xl mx-auto bg-white rounded-xl shadow p-6">
     <h1 class="text-2xl font-bold mb-6">🧑‍💼 ระบบอนุมัติกรรมการ</h1>
 
-    <!-- Filter -->
     <div class="mb-4 flex gap-2">
       <select id="filterStatus" class="border rounded px-3 py-2">
         <option value="">ทั้งหมด</option>
@@ -20,13 +19,11 @@
         <option value="approved">อนุมัติแล้ว</option>
         <option value="rejected">ไม่อนุมัติ</option>
       </select>
-
       <button onclick="loadData()" class="bg-blue-600 text-white px-4 py-2 rounded">
         ค้นหา
       </button>
     </div>
 
-    <!-- Table -->
     <div class="overflow-x-auto">
       <table class="w-full border text-sm">
         <thead class="bg-gray-200">
@@ -44,20 +41,28 @@
   </div>
 
 <script>
-  const supabase = supabase.createClient(
-    'https://ttottijljxoinptmhgtu.supabase.co',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'
+  /* ====== CONFIG ====== */
+  const SUPABASE_URL = 'https://ttottijljxoinptmhgtu.supabase.co'
+  const SUPABASE_ANON_KEY = 'YOUR_ANON_KEY'
+
+  /* ====== INIT CLIENT ====== */
+  const supabaseClient = supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_ANON_KEY
   )
 
   async function loadData() {
     const status = document.getElementById('filterStatus').value
-    let query = supabase.from('adminmember').select('*').order('created_at', { ascending: false })
 
-    if (status) {
-      query = query.eq('approve_status', status)
-    }
+    let query = supabaseClient
+      .from('adminmember')
+      .select('*')
+      .order('created_at', { ascending: false })
+
+    if (status) query = query.eq('approve_status', status)
 
     const { data, error } = await query
+
     if (error) {
       alert(error.message)
       return
@@ -66,6 +71,16 @@
     const tbody = document.getElementById('tableBody')
     tbody.innerHTML = ''
 
+    if (!data || data.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="5" class="p-4 text-center text-gray-500">
+            ไม่มีข้อมูล
+          </td>
+        </tr>`
+      return
+    }
+
     data.forEach(row => {
       tbody.innerHTML += `
         <tr class="text-center">
@@ -73,20 +88,19 @@
           <td class="border p-2">${row.last_name}</td>
           <td class="border p-2">${row.position}</td>
           <td class="border p-2">
-            <span class="${statusColor(row.approve_status)} px-2 py-1 rounded text-white">
+            <span class="px-2 py-1 rounded text-white ${statusColor(row.approve_status)}">
               ${row.approve_status}
             </span>
           </td>
           <td class="border p-2">
-            <select onchange="updateStatus(${row.id}, this.value)"
-              class="border rounded px-2 py-1">
+            <select class="border rounded px-2 py-1"
+              onchange="updateStatus(${row.id}, this.value)">
               <option value="">เลือก</option>
               <option value="approved">อนุมัติ</option>
               <option value="rejected">ไม่อนุมัติ</option>
             </select>
           </td>
-        </tr>
-      `
+        </tr>`
     })
   }
 
@@ -98,23 +112,15 @@
 
   async function updateStatus(id, status) {
     if (!status) return
+    if (!confirm('ยืนยันการเปลี่ยนสถานะ?')) return
 
-    const confirmMsg = status === 'approved'
-      ? 'ยืนยันการอนุมัติ?'
-      : 'ยืนยันการไม่อนุมัติ?'
-
-    if (!confirm(confirmMsg)) return
-
-    const { error } = await supabase
+    const { error } = await supabaseClient
       .from('adminmember')
       .update({ approve_status: status })
       .eq('id', id)
 
-    if (error) {
-      alert(error.message)
-    } else {
-      loadData()
-    }
+    if (error) alert(error.message)
+    else loadData()
   }
 
   loadData()
