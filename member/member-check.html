@@ -23,6 +23,18 @@
     class="w-full rounded-xl px-4 py-2 text-black"
     placeholder="🔍 ค้นหาเลขสมาชิก / ชื่อ / นามสกุล">
 </div>
+<div class="px-3 pb-2">
+  <button
+    id="refreshBtn"
+    onclick="refreshMembers()"
+    class="w-full flex items-center justify-center gap-2
+           bg-gradient-to-r from-emerald-500 to-green-600
+           hover:from-emerald-600 hover:to-green-700
+           text-white font-semibold py-2 rounded-xl
+           shadow active:scale-95 transition">
+    🔄 รีเฟรชข้อมูลจากฐานข้อมูล
+  </button>
+</div>
 
 <!-- SUMMARY -->
 <div class="grid grid-cols-3 gap-3 p-4">
@@ -54,7 +66,7 @@
     <div class="flex justify-between mb-2">
       <div id="modalTitle" class="font-bold"></div>
       <button onclick="closeMap()" class="text-red-400">✕</button>
-      <button onclick="loadMembers()"class="w-full bg-emerald-600 text-white py-2 rounded-xl mt-2">🔄 โหลดข้อมูลใหม่จากฐานข้อมูล</button>
+     
     </div>
     <div id="singleMap" class="h-full rounded"></div>
   </div>
@@ -331,6 +343,30 @@ window.addEventListener('scroll',()=>{
 })
 
 init()
+
+  async function refreshMembers(){
+  const btn = document.getElementById('refreshBtn')
+  btn.disabled = true
+  btn.innerHTML = '⏳ กำลังโหลดข้อมูล...'
+
+  try {
+    await loadMembers()   // 🔥 ตัวเดียวที่ต้องเรียก
+    Swal.fire({
+      toast: true,
+      position: 'top',
+      icon: 'success',
+      title: 'อัปเดตข้อมูลล่าสุดแล้ว',
+      showConfirmButton: false,
+      timer: 1500
+    })
+  } catch (e) {
+    Swal.fire('ผิดพลาด', 'โหลดข้อมูลไม่สำเร็จ', 'error')
+  }
+
+  btn.disabled = false
+  btn.innerHTML = '🔄 รีเฟรชข้อมูลจากฐานข้อมูล'
+}
+
 </script>
 </body>
 </html>
