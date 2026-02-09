@@ -142,19 +142,13 @@ fiscal_year.value = getFiscalYear(today)
 
 /* ===== MEMBER AUTO FILL ===== */
 member_id.addEventListener('blur', async ()=>{
-  const { data, error } = await db
-    .from('members')
-    .select('title,first_name,last_name,"group"') // <== แก้ตรงนี้
-    .eq('member_id', Number(member_id.value))
-    .maybeSingle()
+  const { data, error } = await db.from('members')
+    .select('title,first_name,last_name,"group"')
+    .eq('member_id', member_id.value)
+    .single()
 
-  if(error){
-    Swal.fire(error.message)
-    return
-  }
-
-  if(!data){
-    Swal.fire('ไม่พบสมาชิก')
+  if(error || !data){
+    Swal.fire('ไม่พบสมาชิก','','error')
     return
   }
 
@@ -173,20 +167,20 @@ form.onsubmit = async e=>{
   e.preventDefault()
 
   const payload = {
-    member_id: Number(member_id.value),
+    member_id: member_id.value,
     title:title.value,
     first_name:first_name.value,
     last_name:last_name.value,
     group:group.value,
     meeting_type:meeting_type.value,
     meeting_date:meeting_date.value,
-    fiscal_year:Number(fiscal_year.value)
+    fiscal_year:parseInt(fiscal_year.value)
   }
 
   const { error } = await db.from('member_meeting').insert([payload])
 
   if(error){
-    Swal.fire(error.message)
+    Swal.fire(error.message,'','error')
     return
   }
 
@@ -218,8 +212,8 @@ async function load(){
     rows.innerHTML+=`
 <tr>
 <td>${r.member_id}</td>
-<td>${r.title}${r.first_name} ${r.last_name}</td>
-<td>${r.group}</td>
+<td>${r.title||''}${r.first_name||''} ${r.last_name||''}</td>
+<td>${r.group||''}</td>
 <td>${r.meeting_type}</td>
 <td>${r.meeting_date}</td>
 <td>${r.fiscal_year}</td>
