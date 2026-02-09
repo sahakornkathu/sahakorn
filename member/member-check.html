@@ -55,7 +55,17 @@
 <!-- MAP OVERVIEW -->
 <div class="px-4">
   <div id="map" class="h-72 rounded-xl"></div>
+
+  <!-- ปุ่มตำแหน่งของฉัน -->
+  <div class="mt-2">
+    <button onclick="goMyLocation()"
+      class="w-full bg-indigo-600 hover:bg-indigo-700
+             text-white py-2 rounded-xl shadow">
+      📍 ตำแหน่งของฉัน
+    </button>
+  </div>
 </div>
+
 
 <!-- CARD LIST -->
 <div id="cardList" class="p-4 space-y-3"></div>
@@ -193,7 +203,48 @@ async function loadMembers(){
   renderMarkers()
   resetAndRender()
 }
+// ปุ่มกดmylocation
+function goMyLocation(){
 
+  if (!navigator.geolocation) {
+    Swal.fire('ผิดพลาด','อุปกรณ์ไม่รองรับ GPS','error')
+    return
+  }
+
+  Swal.fire({
+    title: 'กำลังค้นหาตำแหน่ง...',
+    allowOutsideClick: false,
+    didOpen: () => Swal.showLoading()
+  })
+
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+
+      const lat = pos.coords.latitude
+      const lng = pos.coords.longitude
+
+      Swal.close()
+
+      // เลื่อน map ไปตำแหน่งเรา
+      map.setView([lat, lng], 17)
+
+      // ปัก marker ชั่วคราว
+      const myMarker = L.marker([lat, lng])
+        .addTo(map)
+        .bindPopup('📍 ตำแหน่งของฉัน')
+        .openPopup()
+
+      // ลบ marker อัตโนมัติ 10 วินาที
+      setTimeout(()=>{
+        map.removeLayer(myMarker)
+      },10000)
+
+    },
+    () => {
+      Swal.fire('ผิดพลาด','ไม่สามารถดึงตำแหน่งได้','error')
+    }
+  )
+}
 
 
 /* ================= SUMMARY ================= */
