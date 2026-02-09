@@ -62,12 +62,14 @@
 ยังไม่ได้สุ่ม
 </div>
 
-<div class="grid md:grid-cols-2 gap-3">
-<button onclick="randomMember()"
- class="bg-purple-600 p-3 rounded">
-สุ่ม
-</button>
+<div class="flex justify-center">
+  <button onclick="randomMember()"
+   class="bg-purple-600 px-10 py-4 rounded text-lg font-bold
+          hover:bg-purple-700 shadow-lg transition">
+   🎲 สุ่มรายชื่อ
+  </button>
 </div>
+
 
 <div id="remainBox" class="text-center text-sky-400"></div>
 
@@ -160,8 +162,22 @@ async function randomMember(){
  .eq('group',groupSel.value)
  .eq('fiscal_year',fiscalYear.value)
 
- if(quotaNum>0 && used.length>=quotaNum)
- return alert('ครบจำนวนสิทธิ์แล้ว')
+ if(quotaNum > 0 && used.length >= quotaNum){
+  await Swal.fire({
+    icon: 'warning',
+    title: 'ครบจำนวนสิทธิ์แล้ว',
+    html: `
+      <div style="font-size:18px">
+        กลุ่มนี้ใช้สิทธิ์ครบแล้ว<br>
+        <b>${quotaNum} คน</b>
+      </div>
+    `,
+    confirmButtonText: 'ตกลง',
+    confirmButtonColor: '#eab308'
+  })
+  return
+}
+
 
  let box=document.getElementById('spinBox')
  box.classList.remove('glow')
