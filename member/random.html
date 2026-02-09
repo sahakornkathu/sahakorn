@@ -276,6 +276,7 @@ async function removeWinner(id){
 }
 
 loadFiscalYear()
+ 
 // ปริ้นรายงาน
  async function printWinnersReport(){
   const g = groupSel.value
@@ -286,13 +287,12 @@ loadFiscalYear()
     return
   }
 
-  // ดึงผู้ได้รับสิทธิ์
   const { data, error } = await sb
     .from('meeting_random')
     .select('*')
     .eq('group', g)
     .eq('fiscal_year', fy)
-    .order('first_name')
+    .order('member_id')
 
   if(error){
     Swal.fire(error.message,'','error')
@@ -307,7 +307,7 @@ loadFiscalYear()
   const rowsHtml = data.map((r,i)=>`
 <tr>
   <td>${i+1}</td>
-  <td>${r.first_name} ${r.last_name}</td>
+  <td>${r.member_id} ${r.first_name} ${r.last_name}</td>
   <td style="text-align:left">${r.address || ''}</td>
   <td></td>
   <td></td>
@@ -322,27 +322,35 @@ loadFiscalYear()
 <meta charset="UTF-8">
 <style>
 @page{ margin:20mm; }
-body{ font-family:"TH Sarabun New",sans-serif; font-size:18px }
-h2{ text-align:center }
+body{
+  font-family:"TH Sarabun New","Sarabun",sans-serif;
+  font-size:20px;
+  color:#000;
+}
+h2{
+  text-align:center;
+  margin-bottom:10px;
+}
 
 table{
   width:100%;
   border-collapse:collapse;
-  margin-top:15px
+  margin-top:15px;
 }
 th,td{
   border:1px solid #000;
   padding:8px;
-  text-align:center
+  text-align:center;
 }
 td:nth-child(3){ text-align:left }
-td:nth-child(4){ height:40px }
-td:nth-child(5){ height:40px }
+td:nth-child(4){ height:45px }
+td:nth-child(5){ height:45px }
 </style>
 </head>
 
 <body>
 <h2>รายชื่อผู้มีสิทธิ์เข้าประชุมใหญ่</h2>
+
 <div style="text-align:center">
 กลุ่ม ${g} | ปีบัญชี ${fy}<br>
 วันที่ ${today}
@@ -352,7 +360,7 @@ td:nth-child(5){ height:40px }
 <thead>
 <tr>
   <th style="width:50px">ลำดับ</th>
-  <th style="width:200px">ชื่อ-นามสกุล</th>
+  <th style="width:240px">รหัสสมาชิก / ชื่อ-นามสกุล</th>
   <th>ที่อยู่</th>
   <th style="width:120px">เบอร์โทร</th>
   <th style="width:180px">ลายเซ็น</th>
@@ -372,6 +380,7 @@ ${rowsHtml}
   w.document.close()
   w.print()
 }
+
 
 </script>
 
