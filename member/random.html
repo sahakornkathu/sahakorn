@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<title>สุ่มประชุมใหญ่</title>
+<title>สุ่มสิทธิ์ประชุมใหญ่</title>
 
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -12,7 +12,7 @@
 
 <style>
 .spinBox{
-  font-size:32px;
+  font-size:28px;
   font-weight:bold;
   height:120px;
   display:flex;
@@ -30,24 +30,10 @@
   from{box-shadow:0 0 10px #fff}
   to{box-shadow:0 0 30px #facc15}
 }
-
-/* SweetAlert Dark */
-.swal2-popup{
-  background:#020617 !important;
-  color:#f9fafb !important;
-}
-.swal2-title{
-  color:#facc15 !important;
-}
-.swal2-confirm{
-  background:#16a34a !important;
-}
-.swal2-cancel{
-  background:#dc2626 !important;
-}
 .spinText{
-  font-size:28px;
+  font-size:26px;
   font-weight:bold;
+  color:#111;
 }
 </style>
 </head>
@@ -68,14 +54,16 @@
 <option>7</option><option>8</option><option>9</option>
 </select>
 
-<select id="fiscalYear" class="text-black p-2 rounded"></select>
+<select id="fiscalYear" class="text-black p-2 rounded">
+<option value="">เลือกปีบัญชี</option>
+</select>
 
 <input id="quota" class="text-black p-2 rounded"
  placeholder="สิทธิ์ทั้งหมด">
 </div>
 
 <button onclick="loadPool()"
- class="w-full bg-blue-600 p-3 rounded">
+ class="w-full bg-blue-600 hover:bg-blue-700 p-3 rounded">
 โหลดรายชื่อ
 </button>
 
@@ -83,17 +71,10 @@
 ยังไม่ได้สุ่ม
 </div>
 
-<div class="grid md:grid-cols-2 gap-3">
 <button onclick="randomMember()"
- class="bg-purple-600 p-3 rounded">
+ class="w-full bg-purple-600 hover:bg-purple-700 p-3 rounded">
 สุ่ม
 </button>
-
-<button onclick="saveWinner()"
- class="bg-green-600 p-3 rounded">
-บันทึก
-</button>
-</div>
 
 <div id="remainBox" class="text-center text-sky-400"></div>
 
@@ -108,6 +89,7 @@ const sb = supabase.createClient(
 let pool=[]
 let winner=null
 
+/* ================= TOAST ================= */
 function toast(msg){
 Swal.fire({
  toast:true,
@@ -119,21 +101,21 @@ Swal.fire({
 })
 }
 
-/* ===== LOAD YEAR DROPDOWN ===== */
-async function loadYears(){
-const {data}=await sb.from('member_meeting')
-.select('fiscal_year')
+/* ================= LOAD FISCAL YEAR ================= */
+async function loadFiscalYear(){
+ const {data}=await sb.from('member_meeting')
+ .select('fiscal_year')
 
-let years=[...new Set(data.map(d=>d.fiscal_year))]
-years.sort((a,b)=>b-a)
+ const years=[...new Set(data.map(d=>d.fiscal_year))]
+ years.sort((a,b)=>b-a)
 
-fiscalYear.innerHTML='<option value="">เลือกปีบัญชี</option>'
-years.forEach(y=>{
- fiscalYear.innerHTML+=`<option>${y}</option>`
-})
+ years.forEach(y=>{
+   fiscalYear.innerHTML+=`<option value="${y}">${y}</option>`
+ })
 }
+loadFiscalYear()
 
-/* ===== LOAD POOL ===== */
+/* ================= LOAD POOL ================= */
 async function loadPool(){
 const g=groupSel.value
 const fy=fiscalYear.value
@@ -156,49 +138,55 @@ remainBox.innerText=`เหลือ ${pool.length} คน`
 toast('โหลดสำเร็จ')
 }
 
-/* ===== RANDOM POPUP ===== */
+/* ================= RANDOM ================= */
 async function randomMember(){
 if(pool.length==0) return alert('ไม่มีคน')
 
-Swal.fire({
- title:'กำลังสุ่ม...',
- html:'<div id="spin" class="spinText">...</div>',
- background:'#020617',
- color:'#fff',
- showConfirmButton:false,
- allowOutsideClick:false
-})
+let box=document.getElementById('spinBox')
+box.classList.remove('glow')
 
 let t=0
 const iv=setInterval(()=>{
  const r=pool[Math.floor(Math.random()*pool.length)]
- document.getElementById('spin').innerText=r.member_id+' '+r.first_name
+ box.innerText=r.member_id+' '+r.first_name
  t++
  if(t>20){
    clearInterval(iv)
    winner=r
-   Swal.update({
-     title:'🎉 ผู้โชคดี',
-     html:`<div class="animate__animated animate__zoomIn spinText">
-       ${r.member_id} ${r.first_name} ${r.last_name}
-     </div>`,
-     showConfirmButton:true
-   })
+   box.innerText=r.member_id+' '+r.first_name
+   box.classList.add('glow')
+
+   showWinnerPopup(r)
  }
 },200)
 }
 
-/* ===== SAVE ===== */
-async function saveWinner(){
-if(!winner) return
-
-const confirm=await Swal.fire({
- title:'บันทึกหรือไม่?',
- showCancelButton:true,
- backdrop:false
+/* ================= POPUP WINNER ================= */
+function showWinnerPopup(r){
+Swal.fire({
+ background:'#ffffff',
+ color:'#111',
+ title:'🎉 ผู้โชคดี',
+ html:`
+ <div class="animate__animated animate__zoomIn spinText mb-4">
+   ${r.member_id} ${r.first_name} ${r.last_name}
+ </div>
+ <button id="saveBtn"
+  class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg shadow">
+  บันทึกสิทธิ์เข้าประชุม
+ </button>
+ `,
+ showConfirmButton:false
 })
 
-if(!confirm.isConfirmed) return
+setTimeout(()=>{
+ document.getElementById('saveBtn').onclick = saveWinner
+},100)
+}
+
+/* ================= SAVE WINNER (เดิม) ================= */
+async function saveWinner(){
+if(!winner) return
 
 await sb.from('meeting_random').insert([{
  member_id:winner.member_id,
@@ -208,13 +196,10 @@ await sb.from('meeting_random').insert([{
  fiscal_year:fiscalYear.value
 }])
 
-toast('บันทึกแล้ว')
+Swal.fire('บันทึกแล้ว','','success')
 winner=null
 loadPool()
 }
-
-/* INIT */
-loadYears()
 </script>
 
 </body>
