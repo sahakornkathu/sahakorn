@@ -2,136 +2,169 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<title>สุ่มประชุมใหญ่</title>
+<title>สุ่มสมาชิกประชุมใหญ่</title>
 
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <style>
-.spin{
-  animation: spin 0.2s linear infinite;
+.random-box{
+  background: linear-gradient(135deg,#1e3a8a,#9333ea,#f59e0b);
+  background-size: 400% 400%;
+  animation: bgmove 6s ease infinite;
+  border-radius:16px;
+  padding:30px;
+  text-align:center;
+  box-shadow:0 0 30px rgba(255,255,255,0.3);
 }
-@keyframes spin{
-  from{transform:rotate(0)}
-  to{transform:rotate(360deg)}
+
+@keyframes bgmove{
+  0%{background-position:0% 50%}
+  50%{background-position:100% 50%}
+  100%{background-position:0% 50%}
+}
+
+.spin-text{
+  font-size:32px;
+  font-weight:bold;
+  color:#fff;
+  text-shadow:0 0 10px #fff,0 0 20px #facc15;
+  animation:pulse 0.6s infinite;
+}
+
+@keyframes pulse{
+  0%{transform:scale(1)}
+  50%{transform:scale(1.1)}
+  100%{transform:scale(1)}
+}
+
+.winner{
+  font-size:36px;
+  font-weight:bold;
+  color:#22c55e;
+  text-shadow:0 0 20px #22c55e;
 }
 </style>
 </head>
 
 <body class="bg-slate-900 text-white p-6">
 
-<div class="max-w-xl mx-auto space-y-4">
+<div class="max-w-4xl mx-auto space-y-6">
 
-<h1 class="text-2xl text-center text-yellow-400 font-bold">
-สุ่มผู้มีสิทธิ์ประชุมใหญ่
+<h1 class="text-2xl font-bold text-center text-yellow-400">
+สุ่มสมาชิกเข้าประชุมใหญ่
 </h1>
 
-<select id="fiscal_year" class="w-full p-2 rounded text-black"></select>
+<!-- FILTER -->
+<div class="grid md:grid-cols-3 gap-3">
+<select id="fiscalYear" class="text-black p-2 rounded"></select>
 
-<select id="group" class="w-full p-2 rounded text-black">
+<select id="groupNo" class="text-black p-2 rounded">
 <option value="">เลือกกลุ่ม</option>
 <option>1</option><option>2</option><option>3</option>
 <option>4</option><option>5</option><option>6</option>
 <option>7</option><option>8</option><option>9</option>
 </select>
 
-<input id="quota" type="number" placeholder="จำนวนสิทธิ์"
-class="w-full p-2 rounded text-black">
+<input id="quota" type="number" placeholder="สิทธิ์ของกลุ่ม"
+class="text-black p-2 rounded">
+</div>
 
-<button onclick="randomMember()"
-class="w-full bg-yellow-500 p-2 rounded font-bold">
-สุ่มรายชื่อ
+<button onclick="loadPool()"
+class="w-full bg-blue-600 py-2 rounded">
+โหลดรายชื่อ
 </button>
 
-<div id="result" class="text-center text-xl mt-4"></div>
+<!-- RANDOM BOX -->
+<div class="random-box mt-6">
+<div id="spinName" class="spin-text">🎯 กดสุ่ม</div>
+</div>
+
+<button onclick="randomMember()"
+class="w-full bg-green-600 py-3 rounded mt-4 text-xl">
+สุ่ม
+</button>
 
 </div>
 
 <script>
-const db = supabase.createClient(
-'https://ttottijljxoinptmhgtu.supabase.co',
-'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'
-)
+const SUPABASE_URL='https://ttottijljxoinptmhgtu.supabase.co'
+const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'
+const db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY)
 
-async function loadYears(){
-  const { data } = await db
-  .from('member_meeting')
+let pool=[]
+
+async function loadFiscalYears(){
+  const {data}=await db.from('member_meeting')
   .select('fiscal_year')
+  .order('fiscal_year',{ascending:false})
 
-  const years=[...new Set(data.map(d=>d.fiscal_year))]
-  fiscal_year.innerHTML='<option value="">เลือกปีบัญชี</option>'
-  years.forEach(y=>{
-    fiscal_year.innerHTML+=`<option>${y}</option>`
-  })
+  const years=[...new Set(data.map(x=>x.fiscal_year))]
+  fiscalYear.innerHTML=years.map(y=>`<option>${y}</option>`).join('')
 }
-loadYears()
+loadFiscalYears()
+
+async function loadPool(){
+  if(!groupNo.value) return alert('เลือกกลุ่ม')
+
+  // คนประชุมกลุ่ม
+  const {data:members}=await db.from('member_meeting')
+    .select('*')
+    .eq('meeting_type','ประชุมกลุ่ม')
+    .eq('group',groupNo.value)
+    .eq('fiscal_year',parseInt(fiscalYear.value))
+
+  // คนที่เคยได้สิทธิ์แล้ว
+  const {data:selected}=await db.from('meeting_random')
+    .select('member_id')
+    .eq('fiscal_year',parseInt(fiscalYear.value))
+
+  const usedIds=selected.map(x=>x.member_id)
+
+  pool=members.filter(m=>!usedIds.includes(m.member_id))
+
+  Swal.fire(`เหลือ ${pool.length} คน`)
+}
 
 async function randomMember(){
+  if(pool.length===0) return Swal.fire('ไม่มีรายชื่อ')
 
-if(!fiscal_year.value || !group.value || !quota.value){
-  Swal.fire('กรอกข้อมูลให้ครบ')
-  return
-}
+  const el=spinName
+  el.className='spin-text'
 
-const { data } = await db
-.from('member_meeting')
-.select('*')
-.eq('meeting_type','ประชุมกลุ่ม')
-.eq('group',group.value)
-.eq('fiscal_year',parseInt(fiscal_year.value))
+  let count=0
+  const run=setInterval(()=>{
+    const r=pool[Math.floor(Math.random()*pool.length)]
+    el.innerText=r.first_name+' '+r.last_name
+    count++
+  },100)
 
-if(!data.length){
-  Swal.fire('ไม่มีรายชื่อ')
-  return
-}
+  setTimeout(async()=>{
+    clearInterval(run)
+    const winner=pool[Math.floor(Math.random()*pool.length)]
+    el.className='winner'
+    el.innerText=`🎉 ${winner.first_name} ${winner.last_name}`
 
-const { data:used } = await db
-.from('meeting_random')
-.select('member_id')
-.eq('fiscal_year',parseInt(fiscal_year.value))
+    const confirm=await Swal.fire({
+      title:'บันทึกหรือไม่?',
+      showCancelButton:true
+    })
 
-const usedIds = used.map(u=>u.member_id)
-const pool = data.filter(m=>!usedIds.includes(m.member_id))
+    if(confirm.isConfirmed){
+      await db.from('meeting_random').insert([{
+        member_id:winner.member_id,
+        first_name:winner.first_name,
+        last_name:winner.last_name,
+        group:winner.group,
+        fiscal_year:parseInt(fiscalYear.value)
+      }])
+      loadPool()
+    }
 
-if(!pool.length){
-  Swal.fire('ไม่มีคนเหลือให้สุ่ม')
-  return
-}
-
-result.innerHTML='🎲 กำลังสุ่ม...'
-let i=0
-const interval=setInterval(()=>{
-  const r = pool[Math.floor(Math.random()*pool.length)]
-  result.innerHTML = r.first_name
-  i++
-  if(i>25){
-    clearInterval(interval)
-    confirmSave(r)
-  }
-},200)
-}
-
-async function confirmSave(member){
-
-const ok = await Swal.fire({
-title:'ยืนยัน?',
-text:member.first_name+' '+member.last_name,
-showCancelButton:true
-})
-
-if(!ok.isConfirmed) return
-
-await db.from('meeting_random').insert([{
-member_id:member.member_id,
-first_name:member.first_name,
-last_name:member.last_name,
-group:member.group,
-fiscal_year:member.fiscal_year
-}])
-
-Swal.fire('บันทึกแล้ว')
+  },5000)
 }
 </script>
+
 </body>
 </html>
