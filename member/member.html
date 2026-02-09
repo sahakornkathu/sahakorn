@@ -361,53 +361,75 @@ window.viewMember = async function(id){
     return
   }
 
-  // แปลง key เป็นชื่อไทยคร่าว ๆ
-  const labelMap = {
-    member_id: 'รหัสสมาชิก',
-    title: 'คำนำหน้า',
-    first_name: 'ชื่อ',
-    last_name: 'นามสกุล',
-    group: 'กลุ่ม',
-    phone: 'โทรศัพท์',
-    phone_alt: 'โทรศัพท์สำรอง',
-    member_status: 'สถานะ',
-    join_date: 'วันที่สมัคร',
-    birthday: 'วันเกิด',
-    age: 'อายุ',
-    id_card: 'บัตรประชาชน',
-    house_no: 'บ้านเลขที่',
-    moo: 'หมู่',
-    street: 'ถนน',
-    village: 'หมู่บ้าน',
-    subdistrict: 'ตำบล',
-    district: 'อำเภอ',
-    province: 'จังหวัด',
-    postal_code: 'รหัสไปรษณีย์',
-    marital_status: 'สถานภาพ',
-    spouse_name: 'คู่สมรส',
-    kyot_member: 'สมาชิก กยท.',
-    kyot_member_id: 'เลข กยท.',
-    father_name: 'บิดา',
-    mother_name: 'มารดา'
-  }
+  const show = v => v ? v : '-'
 
-  let html = '<div style="text-align:left;font-size:14px;line-height:1.9">'
+  const personal = `
+  <div class="box-view">
+    <h3>ข้อมูลส่วนตัว</h3>
+    <div>รหัสสมาชิก : ${show(data.member_id)}</div>
+    <div>คำนำหน้า : ${show(data.title)}</div>
+    <div>ชื่อ : ${show(data.first_name)}</div>
+    <div>นามสกุล : ${show(data.last_name)}</div>
+    <div>กลุ่ม : ${show(data.group)}</div>
+    <div>เพศ : ${show(data.gender)}</div>
+    <div>วันเกิด : ${show(data.birthday)}</div>
+    <div>อายุ : ${show(data.age)}</div>
+    <div>สถานะสมาชิก : ${show(data.member_status)}</div>
+    <div>วันที่สมัคร : ${show(data.join_date)}</div>
+  </div>`
 
-  Object.keys(data).forEach(key=>{
-    if(key === 'lat' || key === 'lng') return // ไม่ต้องโชว์ GPS ก็ได้
+  const address = `
+  <div class="box-view">
+    <h3>ที่อยู่</h3>
+    <div>บ้านเลขที่ : ${show(data.house_no)}</div>
+    <div>หมู่ : ${show(data.moo)}</div>
+    <div>ถนน : ${show(data.street)}</div>
+    <div>หมู่บ้าน : ${show(data.village)}</div>
+    <div>ตำบล : ${show(data.subdistrict)}</div>
+    <div>อำเภอ : ${show(data.district)}</div>
+    <div>จังหวัด : ${show(data.province)}</div>
+    <div>รหัสไปรษณีย์ : ${show(data.postal_code)}</div>
+    <div>โทรศัพท์ : ${show(data.phone)}</div>
+    <div>โทรศัพท์สำรอง : ${show(data.phone_alt)}</div>
+  </div>`
 
-    const label = labelMap[key] || key
-    const value = data[key] || '-'
-
-    html += `<b>${label} :</b> ${value}<br>`
-  })
-
-  html += '</div>'
+  const family = `
+  <div class="box-view">
+    <h3>ครอบครัว / อื่น ๆ</h3>
+    <div>บัตรประชาชน : ${show(data.id_card)}</div>
+    <div>สถานภาพสมรส : ${show(data.marital_status)}</div>
+    <div>ชื่อคู่สมรส : ${show(data.spouse_name)}</div>
+    <div>สมาชิก กยท. : ${show(data.kyot_member)}</div>
+    <div>เลข กยท. : ${show(data.kyot_member_id)}</div>
+    <div>ชื่อบิดา : ${show(data.father_name)}</div>
+    <div>ชื่อมารดา : ${show(data.mother_name)}</div>
+  </div>`
 
   Swal.fire({
     title: 'รายละเอียดสมาชิก',
-    width: 650,
-    html: html,
+    width: 800,
+    html: `
+      <style>
+        .box-view{
+          border:1px solid #ddd;
+          border-radius:10px;
+          padding:10px;
+          margin-bottom:10px;
+          text-align:left;
+          background:#f9fafb;
+          font-size:14px;
+          line-height:1.8;
+        }
+        .box-view h3{
+          font-weight:bold;
+          margin-bottom:6px;
+          color:#2563eb;
+        }
+      </style>
+      ${personal}
+      ${address}
+      ${family}
+    `,
     confirmButtonText: 'ปิด'
   })
 }
