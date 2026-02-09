@@ -2,119 +2,187 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<title>สุ่มสมาชิกประชุมใหญ่</title>
+<title>สุ่มสมาชิกเข้าประชุมใหญ่</title>
 
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<style>
+.roll{
+  font-size:28px;
+  font-weight:bold;
+  animation:pulse .4s infinite;
+}
+@keyframes pulse{
+  0%{transform:scale(1)}
+  50%{transform:scale(1.1)}
+  100%{transform:scale(1)}
+}
+</style>
 </head>
 
 <body class="bg-slate-900 text-white p-6">
 
 <div class="max-w-3xl mx-auto space-y-6">
 
-<h1 class="text-2xl text-center text-yellow-400 font-bold">
-🎯 สุ่มสมาชิกประชุมใหญ่
+<h1 class="text-2xl font-bold text-center text-yellow-400">
+สุ่มสมาชิกเข้าประชุมใหญ่
 </h1>
 
 <div class="bg-slate-800 p-6 rounded-xl space-y-4">
 
 <select id="group" class="w-full p-2 text-black rounded">
 <option value="">เลือกกลุ่ม</option>
-<option>1</option><option>2</option><option>3</option>
-<option>4</option><option>5</option><option>6</option>
-<option>7</option><option>8</option><option>9</option>
+<option value="1">กลุ่ม 1</option>
+<option value="2">กลุ่ม 2</option>
+<option value="3">กลุ่ม 3</option>
+<option value="4">กลุ่ม 4</option>
+<option value="5">กลุ่ม 5</option>
+<option value="6">กลุ่ม 6</option>
+<option value="7">กลุ่ม 7</option>
+<option value="8">กลุ่ม 8</option>
+<option value="9">กลุ่ม 9</option>
 </select>
 
 <select id="year" class="w-full p-2 text-black rounded"></select>
 
-<button onclick="randomMember()"
-class="w-full bg-yellow-500 text-black py-2 rounded font-bold">
-สุ่ม
+<input id="count" type="number" min="1"
+ class="w-full p-2 text-black rounded"
+ placeholder="จำนวนคนที่ต้องการสุ่ม">
+
+<button onclick="randomMembers()"
+ class="w-full bg-yellow-500 py-2 rounded text-black font-bold">
+สุ่มรายชื่อ
 </button>
 
-<div id="result" class="text-center text-xl mt-4"></div>
+<div id="result" class="text-center text-xl"></div>
 
 </div>
+
+<div id="selectedList"
+ class="bg-slate-800 p-4 rounded-xl space-y-2"></div>
+
 </div>
 
 <script>
-const SUPABASE_URL = 'https://ttottijljxoinptmhgtu.supabase.co'
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'
-const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
+const db = supabase.createClient(
+'https://ttottijljxoinptmhgtu.supabase.co',
+'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'
+)
 
-/* ===== LOAD YEAR ===== */
-async function loadYear(){
-  const { data } = await db
+const yearSelect = document.getElementById('year')
+const result = document.getElementById('result')
+const selectedList = document.getElementById('selectedList')
+
+/* ===== LOAD YEARS ===== */
+async function loadYears(){
+  const {data} = await db
     .from('member_meeting')
     .select('fiscal_year')
+  const years = [...new Set(data.map(d=>d.fiscal_year))]
+  yearSelect.innerHTML = '<option value="">เลือกปีบัญชี</option>'
+  years.sort((a,b)=>b-a).forEach(y=>{
+    yearSelect.innerHTML += `<option>${y}</option>`
+  })
+}
+loadYears()
 
-  const years = [...new Set((data||[]).map(d=>d.fiscal_year))]
-  year.innerHTML = years.map(y=>`<option>${y}</option>`).join('')
+/* ===== ANIMATION ===== */
+function rollAnimation(list){
+  return new Promise(resolve=>{
+    let speed=80, elapsed=0, rolling
+
+    function start(){
+      rolling=setInterval(()=>{
+        const r=list[Math.floor(Math.random()*list.length)]
+        result.innerHTML=`<div class="roll">${r.first_name}</div>`
+      },speed)
+    }
+
+    start()
+
+    const t=setInterval(()=>{
+      elapsed+=500
+      if(elapsed>2000) speed=150
+      if(elapsed>4000) speed=300
+      clearInterval(rolling)
+      start()
+
+      if(elapsed>=5000){
+        clearInterval(t)
+        clearInterval(rolling)
+        resolve()
+      }
+    },500)
+  })
 }
 
 /* ===== RANDOM ===== */
-async function randomMember(){
+async function randomMembers(){
 
-  if(!group.value || !year.value){
-    Swal.fire('กรุณาเลือกกลุ่มและปีบัญชี')
+  const group = document.getElementById('group').value
+  const year = yearSelect.value
+  const count = parseInt(document.getElementById('count').value)
+
+  if(!group || !year || !count){
+    Swal.fire('กรอกข้อมูลให้ครบ')
     return
   }
 
-  /* รายชื่อที่มีสิทธิ์ */
-  const { data: members } = await db
+  const {data:members} = await db
     .from('member_meeting')
     .select('*')
     .eq('meeting_type','ประชุมกลุ่ม')
-    .eq('fiscal_year',year.value)
-    .eq('group',group.value)
+    .eq('fiscal_year',year)
+    .eq('group',group)
 
-  if(!members || members.length === 0){
-    Swal.fire('ไม่พบรายชื่อ')
-    return
-  }
-
-  /* คนที่เคยสุ่มแล้ว */
-  const { data: used } = await db
+  const {data:used} = await db
     .from('member_random')
     .select('member_id')
-    .eq('fiscal_year',year.value)
-    .eq('group',group.value)
+    .eq('fiscal_year',year)
+    .eq('group',group)
 
-  const usedIds = (used || []).map(u=>u.member_id)
+  const usedIds=(used||[]).map(u=>u.member_id)
+  const available=members.filter(m=>!usedIds.includes(m.member_id))
 
-  const available = members.filter(m=>!usedIds.includes(m.member_id))
-
-  if(available.length === 0){
-    Swal.fire('กลุ่มนี้ถูกสุ่มครบแล้ว')
+  if(available.length < count){
+    Swal.fire('จำนวนไม่พอ')
     return
   }
 
-  const pick = available[Math.floor(Math.random()*available.length)]
+  await rollAnimation(available)
+
+  const shuffled = available.sort(()=>0.5-Math.random())
+  const picks = shuffled.slice(0,count)
 
   const confirm = await Swal.fire({
     title:'ยืนยันผลสุ่ม?',
-    html:`${pick.first_name} ${pick.last_name}`,
+    html:picks.map(p=>p.first_name).join('<br>'),
     showCancelButton:true
   })
 
   if(!confirm.isConfirmed) return
 
-  await db.from('member_random').insert([{
-    member_id:pick.member_id,
-    title:pick.title,
-    first_name:pick.first_name,
-    last_name:pick.last_name,
-    group:pick.group,
-    fiscal_year:pick.fiscal_year
-  }])
+  for(const p of picks){
+    await db.from('member_random').insert([{
+      member_id:p.member_id,
+      title:p.title,
+      first_name:p.first_name,
+      last_name:p.last_name,
+      group:p.group,
+      fiscal_year:p.fiscal_year
+    }])
+  }
 
-  result.innerHTML =
-  `🎉 ${pick.first_name} ${pick.last_name}`
+  result.innerHTML='<div class="text-green-400">บันทึกสำเร็จ</div>'
+
+  selectedList.innerHTML='<h3 class="font-bold">ผู้ได้รับเลือก</h3>'
+  picks.forEach(p=>{
+    selectedList.innerHTML+=
+    `<div>${p.member_id} ${p.first_name} ${p.last_name}</div>`
+  })
 }
-
-loadYear()
 </script>
-
 </body>
 </html>
