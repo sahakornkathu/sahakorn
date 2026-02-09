@@ -177,7 +177,28 @@ form.onsubmit = async e=>{
     fiscal_year:parseInt(fiscal_year.value)
   }
 
-  const { error } = await db.from('member_meeting').insert([payload])
+  // ===== CHECK DUPLICATE =====
+  const { data: exists } = await db
+    .from('member_meeting')
+    .select('id')
+    .eq('member_id', payload.member_id)
+    .eq('fiscal_year', payload.fiscal_year)
+    .eq('meeting_type', payload.meeting_type)
+    .maybeSingle()
+
+  if(exists){
+    Swal.fire(
+      'ซ้ำ',
+      `สมาชิกนี้ลง ${payload.meeting_type} ปีบัญชี ${payload.fiscal_year} แล้ว`,
+      'warning'
+    )
+    return
+  }
+
+  // ===== INSERT =====
+  const { error } = await db
+    .from('member_meeting')
+    .insert([payload])
 
   if(error){
     Swal.fire(error.message,'','error')
@@ -194,9 +215,16 @@ form.onsubmit = async e=>{
   meeting_date.value = today
   fiscal_year.value = getFiscalYear(today)
 
+  // เคลียร์ชื่อสมาชิก
+  title.value = ''
+  first_name.value = ''
+  last_name.value = ''
+  group.value = ''
+
   // โหลดตารางใหม่
   load()
 }
+
 
 
 /* ===== FILTER ===== */
