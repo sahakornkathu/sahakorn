@@ -2,170 +2,118 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<title>สุ่มผู้มีสิทธิ์ประชุมใหญ่</title>
+<title>สุ่มสมาชิกประชุมใหญ่</title>
 
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-<style>
-.input{
-  width:100%;
-  background:#020617;
-  border:1px solid #334155;
-  padding:8px;
-  border-radius:8px;
-  color:#fff;
-}
-.btn{padding:8px 18px;border-radius:10px;font-weight:500;}
-.blue{background:#2563eb}
-.green{background:#16a34a}
-</style>
 </head>
 
-<body class="bg-slate-900 text-slate-100 p-6">
+<body class="bg-slate-900 text-white p-6">
 
 <div class="max-w-3xl mx-auto space-y-6">
 
-<h1 class="text-2xl font-bold text-center text-yellow-400">
-สุ่มผู้มีสิทธิ์ประชุมใหญ่
+<h1 class="text-2xl text-center text-yellow-400 font-bold">
+🎯 สุ่มสมาชิกประชุมใหญ่
 </h1>
 
-<!-- ===== FILTER ===== -->
-<div class="bg-slate-800 p-6 rounded-xl border border-slate-700 space-y-4">
+<div class="bg-slate-800 p-6 rounded-xl space-y-4">
 
-<div>
-<label>กลุ่ม</label>
-<select id="group" class="input">
+<select id="group" class="w-full p-2 text-black rounded">
 <option value="">เลือกกลุ่ม</option>
-<option value="1">กลุ่ม 1</option>
-<option value="2">กลุ่ม 2</option>
-<option value="3">กลุ่ม 3</option>
-<option value="4">กลุ่ม 4</option>
-<option value="5">กลุ่ม 5</option>
-<option value="6">กลุ่ม 6</option>
-<option value="7">กลุ่ม 7</option>
-<option value="8">กลุ่ม 8</option>
-<option value="9">กลุ่ม 9</option>
+<option>1</option><option>2</option><option>3</option>
+<option>4</option><option>5</option><option>6</option>
+<option>7</option><option>8</option><option>9</option>
 </select>
-</div>
 
-<div>
-<label>ปีบัญชี (พ.ศ.)</label>
-<select id="year" class="input">
-<option value="">เลือกปีบัญชี</option>
-</select>
-</div>
+<select id="year" class="w-full p-2 text-black rounded"></select>
 
-<button onclick="randomMember()" class="btn blue w-full">
-สุ่มรายชื่อ
+<button onclick="randomMember()"
+class="w-full bg-yellow-500 text-black py-2 rounded font-bold">
+สุ่ม
 </button>
 
-</div>
+<div id="result" class="text-center text-xl mt-4"></div>
 
-<!-- RESULT -->
-<div id="resultBox" class="hidden bg-slate-800 p-6 rounded-xl text-center space-y-2">
-<div id="r_name" class="text-xl font-bold"></div>
-<div id="r_group"></div>
-<button onclick="confirmSave()" class="btn green w-full">
-ยืนยันบันทึก
-</button>
 </div>
-
 </div>
 
 <script>
-/* ===== CONFIG ===== */
 const SUPABASE_URL = 'https://ttottijljxoinptmhgtu.supabase.co'
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'
 const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
 
-let selectedMember = null
-
 /* ===== LOAD YEAR ===== */
-async function loadFiscalYears(){
-  const { data, error } = await db
+async function loadYear(){
+  const { data } = await db
     .from('member_meeting')
     .select('fiscal_year')
-    .eq('meeting_type','ประชุมกลุ่ม')
-    .order('fiscal_year',{ascending:false})
 
-  if(error) return console.log(error)
-
-  const years = [...new Set(data.map(d=>d.fiscal_year))]
-  year.innerHTML = '<option value="">เลือกปีบัญชี</option>'
-
-  years.forEach(y=>{
-    year.innerHTML += `<option value="${y}">${y}</option>`
-  })
+  const years = [...new Set((data||[]).map(d=>d.fiscal_year))]
+  year.innerHTML = years.map(y=>`<option>${y}</option>`).join('')
 }
 
 /* ===== RANDOM ===== */
 async function randomMember(){
+
   if(!group.value || !year.value){
     Swal.fire('กรุณาเลือกกลุ่มและปีบัญชี')
     return
   }
 
-  // ดึงรายชื่อประชุมกลุ่ม
-  const { data } = await db
+  /* รายชื่อที่มีสิทธิ์ */
+  const { data: members } = await db
     .from('member_meeting')
     .select('*')
     .eq('meeting_type','ประชุมกลุ่ม')
-    .eq('fiscal_year', year.value)
-    .eq('group', group.value)
+    .eq('fiscal_year',year.value)
+    .eq('group',group.value)
 
-  if(!data.length){
-    Swal.fire('ไม่มีผู้เข้าประชุมกลุ่ม')
+  if(!members || members.length === 0){
+    Swal.fire('ไม่พบรายชื่อ')
     return
   }
 
-  // ดึงคนที่ถูกสุ่มแล้ว
+  /* คนที่เคยสุ่มแล้ว */
   const { data: used } = await db
     .from('member_random')
     .select('member_id')
-    .eq('fiscal_year', year.value)
-    .eq('group', group.value)
+    .eq('fiscal_year',year.value)
+    .eq('group',group.value)
 
-  const usedIds = used.map(u=>u.member_id)
-  const available = data.filter(m=>!usedIds.includes(m.member_id))
+  const usedIds = (used || []).map(u=>u.member_id)
 
-  if(!available.length){
-    Swal.fire('สุ่มครบแล้ว')
+  const available = members.filter(m=>!usedIds.includes(m.member_id))
+
+  if(available.length === 0){
+    Swal.fire('กลุ่มนี้ถูกสุ่มครบแล้ว')
     return
   }
 
-  selectedMember = available[Math.floor(Math.random()*available.length)]
+  const pick = available[Math.floor(Math.random()*available.length)]
 
-  r_name.innerText = `${selectedMember.title}${selectedMember.first_name} ${selectedMember.last_name}`
-  r_group.innerText = `กลุ่ม ${selectedMember.group}`
-  resultBox.classList.remove('hidden')
-}
-
-/* ===== SAVE ===== */
-async function confirmSave(){
-  const ok = await Swal.fire({
-    title:'บันทึกคนนี้?',
+  const confirm = await Swal.fire({
+    title:'ยืนยันผลสุ่ม?',
+    html:`${pick.first_name} ${pick.last_name}`,
     showCancelButton:true
   })
 
-  if(!ok.isConfirmed) return
+  if(!confirm.isConfirmed) return
 
   await db.from('member_random').insert([{
-    member_id:selectedMember.member_id,
-    title:selectedMember.title,
-    first_name:selectedMember.first_name,
-    last_name:selectedMember.last_name,
-    group:selectedMember.group,
-    fiscal_year:selectedMember.fiscal_year
+    member_id:pick.member_id,
+    title:pick.title,
+    first_name:pick.first_name,
+    last_name:pick.last_name,
+    group:pick.group,
+    fiscal_year:pick.fiscal_year
   }])
 
-  Swal.fire('บันทึกแล้ว','','success')
-  resultBox.classList.add('hidden')
+  result.innerHTML =
+  `🎉 ${pick.first_name} ${pick.last_name}`
 }
 
-/* INIT */
-loadFiscalYears()
+loadYear()
 </script>
 
 </body>
