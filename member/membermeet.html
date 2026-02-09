@@ -185,8 +185,19 @@ form.onsubmit = async e=>{
   }
 
   Swal.fire('บันทึกสำเร็จ','','success')
+
+  // ===== ล้างฟอร์ม =====
+  form.reset()
+
+  // ตั้งวันที่ + ปีบัญชีใหม่
+  const today = new Date().toISOString().split('T')[0]
+  meeting_date.value = today
+  fiscal_year.value = getFiscalYear(today)
+
+  // โหลดตารางใหม่
   load()
 }
+
 
 /* ===== FILTER ===== */
 const fMemberId = document.getElementById('f_member_id')
