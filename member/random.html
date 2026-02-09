@@ -2,21 +2,19 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<title>สุ่มสมาชิกประชุมใหญ่</title>
+<title>สุ่มประชุมใหญ่</title>
 
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <style>
-.slot{
-  font-size:28px;
-  font-weight:bold;
-  text-align:center;
-  padding:20px;
-  border-radius:12px;
-  background:#020617;
-  border:2px solid #38bdf8;
+.spin{
+  animation: spin 0.2s linear infinite;
+}
+@keyframes spin{
+  from{transform:rotate(0)}
+  to{transform:rotate(360deg)}
 }
 </style>
 </head>
@@ -25,137 +23,115 @@
 
 <div class="max-w-xl mx-auto space-y-4">
 
-<h1 class="text-2xl font-bold text-center text-sky-400">
-สุ่มสมาชิกประชุมใหญ่
+<h1 class="text-2xl text-center text-yellow-400 font-bold">
+สุ่มผู้มีสิทธิ์ประชุมใหญ่
 </h1>
-
-<select id="group_no" class="w-full p-2 rounded text-black">
-  <option value="">เลือกกลุ่ม</option>
-  <option value="1">กลุ่ม 1</option>
-  <option value="2">กลุ่ม 2</option>
-  <option value="3">กลุ่ม 3</option>
-  <option value="4">กลุ่ม 4</option>
-  <option value="5">กลุ่ม 5</option>
-  <option value="6">กลุ่ม 6</option>
-  <option value="7">กลุ่ม 7</option>
-  <option value="8">กลุ่ม 8</option>
-  <option value="9">กลุ่ม 9</option>
-</select>
-
 
 <select id="fiscal_year" class="w-full p-2 rounded text-black"></select>
 
-<input id="quota" type="number"
-placeholder="จำนวนสิทธิ์ของกลุ่ม"
+<select id="group" class="w-full p-2 rounded text-black">
+<option value="">เลือกกลุ่ม</option>
+<option>1</option><option>2</option><option>3</option>
+<option>4</option><option>5</option><option>6</option>
+<option>7</option><option>8</option><option>9</option>
+</select>
+
+<input id="quota" type="number" placeholder="จำนวนสิทธิ์"
 class="w-full p-2 rounded text-black">
 
 <button onclick="randomMember()"
-class="w-full bg-green-600 py-2 rounded">
-สุ่ม
+class="w-full bg-yellow-500 p-2 rounded font-bold">
+สุ่มรายชื่อ
 </button>
 
-<div id="slot" class="slot">-</div>
+<div id="result" class="text-center text-xl mt-4"></div>
 
 </div>
 
 <script>
-const SUPABASE_URL='https://ttottijljxoinptmhgtu.supabase.co'
-const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'
-const db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY)
+const db = supabase.createClient(
+'https://ttottijljxoinptmhgtu.supabase.co',
+'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'
+)
 
-function loadYears(){
-  const y=new Date().getFullYear()+543
-  for(let i=y;i>=y-5;i--){
-    fiscal_year.innerHTML+=`<option>${i}</option>`
-  }
+async function loadYears(){
+  const { data } = await db
+  .from('member_meeting')
+  .select('fiscal_year')
+
+  const years=[...new Set(data.map(d=>d.fiscal_year))]
+  fiscal_year.innerHTML='<option value="">เลือกปีบัญชี</option>'
+  years.forEach(y=>{
+    fiscal_year.innerHTML+=`<option>${y}</option>`
+  })
 }
 loadYears()
 
 async function randomMember(){
 
-  const group=group_no.value
-  const year=parseInt(fiscal_year.value)
-  const quotaVal=parseInt(quota.value)
-
-  if(!group||!year||!quotaVal){
-    Swal.fire('กรอกข้อมูลให้ครบ')
-    return
-  }
-
-  // นับโควต้า
-  const { count } = await db
-    .from('member_random')
-    .select('*',{count:'exact',head:true})
-    .eq('group_no',group)
-    .eq('fiscal_year',year)
-
-  if(count>=quotaVal){
-    Swal.fire('โควต้าเต็มแล้ว')
-    return
-  }
-
-  // ดึงสมาชิกที่มาประชุมกลุ่ม
-  const { data } = await db
-    .from('member_meeting')
-    .select('*')
-    .eq('meeting_type','ประชุมกลุ่ม')
-    .eq('group_no',group)
-    .eq('fiscal_year',year)
-
-  if(!data||!data.length){
-    Swal.fire('ไม่มีรายชื่อ')
-    return
-  }
-
-  // กันซ้ำ
-  const { data: used } = await db
-    .from('member_random')
-    .select('member_id')
-    .eq('fiscal_year',year)
-
-  const usedIds = used.map(x=>x.member_id)
-  const pool = data.filter(x=>!usedIds.includes(x.member_id))
-
-  if(!pool.length){
-    Swal.fire('ไม่มีคนให้สุ่ม')
-    return
-  }
-
-  // ===== ANIMATION 5 วิ =====
-  let t=0
-  const anim=setInterval(()=>{
-    const r=pool[Math.floor(Math.random()*pool.length)]
-    slot.innerText=r.member_id+' '+r.first_name
-    t++
-    if(t>10){
-      clearInterval(anim)
-      finishRandom(pool)
-    }
-  },500)
+if(!fiscal_year.value || !group.value || !quota.value){
+  Swal.fire('กรอกข้อมูลให้ครบ')
+  return
 }
 
-async function finishRandom(pool){
-  const r=pool[Math.floor(Math.random()*pool.length)]
+const { data } = await db
+.from('member_meeting')
+.select('*')
+.eq('meeting_type','ประชุมกลุ่ม')
+.eq('group',group.value)
+.eq('fiscal_year',parseInt(fiscal_year.value))
 
-  const ok=await Swal.fire({
-    title:'ยืนยัน?',
-    text:r.first_name,
-    showCancelButton:true
-  })
+if(!data.length){
+  Swal.fire('ไม่มีรายชื่อ')
+  return
+}
 
-  if(!ok.isConfirmed)return
+const { data:used } = await db
+.from('meeting_random')
+.select('member_id')
+.eq('fiscal_year',parseInt(fiscal_year.value))
 
-  await db.from('member_random').insert([{
-    member_id:r.member_id,
-    first_name:r.first_name,
-    last_name:r.last_name,
-    group_no:r.group_no,
-    fiscal_year:r.fiscal_year
-  }])
+const usedIds = used.map(u=>u.member_id)
+const pool = data.filter(m=>!usedIds.includes(m.member_id))
 
-  Swal.fire('บันทึกแล้ว')
+if(!pool.length){
+  Swal.fire('ไม่มีคนเหลือให้สุ่ม')
+  return
+}
+
+result.innerHTML='🎲 กำลังสุ่ม...'
+let i=0
+const interval=setInterval(()=>{
+  const r = pool[Math.floor(Math.random()*pool.length)]
+  result.innerHTML = r.first_name
+  i++
+  if(i>25){
+    clearInterval(interval)
+    confirmSave(r)
+  }
+},200)
+}
+
+async function confirmSave(member){
+
+const ok = await Swal.fire({
+title:'ยืนยัน?',
+text:member.first_name+' '+member.last_name,
+showCancelButton:true
+})
+
+if(!ok.isConfirmed) return
+
+await db.from('meeting_random').insert([{
+member_id:member.member_id,
+first_name:member.first_name,
+last_name:member.last_name,
+group:member.group,
+fiscal_year:member.fiscal_year
+}])
+
+Swal.fire('บันทึกแล้ว')
 }
 </script>
-
 </body>
 </html>
