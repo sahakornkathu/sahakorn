@@ -303,7 +303,12 @@ async function loadMembers(){
     rows.innerHTML+=`
 <tr class="border-b hover:bg-blue-50">
 <td>${m.member_id}</td>
-<td>${m.first_name||''} ${m.last_name||''}</td>
+<td>
+  <span class="link" onclick="viewMember(${m.member_id})">
+    ${m.first_name||''} ${m.last_name||''}
+  </span>
+</td>
+
 <td>${m.group||''}</td>
 <td>${m.phone||''}</td>
 <td>${m.gender||''}</td>
@@ -341,6 +346,43 @@ window.deleteMember = async id=>{
   editingMemberId = null
   loadMembers()
   loadSummary()
+}
+  // กดชื่อดูรายละเอียดสมาชิก
+window.viewMember = async function(id){
+
+  const { data, error } = await db
+    .from('members')
+    .select('*')
+    .eq('member_id', id)
+    .single()
+
+  if(error){
+    Swal.fire('ผิดพลาด', error.message, 'error')
+    return
+  }
+
+  Swal.fire({
+    title: 'รายละเอียดสมาชิก',
+    width: 600,
+    html: `
+      <div style="text-align:left;font-size:14px;line-height:1.8">
+        <b>เลขสมาชิก:</b> ${data.member_id}<br>
+        <b>ชื่อ:</b> ${data.title||''}${data.first_name||''} ${data.last_name||''}<br>
+        <b>กลุ่ม:</b> ${data.group||'-'}<br>
+        <b>โทร:</b> ${data.phone||'-'}<br>
+        <b>สถานะ:</b> ${data.member_status||'-'}<br>
+        <hr>
+        <b>ที่อยู่:</b><br>
+        ${data.house_no||''} หมู่ ${data.moo||''} ${data.village||''}<br>
+        ${data.subdistrict||''} ${data.district||''} ${data.province||''}<br>
+        <hr>
+        <b>บัตรประชาชน:</b> ${data.id_card||'-'}<br>
+        <b>วันเกิด:</b> ${data.birthday||'-'}<br>
+        <b>อายุ:</b> ${data.age||'-'}<br>
+      </div>
+    `,
+    confirmButtonText: 'ปิด'
+  })
 }
 
 
