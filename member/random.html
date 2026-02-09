@@ -2,167 +2,169 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<title>สุ่มสมาชิกประชุมใหญ่</title>
+<title>สุ่มประชุมใหญ่</title>
 
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<link rel="stylesheet"
+ href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
 
 <style>
-.random-box{
-  background: linear-gradient(135deg,#1e3a8a,#9333ea,#f59e0b);
-  background-size: 400% 400%;
-  animation: bgmove 6s ease infinite;
-  border-radius:16px;
-  padding:30px;
-  text-align:center;
-  box-shadow:0 0 30px rgba(255,255,255,0.3);
-}
-
-@keyframes bgmove{
-  0%{background-position:0% 50%}
-  50%{background-position:100% 50%}
-  100%{background-position:0% 50%}
-}
-
-.spin-text{
+.spinBox{
   font-size:32px;
   font-weight:bold;
-  color:#fff;
-  text-shadow:0 0 10px #fff,0 0 20px #facc15;
-  animation:pulse 0.6s infinite;
+  height:120px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:16px;
+  background:linear-gradient(45deg,#0ea5e9,#9333ea);
+  color:white;
+  box-shadow:0 0 20px #38bdf8;
 }
-
-@keyframes pulse{
-  0%{transform:scale(1)}
-  50%{transform:scale(1.1)}
-  100%{transform:scale(1)}
+.glow{
+  animation: glow 1s infinite alternate;
 }
-
-.winner{
-  font-size:36px;
-  font-weight:bold;
-  color:#22c55e;
-  text-shadow:0 0 20px #22c55e;
+@keyframes glow{
+  from{box-shadow:0 0 10px #fff}
+  to{box-shadow:0 0 30px #facc15}
 }
 </style>
 </head>
 
 <body class="bg-slate-900 text-white p-6">
 
-<div class="max-w-4xl mx-auto space-y-6">
+<div class="max-w-3xl mx-auto space-y-6">
 
-<h1 class="text-2xl font-bold text-center text-yellow-400">
-สุ่มสมาชิกเข้าประชุมใหญ่
+<h1 class="text-2xl text-center text-yellow-400 font-bold">
+สุ่มสิทธิ์ประชุมใหญ่
 </h1>
 
-<!-- FILTER -->
 <div class="grid md:grid-cols-3 gap-3">
-<select id="fiscalYear" class="text-black p-2 rounded"></select>
-
-<select id="groupNo" class="text-black p-2 rounded">
+<select id="groupSel" class="text-black p-2 rounded">
 <option value="">เลือกกลุ่ม</option>
 <option>1</option><option>2</option><option>3</option>
 <option>4</option><option>5</option><option>6</option>
 <option>7</option><option>8</option><option>9</option>
 </select>
 
-<input id="quota" type="number" placeholder="สิทธิ์ของกลุ่ม"
-class="text-black p-2 rounded">
+<input id="fiscalYear" class="text-black p-2 rounded"
+ placeholder="ปีบัญชี พ.ศ.">
+
+<input id="quota" class="text-black p-2 rounded"
+ placeholder="สิทธิ์ทั้งหมด">
 </div>
 
 <button onclick="loadPool()"
-class="w-full bg-blue-600 py-2 rounded">
+ class="w-full bg-blue-600 p-3 rounded">
 โหลดรายชื่อ
 </button>
 
-<!-- RANDOM BOX -->
-<div class="random-box mt-6">
-<div id="spinName" class="spin-text">🎯 กดสุ่ม</div>
+<div id="spinBox" class="spinBox">
+ยังไม่ได้สุ่ม
 </div>
 
+<div class="grid md:grid-cols-2 gap-3">
 <button onclick="randomMember()"
-class="w-full bg-green-600 py-3 rounded mt-4 text-xl">
+ class="bg-purple-600 p-3 rounded">
 สุ่ม
 </button>
+
+<button onclick="saveWinner()"
+ class="bg-green-600 p-3 rounded">
+บันทึก
+</button>
+</div>
+
+<div id="remainBox" class="text-center text-sky-400"></div>
 
 </div>
 
 <script>
-const SUPABASE_URL='https://ttottijljxoinptmhgtu.supabase.co'
-const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'
-const db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY)
+const sb = supabase.createClient(
+'https://ttottijljxoinptmhgtu.supabase.co',
+'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'
+)
 
 let pool=[]
+let winner=null
 
-async function loadFiscalYears(){
-  const {data}=await db.from('member_meeting')
-  .select('fiscal_year')
-  .order('fiscal_year',{ascending:false})
-
-  const years=[...new Set(data.map(x=>x.fiscal_year))]
-  fiscalYear.innerHTML=years.map(y=>`<option>${y}</option>`).join('')
+function toast(msg){
+Swal.fire({
+ toast:true,
+ position:'top-end',
+ icon:'success',
+ title:msg,
+ showConfirmButton:false,
+ timer:2000
+})
 }
-loadFiscalYears()
 
 async function loadPool(){
-  if(!groupNo.value) return alert('เลือกกลุ่ม')
+const g=groupSel.value
+const fy=fiscalYear.value
+if(!g||!fy) return alert('เลือกกลุ่ม/ปี')
 
-  // คนประชุมกลุ่ม
-  const {data:members}=await db.from('member_meeting')
-    .select('*')
-    .eq('meeting_type','ประชุมกลุ่ม')
-    .eq('group',groupNo.value)
-    .eq('fiscal_year',parseInt(fiscalYear.value))
+const {data}=await sb.from('member_meeting')
+.select('*')
+.eq('meeting_type','ประชุมกลุ่ม')
+.eq('group',g)
+.eq('fiscal_year',fy)
 
-  // คนที่เคยได้สิทธิ์แล้ว
-  const {data:selected}=await db.from('meeting_random')
-    .select('member_id')
-    .eq('fiscal_year',parseInt(fiscalYear.value))
+const {data:used}=await sb.from('meeting_random')
+.select('member_id')
+.eq('fiscal_year',fy)
 
-  const usedIds=selected.map(x=>x.member_id)
+const usedIds=used.map(u=>u.member_id)
+pool=data.filter(m=>!usedIds.includes(m.member_id))
 
-  pool=members.filter(m=>!usedIds.includes(m.member_id))
-
-  Swal.fire(`เหลือ ${pool.length} คน`)
+remainBox.innerText=`เหลือ ${pool.length} คน`
+toast('โหลดสำเร็จ')
 }
 
 async function randomMember(){
-  if(pool.length===0) return Swal.fire('ไม่มีรายชื่อ')
+if(pool.length==0) return alert('ไม่มีคน')
 
-  const el=spinName
-  el.className='spin-text'
+let box=document.getElementById('spinBox')
+box.classList.remove('glow')
 
-  let count=0
-  const run=setInterval(()=>{
-    const r=pool[Math.floor(Math.random()*pool.length)]
-    el.innerText=r.first_name+' '+r.last_name
-    count++
-  },100)
+let t=0
+const iv=setInterval(()=>{
+ const r=pool[Math.floor(Math.random()*pool.length)]
+ box.innerText=r.member_id+' '+r.first_name
+ t++
+ if(t>20){
+   clearInterval(iv)
+   winner=r
+   box.innerText=r.member_id+' '+r.first_name
+   box.classList.add('glow')
+ }
+},200)
+}
 
-  setTimeout(async()=>{
-    clearInterval(run)
-    const winner=pool[Math.floor(Math.random()*pool.length)]
-    el.className='winner'
-    el.innerText=`🎉 ${winner.first_name} ${winner.last_name}`
+async function saveWinner(){
+if(!winner) return
 
-    const confirm=await Swal.fire({
-      title:'บันทึกหรือไม่?',
-      showCancelButton:true
-    })
+const confirm=await Swal.fire({
+ title:'บันทึกหรือไม่?',
+ showCancelButton:true,
+ backdrop:false
+})
 
-    if(confirm.isConfirmed){
-      await db.from('meeting_random').insert([{
-        member_id:winner.member_id,
-        first_name:winner.first_name,
-        last_name:winner.last_name,
-        group:winner.group,
-        fiscal_year:parseInt(fiscalYear.value)
-      }])
-      loadPool()
-    }
+if(!confirm.isConfirmed) return
 
-  },5000)
+await sb.from('meeting_random').insert([{
+ member_id:winner.member_id,
+ first_name:winner.first_name,
+ last_name:winner.last_name,
+ group:winner.group,
+ fiscal_year:fiscalYear.value
+}])
+
+toast('บันทึกแล้ว')
+winner=null
+loadPool()
 }
 </script>
 
