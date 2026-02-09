@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8" />
-  <title>Admin - จัดการกรรมการ</title>
+<meta charset="UTF-8">
+<title>Admin - จัดการกรรมการ</title>
 
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
 <body class="bg-gray-100 min-h-screen p-6">
@@ -21,15 +21,15 @@
 
     <select id="searchPosition" class="border px-3 py-2 rounded">
       <option value="">ทุกตำแหน่ง</option>
-      <option value="1">กรรมการกลุ่มที่ 1</option>
-      <option value="2">กรรมการกลุ่มที่ 2</option>
-      <option value="3">กรรมการกลุ่มที่ 3</option>
-      <option value="4">กรรมการกลุ่มที่ 4</option>
-      <option value="5">กรรมการกลุ่มที่ 5</option>
-      <option value="6">กรรมการกลุ่มที่ 6</option>
-      <option value="7">กรรมการกลุ่มที่ 7</option>
-      <option value="8">กรรมการกลุ่มที่ 8</option>
-      <option value="9">กรรมการกลุ่มที่ 9</option>
+      <option value="กรรมการกลุ่มที่ 1">กรรมการกลุ่มที่ 1</option>
+      <option value="กรรมการกลุ่มที่ 2">กรรมการกลุ่มที่ 2</option>
+      <option value="กรรมการกลุ่มที่ 3">กรรมการกลุ่มที่ 3</option>
+      <option value="กรรมการกลุ่มที่ 4">กรรมการกลุ่มที่ 4</option>
+      <option value="กรรมการกลุ่มที่ 5">กรรมการกลุ่มที่ 5</option>
+      <option value="กรรมการกลุ่มที่ 6">กรรมการกลุ่มที่ 6</option>
+      <option value="กรรมการกลุ่มที่ 7">กรรมการกลุ่มที่ 7</option>
+      <option value="กรรมการกลุ่มที่ 8">กรรมการกลุ่มที่ 8</option>
+      <option value="กรรมการกลุ่มที่ 9">กรรมการกลุ่มที่ 9</option>
     </select>
 
     <select id="filterStatus" class="border px-3 py-2 rounded">
@@ -80,15 +80,15 @@
 
     <select id="editPosition"
       class="border p-2 rounded w-full mb-4">
-      <option value="1">กรรมการกลุ่มที่ 1</option>
-      <option value="2">กรรมการกลุ่มที่ 2</option>
-      <option value="3">กรรมการกลุ่มที่ 3</option>
-      <option value="4">กรรมการกลุ่มที่ 4</option>
-      <option value="5">กรรมการกลุ่มที่ 5</option>
-      <option value="6">กรรมการกลุ่มที่ 6</option>
-      <option value="7">กรรมการกลุ่มที่ 7</option>
-      <option value="8">กรรมการกลุ่มที่ 8</option>
-      <option value="9">กรรมการกลุ่มที่ 9</option>
+      <option value="กรรมการกลุ่มที่ 1">กรรมการกลุ่มที่ 1</option>
+      <option value="กรรมการกลุ่มที่ 2">กรรมการกลุ่มที่ 2</option>
+      <option value="กรรมการกลุ่มที่ 3">กรรมการกลุ่มที่ 3</option>
+      <option value="กรรมการกลุ่มที่ 4">กรรมการกลุ่มที่ 4</option>
+      <option value="กรรมการกลุ่มที่ 5">กรรมการกลุ่มที่ 5</option>
+      <option value="กรรมการกลุ่มที่ 6">กรรมการกลุ่มที่ 6</option>
+      <option value="กรรมการกลุ่มที่ 7">กรรมการกลุ่มที่ 7</option>
+      <option value="กรรมการกลุ่มที่ 8">กรรมการกลุ่มที่ 8</option>
+      <option value="กรรมการกลุ่มที่ 9">กรรมการกลุ่มที่ 9</option>
     </select>
 
     <div class="flex justify-end gap-2">
@@ -140,7 +140,7 @@ async function loadData() {
       <tr class="text-center">
         <td class="border p-2">${row.first_name}</td>
         <td class="border p-2">${row.last_name}</td>
-        <td class="border p-2">กลุ่ม ${row.position}</td>
+        <td class="border p-2">${row.position}</td>
         <td class="border p-2">${thaiStatus(row.approve_status)}</td>
         <td class="border p-2 space-x-1">
           <button
@@ -195,16 +195,22 @@ function openEdit(id, first, last, position) {
 
 function closeEdit() {
   editModal.classList.add('hidden')
+  editModal.classList.remove('flex')
 }
 
 async function saveEdit() {
-  await sb.from('adminmember')
+  const { error } = await sb.from('adminmember')
     .update({
       first_name: editFirstName.value.trim(),
       last_name: editLastName.value.trim(),
       position: editPosition.value
     })
     .eq('id', editId.value)
+
+  if(error){
+    alert(error.message)
+    return
+  }
 
   closeEdit()
   loadData()
