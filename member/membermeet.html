@@ -19,6 +19,7 @@
 }
 .label{font-size:13px;color:#cbd5f5;margin-bottom:4px;display:block;}
 .btn{padding:8px 18px;border-radius:10px;font-weight:500;}
+.blue{background:#2563eb}
 .green{background:#16a34a}
 .gray{background:#475569}
 </style>
@@ -81,7 +82,7 @@
 
 <div class="col-span-full flex gap-4 justify-center mt-2">
 <button class="btn green">บันทึก</button>
-<button type="reset" class="btn gray">ล้าง</button>
+<button type="reset" class="btn gray" onclick="setDefaultDate()">ล้าง</button>
 </div>
 
 </form>
@@ -127,39 +128,42 @@ const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
 const form = document.getElementById('meetingForm')
 const rows = document.getElementById('rows')
 
-/* ===== YEAR ===== */
+/* ===== FISCAL YEAR ===== */
 function getFiscalYear(dateStr){
   const d = new Date(dateStr)
   const y = d.getFullYear()
   const m = d.getMonth()+1
-  return (m<4?y-1:y)+543
+  return (m < 4 ? y - 1 : y) + 543
 }
 
 /* ===== DEFAULT DATE ===== */
-const today = new Date().toISOString().split('T')[0]
-meeting_date.value = today
-fiscal_year.value = getFiscalYear(today)
+function setDefaultDate(){
+  const today = new Date().toISOString().split('T')[0]
+  meeting_date.value = today
+  fiscal_year.value = getFiscalYear(today)
+}
+setDefaultDate()
+
+/* ===== CHANGE DATE ===== */
+meeting_date.addEventListener('change', ()=>{
+  if(meeting_date.value){
+    fiscal_year.value = getFiscalYear(meeting_date.value)
+  }
+})
 
 /* ===== MEMBER AUTO FILL ===== */
 member_id.addEventListener('blur', async ()=>{
-  const { data, error } = await db.from('members')
-    .select('title,first_name,last_name,"group"')
+  const { data } = await db.from('members')
+    .select('title,first_name,last_name,group')
     .eq('member_id', member_id.value)
     .single()
 
-  if(error || !data){
-    Swal.fire('ไม่พบสมาชิก','','error')
-    return
-  }
+  if(!data){ Swal.fire('ไม่พบสมาชิก'); return }
 
-  title.value = data.title || ''
-  first_name.value = data.first_name || ''
-  last_name.value = data.last_name || ''
-  group.value = data.group || ''
-})
-
-meeting_date.addEventListener('change',()=>{
-  fiscal_year.value = getFiscalYear(meeting_date.value)
+  title.value = data.title
+  first_name.value = data.first_name
+  last_name.value = data.last_name
+  group.value = data.group
 })
 
 /* ===== SAVE ===== */
@@ -187,19 +191,11 @@ form.onsubmit = async e=>{
     .maybeSingle()
 
   if(exists){
-    Swal.fire(
-      'ซ้ำ',
-      `สมาชิกนี้ลง ${payload.meeting_type} ปีบัญชี ${payload.fiscal_year} แล้ว`,
-      'warning'
-    )
+    Swal.fire('ปีบัญชีนี้มีการบันทึกแล้ว','','warning')
     return
   }
 
-  // ===== INSERT =====
-  const { error } = await db
-    .from('member_meeting')
-    .insert([payload])
-
+  const { error } = await db.from('member_meeting').insert([payload])
   if(error){
     Swal.fire(error.message,'','error')
     return
@@ -207,25 +203,10 @@ form.onsubmit = async e=>{
 
   Swal.fire('บันทึกสำเร็จ','','success')
 
-  // ===== ล้างฟอร์ม =====
   form.reset()
-
-  // ตั้งวันที่ + ปีบัญชีใหม่
-  const today = new Date().toISOString().split('T')[0]
-  meeting_date.value = today
-  fiscal_year.value = getFiscalYear(today)
-
-  // เคลียร์ชื่อสมาชิก
-  title.value = ''
-  first_name.value = ''
-  last_name.value = ''
-  group.value = ''
-
-  // โหลดตารางใหม่
+  setDefaultDate()
   load()
 }
-
-
 
 /* ===== FILTER ===== */
 const fMemberId = document.getElementById('f_member_id')
@@ -251,8 +232,8 @@ async function load(){
     rows.innerHTML+=`
 <tr>
 <td>${r.member_id}</td>
-<td>${r.title||''}${r.first_name||''} ${r.last_name||''}</td>
-<td>${r.group||''}</td>
+<td>${r.title}${r.first_name} ${r.last_name}</td>
+<td>${r.group}</td>
 <td>${r.meeting_type}</td>
 <td>${r.meeting_date}</td>
 <td>${r.fiscal_year}</td>
