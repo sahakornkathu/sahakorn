@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<title>สุ่มสมาชิกเข้าประชุมใหญ่</title>
+<title>สุ่มสมาชิกประชุมใหญ่</title>
 
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -24,44 +24,31 @@
 
 <body class="bg-slate-900 text-white p-6">
 
-<div class="max-w-3xl mx-auto space-y-6">
+<div class="max-w-xl mx-auto space-y-6">
 
-<h1 class="text-2xl font-bold text-center text-yellow-400">
+<h1 class="text-2xl text-center text-yellow-400 font-bold">
 สุ่มสมาชิกเข้าประชุมใหญ่
 </h1>
 
 <div class="bg-slate-800 p-6 rounded-xl space-y-4">
 
-<select id="group" class="w-full p-2 text-black rounded">
+<select id="group_no" class="w-full p-2 text-black rounded">
 <option value="">เลือกกลุ่ม</option>
-<option value="1">กลุ่ม 1</option>
-<option value="2">กลุ่ม 2</option>
-<option value="3">กลุ่ม 3</option>
-<option value="4">กลุ่ม 4</option>
-<option value="5">กลุ่ม 5</option>
-<option value="6">กลุ่ม 6</option>
-<option value="7">กลุ่ม 7</option>
-<option value="8">กลุ่ม 8</option>
-<option value="9">กลุ่ม 9</option>
+<option>1</option><option>2</option><option>3</option>
+<option>4</option><option>5</option><option>6</option>
+<option>7</option><option>8</option><option>9</option>
 </select>
 
 <select id="year" class="w-full p-2 text-black rounded"></select>
 
-<input id="count" type="number" min="1"
- class="w-full p-2 text-black rounded"
- placeholder="จำนวนคนที่ต้องการสุ่ม">
-
-<button onclick="randomMembers()"
+<button onclick="randomOne()"
  class="w-full bg-yellow-500 py-2 rounded text-black font-bold">
-สุ่มรายชื่อ
+สุ่ม 1 คน
 </button>
 
 <div id="result" class="text-center text-xl"></div>
 
 </div>
-
-<div id="selectedList"
- class="bg-slate-800 p-4 rounded-xl space-y-2"></div>
 
 </div>
 
@@ -73,17 +60,17 @@ const db = supabase.createClient(
 
 const yearSelect = document.getElementById('year')
 const result = document.getElementById('result')
-const selectedList = document.getElementById('selectedList')
 
-/* ===== LOAD YEARS ===== */
+/* ===== LOAD YEAR ===== */
 async function loadYears(){
   const {data} = await db
     .from('member_meeting')
     .select('fiscal_year')
-  const years = [...new Set(data.map(d=>d.fiscal_year))]
-  yearSelect.innerHTML = '<option value="">เลือกปีบัญชี</option>'
+
+  const years=[...new Set(data.map(d=>d.fiscal_year))]
+  yearSelect.innerHTML='<option value="">เลือกปีบัญชี</option>'
   years.sort((a,b)=>b-a).forEach(y=>{
-    yearSelect.innerHTML += `<option>${y}</option>`
+    yearSelect.innerHTML+=`<option>${y}</option>`
   })
 }
 loadYears()
@@ -91,97 +78,82 @@ loadYears()
 /* ===== ANIMATION ===== */
 function rollAnimation(list){
   return new Promise(resolve=>{
-    let speed=80, elapsed=0, rolling
+    let rolling=setInterval(()=>{
+      const r=list[Math.floor(Math.random()*list.length)]
+      result.innerHTML=`<div class="roll">${r.first_name}</div>`
+    },80)
 
-    function start(){
-      rolling=setInterval(()=>{
-        const r=list[Math.floor(Math.random()*list.length)]
-        result.innerHTML=`<div class="roll">${r.first_name}</div>`
-      },speed)
-    }
-
-    start()
-
-    const t=setInterval(()=>{
-      elapsed+=500
-      if(elapsed>2000) speed=150
-      if(elapsed>4000) speed=300
+    setTimeout(()=>{
       clearInterval(rolling)
-      start()
-
-      if(elapsed>=5000){
-        clearInterval(t)
-        clearInterval(rolling)
-        resolve()
-      }
-    },500)
+      resolve()
+    },5000)
   })
 }
 
-/* ===== RANDOM ===== */
-async function randomMembers(){
+/* ===== RANDOM ONE ===== */
+async function randomOne(){
 
-  const group = document.getElementById('group').value
+  const group_no = document.getElementById('group_no').value
   const year = yearSelect.value
-  const count = parseInt(document.getElementById('count').value)
 
-  if(!group || !year || !count){
-    Swal.fire('กรอกข้อมูลให้ครบ')
+  if(!group_no || !year){
+    Swal.fire('เลือกกลุ่มและปีบัญชี')
     return
   }
 
+  // คนที่มาประชุมกลุ่ม
   const {data:members} = await db
     .from('member_meeting')
     .select('*')
     .eq('meeting_type','ประชุมกลุ่ม')
     .eq('fiscal_year',year)
-    .eq('group',group)
+    .eq('group',group_no)
 
+  // คนที่ถูกสุ่มไปแล้ว
   const {data:used} = await db
     .from('member_random')
     .select('member_id')
     .eq('fiscal_year',year)
-    .eq('group',group)
+    .eq('group_no',group_no)
 
   const usedIds=(used||[]).map(u=>u.member_id)
   const available=members.filter(m=>!usedIds.includes(m.member_id))
 
-  if(available.length < count){
-    Swal.fire('จำนวนไม่พอ')
+  if(!available.length){
+    Swal.fire('ไม่มีรายชื่อให้สุ่ม')
     return
   }
 
   await rollAnimation(available)
 
-  const shuffled = available.sort(()=>0.5-Math.random())
-  const picks = shuffled.slice(0,count)
+  const pick = available[Math.floor(Math.random()*available.length)]
 
   const confirm = await Swal.fire({
-    title:'ยืนยันผลสุ่ม?',
-    html:picks.map(p=>p.first_name).join('<br>'),
+    title:'ยืนยัน?',
+    html:`${pick.member_id} ${pick.first_name} ${pick.last_name}`,
     showCancelButton:true
   })
 
   if(!confirm.isConfirmed) return
 
-  for(const p of picks){
-    await db.from('member_random').insert([{
-      member_id:p.member_id,
-      title:p.title,
-      first_name:p.first_name,
-      last_name:p.last_name,
-      group:p.group,
-      fiscal_year:p.fiscal_year
-    }])
+  const {error} = await db.from('member_random').insert([{
+    member_id:pick.member_id,
+    title:pick.title,
+    first_name:pick.first_name,
+    last_name:pick.last_name,
+    group_no:pick.group,
+    fiscal_year:pick.fiscal_year
+  }])
+
+  if(error){
+    Swal.fire(error.message)
+    return
   }
 
-  result.innerHTML='<div class="text-green-400">บันทึกสำเร็จ</div>'
-
-  selectedList.innerHTML='<h3 class="font-bold">ผู้ได้รับเลือก</h3>'
-  picks.forEach(p=>{
-    selectedList.innerHTML+=
-    `<div>${p.member_id} ${p.first_name} ${p.last_name}</div>`
-  })
+  result.innerHTML=`
+  <div class="text-green-400 font-bold">
+  ${pick.member_id} ${pick.first_name} ${pick.last_name}
+  </div>`
 }
 </script>
 </body>
