@@ -361,29 +361,57 @@ window.viewMember = async function(id){
     return
   }
 
+  // แปลง key เป็นชื่อไทยคร่าว ๆ
+  const labelMap = {
+    member_id: 'รหัสสมาชิก',
+    title: 'คำนำหน้า',
+    first_name: 'ชื่อ',
+    last_name: 'นามสกุล',
+    group: 'กลุ่ม',
+    phone: 'โทรศัพท์',
+    phone_alt: 'โทรศัพท์สำรอง',
+    member_status: 'สถานะ',
+    join_date: 'วันที่สมัคร',
+    birthday: 'วันเกิด',
+    age: 'อายุ',
+    id_card: 'บัตรประชาชน',
+    house_no: 'บ้านเลขที่',
+    moo: 'หมู่',
+    street: 'ถนน',
+    village: 'หมู่บ้าน',
+    subdistrict: 'ตำบล',
+    district: 'อำเภอ',
+    province: 'จังหวัด',
+    postal_code: 'รหัสไปรษณีย์',
+    marital_status: 'สถานภาพ',
+    spouse_name: 'คู่สมรส',
+    kyot_member: 'สมาชิก กยท.',
+    kyot_member_id: 'เลข กยท.',
+    father_name: 'บิดา',
+    mother_name: 'มารดา'
+  }
+
+  let html = '<div style="text-align:left;font-size:14px;line-height:1.9">'
+
+  Object.keys(data).forEach(key=>{
+    if(key === 'lat' || key === 'lng') return // ไม่ต้องโชว์ GPS ก็ได้
+
+    const label = labelMap[key] || key
+    const value = data[key] || '-'
+
+    html += `<b>${label} :</b> ${value}<br>`
+  })
+
+  html += '</div>'
+
   Swal.fire({
     title: 'รายละเอียดสมาชิก',
-    width: 600,
-    html: `
-      <div style="text-align:left;font-size:14px;line-height:1.8">
-        <b>เลขสมาชิก:</b> ${data.member_id}<br>
-        <b>ชื่อ:</b> ${data.title||''}${data.first_name||''} ${data.last_name||''}<br>
-        <b>กลุ่ม:</b> ${data.group||'-'}<br>
-        <b>โทร:</b> ${data.phone||'-'}<br>
-        <b>สถานะ:</b> ${data.member_status||'-'}<br>
-        <hr>
-        <b>ที่อยู่:</b><br>
-        ${data.house_no||''} หมู่ ${data.moo||''} ${data.village||''}<br>
-        ${data.subdistrict||''} ${data.district||''} ${data.province||''}<br>
-        <hr>
-        <b>บัตรประชาชน:</b> ${data.id_card||'-'}<br>
-        <b>วันเกิด:</b> ${data.birthday||'-'}<br>
-        <b>อายุ:</b> ${data.age||'-'}<br>
-      </div>
-    `,
+    width: 650,
+    html: html,
     confirmButtonText: 'ปิด'
   })
 }
+
 
 
 /* ===== PAGINATION ===== */
