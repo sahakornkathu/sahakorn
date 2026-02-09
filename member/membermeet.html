@@ -72,7 +72,7 @@
 
 <div>
 <label class="label">วันที่ประชุม</label>
-<input id="meeting_date" type="date" class="input">
+<input id="meeting_date" type="date" class="input" required>
 </div>
 
 <div>
@@ -143,17 +143,20 @@ fiscal_year.value = getFiscalYear(today)
 
 /* ===== MEMBER AUTO FILL ===== */
 member_id.addEventListener('blur', async ()=>{
-  const { data } = await db.from('members')
+  const { data, error } = await db.from('members')
     .select('title,first_name,last_name,group')
     .eq('member_id', member_id.value)
-    .single()
+    .maybeSingle()
 
-  if(!data){ Swal.fire('ไม่พบสมาชิก'); return }
+  if(error || !data){
+    Swal.fire('ไม่พบสมาชิก','','warning')
+    return
+  }
 
-  title.value = data.title
-  first_name.value = data.first_name
-  last_name.value = data.last_name
-  group.value = data.group
+  title.value = data.title || ''
+  first_name.value = data.first_name || ''
+  last_name.value = data.last_name || ''
+  group.value = data.group || ''
 })
 
 meeting_date.addEventListener('change',()=>{
@@ -165,17 +168,23 @@ form.onsubmit = async e=>{
   e.preventDefault()
 
   const payload = {
-    member_id: member_id.value,
+    member_id: Number(member_id.value),
     title:title.value,
     first_name:first_name.value,
     last_name:last_name.value,
     group:group.value,
     meeting_type:meeting_type.value,
     meeting_date:meeting_date.value,
-    fiscal_year:fiscal_year.value
+    fiscal_year:Number(fiscal_year.value)
   }
 
-  await db.from('member_meeting').insert([payload])
+  const { error } = await db.from('member_meeting').insert([payload])
+
+  if(error){
+    Swal.fire(error.message,'','error')
+    return
+  }
+
   Swal.fire('บันทึกสำเร็จ','','success')
   load()
 }
@@ -200,15 +209,15 @@ async function load(){
   const { data } = await q.order('meeting_date',{ascending:false})
 
   rows.innerHTML=''
-  data.forEach(r=>{
+  ;(data||[]).forEach(r=>{
     rows.innerHTML+=`
 <tr>
 <td>${r.member_id}</td>
-<td>${r.title}${r.first_name} ${r.last_name}</td>
-<td>${r.group}</td>
-<td>${r.meeting_type}</td>
-<td>${r.meeting_date}</td>
-<td>${r.fiscal_year}</td>
+<td>${r.title||''}${r.first_name||''} ${r.last_name||''}</td>
+<td>${r.group||''}</td>
+<td>${r.meeting_type||''}</td>
+<td>${r.meeting_date||''}</td>
+<td>${r.fiscal_year||''}</td>
 </tr>`
   })
 }
