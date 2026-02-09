@@ -5,62 +5,53 @@
 <title>ระบบบันทึกการประชุมสมาชิก</title>
 
 <script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script src="https://esm.sh/@supabase/supabase-js@2"></script>
 
 <style>
-.input{width:100%;background:#020617;border:1px solid #334155;padding:8px;border-radius:8px;color:#fff}
+.input{
+  width:100%;
+  background:#020617;
+  border:1px solid #334155;
+  padding:8px;
+  border-radius:8px;
+  color:#fff;
+}
 .label{font-size:13px;color:#cbd5f5;margin-bottom:4px;display:block}
 .btn{padding:8px 18px;border-radius:10px;font-weight:500}
-.red{background:#dc2626}
-.gray{background:#475569}
 .green{background:#16a34a}
+.gray{background:#475569}
 .blue{background:#2563eb}
+.red{background:#dc2626}
 </style>
 </head>
 
 <body class="bg-slate-900 text-slate-100 p-6">
 
-<div class="max-w-6xl mx-auto space-y-6">
+<div class="max-w-7xl mx-auto space-y-8">
 
-<h1 class="text-2xl font-bold text-center text-green-400">
-บันทึกการเข้าประชุมสมาชิก
+<h1 class="text-2xl font-bold text-center text-emerald-400">
+ระบบบันทึกการประชุมสมาชิก
 </h1>
 
-<!-- FORM -->
+<!-- ================= FORM ================= -->
 <div class="bg-slate-800 p-6 rounded-xl border border-slate-700">
-<form id="meetingForm" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+<h2 class="font-bold text-yellow-400 mb-4">บันทึกการเข้าประชุม</h2>
 
-<div>
-<label class="label">รหัสสมาชิก</label>
-<input id="member_id" class="input" required>
-</div>
+<form id="meetForm" class="grid grid-cols-1 md:grid-cols-4 gap-4">
 
-<div>
-<label class="label">คำนำหน้า</label>
-<input id="title" class="input" readonly>
-</div>
-
-<div>
-<label class="label">ชื่อ</label>
-<input id="first_name" class="input" readonly>
-</div>
-
-<div>
-<label class="label">นามสกุล</label>
-<input id="last_name" class="input" readonly>
-</div>
-
-<div>
-<label class="label">กลุ่ม</label>
-<input id="group_no" class="input" readonly>
-</div>
+<div><label class="label">รหัสสมาชิก</label><input id="member_id" class="input" required></div>
+<div><label class="label">คำนำหน้า</label><input id="title" class="input" readonly></div>
+<div><label class="label">ชื่อ</label><input id="first_name" class="input" readonly></div>
+<div><label class="label">นามสกุล</label><input id="last_name" class="input" readonly></div>
+<div><label class="label">กลุ่ม</label><input id="group" class="input" readonly></div>
 
 <div>
 <label class="label">ประเภทประชุม</label>
-<select id="meeting_type" class="input">
-<option value="กลุ่ม">ประชุมกลุ่ม</option>
-<option value="ใหญ่">ประชุมใหญ่</option>
+<select id="meeting_type" class="input" required>
+<option value="">--เลือก--</option>
+<option value="ประชุมกลุ่ม">ประชุมกลุ่ม</option>
+<option value="ประชุมใหญ่">ประชุมใหญ่</option>
 </select>
 </div>
 
@@ -71,7 +62,7 @@
 
 <div>
 <label class="label">ปีบัญชี (พ.ศ.)</label>
-<input id="fiscal_year_th" class="input" readonly>
+<input id="fiscal_year" class="input" readonly>
 </div>
 
 <div class="col-span-full flex justify-center gap-4 mt-2">
@@ -82,30 +73,14 @@
 </form>
 </div>
 
-<!-- FILTER -->
-<div class="bg-slate-800 p-6 rounded-xl border border-slate-700 grid grid-cols-1 md:grid-cols-4 gap-4">
-<input id="f_member" class="input" placeholder="รหัสสมาชิก">
-<input id="f_group" class="input" placeholder="กลุ่ม">
-<select id="f_type" class="input">
-<option value="">ทุกประเภท</option>
-<option value="กลุ่ม">กลุ่ม</option>
-<option value="ใหญ่">ใหญ่</option>
-</select>
-<input id="f_year" class="input" placeholder="ปีบัญชี พ.ศ.">
-<button onclick="load()" class="btn blue col-span-full">ค้นหา</button>
-</div>
-
-<!-- TABLE -->
+<!-- ================= TABLE ================= -->
 <div class="bg-slate-800 p-6 rounded-xl border border-slate-700">
+<h2 class="font-bold text-blue-400 mb-2">ประวัติการประชุม</h2>
 <table class="w-full text-center text-sm">
 <thead class="bg-slate-700">
 <tr>
-<th>สมาชิก</th>
-<th>ชื่อ</th>
-<th>กลุ่ม</th>
-<th>ประเภท</th>
-<th>วันที่</th>
-<th>ปีบัญชี</th>
+<th>รหัส</th><th>ชื่อ</th><th>กลุ่ม</th>
+<th>ประเภท</th><th>วันที่</th><th>ปีบัญชี</th>
 </tr>
 </thead>
 <tbody id="rows"></tbody>
@@ -114,84 +89,81 @@
 
 </div>
 
-<script type="module">
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+<script>
 
-const db = createClient(
-'https://ttottijljxoinptmhgtu.supabase.co',
-'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'
-)
+/* ================= CONFIG ================= */
+const SUPABASE_URL = 'https://ttottijljxoinptmhgtu.supabase.co'
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
 
-/* ===== MEMBER AUTO LOAD ===== */
-member_id.addEventListener('blur', async ()=>{
-  const id = member_id.value.trim()
-  if(!id) return
-
-  const {data,error} = await db
-    .from('members')
-    .select('title,first_name,last_name,"group"')
-    .eq('member_id', id)
-    .maybeSingle()
-
-  if(!data){ alert('ไม่พบสมาชิก'); return }
-
-  title.value = data.title
-  first_name.value = data.first_name
-  last_name.value = data.last_name
-  group_no.value = data.group
-})
-
-/* ===== FISCAL YEAR ===== */
-meeting_date.addEventListener('change', ()=>{
-  const d = new Date(meeting_date.value)
-  const y = d.getFullYear()+543
+/* ================= FUNCTIONS ================= */
+function getFiscalYear(dateStr){
+  const d = new Date(dateStr)
+  const y = d.getFullYear()
   const m = d.getMonth()+1
-  fiscal_year_th.value = m<4 ? y-1 : y
+  return (m<4?y-1:y)+543
+}
+
+/* AUTO FISCAL */
+meeting_date.addEventListener('change',()=>{
+  fiscal_year.value = getFiscalYear(meeting_date.value)
 })
 
-/* ===== SUBMIT ===== */
-meetingForm.onsubmit = async e=>{
+/* FETCH MEMBER */
+member_id.addEventListener('blur', async ()=>{
+  const { data } = await db.from('members')
+    .select('title,first_name,last_name,group')
+    .eq('member_id', member_id.value)
+    .single()
+  if(!data){ alert('ไม่พบสมาชิก'); return }
+  title.value=data.title
+  first_name.value=data.first_name
+  last_name.value=data.last_name
+  group.value=data.group
+})
+
+/* SAVE */
+meetForm.onsubmit = async e=>{
   e.preventDefault()
 
   const payload = {
     member_id: member_id.value,
-    meeting_type: meeting_type.value,
-    meeting_date: meeting_date.value,
-    fiscal_year_th: fiscal_year_th.value,
-    group_no: group_no.value
+    title:title.value,
+    first_name:first_name.value,
+    last_name:last_name.value,
+    group:group.value,
+    meeting_type:meeting_type.value,
+    meeting_date:meeting_date.value,
+    fiscal_year:fiscal_year.value
   }
 
   await db.from('member_meeting').insert([payload])
   load()
-  meetingForm.reset()
+  meetForm.reset()
 }
 
-/* ===== LOAD ===== */
+/* LOAD TABLE */
 async function load(){
-  let q = db.from('member_meeting').select('*')
-
-  if(f_member.value) q=q.eq('member_id', f_member.value)
-  if(f_group.value) q=q.eq('group_no', f_group.value)
-  if(f_type.value) q=q.eq('meeting_type', f_type.value)
-  if(f_year.value) q=q.eq('fiscal_year_th', f_year.value)
-
-  const {data} = await q.order('meeting_date',{ascending:false})
+  const { data } = await db.from('member_meeting')
+    .select('*')
+    .order('meeting_date',{ascending:false})
 
   rows.innerHTML=''
   data.forEach(r=>{
     rows.innerHTML+=`
 <tr>
 <td>${r.member_id}</td>
-<td>${r.first_name||''}</td>
-<td>${r.group_no}</td>
+<td>${r.first_name} ${r.last_name}</td>
+<td>${r.group}</td>
 <td>${r.meeting_type}</td>
 <td>${r.meeting_date}</td>
-<td>${r.fiscal_year_th}</td>
+<td>${r.fiscal_year}</td>
 </tr>`
   })
 }
 
 load()
+
 </script>
 
 </body>
