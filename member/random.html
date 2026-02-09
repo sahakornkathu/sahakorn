@@ -9,152 +9,144 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <style>
-.roll{
+.slot{
   font-size:28px;
   font-weight:bold;
-  animation:pulse .4s infinite;
-}
-@keyframes pulse{
-  0%{transform:scale(1)}
-  50%{transform:scale(1.1)}
-  100%{transform:scale(1)}
+  text-align:center;
+  padding:20px;
+  border-radius:12px;
+  background:#020617;
+  border:2px solid #38bdf8;
 }
 </style>
 </head>
 
 <body class="bg-slate-900 text-white p-6">
 
-<div class="max-w-xl mx-auto space-y-6">
+<div class="max-w-xl mx-auto space-y-4">
 
-<h1 class="text-2xl text-center text-yellow-400 font-bold">
-สุ่มสมาชิกเข้าประชุมใหญ่
+<h1 class="text-2xl font-bold text-center text-sky-400">
+สุ่มสมาชิกประชุมใหญ่
 </h1>
 
-<div class="bg-slate-800 p-6 rounded-xl space-y-4">
-
-<select id="group_no" class="w-full p-2 text-black rounded">
+<select id="group_no" class="w-full p-2 rounded text-black">
 <option value="">เลือกกลุ่ม</option>
-<option>1</option><option>2</option><option>3</option>
-<option>4</option><option>5</option><option>6</option>
-<option>7</option><option>8</option><option>9</option>
+${[1,2,3,4,5,6,7,8,9].map(g=>`<option>${g}</option>`).join('')}
 </select>
 
-<select id="year" class="w-full p-2 text-black rounded"></select>
+<select id="fiscal_year" class="w-full p-2 rounded text-black"></select>
 
-<button onclick="randomOne()"
- class="w-full bg-yellow-500 py-2 rounded text-black font-bold">
-สุ่ม 1 คน
+<input id="quota" type="number"
+placeholder="จำนวนสิทธิ์ของกลุ่ม"
+class="w-full p-2 rounded text-black">
+
+<button onclick="randomMember()"
+class="w-full bg-green-600 py-2 rounded">
+สุ่ม
 </button>
 
-<div id="result" class="text-center text-xl"></div>
-
-</div>
+<div id="slot" class="slot">-</div>
 
 </div>
 
 <script>
-const db = supabase.createClient(
-'https://ttottijljxoinptmhgtu.supabase.co',
-'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'
-)
+const SUPABASE_URL='https://ttottijljxoinptmhgtu.supabase.co'
+const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'
+const db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY)
 
-const yearSelect = document.getElementById('year')
-const result = document.getElementById('result')
-
-/* ===== LOAD YEAR ===== */
-async function loadYears(){
-  const {data} = await db
-    .from('member_meeting')
-    .select('fiscal_year')
-
-  const years=[...new Set(data.map(d=>d.fiscal_year))]
-  yearSelect.innerHTML='<option value="">เลือกปีบัญชี</option>'
-  years.sort((a,b)=>b-a).forEach(y=>{
-    yearSelect.innerHTML+=`<option>${y}</option>`
-  })
+function loadYears(){
+  const y=new Date().getFullYear()+543
+  for(let i=y;i>=y-5;i--){
+    fiscal_year.innerHTML+=`<option>${i}</option>`
+  }
 }
 loadYears()
 
-/* ===== ANIMATION ===== */
-function rollAnimation(list){
-  return new Promise(resolve=>{
-    let rolling=setInterval(()=>{
-      const r=list[Math.floor(Math.random()*list.length)]
-      result.innerHTML=`<div class="roll">${r.first_name}</div>`
-    },80)
+async function randomMember(){
 
-    setTimeout(()=>{
-      clearInterval(rolling)
-      resolve()
-    },5000)
-  })
-}
+  const group=group_no.value
+  const year=parseInt(fiscal_year.value)
+  const quotaVal=parseInt(quota.value)
 
-/* ===== RANDOM ONE ===== */
-async function randomOne(){
-
-  const group_no = document.getElementById('group_no').value
-  const year = yearSelect.value
-
-  if(!group_no || !year){
-    Swal.fire('เลือกกลุ่มและปีบัญชี')
+  if(!group||!year||!quotaVal){
+    Swal.fire('กรอกข้อมูลให้ครบ')
     return
   }
 
-  // คนที่มาประชุมกลุ่ม
-  const {data:members} = await db
+  // นับโควต้า
+  const { count } = await db
+    .from('member_random')
+    .select('*',{count:'exact',head:true})
+    .eq('group_no',group)
+    .eq('fiscal_year',year)
+
+  if(count>=quotaVal){
+    Swal.fire('โควต้าเต็มแล้ว')
+    return
+  }
+
+  // ดึงสมาชิกที่มาประชุมกลุ่ม
+  const { data } = await db
     .from('member_meeting')
     .select('*')
     .eq('meeting_type','ประชุมกลุ่ม')
+    .eq('group_no',group)
     .eq('fiscal_year',year)
-    .eq('group',group_no)
 
-  // คนที่ถูกสุ่มไปแล้ว
-  const {data:used} = await db
+  if(!data||!data.length){
+    Swal.fire('ไม่มีรายชื่อ')
+    return
+  }
+
+  // กันซ้ำ
+  const { data: used } = await db
     .from('member_random')
     .select('member_id')
     .eq('fiscal_year',year)
-    .eq('group_no',group_no)
 
-  const usedIds=(used||[]).map(u=>u.member_id)
-  const available=members.filter(m=>!usedIds.includes(m.member_id))
+  const usedIds = used.map(x=>x.member_id)
+  const pool = data.filter(x=>!usedIds.includes(x.member_id))
 
-  if(!available.length){
-    Swal.fire('ไม่มีรายชื่อให้สุ่ม')
+  if(!pool.length){
+    Swal.fire('ไม่มีคนให้สุ่ม')
     return
   }
 
-  await rollAnimation(available)
+  // ===== ANIMATION 5 วิ =====
+  let t=0
+  const anim=setInterval(()=>{
+    const r=pool[Math.floor(Math.random()*pool.length)]
+    slot.innerText=r.member_id+' '+r.first_name
+    t++
+    if(t>10){
+      clearInterval(anim)
+      finishRandom(pool)
+    }
+  },500)
+}
 
-  const pick = available[Math.floor(Math.random()*available.length)]
+async function finishRandom(pool){
+  const r=pool[Math.floor(Math.random()*pool.length)]
 
-  const confirm = await Swal.fire({
+  const ok=await Swal.fire({
     title:'ยืนยัน?',
-    html:`${pick.member_id} ${pick.first_name} ${pick.last_name}`,
+    text:r.first_name,
     showCancelButton:true
   })
 
-  if(!confirm.isConfirmed) return
+  if(!ok.isConfirmed)return
 
-  const {error} = await db.from('member_random').insert([{
-    member_id:pick.member_id,
-    title:pick.title,
-    first_name:pick.first_name,
-    last_name:pick.last_name,
-    group_no:pick.group,
-    fiscal_year:pick.fiscal_year
+  await db.from('member_random').insert([{
+    member_id:r.member_id,
+    first_name:r.first_name,
+    last_name:r.last_name,
+    group_no:r.group_no,
+    fiscal_year:r.fiscal_year
   }])
 
-  if(error){
-    Swal.fire(error.message)
-    return
-  }
-
-  result.innerHTML=`
-  <div class="text-green-400 font-bold">
-  ${pick.member_id} ${pick.first_name} ${pick.last_name}
-  </div>`
+  Swal.fire('บันทึกแล้ว')
 }
 </script>
+
 </body>
 </html>
