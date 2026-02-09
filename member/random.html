@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<title>สุ่มรายชื่อประชุมใหญ่</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+
+<body class="bg-slate-900 text-white p-6">
+
+<div class="max-w-4xl mx-auto space-y-6">
+
+<h1 class="text-2xl text-center text-sky-400 font-bold">
+สุ่มรายชื่อประชุมใหญ่
+</h1>
+
+<!-- FILTER -->
+<div class="bg-slate-800 p-4 rounded-xl space-y-3">
+
+<div class="grid md:grid-cols-3 gap-3">
+
+<select id="group" class="input">
+<option value="">เลือกกลุ่ม</option>
+<option>1</option><option>2</option><option>3</option>
+<option>4</option><option>5</option><option>6</option>
+<option>7</option><option>8</option><option>9</option>
+</select>
+
+<input id="year" class="input" placeholder="ปีบัญชี พ.ศ.">
+
+<input id="count" type="number" class="input" placeholder="จำนวนคน">
+
+</div>
+
+<button onclick="randomNames()" class="bg-blue-600 px-4 py-2 rounded w-full">
+สุ่มรายชื่อ
+</button>
+
+</div>
+
+<!-- RESULT -->
+<div id="resultBox" class="bg-slate-800 p-4 rounded-xl hidden">
+<h2 class="text-lg mb-2">ผลการสุ่ม</h2>
+<table class="w-full text-center text-sm">
+<thead><tr>
+<th>ลำดับ</th>
+<th>รหัส</th>
+<th>ชื่อ</th>
+<th>กลุ่ม</th>
+</tr></thead>
+<tbody id="resultRows"></tbody>
+</table>
+
+<div class="flex gap-3 mt-4">
+<button onclick="saveRandom()" class="bg-green-600 px-4 py-2 rounded w-full">
+บันทึกผลการสุ่ม
+</button>
+<button onclick="randomNames()" class="bg-yellow-600 px-4 py-2 rounded w-full">
+สุ่มใหม่
+</button>
+</div>
+</div>
+
+</div>
+
+<script>
+const db = supabase.createClient(
+'https://ttottijljxoinptmhgtu.supabase.co',
+'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'
+)
+
+let previewData = []
+
+async function randomNames(){
+  const g = group.value
+  const y = year.value
+  const c = parseInt(count.value)
+
+  if(!g || !y || !c){
+    Swal.fire('กรอกข้อมูลให้ครบ')
+    return
+  }
+
+  // คนที่มาประชุมกลุ่ม
+  let { data } = await db
+    .from('member_meeting')
+    .select('*')
+    .eq('meeting_type','ประชุมกลุ่ม')
+    .eq('fiscal_year', y)
+    .eq('group', g)
+
+  // ตัดคนที่เคยสุ่มแล้ว
+  const { data: used } = await db
+    .from('big_meeting_random')
+    .select('member_id')
+    .eq('fiscal_year', y)
+
+  const usedIds = used.map(u=>u.member_id)
+  data = data.filter(d=>!usedIds.includes(d.member_id))
+
+  // shuffle
+  data.sort(()=>Math.random()-0.5)
+
+  previewData = data.slice(0,c)
+
+  renderPreview()
+}
+
+function renderPreview(){
+  resultRows.innerHTML = ''
+  previewData.forEach((m,i)=>{
+    resultRows.innerHTML += `
+<tr>
+<td>${i+1}</td>
+<td>${m.member_id}</td>
+<td>${m.first_name} ${m.last_name}</td>
+<td>${m.group}</td>
+</tr>`
+  })
+  resultBox.classList.remove('hidden')
+}
+
+async function saveRandom(){
+  const confirm = await Swal.fire({
+    title:'ยืนยันบันทึก?',
+    showCancelButton:true
+  })
+
+  if(!confirm.isConfirmed) return
+
+  const payload = previewData.map(m=>({
+    member_id:m.member_id,
+    first_name:m.first_name,
+    last_name:m.last_name,
+    group:m.group,
+    fiscal_year:year.value
+  }))
+
+  await db.from('big_meeting_random').insert(payload)
+
+  Swal.fire('บันทึกสำเร็จ','','success')
+  previewData = []
+  resultBox.classList.add('hidden')
+}
+</script>
+
+<style>
+.input{
+width:100%;
+background:#020617;
+border:1px solid #334155;
+padding:8px;
+border-radius:8px;
+color:white;
+}
+</style>
+
+</body>
+</html>
