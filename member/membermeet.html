@@ -59,7 +59,7 @@
 
 <div>
 <label class="label">กลุ่ม</label>
-<input id="member_member_group" class="input" readonly>
+<input id="group" class="input" readonly>
 </div>
 
 <div>
@@ -144,7 +144,7 @@ fiscal_year.value = getFiscalYear(today)
 /* ===== MEMBER AUTO FILL ===== */
 member_id.addEventListener('blur', async ()=>{
   const { data } = await db.from('members')
-    .select('title,first_name,last_name,member_member_group')
+    .select('title,first_name,last_name,group')
     .eq('member_id', member_id.value)
     .single()
 
@@ -153,7 +153,7 @@ member_id.addEventListener('blur', async ()=>{
   title.value = data.title
   first_name.value = data.first_name
   last_name.value = data.last_name
-  member_group.value = data.member_group
+  group.value = data.group
 })
 
 meeting_date.addEventListener('change',()=>{
@@ -169,7 +169,7 @@ form.onsubmit = async e=>{
     title:title.value,
     first_name:first_name.value,
     last_name:last_name.value,
-    member_member_group:member_member_group.value,
+    group:group.value,
     meeting_type:meeting_type.value,
     meeting_date:meeting_date.value,
     fiscal_year:fiscal_year.value
@@ -205,7 +205,7 @@ async function load(){
 <tr>
 <td>${r.member_id}</td>
 <td>${r.title}${r.first_name} ${r.last_name}</td>
-<td>${r.member_member_group}</td>
+<td>${r.group}</td>
 <td>${r.meeting_type}</td>
 <td>${r.meeting_date}</td>
 <td>${r.fiscal_year}</td>
