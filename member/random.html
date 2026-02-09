@@ -7,12 +7,14 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<link rel="stylesheet"
+ href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
 
 <style>
 .spinBox{
   font-size:28px;
   font-weight:bold;
-  height:120px;
+  height:110px;
   display:flex;
   align-items:center;
   justify-content:center;
@@ -21,9 +23,7 @@
   color:white;
   box-shadow:0 0 20px #38bdf8;
 }
-.glow{
-  animation: glow 1s infinite alternate;
-}
+.glow{animation: glow 1s infinite alternate;}
 @keyframes glow{
   from{box-shadow:0 0 10px #fff}
   to{box-shadow:0 0 30px #facc15}
@@ -62,12 +62,35 @@
 ยังไม่ได้สุ่ม
 </div>
 
+<div class="grid md:grid-cols-2 gap-3">
 <button onclick="randomMember()"
- class="w-full bg-purple-600 p-3 rounded">
+ class="bg-purple-600 p-3 rounded">
 สุ่ม
 </button>
+</div>
 
 <div id="remainBox" class="text-center text-sky-400"></div>
+
+<!-- ===== LIST WINNER ===== -->
+<div class="bg-slate-800 p-4 rounded-xl border border-slate-700 mt-4">
+<h2 class="text-yellow-400 font-bold text-center mb-2">
+รายชื่อผู้ได้รับสิทธิ์
+</h2>
+
+<div id="winnerCount" class="text-center text-sky-400 mb-2"></div>
+
+<table class="w-full text-center text-sm">
+<thead class="bg-slate-700">
+<tr>
+<th>ลำดับ</th>
+<th>ชื่อ</th>
+<th>นามสกุล</th>
+<th>จัดการ</th>
+</tr>
+</thead>
+<tbody id="winnerRows"></tbody>
+</table>
+</div>
 
 </div>
 
@@ -87,122 +110,148 @@ Swal.fire({
  icon:'success',
  title:msg,
  showConfirmButton:false,
- timer:2000
+ timer:1500
 })
 }
 
-/* ===== โหลดปีบัญชี ===== */
-async function loadFiscalYears(){
-const {data}=await sb.from('member_meeting')
-.select('fiscal_year')
+async function loadFiscalYear(){
+ const {data} = await sb.from('member_meeting')
+ .select('fiscal_year')
 
-const years=[...new Set(data.map(x=>x.fiscal_year))]
-fiscalYear.innerHTML='<option value="">ปีบัญชี</option>'
-years.forEach(y=>{
+ const years=[...new Set(data.map(d=>d.fiscal_year))]
+ fiscalYear.innerHTML='<option value="">ปีบัญชี</option>'
+ years.forEach(y=>{
  fiscalYear.innerHTML+=`<option>${y}</option>`
-})
-}
-loadFiscalYears()
-
-/* ===== เช็ค Quota ===== */
-async function checkQuota(){
-  const fy=fiscalYear.value
-  const g=groupSel.value
-  const q=parseInt(quota.value||0)
-
-  if(!q) return true
-
-  const {data}=await sb.from('meeting_random')
-    .select('member_id')
-    .eq('group',g)
-    .eq('fiscal_year',fy)
-
-  if(data.length>=q){
-    Swal.fire('ครบจำนวนสิทธิ์แล้ว','','warning')
-    return false
-  }
-  return true
+ })
 }
 
-/* ===== โหลด Pool ===== */
 async function loadPool(){
-const g=groupSel.value
-const fy=fiscalYear.value
-if(!g||!fy) return alert('เลือกกลุ่ม/ปี')
+ const g=groupSel.value
+ const fy=fiscalYear.value
+ if(!g||!fy) return alert('เลือกกลุ่ม/ปี')
 
-const {data}=await sb.from('member_meeting')
-.select('*')
-.eq('meeting_type','ประชุมกลุ่ม')
-.eq('group',g)
-.eq('fiscal_year',fy)
+ const {data}=await sb.from('member_meeting')
+ .select('*')
+ .eq('meeting_type','ประชุมกลุ่ม')
+ .eq('group',g)
+ .eq('fiscal_year',fy)
 
-const {data:used}=await sb.from('meeting_random')
-.select('member_id')
-.eq('fiscal_year',fy)
-.eq('group',g)
+ const {data:used}=await sb.from('meeting_random')
+ .select('member_id')
+ .eq('fiscal_year',fy)
 
-const usedIds=used.map(u=>u.member_id)
-pool=data.filter(m=>!usedIds.includes(m.member_id))
+ const usedIds=used.map(u=>u.member_id)
+ pool=data.filter(m=>!usedIds.includes(m.member_id))
 
-remainBox.innerText=`เหลือ ${pool.length} คน`
-toast('โหลดสำเร็จ')
+ remainBox.innerText=`เหลือ ${pool.length} คน`
+ toast('โหลดสำเร็จ')
+ loadWinnerList()
 }
 
-/* ===== สุ่ม ===== */
 async function randomMember(){
+ if(pool.length==0) return alert('ไม่มีคน')
 
-const ok=await checkQuota()
-if(!ok) return
+ if(winner) return alert('ยังไม่ได้บันทึก')
 
-if(pool.length==0) return alert('ไม่มีคน')
+ const quotaNum=parseInt(quota.value||0)
 
-let box=document.getElementById('spinBox')
-box.classList.remove('glow')
+ const {data:used}=await sb.from('meeting_random')
+ .select('*')
+ .eq('group',groupSel.value)
+ .eq('fiscal_year',fiscalYear.value)
 
-let t=0
-const iv=setInterval(()=>{
+ if(quotaNum>0 && used.length>=quotaNum)
+ return alert('ครบจำนวนสิทธิ์แล้ว')
+
+ let box=document.getElementById('spinBox')
+ box.classList.remove('glow')
+
+ let t=0
+ const iv=setInterval(()=>{
  const r=pool[Math.floor(Math.random()*pool.length)]
  box.innerText=r.first_name+' '+r.last_name
  t++
- if(t>25){
-   clearInterval(iv)
-   winner=r
-   box.innerText=r.first_name+' '+r.last_name
-   box.classList.add('glow')
-   popupWinner()
+ if(t>20){
+ clearInterval(iv)
+ winner=r
+ box.innerText=r.first_name+' '+r.last_name
+ box.classList.add('glow')
+ showPopup(r)
  }
-},150)
+ },150)
 }
 
-/* ===== Popup ===== */
-function popupWinner(){
-Swal.fire({
-  background:'#ffffff',
-  color:'#000000',
-  title:'ผลการสุ่ม',
-  html:`<h2>${winner.first_name} ${winner.last_name}</h2>`,
-  showCancelButton:true,
-  confirmButtonText:'บันทึก',
-  cancelButtonText:'ไม่บันทึก'
-}).then(res=>{
- if(res.isConfirmed) saveWinner()
-})
-}
+async function showPopup(r){
+ const res=await Swal.fire({
+ title:'ยืนยันสิทธิ์?',
+ html:`<b>${r.first_name} ${r.last_name}</b>`,
+ showCancelButton:true,
+ confirmButtonText:'บันทึก',
+ cancelButtonText:'ไม่บันทึก',
+ backdrop:false
+ })
 
-/* ===== บันทึก ===== */
-async function saveWinner(){
-await sb.from('meeting_random').insert([{
- member_id:winner.member_id,
- first_name:winner.first_name,
- last_name:winner.last_name,
- group:winner.group,
+ if(!res.isConfirmed){
+ winner=null
+ spinBox.innerText='ยกเลิก'
+ return
+ }
+
+ await sb.from('meeting_random').insert([{
+ member_id:r.member_id,
+ first_name:r.first_name,
+ last_name:r.last_name,
+ group:r.group,
  fiscal_year:fiscalYear.value
-}])
+ }])
 
-toast('บันทึกแล้ว')
-winner=null
-loadPool()
+ toast('บันทึกแล้ว')
+ winner=null
+ loadPool()
 }
+
+async function loadWinnerList(){
+ const g=groupSel.value
+ const fy=fiscalYear.value
+ if(!fy) return
+
+ let q=sb.from('meeting_random').select('*')
+ if(g) q=q.eq('group',g)
+ if(fy) q=q.eq('fiscal_year',fy)
+
+ const {data}=await q.order('member_id')
+
+ winnerRows.innerHTML=''
+ winnerCount.innerText=`ทั้งหมด ${data.length} คน`
+
+ data.forEach((r,i)=>{
+ winnerRows.innerHTML+=`
+<tr>
+<td>${i+1}</td>
+<td>${r.first_name}</td>
+<td>${r.last_name}</td>
+<td>
+<button onclick="removeWinner(${r.id})"
+ class="bg-red-600 px-2 py-1 rounded">
+ลบ
+</button>
+</td>
+</tr>`
+ })
+}
+
+async function removeWinner(id){
+ const cf=await Swal.fire({
+ title:'ลบสิทธิ์นี้หรือไม่?',
+ showCancelButton:true
+ })
+ if(!cf.isConfirmed) return
+
+ await sb.from('meeting_random').delete().eq('id',id)
+ loadWinnerList()
+}
+
+loadFiscalYear()
 </script>
 
 </body>
