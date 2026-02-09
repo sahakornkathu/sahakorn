@@ -11,10 +11,43 @@
  href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
 
 <style>
-.spinText{
-  font-size:30px;
+.spinBox{
+  font-size:32px;
   font-weight:bold;
-  color:#fff;
+  height:120px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:16px;
+  background:linear-gradient(45deg,#0ea5e9,#9333ea);
+  color:white;
+  box-shadow:0 0 20px #38bdf8;
+}
+.glow{
+  animation: glow 1s infinite alternate;
+}
+@keyframes glow{
+  from{box-shadow:0 0 10px #fff}
+  to{box-shadow:0 0 30px #facc15}
+}
+
+/* SweetAlert Dark */
+.swal2-popup{
+  background:#020617 !important;
+  color:#f9fafb !important;
+}
+.swal2-title{
+  color:#facc15 !important;
+}
+.swal2-confirm{
+  background:#16a34a !important;
+}
+.swal2-cancel{
+  background:#dc2626 !important;
+}
+.spinText{
+  font-size:28px;
+  font-weight:bold;
 }
 </style>
 </head>
@@ -28,7 +61,6 @@
 </h1>
 
 <div class="grid md:grid-cols-3 gap-3">
-
 <select id="groupSel" class="text-black p-2 rounded">
 <option value="">เลือกกลุ่ม</option>
 <option>1</option><option>2</option><option>3</option>
@@ -36,9 +68,7 @@
 <option>7</option><option>8</option><option>9</option>
 </select>
 
-<select id="fiscalYear" class="text-black p-2 rounded">
-<option value="">เลือกปีบัญชี</option>
-</select>
+<select id="fiscalYear" class="text-black p-2 rounded"></select>
 
 <input id="quota" class="text-black p-2 rounded"
  placeholder="สิทธิ์ทั้งหมด">
@@ -48,6 +78,10 @@
  class="w-full bg-blue-600 p-3 rounded">
 โหลดรายชื่อ
 </button>
+
+<div id="spinBox" class="spinBox">
+ยังไม่ได้สุ่ม
+</div>
 
 <div class="grid md:grid-cols-2 gap-3">
 <button onclick="randomMember()"
@@ -74,20 +108,32 @@ const sb = supabase.createClient(
 let pool=[]
 let winner=null
 
-/* ===== โหลดปีบัญชี ===== */
-async function loadFiscalYears(){
- const {data}=await sb.from('member_meeting')
- .select('fiscal_year')
-
- const years=[...new Set(data.map(d=>d.fiscal_year))].sort((a,b)=>b-a)
-
- fiscalYear.innerHTML='<option value="">เลือกปีบัญชี</option>'
- years.forEach(y=>{
-  fiscalYear.innerHTML+=`<option>${y}</option>`
- })
+function toast(msg){
+Swal.fire({
+ toast:true,
+ position:'top-end',
+ icon:'success',
+ title:msg,
+ showConfirmButton:false,
+ timer:2000
+})
 }
 
-/* ===== โหลด Pool ===== */
+/* ===== LOAD YEAR DROPDOWN ===== */
+async function loadYears(){
+const {data}=await sb.from('member_meeting')
+.select('fiscal_year')
+
+let years=[...new Set(data.map(d=>d.fiscal_year))]
+years.sort((a,b)=>b-a)
+
+fiscalYear.innerHTML='<option value="">เลือกปีบัญชี</option>'
+years.forEach(y=>{
+ fiscalYear.innerHTML+=`<option>${y}</option>`
+})
+}
+
+/* ===== LOAD POOL ===== */
 async function loadPool(){
 const g=groupSel.value
 const fy=fiscalYear.value
@@ -107,30 +153,28 @@ const usedIds=used.map(u=>u.member_id)
 pool=data.filter(m=>!usedIds.includes(m.member_id))
 
 remainBox.innerText=`เหลือ ${pool.length} คน`
-Swal.fire('โหลดสำเร็จ','','success')
+toast('โหลดสำเร็จ')
 }
 
-/* ===== สุ่มแบบ Popup ===== */
+/* ===== RANDOM POPUP ===== */
 async function randomMember(){
 if(pool.length==0) return alert('ไม่มีคน')
-
-let t=0
-winner=null
 
 Swal.fire({
  title:'กำลังสุ่ม...',
  html:'<div id="spin" class="spinText">...</div>',
+ background:'#020617',
+ color:'#fff',
  showConfirmButton:false,
- allowOutsideClick:false,
- backdrop:true
+ allowOutsideClick:false
 })
 
+let t=0
 const iv=setInterval(()=>{
  const r=pool[Math.floor(Math.random()*pool.length)]
- document.getElementById('spin').innerText=
-   r.member_id+' '+r.first_name
+ document.getElementById('spin').innerText=r.member_id+' '+r.first_name
  t++
- if(t>25){
+ if(t>20){
    clearInterval(iv)
    winner=r
    Swal.update({
@@ -144,13 +188,14 @@ const iv=setInterval(()=>{
 },200)
 }
 
-/* ===== บันทึก ===== */
+/* ===== SAVE ===== */
 async function saveWinner(){
-if(!winner) return alert('ยังไม่สุ่ม')
+if(!winner) return
 
 const confirm=await Swal.fire({
  title:'บันทึกหรือไม่?',
- showCancelButton:true
+ showCancelButton:true,
+ backdrop:false
 })
 
 if(!confirm.isConfirmed) return
@@ -163,12 +208,13 @@ await sb.from('meeting_random').insert([{
  fiscal_year:fiscalYear.value
 }])
 
-Swal.fire('บันทึกแล้ว','','success')
+toast('บันทึกแล้ว')
 winner=null
 loadPool()
 }
 
-loadFiscalYears()
+/* INIT */
+loadYears()
 </script>
 
 </body>
