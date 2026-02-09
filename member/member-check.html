@@ -99,6 +99,36 @@ let isSuperAdmin = false
 let adminGroup = null
 
 /* ================= INIT ================= */
+// async function init(){
+//   await liff.init({ liffId: LIFF_ID })
+
+//   if (!liff.isInClient()) {
+//     document.body.innerHTML =
+//       '<div class="text-center mt-20 text-xl">❌ กรุณาเปิดผ่าน LINE เท่านั้น</div>'
+//     return
+//   }
+
+//   if (!liff.isLoggedIn()) return liff.login()
+
+//   const profile = await liff.getProfile()
+
+//   const { data: admin } = await supabaseClient
+//     .from('adminmember')
+//     .select('position, approve_status')
+//     .eq('line_user_id', profile.userId)
+//     .maybeSingle()
+
+//   if (!admin || admin.approve_status !== 'approved') {
+//     alert('❌ ไม่มีสิทธิ์เข้าถึง')
+//     return
+//   }
+
+//   isSuperAdmin = admin.position === 'superadmin'
+//   adminGroup = isSuperAdmin ? null : admin.position.match(/\d+/)?.[0]
+
+//   initMap()
+//   loadMembers()
+// }
 async function init(){
   await liff.init({ liffId: LIFF_ID })
 
@@ -128,6 +158,11 @@ async function init(){
 
   initMap()
   loadMembers()
+
+  // ⭐ เพิ่มตรงนี้
+  setTimeout(()=>{
+    goMyLocation()
+  }, 800)
 }
 
 /* ================= MAP ================= */
