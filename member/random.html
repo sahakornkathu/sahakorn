@@ -401,10 +401,19 @@ ${rowsHtml}
 </html>
 `
 
-  const w = window.open('')
-  w.document.write(html)
-  w.document.close()
-  w.print()
+  const w = window.open('', '_blank')
+
+w.document.write(html)
+w.document.close()
+
+// รอฟอนต์โหลด
+w.onload = () => {
+  w.document.fonts.ready.then(() => {
+    w.focus()
+    w.print()
+  })
+}
+
 }
 
 
