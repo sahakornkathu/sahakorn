@@ -73,7 +73,8 @@
 
 <div class="flex justify-center">
   <button onclick="randomMember()"
-   class="bg-purple-600 px-10 py-4 rounded text-lg font-bold">
+   class="bg-purple-600 px-10 py-4 rounded text-lg font-bold
+          hover:bg-purple-700 shadow-lg transition">
    🎲 สุ่มรายชื่อ
   </button>
 </div>
@@ -92,16 +93,24 @@ let pool=[]
 let lockPool=[]
 let normalPool=[]
 let winner=null
-let lockTurn=false
+
+function playSpin(){
+ const a=document.getElementById('spinSound')
+ a.currentTime=0
+ a.play()
+}
+function playWin(){
+ const a=document.getElementById('winSound')
+ a.currentTime=0
+ a.play()
+}
 
 async function loadFiscalYear(){
- const {data} = await sb.from('member_meeting')
- .select('fiscal_year')
-
+ const {data}=await sb.from('member_meeting').select('fiscal_year')
  const years=[...new Set(data.map(d=>d.fiscal_year))]
  fiscalYear.innerHTML='<option value="">ปีบัญชี</option>'
  years.forEach(y=>{
- fiscalYear.innerHTML+=`<option>${y}</option>`
+  fiscalYear.innerHTML+=`<option>${y}</option>`
  })
 }
 
@@ -116,103 +125,52 @@ async function loadPool(){
  .eq('group',g)
  .eq('fiscal_year',fy)
 
- const {data:used}=await sb.from('meeting_random')
- .select('member_id')
- .eq('fiscal_year',fy)
+ pool=data||[]
 
- const usedIds=used.map(u=>u.member_id)
- pool=data.filter(m=>!usedIds.includes(m.member_id))
+ // ===== แยก lock =====
+ lockPool = pool.filter(m=>m.lock_random===true)
+ normalPool = pool.filter(m=>!m.lock_random)
 
- lockPool = pool.filter(m => m.is_lock === true)
- normalPool = pool.filter(m => !m.is_lock)
-
- remainBox.innerText=`เหลือ ${pool.length} คน`
+ remainBox.innerText=`ทั้งหมด ${pool.length} คน | Lock ${lockPool.length}`
 }
 
-// async function randomMember(){
-//  if(pool.length==0) return alert('ไม่มีคน')
-//  if(winner) return alert('ยังไม่ได้บันทึก')
-
-//  let source = []
-
-//  if(lockTurn && lockPool.length > 0){
-//    source = lockPool
-//  } else if(normalPool.length > 0){
-//    source = normalPool
-//  } else {
-//    source = pool
-//  }
-
-//  lockTurn = !lockTurn
-
-//  let box=document.getElementById('spinBox')
-//  box.classList.remove('glow')
-
-//  let t=0
-//  const iv=setInterval(()=>{
-//  const r=source[Math.floor(Math.random()*source.length)]
-//  box.innerText=r.first_name+' '+r.last_name
-//  t++
-//  if(t>25){
-//       clearInterval(iv)
-//       winner=r
-//       box.innerText=r.first_name+' '+r.last_name
-//       box.classList.add('glow')
-//       showPopup(r)
-//     }
-//   },180)
-// }
- async function randomMember(){
- if(pool.length==0) return alert('ไม่มีคน')
+async function randomMember(){
+ if(pool.length===0) return alert('ไม่มีคน')
  if(winner) return alert('ยังไม่ได้บันทึก')
-
- const quotaNum = parseInt(quota.value || 0)
-
- // ===== เช็คคนที่ถูกเลือกไปแล้ว =====
- const {data:used} = await sb.from('meeting_random')
- .select('*')
- .eq('group', groupSel.value)
- .eq('fiscal_year', fiscalYear.value)
-
- if(quotaNum > 0 && used.length >= quotaNum){
-  await Swal.fire({
-    icon:'warning',
-    title:'ครบจำนวนสิทธิ์แล้ว',
-    text:`กลุ่มนี้ใช้สิทธิ์ครบ ${quotaNum} คน`,
-    confirmButtonColor:'#eab308'
-  })
-  return
- }
-
- // ===== เลือกแหล่งสุ่ม =====
- let source = []
-
- if(lockPool.length > 0){
-   source = lockPool        // Lock มาก่อน
- }else if(normalPool.length > 0){
-   source = normalPool      // ค่อยสุ่มคนปกติ
- }else{
-   return alert('ไม่มีรายชื่อเหลือ')
- }
 
  let box=document.getElementById('spinBox')
  box.classList.remove('glow')
+ playSpin()
 
  let t=0
  const iv=setInterval(()=>{
- const r=source[Math.floor(Math.random()*source.length)]
- box.innerText=r.first_name+' '+r.last_name
- t++
- if(t>25){
-      clearInterval(iv)
-      winner=r
-      box.innerText=r.first_name+' '+r.last_name
-      box.classList.add('glow')
-      showPopup(r)
-    }
-  },180)
-}
 
+  // ===== ตอนหมุน วิ่งทุกคน =====
+  const r=pool[Math.floor(Math.random()*pool.length)]
+  box.innerText=r.first_name+' '+r.last_name
+  t++
+
+  if(t>25){
+   clearInterval(iv)
+
+   // ===== ตอนจบ ค่อยบังคับ =====
+   let finalPick=null
+
+   if(lockPool.length>0){
+    finalPick=lockPool[Math.floor(Math.random()*lockPool.length)]
+   }else{
+    finalPick=normalPool[Math.floor(Math.random()*normalPool.length)]
+   }
+
+   winner=finalPick
+   box.innerText=finalPick.first_name+' '+finalPick.last_name
+   box.classList.add('glow')
+   playWin()
+   showPopup(finalPick)
+  }
+
+ },180)
+}
 
 async function showPopup(r){
  const res=await Swal.fire({
@@ -220,7 +178,7 @@ async function showPopup(r){
   html:`<b>${r.first_name} ${r.last_name}</b>`,
   showCancelButton:true,
   confirmButtonText:'บันทึก',
-  cancelButtonText:'ไม่บันทึก'
+  cancelButtonText:'ยกเลิก'
  })
 
  if(!res.isConfirmed){
