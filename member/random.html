@@ -222,33 +222,60 @@ async function randomMember(){
 }
 
 async function showPopup(r){
- const res=await Swal.fire({
- title:'ยืนยันสิทธิ์?',
- html:`<b>${r.first_name} ${r.last_name}</b>`,
- showCancelButton:true,
- confirmButtonText:'บันทึก',
- cancelButtonText:'ไม่บันทึก',
- backdrop:false
+ const res = await Swal.fire({
+  title: '🎉 ผู้ได้รับสิทธิ์ 🎉',
+  html: `
+    <div class="animate__animated animate__zoomIn"
+         style="
+           background:linear-gradient(135deg,#0ea5e9,#9333ea);
+           padding:20px;
+           border-radius:16px;
+           color:white;
+           font-size:22px;
+           font-weight:bold;
+           box-shadow:0 0 25px #38bdf8;
+         ">
+      ${r.first_name} ${r.last_name}
+    </div>
+  `,
+  background: '#111827',
+  color: '#fff',
+  showCancelButton: true,
+  confirmButtonText: '💾 บันทึกสิทธิ์',
+  cancelButtonText: '❌ ไม่บันทึก',
+  confirmButtonColor: '#22c55e',
+  cancelButtonColor: '#ef4444',
+  backdrop: 'rgba(0,0,0,0.85)',
+  width: 420
  })
 
  if(!res.isConfirmed){
- winner=null
- spinBox.innerText='ยกเลิก'
- return
+  winner=null
+  spinBox.innerText='ยกเลิก'
+  return
  }
 
  await sb.from('meeting_random').insert([{
- member_id:r.member_id,
- first_name:r.first_name,
- last_name:r.last_name,
- group:r.group,
- fiscal_year:fiscalYear.value
+  member_id:r.member_id,
+  first_name:r.first_name,
+  last_name:r.last_name,
+  group:r.group,
+  fiscal_year:fiscalYear.value
  }])
 
- toast('บันทึกแล้ว')
+ Swal.fire({
+  icon:'success',
+  title:'บันทึกสำเร็จ',
+  timer:1500,
+  showConfirmButton:false,
+  background:'#111827',
+  color:'#fff'
+ })
+
  winner=null
  loadPool()
 }
+
 // เสียงสุ่ม
 function playSpin(){
   const a = document.getElementById('spinSound')
