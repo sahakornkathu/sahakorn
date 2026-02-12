@@ -124,6 +124,9 @@ const sb = supabase.createClient(
 
 let pool=[]
 let winner=null
+let lockPool = []
+let normalPool = []
+let useLockTurn = false
 
 function toast(msg){
 Swal.fire({
@@ -164,6 +167,17 @@ async function loadPool(){
 
  const usedIds=used.map(u=>u.member_id)
  pool=data.filter(m=>!usedIds.includes(m.member_id))
+// ===== โหลด lock =====
+const {data:locks}=await sb.from('meeting_lock')
+  .select('member_id')
+  .eq('group',g)
+  .eq('fiscal_year',fy)
+
+const lockIds = (locks || []).map(l=>l.member_id)
+
+// แยก pool
+lockPool = pool.filter(p=>lockIds.includes(p.member_id))
+normalPool = pool.filter(p=>!lockIds.includes(p.member_id))
 
  remainBox.innerText=`เหลือ ${pool.length} คน`
  toast('โหลดสำเร็จ')
@@ -206,7 +220,17 @@ async function randomMember(){
  
  let t=0
  const iv=setInterval(()=>{
- const r=pool[Math.floor(Math.random()*pool.length)]
+ let source = []
+
+if(useLockTurn && lockPool.length > 0){
+  source = lockPool
+}else{
+  source = normalPool.length > 0 ? normalPool : lockPool
+}
+
+const r = source[Math.floor(Math.random()*source.length)]
+ 
+
  box.innerText=r.first_name+' '+r.last_name
  t++
  if(t>25){
@@ -214,6 +238,7 @@ async function randomMember(){
       winner=r
       box.innerText=r.first_name+' '+r.last_name
       box.classList.add('glow')
+      useLockTurn = !useLockTurn
 
       playWin()
       showPopup(r)
