@@ -32,6 +32,9 @@
 </head>
 
 <body class="bg-slate-900 text-white p-6">
+ <!-- เสียงสุ่ม -->
+<audio id="spinSound" src="spin.mp3" preload="auto"></audio>
+<audio id="winSound" src="win.mp3" preload="auto"></audio>
 
 <div class="max-w-3xl mx-auto space-y-6">
 
@@ -195,14 +198,15 @@ async function randomMember(){
  const r=pool[Math.floor(Math.random()*pool.length)]
  box.innerText=r.first_name+' '+r.last_name
  t++
- if(t>20){
- clearInterval(iv)
- winner=r
- box.innerText=r.first_name+' '+r.last_name
- box.classList.add('glow')
- showPopup(r)
- }
- },150)
+ if(t>25){
+      clearInterval(iv)
+      winner=r
+      box.innerText=r.first_name+' '+r.last_name
+      box.classList.add('glow')
+
+      playWin()   // 🔔 เสียงได้ผู้ชนะ
+    }
+  },180)
 }
 
 async function showPopup(r){
@@ -233,7 +237,20 @@ async function showPopup(r){
  winner=null
  loadPool()
 }
+// เสียงสุ่ม
+function playSpin(){
+  const a = document.getElementById('spinSound')
+  a.currentTime = 0
+  a.play()
+}
 
+function playWin(){
+  const a = document.getElementById('winSound')
+  a.currentTime = 0
+  a.play()
+}
+
+ 
 async function loadWinnerList(){
  const g=groupSel.value
  const fy=fiscalYear.value
