@@ -129,21 +129,71 @@ async function loadPool(){
  remainBox.innerText=`เหลือ ${pool.length} คน`
 }
 
-async function randomMember(){
+// async function randomMember(){
+//  if(pool.length==0) return alert('ไม่มีคน')
+//  if(winner) return alert('ยังไม่ได้บันทึก')
+
+//  let source = []
+
+//  if(lockTurn && lockPool.length > 0){
+//    source = lockPool
+//  } else if(normalPool.length > 0){
+//    source = normalPool
+//  } else {
+//    source = pool
+//  }
+
+//  lockTurn = !lockTurn
+
+//  let box=document.getElementById('spinBox')
+//  box.classList.remove('glow')
+
+//  let t=0
+//  const iv=setInterval(()=>{
+//  const r=source[Math.floor(Math.random()*source.length)]
+//  box.innerText=r.first_name+' '+r.last_name
+//  t++
+//  if(t>25){
+//       clearInterval(iv)
+//       winner=r
+//       box.innerText=r.first_name+' '+r.last_name
+//       box.classList.add('glow')
+//       showPopup(r)
+//     }
+//   },180)
+// }
+ async function randomMember(){
  if(pool.length==0) return alert('ไม่มีคน')
  if(winner) return alert('ยังไม่ได้บันทึก')
 
- let source = []
+ const quotaNum = parseInt(quota.value || 0)
 
- if(lockTurn && lockPool.length > 0){
-   source = lockPool
- } else if(normalPool.length > 0){
-   source = normalPool
- } else {
-   source = pool
+ // ===== เช็คคนที่ถูกเลือกไปแล้ว =====
+ const {data:used} = await sb.from('meeting_random')
+ .select('*')
+ .eq('group', groupSel.value)
+ .eq('fiscal_year', fiscalYear.value)
+
+ if(quotaNum > 0 && used.length >= quotaNum){
+  await Swal.fire({
+    icon:'warning',
+    title:'ครบจำนวนสิทธิ์แล้ว',
+    text:`กลุ่มนี้ใช้สิทธิ์ครบ ${quotaNum} คน`,
+    confirmButtonColor:'#eab308'
+  })
+  return
  }
 
- lockTurn = !lockTurn
+ // ===== เลือกแหล่งสุ่ม =====
+ let source = []
+
+ if(lockPool.length > 0){
+   source = lockPool        // Lock มาก่อน
+ }else if(normalPool.length > 0){
+   source = normalPool      // ค่อยสุ่มคนปกติ
+ }else{
+   return alert('ไม่มีรายชื่อเหลือ')
+ }
 
  let box=document.getElementById('spinBox')
  box.classList.remove('glow')
@@ -162,6 +212,7 @@ async function randomMember(){
     }
   },180)
 }
+
 
 async function showPopup(r){
  const res=await Swal.fire({
