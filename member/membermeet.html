@@ -110,6 +110,7 @@
 <th>ประเภท</th>
 <th>วันที่</th>
 <th>ปีบัญชี</th>
+<th>Lock</th>
 </tr>
 </thead>
 <tbody id="rows"></tbody>
@@ -178,10 +179,10 @@ form.onsubmit = async e=>{
     group:group.value,
     meeting_type:meeting_type.value,
     meeting_date:meeting_date.value,
-    fiscal_year:parseInt(fiscal_year.value)
+    fiscal_year:parseInt(fiscal_year.value),
+    is_lock:false
   }
 
-  // ===== CHECK DUPLICATE =====
   const { data: exists } = await db
     .from('member_meeting')
     .select('id')
@@ -202,7 +203,6 @@ form.onsubmit = async e=>{
   }
 
   Swal.fire('บันทึกสำเร็จ','','success')
-
   form.reset()
   setDefaultDate()
   load()
@@ -237,7 +237,34 @@ async function load(){
 <td>${r.meeting_type}</td>
 <td>${r.meeting_date}</td>
 <td>${r.fiscal_year}</td>
+<td>
+<input type="checkbox"
+ ${r.is_lock ? 'checked' : ''}
+ onchange="toggleLock(${r.id}, this.checked)">
+</td>
 </tr>`
+  })
+}
+
+/* ===== TOGGLE LOCK ===== */
+async function toggleLock(id,val){
+  const { error } = await db
+    .from('member_meeting')
+    .update({ is_lock: val })
+    .eq('id', id)
+
+  if(error){
+    Swal.fire('ผิดพลาด','','error')
+    return
+  }
+
+  Swal.fire({
+    toast:true,
+    position:'top-end',
+    icon:'success',
+    title: val ? 'ล็อคแล้ว' : 'ปลดล็อคแล้ว',
+    showConfirmButton:false,
+    timer:1000
   })
 }
 
