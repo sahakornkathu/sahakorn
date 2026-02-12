@@ -158,7 +158,7 @@ async function loadPool(){
  const {data}=await sb.from('member_meeting')
  .select('*')
  .eq('meeting_type','ประชุมกลุ่ม')
- .eq('group',g)
+ .eq('group_no',g)
  .eq('fiscal_year',fy)
 
  const {data:used}=await sb.from('meeting_random')
