@@ -113,7 +113,7 @@ function playWin(){
 
 async function loadFiscalYear(){
  const {data}=await sb.from('member_meeting').select('fiscal_year')
- const years=[...new Set(data.map(d=>d.fiscal_year))]
+ const years=[...new Set((data||[]).map(d=>d.fiscal_year))]
  fiscalYear.innerHTML='<option value="">ปีบัญชี</option>'
  years.forEach(y=>{
   fiscalYear.innerHTML+=`<option>${y}</option>`
@@ -143,18 +143,24 @@ async function loadPool(){
 
 async function randomMember(){
 
+ // ===== QUOTA CHECK =====
  const q=parseInt(quota.value||0)
  if(!q) return alert('กรอกโควต้า')
 
- const {count} = await sb.from('meeting_random')
- .select('*',{count:'exact',head:true})
+ const {data:used}=await sb.from('meeting_random')
+ .select('member_id')
  .eq('group',groupSel.value)
  .eq('fiscal_year',fiscalYear.value)
 
- if(count>=q){
+ const usedIds=(used||[]).map(u=>u.member_id)
+ if(usedIds.length>=q){
   alert('ครบโควต้าแล้ว')
   return
  }
+
+ // ===== CUT USED =====
+ lockPool = lockPool.filter(m=>!usedIds.includes(m.member_id))
+ normalPool = normalPool.filter(m=>!usedIds.includes(m.member_id))
 
  if(pool.length===0) return alert('ไม่มีคน')
  if(winner) return alert('ยังไม่ได้บันทึก')
@@ -181,6 +187,11 @@ async function randomMember(){
     finalPick=normalPool[Math.floor(Math.random()*normalPool.length)]
    }
 
+   if(!finalPick){
+    alert('ไม่มีคนเหลือ')
+    return
+   }
+
    winner=finalPick
    box.innerText=finalPick.first_name+' '+finalPick.last_name
    box.classList.add('glow')
@@ -192,6 +203,13 @@ async function randomMember(){
 }
 
 async function showPopup(r){
+
+ if(!r || !r.member_id){
+  alert('ข้อมูลผิด')
+  winner=null
+  return
+ }
+
  const res=await Swal.fire({
   title:'ผู้ได้รับสิทธิ์',
   html:`<b>${r.first_name} ${r.last_name}</b>`,
@@ -215,13 +233,11 @@ async function showPopup(r){
 
  winner=null
  loadPool()
- loadWinnerList()
 }
 
 async function loadWinnerList(){
  const g=groupSel.value
  const fy=fiscalYear.value
- const q=parseInt(quota.value||0)
  if(!g||!fy) return
 
  const {data:winData}=await sb.from('meeting_random')
@@ -229,47 +245,18 @@ async function loadWinnerList(){
   .eq('group',g)
   .eq('fiscal_year',fy)
 
- if(!winData) return
-
- const ids=winData.map(d=>d.member_id)
-
- const {data:memData}=await sb.from('member_meeting')
-  .select('member_id,lock_random')
-  .in('member_id',ids)
-
- const lockMap={}
- memData.forEach(m=>lockMap[m.member_id]=m.lock_random)
-
- const lockList=[]
- const normalList=[]
-
- winData.forEach(w=>{
-  if(lockMap[w.member_id]) lockList.push(w)
-  else normalList.push(w)
- })
-
- let finalList=[...lockList,...normalList]
-
- if(q>0){
-  finalList=finalList.slice(0,q)
- }
-
  const box=document.getElementById('winnerList')
  box.innerHTML=''
 
- if(finalList.length===0){
+ if(!winData || winData.length===0){
   box.innerHTML='<div class="text-gray-400">ยังไม่มีผู้ได้รับสิทธิ์</div>'
   return
  }
 
- finalList.forEach(r=>{
-  const badge = lockMap[r.member_id]
-   ? '<span class="text-yellow-400 ml-2">LOCK</span>'
-   : ''
-
+ winData.forEach(r=>{
   box.innerHTML+=`
    <div class="flex justify-between items-center bg-slate-700 p-2 rounded">
-    <div>${r.first_name} ${r.last_name} ${badge}</div>
+    <div>${r.first_name} ${r.last_name}</div>
     <button onclick="deleteWinner(${r.id})"
      class="bg-red-600 px-3 py-1 rounded hover:bg-red-700">
      ลบ
@@ -286,13 +273,9 @@ async function deleteWinner(id){
   showCancelButton:true,
   confirmButtonText:'ลบ'
  })
-
  if(!res.isConfirmed) return
 
- await sb.from('meeting_random')
-  .delete()
-  .eq('id',id)
-
+ await sb.from('meeting_random').delete().eq('id',id)
  loadWinnerList()
 }
 
