@@ -71,8 +71,8 @@
 
 <script>
 const sb = supabase.createClient(
-'https://ttottijljxoinptmhgtu.supabase.co',
-'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'
+ 'https://ttottijljxoinptmhgtu.supabase.co',
+ 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'
 )
 
 let pool=[]
@@ -99,10 +99,7 @@ async function loadPool(){
  .eq('fiscal_year',fy)
 
  pool=data||[]
- lockPool=pool.filter(m=>m.is_lock==true)
- normalPool=pool.filter(m=>m.is_lock!=true)
-
- remainBox.innerText=`ทั้งหมด ${pool.length} | Lock ${lockPool.length}`
+ remainBox.innerText=`ทั้งหมด ${pool.length}`
  loadWinnerList()
 }
 
@@ -111,12 +108,21 @@ async function randomMember(){
  const q=parseInt(quota.value||0)
  if(!q) return alert('กรอกโควต้า')
 
+ // ===== คนที่ได้แล้ว =====
  const {data:used}=await sb.from('meeting_random')
  .select('member_id')
  .eq('group',groupSel.value)
  .eq('fiscal_year',fiscalYear.value)
 
- if((used||[]).length>=q) return alert('ครบโควต้าแล้ว')
+ const usedIds=(used||[]).map(u=>u.member_id)
+ if(usedIds.length>=q) return alert('ครบโควต้าแล้ว')
+
+ // ===== ตัดออก =====
+ const available=pool.filter(p=>!usedIds.includes(p.member_id))
+ lockPool=available.filter(m=>m.is_lock==true)
+ normalPool=available.filter(m=>m.is_lock!=true)
+
+ if(available.length===0) return alert('ไม่มีคนเหลือ')
 
  let box=document.getElementById('spinBox')
  box.classList.remove('glow')
@@ -124,7 +130,7 @@ async function randomMember(){
  let t=0
  const iv=setInterval(()=>{
 
-  const r=pool[Math.floor(Math.random()*pool.length)]
+  const r=available[Math.floor(Math.random()*available.length)]
   box.innerText=r.first_name+' '+r.last_name
   t++
 
@@ -137,8 +143,6 @@ async function randomMember(){
    }else{
     finalPick=normalPool[Math.floor(Math.random()*normalPool.length)]
    }
-
-   if(!finalPick) return alert('ไม่มีคนเหลือ')
 
    winner=finalPick
    box.innerText=finalPick.first_name+' '+finalPick.last_name
@@ -158,7 +162,7 @@ async function showPopup(r){
  .eq('fiscal_year',fiscalYear.value)
 
  if(dup.length>0){
-  alert('คนนี้ได้สิทธิ์แล้ว')
+  alert('ซ้ำ')
   winner=null
   return
  }
