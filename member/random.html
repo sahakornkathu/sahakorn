@@ -81,7 +81,7 @@
 
 <div id="remainBox" class="text-center text-sky-400"></div>
 
-<!-- ===== เพิ่มตรงนี้ ===== -->
+<!-- รายชื่อผู้ได้รับสิทธิ์ -->
 <div class="bg-slate-800 p-4 rounded-xl shadow">
   <h2 class="text-yellow-400 font-bold mb-3">ผู้ได้รับสิทธิ์แล้ว</h2>
   <div id="winnerList" class="space-y-2"></div>
@@ -133,13 +133,12 @@ async function loadPool(){
 
  pool=data||[]
 
- // ===== เดิมคุณ =====
- lockPool = pool.filter(m=>m.lock_random===true)
- normalPool = pool.filter(m=>!m.lock_random)
+ // เปลี่ยนเป็น is_lock
+ lockPool = pool.filter(m=>m.is_lock == true)
+ normalPool = pool.filter(m=>m.is_lock != true)
 
  remainBox.innerText=`ทั้งหมด ${pool.length} คน | Lock ${lockPool.length}`
 
- // ===== เพิ่มบรรทัดเดียว =====
  loadWinnerList()
 }
 
@@ -203,14 +202,10 @@ async function showPopup(r){
 
  winner=null
  loadPool()
-
- // ===== เพิ่มบรรทัดเดียว =====
  loadWinnerList()
 }
 
-/* ===================== */
-/* ===== เพิ่มใหม่ ===== */
-/* ===================== */
+/* ===== แสดงรายชื่อ ===== */
 
 async function loadWinnerList(){
  const g=groupSel.value
@@ -256,8 +251,6 @@ async function deleteWinner(id){
  await sb.from('meeting_random').delete().eq('id',id)
  loadWinnerList()
 }
-
-/* ===================== */
 
 loadFiscalYear()
 </script>
