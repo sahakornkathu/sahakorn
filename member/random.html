@@ -2,6 +2,8 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+
 <title>สุ่มสิทธิ์ประชุมใหญ่</title>
 
 <script src="https://cdn.tailwindcss.com"></script>
@@ -167,10 +169,25 @@ async function showPopup(r){
   return
  }
 
- const res=await Swal.fire({
-  title:'ผู้ได้รับสิทธิ์',
-  html:`<b>${r.first_name} ${r.last_name}</b>`,
-  showCancelButton:true
+ const res = await Swal.fire({
+  title: '🎉 ผู้ได้รับสิทธิ์ 🎉',
+  html: `
+    <div class="text-3xl font-bold text-yellow-400 mt-2">
+      ${r.first_name} ${r.last_name}
+    </div>
+  `,
+  background: '#0f172a',
+  color: '#fff',
+  confirmButtonText: 'บันทึก',
+  showCancelButton: true,
+  cancelButtonText: 'ยกเลิก',
+
+  showClass: {
+    popup: 'animate__animated animate__zoomIn animate__faster'
+  },
+  hideClass: {
+    popup: 'animate__animated animate__fadeOut'
+  }
  })
 
  if(!res.isConfirmed){
@@ -189,6 +206,7 @@ async function showPopup(r){
  winner=null
  loadPool()
 }
+
 
 async function loadWinnerList(){
  const {data}=await sb.from('meeting_random')
