@@ -83,11 +83,29 @@ let normalPool=[]
 let winner=null
 
 async function loadFiscalYear(){
- const {data}=await sb.from('member_meeting').select('fiscal_year')
- const years=[...new Set((data||[]).map(d=>d.fiscal_year))]
- fiscalYear.innerHTML='<option value="">ปีบัญชี</option>'
- years.forEach(y=> fiscalYear.innerHTML+=`<option>${y}</option>`)
+ const {data, error} = await sb
+  .from('member_meeting')
+  .select('fiscal_year')
+
+ console.log('YEAR DATA:', data, error)
+
+ if(!data || data.length === 0){
+  fiscalYear.innerHTML = '<option value="">ไม่มีปีบัญชี</option>'
+  return
+ }
+
+ const years = [...new Set(
+  data
+   .map(d => d.fiscal_year)
+   .filter(Boolean) // ตัด null
+ )]
+
+ fiscalYear.innerHTML = '<option value="">ปีบัญชี</option>'
+ years.forEach(y=>{
+  fiscalYear.innerHTML += `<option value="${y}">${y}</option>`
+ })
 }
+
 
 async function loadPool(){
  const g=groupSel.value
