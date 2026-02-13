@@ -117,7 +117,31 @@ async function randomMember(){
  .eq('fiscal_year',fiscalYear.value)
 
  const usedIds=(used||[]).map(u=>u.member_id)
- if(usedIds.length>=q) return alert('ครบโควต้าแล้ว')
+ // if(usedIds.length>=q) return alert('ครบโควต้าแล้ว')
+  if(usedIds.length >= q){
+ await Swal.fire({
+  icon: 'info',
+  title: 'ครบจำนวนสิทธิ์แล้ว',
+  html: `
+    <div class="text-lg mt-2">
+      โควต้ากลุ่มนี้เต็มแล้ว<br>
+      ไม่สามารถสุ่มเพิ่มได้
+    </div>
+  `,
+  background: '#0f172a',
+  color: '#fff',
+  confirmButtonText: 'ตกลง',
+
+  showClass: {
+    popup: 'animate__animated animate__shakeX'
+  },
+  hideClass: {
+    popup: 'animate__animated animate__fadeOut'
+  }
+ })
+ return
+}
+
 
  // ===== ตัดออก =====
  const available=pool.filter(p=>!usedIds.includes(p.member_id))
