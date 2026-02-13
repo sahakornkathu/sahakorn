@@ -82,6 +82,16 @@ let lockPool=[]
 let normalPool=[]
 let winner=null
 
+// สุ่ม lock
+  function shuffleArray(arr){
+ for(let i = arr.length - 1; i > 0; i--){
+  const j = Math.floor(Math.random() * (i + 1))
+  ;[arr[i], arr[j]] = [arr[j], arr[i]]
+ }
+ return arr
+}
+
+  
 async function loadFiscalYear(){
  const {data, error} = await sb
   .from('member_meeting')
@@ -228,12 +238,16 @@ if(!q){
   if(t>20){
    clearInterval(iv)
 
-   let finalPick=null
-   if(lockPool.length>0){
-    finalPick=lockPool[Math.floor(Math.random()*lockPool.length)]
-   }else{
-    finalPick=normalPool[Math.floor(Math.random()*normalPool.length)]
-   }
+   let finalPick = null
+
+// รวมสองกลุ่ม แล้วสับตำแหน่ง
+let mixed = shuffleArray([
+ ...lockPool,
+ ...normalPool
+])
+
+finalPick = mixed[0]
+
 
    winner=finalPick
    box.innerText=finalPick.first_name+' '+finalPick.last_name
