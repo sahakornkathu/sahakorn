@@ -108,7 +108,32 @@ async function loadPool(){
 async function randomMember(){
 
  const q=parseInt(quota.value||0)
- if(!q) return alert('กรอกโควต้า')
+ // if(!q) return alert('กรอกโควต้า')
+  const q = parseInt(quota.value || 0)
+
+if(!q){
+ await Swal.fire({
+  icon: 'warning',
+  title: 'กรุณากรอกจำนวนสิทธิ์',
+  html: `
+    <div class="text-lg mt-2">
+      โปรดระบุจำนวนโควต้าก่อนสุ่ม
+    </div>
+  `,
+  background: '#0f172a',
+  color: '#fff',
+  confirmButtonText: 'ตกลง',
+
+  showClass: {
+    popup: 'animate__animated animate__bounceIn'
+  },
+  hideClass: {
+    popup: 'animate__animated animate__fadeOut'
+  }
+ })
+ return
+}
+
 
  // ===== คนที่ได้แล้ว =====
  const {data:used}=await sb.from('meeting_random')
@@ -148,7 +173,31 @@ async function randomMember(){
  lockPool=available.filter(m=>m.is_lock==true)
  normalPool=available.filter(m=>m.is_lock!=true)
 
- if(available.length===0) return alert('ไม่มีคนเหลือ')
+ // if(available.length===0) return alert('ไม่มีคนเหลือ')
+  if(available.length === 0){
+ await Swal.fire({
+  icon: 'info',
+  title: 'ไม่มีรายชื่อให้สุ่มแล้ว',
+  html: `
+    <div class="text-lg mt-2">
+      สมาชิกกลุ่มนี้ได้รับสิทธิ์ครบแล้ว<br>
+      หรือไม่มีรายชื่อคงเหลือ
+    </div>
+  `,
+  background: '#0f172a',
+  color: '#fff',
+  confirmButtonText: 'ตกลง',
+
+  showClass: {
+    popup: 'animate__animated animate__fadeInDown'
+  },
+  hideClass: {
+    popup: 'animate__animated animate__fadeOutUp'
+  }
+ })
+ return
+}
+
 
  let box=document.getElementById('spinBox')
  box.classList.remove('glow')
