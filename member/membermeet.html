@@ -92,10 +92,18 @@
 <div class="bg-slate-800 p-4 rounded-xl border border-slate-700">
 <h2 class="text-sky-400 font-bold mb-3">ค้นหา</h2>
 
-<div class="grid md:grid-cols-3 gap-3">
+<div class="grid md:grid-cols-6 gap-3">
 <input id="f_member_id" class="input" placeholder="รหัสสมาชิก">
 <input id="f_first_name" class="input" placeholder="ชื่อ">
 <input id="f_last_name" class="input" placeholder="นามสกุล">
+<input id="f_group" class="input" placeholder="กลุ่ม">
+<select id="f_type" class="input">
+  <option value="">ประเภททั้งหมด</option>
+  <option value="ประชุมกลุ่ม">ประชุมกลุ่ม</option>
+  <option value="ประชุมใหญ่">ประชุมใหญ่</option>
+</select>
+<input id="f_year" class="input" placeholder="ปีบัญชี">
+
 </div>
 </div>
 
@@ -212,6 +220,9 @@ form.onsubmit = async e=>{
 const fMemberId = document.getElementById('f_member_id')
 const fFirst = document.getElementById('f_first_name')
 const fLast = document.getElementById('f_last_name')
+const fGroup = document.getElementById('f_group')
+const fType = document.getElementById('f_type')
+const fYear = document.getElementById('f_year')
 
 ;[fMemberId,fFirst,fLast].forEach(el=>{
   el.addEventListener('input', load)
