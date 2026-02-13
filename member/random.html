@@ -81,7 +81,7 @@
 
 <div id="remainBox" class="text-center text-sky-400"></div>
 
-<!-- ===== กล่องผู้ได้รับสิทธิ์ ===== -->
+<!-- ===== เพิ่มตรงนี้ ===== -->
 <div class="bg-slate-800 p-4 rounded-xl shadow">
   <h2 class="text-yellow-400 font-bold mb-3">ผู้ได้รับสิทธิ์แล้ว</h2>
   <div id="winnerList" class="space-y-2"></div>
@@ -113,7 +113,7 @@ function playWin(){
 
 async function loadFiscalYear(){
  const {data}=await sb.from('member_meeting').select('fiscal_year')
- const years=[...new Set((data||[]).map(d=>d.fiscal_year))]
+ const years=[...new Set(data.map(d=>d.fiscal_year))]
  fiscalYear.innerHTML='<option value="">ปีบัญชี</option>'
  years.forEach(y=>{
   fiscalYear.innerHTML+=`<option>${y}</option>`
@@ -133,37 +133,17 @@ async function loadPool(){
 
  pool=data||[]
 
-lockPool = pool.filter(m=>m.lock_random==true)
+ // ===== เดิมคุณ =====
+ lockPool = pool.filter(m=>m.lock_random===true)
  normalPool = pool.filter(m=>!m.lock_random)
 
  remainBox.innerText=`ทั้งหมด ${pool.length} คน | Lock ${lockPool.length}`
 
+ // ===== เพิ่มบรรทัดเดียว =====
  loadWinnerList()
 }
 
 async function randomMember(){
-
- // ===== QUOTA CHECK =====
- const q=parseInt(quota.value||0)
- if(!q) return alert('กรอกโควต้า')
-
- const {data:used}=await sb.from('meeting_random')
- .select('member_id')
- .eq('group',groupSel.value)
- .eq('fiscal_year',fiscalYear.value)
-
- const usedIds=(used||[]).map(u=>u.member_id)
- if(usedIds.length>=q){
-  alert('ครบโควต้าแล้ว')
-  return
- }
-
- // ===== CUT USED =====
- lockPool = lockPool.filter(m=>!usedIds.includes(m.member_id))
- normalPool = normalPool.filter(m=>!usedIds.includes(m.member_id))
-// ===== REBUILD POOL ใหม่ =====
-pool = [...lockPool, ...normalPool]
-
  if(pool.length===0) return alert('ไม่มีคน')
  if(winner) return alert('ยังไม่ได้บันทึก')
 
@@ -189,11 +169,6 @@ pool = [...lockPool, ...normalPool]
     finalPick=normalPool[Math.floor(Math.random()*normalPool.length)]
    }
 
-   if(!finalPick){
-    alert('ไม่มีคนเหลือ')
-    return
-   }
-
    winner=finalPick
    box.innerText=finalPick.first_name+' '+finalPick.last_name
    box.classList.add('glow')
@@ -205,13 +180,6 @@ pool = [...lockPool, ...normalPool]
 }
 
 async function showPopup(r){
-
- if(!r || !r.member_id){
-  alert('ข้อมูลผิด')
-  winner=null
-  return
- }
-
  const res=await Swal.fire({
   title:'ผู้ได้รับสิทธิ์',
   html:`<b>${r.first_name} ${r.last_name}</b>`,
@@ -235,27 +203,35 @@ async function showPopup(r){
 
  winner=null
  loadPool()
+
+ // ===== เพิ่มบรรทัดเดียว =====
+ loadWinnerList()
 }
+
+/* ===================== */
+/* ===== เพิ่มใหม่ ===== */
+/* ===================== */
 
 async function loadWinnerList(){
  const g=groupSel.value
  const fy=fiscalYear.value
  if(!g||!fy) return
 
- const {data:winData}=await sb.from('meeting_random')
+ const {data}=await sb.from('meeting_random')
   .select('*')
   .eq('group',g)
   .eq('fiscal_year',fy)
+  .order('id',{ascending:false})
 
  const box=document.getElementById('winnerList')
  box.innerHTML=''
 
- if(!winData || winData.length===0){
+ if(!data || data.length===0){
   box.innerHTML='<div class="text-gray-400">ยังไม่มีผู้ได้รับสิทธิ์</div>'
   return
  }
 
- winData.forEach(r=>{
+ data.forEach(r=>{
   box.innerHTML+=`
    <div class="flex justify-between items-center bg-slate-700 p-2 rounded">
     <div>${r.first_name} ${r.last_name}</div>
@@ -280,6 +256,8 @@ async function deleteWinner(id){
  await sb.from('meeting_random').delete().eq('id',id)
  loadWinnerList()
 }
+
+/* ===================== */
 
 loadFiscalYear()
 </script>
