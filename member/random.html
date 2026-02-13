@@ -81,6 +81,12 @@
 
 <div id="remainBox" class="text-center text-sky-400"></div>
 
+<!-- ===== กล่องผู้ได้รับสิทธิ์ ===== -->
+<div class="bg-slate-800 p-4 rounded-xl shadow">
+  <h2 class="text-yellow-400 font-bold mb-3">ผู้ได้รับสิทธิ์แล้ว</h2>
+  <div id="winnerList" class="space-y-2"></div>
+</div>
+
 </div>
 
 <script>
@@ -127,11 +133,13 @@ async function loadPool(){
 
  pool=data||[]
 
- // ===== แยก lock =====
  lockPool = pool.filter(m=>m.lock_random===true)
  normalPool = pool.filter(m=>!m.lock_random)
 
  remainBox.innerText=`ทั้งหมด ${pool.length} คน | Lock ${lockPool.length}`
+
+ // ===== โหลดรายชื่อผู้ได้รับสิทธิ์ =====
+ loadWinnerList()
 }
 
 async function randomMember(){
@@ -145,7 +153,6 @@ async function randomMember(){
  let t=0
  const iv=setInterval(()=>{
 
-  // ===== ตอนหมุน วิ่งทุกคน =====
   const r=pool[Math.floor(Math.random()*pool.length)]
   box.innerText=r.first_name+' '+r.last_name
   t++
@@ -153,7 +160,6 @@ async function randomMember(){
   if(t>25){
    clearInterval(iv)
 
-   // ===== ตอนจบ ค่อยบังคับ =====
    let finalPick=null
 
    if(lockPool.length>0){
@@ -196,7 +202,64 @@ async function showPopup(r){
 
  winner=null
  loadPool()
+ loadWinnerList()
 }
+
+/* ============================= */
+/* ===== เพิ่มฟังก์ชันใหม่ ===== */
+/* ============================= */
+
+async function loadWinnerList(){
+ const g=groupSel.value
+ const fy=fiscalYear.value
+ if(!g||!fy) return
+
+ const {data}=await sb.from('meeting_random')
+  .select('*')
+  .eq('group',g)
+  .eq('fiscal_year',fy)
+  .order('id',{ascending:false})
+
+ const box=document.getElementById('winnerList')
+ box.innerHTML=''
+
+ if(!data || data.length===0){
+  box.innerHTML='<div class="text-gray-400">ยังไม่มีผู้ได้รับสิทธิ์</div>'
+  return
+ }
+
+ data.forEach(r=>{
+  box.innerHTML+=`
+   <div class="flex justify-between items-center bg-slate-700 p-2 rounded">
+    <div>${r.first_name} ${r.last_name}</div>
+    <button onclick="deleteWinner(${r.id})"
+     class="bg-red-600 px-3 py-1 rounded hover:bg-red-700">
+     ลบ
+    </button>
+   </div>
+  `
+ })
+}
+
+async function deleteWinner(id){
+ const res=await Swal.fire({
+  title:'ยืนยันลบ?',
+  icon:'warning',
+  showCancelButton:true,
+  confirmButtonText:'ลบ',
+  cancelButtonText:'ยกเลิก'
+ })
+
+ if(!res.isConfirmed) return
+
+ await sb.from('meeting_random')
+  .delete()
+  .eq('id',id)
+
+ loadWinnerList()
+}
+
+/* ============================= */
 
 loadFiscalYear()
 </script>
