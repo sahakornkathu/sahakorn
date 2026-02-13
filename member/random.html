@@ -7,8 +7,6 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<link rel="stylesheet"
- href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
 <link rel="icon" href="data:,">
 
 <style>
@@ -22,25 +20,16 @@
   border-radius:16px;
   background:linear-gradient(45deg,#0ea5e9,#9333ea);
   color:white;
-  box-shadow:0 0 20px #38bdf8;
 }
 .glow{animation: glow 1s infinite alternate;}
 @keyframes glow{
-  from{box-shadow:0 0 10px #fff}
-  to{box-shadow:0 0 30px #facc15}
+ from{box-shadow:0 0 10px #fff}
+ to{box-shadow:0 0 30px #facc15}
 }
 </style>
 </head>
 
 <body class="bg-slate-900 text-white p-6">
-
-<audio id="spinSound"
- src="https://ttottijljxoinptmhgtu.supabase.co/storage/v1/object/public/sound/spin.mp3"
- preload="auto"></audio>
-
-<audio id="winSound"
- src="https://ttottijljxoinptmhgtu.supabase.co/storage/v1/object/public/sound/win.mp3"
- preload="auto"></audio>
 
 <div class="max-w-3xl mx-auto space-y-6">
 
@@ -58,41 +47,35 @@
 
 <select id="fiscalYear" class="text-black p-2 rounded"></select>
 
-<input id="quota" class="text-black p-2 rounded"
- placeholder="สิทธิ์ทั้งหมด">
+<input id="quota" class="text-black p-2 rounded" placeholder="สิทธิ์ทั้งหมด">
 </div>
 
-<button onclick="loadPool()"
- class="w-full bg-blue-600 p-3 rounded">
+<button onclick="loadPool()" class="w-full bg-blue-600 p-3 rounded">
 โหลดรายชื่อ
 </button>
 
-<div id="spinBox" class="spinBox">
-ยังไม่ได้สุ่ม
-</div>
+<div id="spinBox" class="spinBox">ยังไม่ได้สุ่ม</div>
 
 <div class="flex justify-center">
-  <button onclick="randomMember()"
-   class="bg-purple-600 px-10 py-4 rounded text-lg font-bold
-          hover:bg-purple-700 shadow-lg transition">
-   🎲 สุ่มรายชื่อ
-  </button>
+<button onclick="randomMember()" class="bg-purple-600 px-10 py-4 rounded text-lg">
+🎲 สุ่มรายชื่อ
+</button>
 </div>
 
 <div id="remainBox" class="text-center text-sky-400"></div>
 
-<!-- รายชื่อผู้ได้รับสิทธิ์ -->
-<div class="bg-slate-800 p-4 rounded-xl shadow">
-  <h2 class="text-yellow-400 font-bold mb-3">ผู้ได้รับสิทธิ์แล้ว</h2>
-  <div id="winnerList" class="space-y-2"></div>
+<div class="bg-slate-800 p-4 rounded-xl">
+<h2 class="text-yellow-400 font-bold mb-3">ผู้ได้รับสิทธิ์แล้ว</h2>
+<div id="winnerList"></div>
 </div>
 
 </div>
 
 <script>
+/* ===== SUPABASE CONNECT ===== */
 const sb = supabase.createClient(
-'https://ttottijljxoinptmhgtu.supabase.co',
-'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'
+ 'https://ttottijljxoinptmhgtu.supabase.co',
+ 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'
 )
 
 let pool=[]
@@ -100,26 +83,15 @@ let lockPool=[]
 let normalPool=[]
 let winner=null
 
-function playSpin(){
- const a=document.getElementById('spinSound')
- a.currentTime=0
- a.play()
-}
-function playWin(){
- const a=document.getElementById('winSound')
- a.currentTime=0
- a.play()
-}
-
+/* ===== LOAD YEAR ===== */
 async function loadFiscalYear(){
  const {data}=await sb.from('member_meeting').select('fiscal_year')
- const years=[...new Set(data.map(d=>d.fiscal_year))]
+ const years=[...new Set((data||[]).map(d=>d.fiscal_year))]
  fiscalYear.innerHTML='<option value="">ปีบัญชี</option>'
- years.forEach(y=>{
-  fiscalYear.innerHTML+=`<option>${y}</option>`
- })
+ years.forEach(y=> fiscalYear.innerHTML+=`<option>${y}</option>`)
 }
 
+/* ===== LOAD MEMBER ===== */
 async function loadPool(){
  const g=groupSel.value
  const fy=fiscalYear.value
@@ -132,124 +104,73 @@ async function loadPool(){
  .eq('fiscal_year',fy)
 
  pool=data||[]
-
- // เปลี่ยนเป็น is_lock
  lockPool = pool.filter(m=>m.is_lock == true)
  normalPool = pool.filter(m=>m.is_lock != true)
 
- remainBox.innerText=`ทั้งหมด ${pool.length} คน | Lock ${lockPool.length}`
-
+ remainBox.innerText=`ทั้งหมด ${pool.length} | Lock ${lockPool.length}`
  loadWinnerList()
 }
 
+/* ===== RANDOM ===== */
 async function randomMember(){
- if(pool.length===0) return alert('ไม่มีคน')
- if(winner) return alert('ยังไม่ได้บันทึก')
 
- let box=document.getElementById('spinBox')
- box.classList.remove('glow')
- playSpin()
+ const q=parseInt(quota.value||0)
+ if(!q) return alert('กรอกโควต้า')
 
- let t=0
- const iv=setInterval(()=>{
+ const {data:used}=await sb.from('meeting_random')
+ .select('member_id')
+ .eq('group',groupSel.value)
+ .eq('fiscal_year',fiscalYear.value)
 
-  const r=pool[Math.floor(Math.random()*pool.length)]
-  box.innerText=r.first_name+' '+r.last_name
-  t++
+ if((used||[]).length>=q) return alert('ครบโควต้าแล้ว')
 
-  if(t>25){
-   clearInterval(iv)
-
-   let finalPick=null
-
-   if(lockPool.length>0){
-    finalPick=lockPool[Math.floor(Math.random()*lockPool.length)]
-   }else{
-    finalPick=normalPool[Math.floor(Math.random()*normalPool.length)]
-   }
-
-   winner=finalPick
-   box.innerText=finalPick.first_name+' '+finalPick.last_name
-   box.classList.add('glow')
-   playWin()
-   showPopup(finalPick)
-  }
-
- },180)
-}
-
-async function showPopup(r){
- const res=await Swal.fire({
-  title:'ผู้ได้รับสิทธิ์',
-  html:`<b>${r.first_name} ${r.last_name}</b>`,
-  showCancelButton:true,
-  confirmButtonText:'บันทึก',
-  cancelButtonText:'ยกเลิก'
- })
-
- if(!res.isConfirmed){
-  winner=null
-  return
+ if(lockPool.length>0){
+  winner=lockPool[Math.floor(Math.random()*lockPool.length)]
+ }else{
+  winner=normalPool[Math.floor(Math.random()*normalPool.length)]
  }
 
+ if(!winner) return alert('ไม่มีคนเหลือ')
+
+ spinBox.innerText=winner.first_name+' '+winner.last_name
+}
+
+/* ===== SAVE ===== */
+async function saveWinner(){
+
+ const {data:dup}=await sb.from('meeting_random')
+ .select('member_id')
+ .eq('member_id',winner.member_id)
+ .eq('group',winner.group)
+ .eq('fiscal_year',fiscalYear.value)
+
+ if(dup.length>0) return alert('ซ้ำ')
+
  await sb.from('meeting_random').insert([{
-  member_id:r.member_id,
-  first_name:r.first_name,
-  last_name:r.last_name,
-  group:r.group,
+  member_id:winner.member_id,
+  first_name:winner.first_name,
+  last_name:winner.last_name,
+  group:winner.group,
   fiscal_year:fiscalYear.value
  }])
 
- winner=null
- loadPool()
  loadWinnerList()
 }
 
-/* ===== แสดงรายชื่อ ===== */
-
+/* ===== LIST ===== */
 async function loadWinnerList(){
- const g=groupSel.value
- const fy=fiscalYear.value
- if(!g||!fy) return
-
  const {data}=await sb.from('meeting_random')
-  .select('*')
-  .eq('group',g)
-  .eq('fiscal_year',fy)
-  .order('id',{ascending:false})
+ .select('*')
+ .eq('group',groupSel.value)
+ .eq('fiscal_year',fiscalYear.value)
 
- const box=document.getElementById('winnerList')
- box.innerHTML=''
-
- if(!data || data.length===0){
-  box.innerHTML='<div class="text-gray-400">ยังไม่มีผู้ได้รับสิทธิ์</div>'
-  return
- }
-
- data.forEach(r=>{
-  box.innerHTML+=`
-   <div class="flex justify-between items-center bg-slate-700 p-2 rounded">
-    <div>${r.first_name} ${r.last_name}</div>
-    <button onclick="deleteWinner(${r.id})"
-     class="bg-red-600 px-3 py-1 rounded hover:bg-red-700">
-     ลบ
-    </button>
-   </div>
-  `
+ winnerList.innerHTML=''
+ ;(data||[]).forEach(r=>{
+  winnerList.innerHTML+=`
+  <div class="flex justify-between bg-slate-700 p-2 rounded mb-2">
+   <div>${r.first_name} ${r.last_name}</div>
+  </div>`
  })
-}
-
-async function deleteWinner(id){
- const res=await Swal.fire({
-  title:'ยืนยันลบ?',
-  icon:'warning',
-  showCancelButton:true,
-  confirmButtonText:'ลบ'
- })
- if(!res.isConfirmed) return
-
- await sb.from('meeting_random').delete().eq('id',id)
- loadWinnerList()
 }
 
 loadFiscalYear()
