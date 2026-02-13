@@ -238,15 +238,23 @@ if(!q){
   if(t>20){
    clearInterval(iv)
 
-   let finalPick = null
+ let finalPick = null
 
-// รวมสองกลุ่ม แล้วสับตำแหน่ง
-let mixed = shuffleArray([
- ...lockPool,
- ...normalPool
-])
+// จำนวน slot ที่เหลือ
+const remainSlot = q - usedIds.length
 
-finalPick = mixed[0]
+// ถ้า slot ที่เหลือ <= จำนวน lock
+// ต้องบังคับ lock
+if(lockPool.length > 0 && remainSlot <= lockPool.length){
+ finalPick = lockPool[Math.floor(Math.random()*lockPool.length)]
+}else{
+ // สุ่มรวม
+ let mixed = shuffleArray([
+  ...lockPool,
+  ...normalPool
+ ])
+ finalPick = mixed[0]
+}
 
 
    winner=finalPick
