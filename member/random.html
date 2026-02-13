@@ -133,7 +133,7 @@ async function loadPool(){
 
  pool=data||[]
 
- lockPool = pool.filter(m=>m.lock_random===true)
+lockPool = pool.filter(m=>m.lock_random==true)
  normalPool = pool.filter(m=>!m.lock_random)
 
  remainBox.innerText=`ทั้งหมด ${pool.length} คน | Lock ${lockPool.length}`
@@ -161,6 +161,8 @@ async function randomMember(){
  // ===== CUT USED =====
  lockPool = lockPool.filter(m=>!usedIds.includes(m.member_id))
  normalPool = normalPool.filter(m=>!usedIds.includes(m.member_id))
+// ===== REBUILD POOL ใหม่ =====
+pool = [...lockPool, ...normalPool]
 
  if(pool.length===0) return alert('ไม่มีคน')
  if(winner) return alert('ยังไม่ได้บันทึก')
