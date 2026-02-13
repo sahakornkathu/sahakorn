@@ -224,7 +224,7 @@ const fGroup = document.getElementById('f_group')
 const fType = document.getElementById('f_type')
 const fYear = document.getElementById('f_year')
 
-;[fMemberId,fFirst,fLast].forEach(el=>{
+;[fMemberId,fFirst,fLast,fGroup,fType,fYear].forEach(el=>{
   el.addEventListener('input', load)
 })
 
@@ -235,6 +235,9 @@ async function load(){
   if(fMemberId.value) q=q.eq('member_id',fMemberId.value)
   if(fFirst.value) q=q.ilike('first_name','%'+fFirst.value+'%')
   if(fLast.value) q=q.ilike('last_name','%'+fLast.value+'%')
+  if(fGroup.value) q=q.eq('group',fGroup.value)
+  if(fType.value) q=q.eq('meeting_type',fType.value)
+  if(fYear.value) q=q.eq('fiscal_year',parseInt(fYear.value))
 
   const { data } = await q.order('meeting_date',{ascending:false})
 
