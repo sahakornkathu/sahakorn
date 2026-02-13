@@ -7,7 +7,6 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<link rel="icon" href="data:,">
 
 <style>
 .spinBox{
@@ -46,7 +45,6 @@
 </select>
 
 <select id="fiscalYear" class="text-black p-2 rounded"></select>
-
 <input id="quota" class="text-black p-2 rounded" placeholder="สิทธิ์ทั้งหมด">
 </div>
 
@@ -72,10 +70,9 @@
 </div>
 
 <script>
-/* ===== SUPABASE CONNECT ===== */
 const sb = supabase.createClient(
- 'https://ttottijljxoinptmhgtu.supabase.co',
- 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'
+'https://ttottijljxoinptmhgtu.supabase.co',
+'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'
 )
 
 let pool=[]
@@ -83,7 +80,6 @@ let lockPool=[]
 let normalPool=[]
 let winner=null
 
-/* ===== LOAD YEAR ===== */
 async function loadFiscalYear(){
  const {data}=await sb.from('member_meeting').select('fiscal_year')
  const years=[...new Set((data||[]).map(d=>d.fiscal_year))]
@@ -91,7 +87,6 @@ async function loadFiscalYear(){
  years.forEach(y=> fiscalYear.innerHTML+=`<option>${y}</option>`)
 }
 
-/* ===== LOAD MEMBER ===== */
 async function loadPool(){
  const g=groupSel.value
  const fy=fiscalYear.value
@@ -104,14 +99,13 @@ async function loadPool(){
  .eq('fiscal_year',fy)
 
  pool=data||[]
- lockPool = pool.filter(m=>m.is_lock == true)
- normalPool = pool.filter(m=>m.is_lock != true)
+ lockPool=pool.filter(m=>m.is_lock==true)
+ normalPool=pool.filter(m=>m.is_lock!=true)
 
  remainBox.innerText=`ทั้งหมด ${pool.length} | Lock ${lockPool.length}`
  loadWinnerList()
 }
 
-/* ===== RANDOM ===== */
 async function randomMember(){
 
  const q=parseInt(quota.value||0)
@@ -124,40 +118,74 @@ async function randomMember(){
 
  if((used||[]).length>=q) return alert('ครบโควต้าแล้ว')
 
- if(lockPool.length>0){
-  winner=lockPool[Math.floor(Math.random()*lockPool.length)]
- }else{
-  winner=normalPool[Math.floor(Math.random()*normalPool.length)]
- }
+ let box=document.getElementById('spinBox')
+ box.classList.remove('glow')
 
- if(!winner) return alert('ไม่มีคนเหลือ')
+ let t=0
+ const iv=setInterval(()=>{
 
- spinBox.innerText=winner.first_name+' '+winner.last_name
+  const r=pool[Math.floor(Math.random()*pool.length)]
+  box.innerText=r.first_name+' '+r.last_name
+  t++
+
+  if(t>20){
+   clearInterval(iv)
+
+   let finalPick=null
+   if(lockPool.length>0){
+    finalPick=lockPool[Math.floor(Math.random()*lockPool.length)]
+   }else{
+    finalPick=normalPool[Math.floor(Math.random()*normalPool.length)]
+   }
+
+   if(!finalPick) return alert('ไม่มีคนเหลือ')
+
+   winner=finalPick
+   box.innerText=finalPick.first_name+' '+finalPick.last_name
+   box.classList.add('glow')
+   showPopup(finalPick)
+  }
+
+ },120)
 }
 
-/* ===== SAVE ===== */
-async function saveWinner(){
+async function showPopup(r){
 
  const {data:dup}=await sb.from('meeting_random')
  .select('member_id')
- .eq('member_id',winner.member_id)
- .eq('group',winner.group)
+ .eq('member_id',r.member_id)
+ .eq('group',r.group)
  .eq('fiscal_year',fiscalYear.value)
 
- if(dup.length>0) return alert('ซ้ำ')
+ if(dup.length>0){
+  alert('คนนี้ได้สิทธิ์แล้ว')
+  winner=null
+  return
+ }
+
+ const res=await Swal.fire({
+  title:'ผู้ได้รับสิทธิ์',
+  html:`<b>${r.first_name} ${r.last_name}</b>`,
+  showCancelButton:true
+ })
+
+ if(!res.isConfirmed){
+  winner=null
+  return
+ }
 
  await sb.from('meeting_random').insert([{
-  member_id:winner.member_id,
-  first_name:winner.first_name,
-  last_name:winner.last_name,
-  group:winner.group,
+  member_id:r.member_id,
+  first_name:r.first_name,
+  last_name:r.last_name,
+  group:r.group,
   fiscal_year:fiscalYear.value
  }])
 
- loadWinnerList()
+ winner=null
+ loadPool()
 }
 
-/* ===== LIST ===== */
 async function loadWinnerList(){
  const {data}=await sb.from('meeting_random')
  .select('*')
