@@ -174,10 +174,16 @@ member_id.addEventListener('input', ()=>{
   typingTimer = setTimeout(async ()=>{
     if(member_id.value.length < 3) return
 
+    // const { data, error } = await db.from('members')
+    //   .select('title,first_name,last_name,group')
+    //   .eq('member_id', member_id.value)
+    //   .single()
     const { data, error } = await db.from('members')
-      .select('title,first_name,last_name,group')
-      .eq('member_id', member_id.value)
-      .single()
+  .select('title,first_name,last_name,group')
+  .eq('member_id', member_id.value)
+  .eq('status', 'member')   // เฉพาะสมาชิกเท่านั้น
+  .single()
+
 
     if(error || !data){
       title.value = ''
