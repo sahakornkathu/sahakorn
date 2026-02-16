@@ -207,23 +207,21 @@ form.onsubmit = async e=>{
     .maybeSingle()
 
   if(exists){
-    Swal.fire({
-  toast: true,
-  position: 'top-end',
-  icon: 'success',
-  title: 'บันทึกข้อมูลซ้ำ',
-  background: '#020617',
-  color: '#e2e8f0',
-  showConfirmButton: false,
-  timer: 2000,
-  timerProgressBar: true,
-  showClass: {
-    popup: 'animate__animated animate__fadeInRight'
+   Swal.fire({
+  icon:'warning',
+  title:'ข้อมูลซ้ำ',
+  text:'ปีบัญชีนี้มีการบันทึกแล้ว',
+  background:'#020617',
+  color:'#fde68a',
+  confirmButtonColor:'#f59e0b',
+  showClass:{
+    popup:'animate__animated animate__pulse'
   },
-  hideClass: {
-    popup: 'animate__animated animate__fadeOutRight'
+  hideClass:{
+    popup:'animate__animated animate__fadeOut'
   }
 })
+
 
 
     return
