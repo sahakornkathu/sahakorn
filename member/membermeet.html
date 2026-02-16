@@ -25,23 +25,7 @@
 .green{background:#16a34a}
 .gray{background:#475569}
 
-  Swal.fire({
-  toast: true,
-  position: 'top-end',
-  icon: 'success',
-  title: 'บันทึกสำเร็จ',
-  background: '#020617',
-  color: '#e2e8f0',
-  showConfirmButton: false,
-  timer: 2000,
-  timerProgressBar: true,
-  showClass: {
-    popup: 'animate__animated animate__fadeInRight'
-  },
-  hideClass: {
-    popup: 'animate__animated animate__fadeOutRight'
-  }
-})
+
 
 </style>
 </head>
@@ -226,19 +210,23 @@ form.onsubmit = async e=>{
 
   if(exists){
     Swal.fire({
-  title: 'บันทึกสำเร็จ',
-  text: 'ข้อมูลถูกบันทึกเรียบร้อย',
+  toast: true,
+  position: 'top-end',
   icon: 'success',
+  title: 'บันทึกสำเร็จ',
   background: '#020617',
   color: '#e2e8f0',
-  confirmButtonColor: '#22c55e',
+  showConfirmButton: false,
+  timer: 2000,
+  timerProgressBar: true,
   showClass: {
-    popup: 'animate__animated animate__zoomIn'
+    popup: 'animate__animated animate__fadeInRight'
   },
   hideClass: {
-    popup: 'animate__animated animate__zoomOut'
+    popup: 'animate__animated animate__fadeOutRight'
   }
 })
+
 
     return
   }
