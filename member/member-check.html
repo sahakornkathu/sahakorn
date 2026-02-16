@@ -379,11 +379,7 @@ function pinGPS(memberId){
       Swal.fire('ผิดพลาด', 'อุปกรณ์ไม่รองรับ GPS', 'error')
       return
     }
-
-    navigator.geolocation.getCurrentPosition(
-      async pos => {
-        
-        Swal.fire({
+ Swal.fire({
       title: 'กำลังบันทึกพิกัด...',
       text: 'กรุณารอสักครู่',
       allowOutsideClick: false,
@@ -391,6 +387,10 @@ function pinGPS(memberId){
         Swal.showLoading()
       }
     })
+    navigator.geolocation.getCurrentPosition(
+      async pos => {
+        
+       
 
         const { error } = await supabaseClient
           .from('members')
