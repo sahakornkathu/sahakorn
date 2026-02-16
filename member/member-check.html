@@ -248,10 +248,23 @@ function goMyLocation(){
   }
 
   Swal.fire({
-    title: 'กำลังค้นหาตำแหน่ง...',
-    allowOutsideClick: false,
-    didOpen: () => Swal.showLoading()
-  })
+  title: 'กำลังค้นหาตำแหน่ง...',
+  text: 'กรุณาอนุญาต GPS',
+  background: '#020617',
+  color: '#e2e8f0',
+  allowOutsideClick: false,
+  showConfirmButton: false,
+  showClass: {
+    popup: 'animate__animated animate__fadeInDown'
+  },
+  hideClass: {
+    popup: 'animate__animated animate__fadeOutUp'
+  },
+  didOpen: () => {
+    Swal.showLoading()
+  }
+})
+
 
   navigator.geolocation.getCurrentPosition(
     pos => {
@@ -358,28 +371,70 @@ function renderMore(){
 /* ================= GPS ================= */
 function pinGPS(memberId){
 
+  // Swal.fire({
+  //   title: 'ยืนยันการปักพิกัด',
+  //   html: `
+  //     <div class="text-sm text-slate-500">
+  //       ระบบจะใช้ตำแหน่งปัจจุบันของคุณ<br>
+  //       แน่ใจหรือไม่ว่าต้องการปักพิกัดให้สมาชิกนี้
+  //     </div>
+  //   `,
+  //   icon: 'warning',
+  //   showCancelButton: true,
+  //   confirmButtonText: '📍 ปักพิกัด',
+  //   cancelButtonText: 'ยกเลิก',
+  //   confirmButtonColor: '#2563eb',
+  //   cancelButtonColor: '#475569'
+  // }).then(result => {
+
+  //   if (!result.isConfirmed) return
+
+  //   if (!navigator.geolocation) {
+  //     Swal.fire('ผิดพลาด', 'อุปกรณ์ไม่รองรับ GPS', 'error')
+  //     return
+  //   }
   Swal.fire({
-    title: 'ยืนยันการปักพิกัด',
-    html: `
-      <div class="text-sm text-slate-500">
-        ระบบจะใช้ตำแหน่งปัจจุบันของคุณ<br>
-        แน่ใจหรือไม่ว่าต้องการปักพิกัดให้สมาชิกนี้
-      </div>
-    `,
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonText: '📍 ปักพิกัด',
-    cancelButtonText: 'ยกเลิก',
-    confirmButtonColor: '#2563eb',
-    cancelButtonColor: '#475569'
-  }).then(result => {
+  title: 'ยืนยันการปักพิกัด',
+  html: `
+    <div class="text-sm text-slate-400">
+      ระบบจะใช้ตำแหน่งปัจจุบันของคุณ<br>
+      แน่ใจหรือไม่ว่าต้องการปักพิกัดให้สมาชิกนี้
+    </div>
+  `,
+  icon: 'warning',
+  background: '#020617',
+  color: '#fde68a',
+  showCancelButton: true,
+  confirmButtonText: '📍 ปักพิกัด',
+  cancelButtonText: 'ยกเลิก',
+  confirmButtonColor: '#2563eb',
+  cancelButtonColor: '#475569',
 
-    if (!result.isConfirmed) return
+  showClass: {
+    popup: 'animate__animated animate__zoomIn'
+  },
+  hideClass: {
+    popup: 'animate__animated animate__fadeOut'
+  }
+}).then(result => {
 
-    if (!navigator.geolocation) {
-      Swal.fire('ผิดพลาด', 'อุปกรณ์ไม่รองรับ GPS', 'error')
-      return
-    }
+  if (!result.isConfirmed) return
+
+  if (!navigator.geolocation) {
+    Swal.fire({
+      icon: 'error',
+      title: 'ผิดพลาด',
+      text: 'อุปกรณ์ไม่รองรับ GPS',
+      background: '#020617',
+      color: '#fca5a5',
+      confirmButtonColor: '#ef4444',
+      showClass: {
+        popup: 'animate__animated animate__shakeX'
+      }
+    })
+    return
+  }
+
 Swal.fire({
   title: 'กำลังบันทึกพิกัด...',
   text: 'กรุณารอสักครู่',
