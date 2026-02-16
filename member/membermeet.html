@@ -178,11 +178,12 @@ member_id.addEventListener('input', ()=>{
     //   .select('title,first_name,last_name,group')
     //   .eq('member_id', member_id.value)
     //   .single()
-    const { data, error } = await db.from('members')
+   const { data, error } = await db.from('members')
   .select('title,first_name,last_name,group')
   .eq('member_id', member_id.value)
-  .eq('status', 'member')   // เฉพาะสมาชิกเท่านั้น
-  .single()
+  .eq('member_status', 'สมาชิก')
+  .maybeSingle()
+
 
 
     if(error || !data){
