@@ -382,6 +382,15 @@ function pinGPS(memberId){
 
     navigator.geolocation.getCurrentPosition(
       async pos => {
+        
+        Swal.fire({
+      title: 'กำลังบันทึกพิกัด...',
+      text: 'กรุณารอสักครู่',
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading()
+      }
+    })
 
         const { error } = await supabaseClient
           .from('members')
