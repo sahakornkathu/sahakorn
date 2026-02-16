@@ -143,7 +143,7 @@ const form = document.getElementById('meetingForm')
 const rows = document.getElementById('rows')
 const resultCount = document.getElementById('resultCount')
 
-
+let typingTimer   // <<< เพิ่ม
 /* ===== FISCAL YEAR ===== */
 function getFiscalYear(dateStr){
   const d = new Date(dateStr)
@@ -168,19 +168,33 @@ meeting_date.addEventListener('change', ()=>{
 })
 
 /* ===== MEMBER AUTO FILL ===== */
-member_id.addEventListener('input', async ()=>{
-  const { data } = await db.from('members')
-    .select('title,first_name,last_name,group')
-    .eq('member_id', member_id.value)
-    .single()
+member_id.addEventListener('input', ()=>{
+  clearTimeout(typingTimer)
 
-  if(!data){ Swal.fire('ไม่พบสมาชิก'); return }
+  typingTimer = setTimeout(async ()=>{
+    if(member_id.value.length < 3) return
 
-  title.value = data.title
-  first_name.value = data.first_name
-  last_name.value = data.last_name
-  group.value = data.group
+    const { data, error } = await db.from('members')
+      .select('title,first_name,last_name,group')
+      .eq('member_id', member_id.value)
+      .single()
+
+    if(error || !data){
+      title.value = ''
+      first_name.value = ''
+      last_name.value = ''
+      group.value = ''
+      return
+    }
+
+    title.value = data.title
+    first_name.value = data.first_name
+    last_name.value = data.last_name
+    group.value = data.group
+
+  }, 500)
 })
+
 
 /* ===== SAVE ===== */
 form.onsubmit = async e=>{
