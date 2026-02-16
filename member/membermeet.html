@@ -168,7 +168,7 @@ meeting_date.addEventListener('change', ()=>{
 })
 
 /* ===== MEMBER AUTO FILL ===== */
-member_id.addEventListener('blur', async ()=>{
+member_id.addEventListener('input', async ()=>{
   const { data } = await db.from('members')
     .select('title,first_name,last_name,group')
     .eq('member_id', member_id.value)
