@@ -103,6 +103,9 @@
   <option value="ประชุมใหญ่">ประชุมใหญ่</option>
 </select>
 <input id="f_year" class="input" placeholder="ปีบัญชี">
+<div class="mt-3 text-right text-sm text-sky-400">
+  พบ <span id="resultCount">0</span> คน
+</div>
 
 </div>
 </div>
@@ -136,6 +139,8 @@ const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
 /* ===== ELEMENT ===== */
 const form = document.getElementById('meetingForm')
 const rows = document.getElementById('rows')
+const resultCount = document.getElementById('resultCount')
+
 
 /* ===== FISCAL YEAR ===== */
 function getFiscalYear(dateStr){
@@ -240,6 +245,7 @@ async function load(){
   if(fYear.value) q=q.eq('fiscal_year',parseInt(fYear.value))
 
   const { data } = await q.order('meeting_date',{ascending:false})
+  resultCount.textContent = data.length
 
   rows.innerHTML=''
   data.forEach(r=>{
