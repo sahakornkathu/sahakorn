@@ -9,6 +9,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -379,14 +380,21 @@ function pinGPS(memberId){
       Swal.fire('ผิดพลาด', 'อุปกรณ์ไม่รองรับ GPS', 'error')
       return
     }
- Swal.fire({
-      title: 'กำลังบันทึกพิกัด...',
-      text: 'กรุณารอสักครู่',
-      allowOutsideClick: false,
-      didOpen: () => {
-        Swal.showLoading()
-      }
-    })
+Swal.fire({
+  title: 'กำลังบันทึกพิกัด...',
+  text: 'กรุณารอสักครู่',
+  background:'#020617',
+  color:'#e2e8f0',
+  allowOutsideClick: false,
+  showClass: {
+    popup: 'animate__animated animate__fadeInDown'
+  },
+  hideClass: {
+    popup: 'animate__animated animate__fadeOutUp'
+  },
+  didOpen: () => Swal.showLoading()
+})
+
     navigator.geolocation.getCurrentPosition(
       async pos => {
         
@@ -401,16 +409,39 @@ function pinGPS(memberId){
           .eq('member_id', memberId)
 
         if (error) {
-          Swal.fire('ผิดพลาด', 'บันทึกพิกัดไม่สำเร็จ', 'error')
+          Swal.fire({
+  icon: 'error',
+  title: 'ผิดพลาด',
+  text: 'บันทึกพิกัดไม่สำเร็จ',
+  background: '#020617',
+  color: '#fca5a5',
+  confirmButtonColor: '#ef4444',
+  showClass: {
+    popup: 'animate__animated animate__shakeX'
+  },
+  hideClass: {
+    popup: 'animate__animated animate__fadeOut'
+  }
+})
+
           return
         }
 
-        Swal.fire({
-          icon: 'success',
-          title: 'บันทึกพิกัดแล้ว',
-          timer: 1200,
-          showConfirmButton: false
-        })
+       Swal.fire({
+  icon: 'success',
+  title: 'บันทึกพิกัดแล้ว',
+  background:'#020617',
+  color:'#86efac',
+  timer: 1200,
+  showConfirmButton: false,
+  showClass: {
+    popup: 'animate__animated animate__zoomIn'
+  },
+  hideClass: {
+    popup: 'animate__animated animate__zoomOut'
+  }
+})
+
 
         loadMembers()
       },
