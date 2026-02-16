@@ -191,6 +191,20 @@ member_id.addEventListener('input', ()=>{
       first_name.value = ''
       last_name.value = ''
       group.value = ''
+      if(member_id.value.length >= 3){
+    Swal.fire({
+      icon:'error',
+      title:'ไม่พบสมาชิก',
+      text:'ไม่มีเลขสมาชิกนี้',
+      background:'#020617',
+      color:'#fca5a5',
+      confirmButtonColor:'#ef4444',
+      showClass:{
+        popup:'animate__animated animate__shakeX'
+      }
+    })
+  }
+
       return
     }
 
