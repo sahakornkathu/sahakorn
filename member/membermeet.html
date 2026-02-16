@@ -7,6 +7,8 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<link rel="stylesheet"href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+
 
 <style>
 .input{
@@ -22,6 +24,25 @@
 .blue{background:#2563eb}
 .green{background:#16a34a}
 .gray{background:#475569}
+
+  Swal.fire({
+  toast: true,
+  position: 'top-end',
+  icon: 'success',
+  title: 'บันทึกสำเร็จ',
+  background: '#020617',
+  color: '#e2e8f0',
+  showConfirmButton: false,
+  timer: 2000,
+  timerProgressBar: true,
+  showClass: {
+    popup: 'animate__animated animate__fadeInRight'
+  },
+  hideClass: {
+    popup: 'animate__animated animate__fadeOutRight'
+  }
+})
+
 </style>
 </head>
 
@@ -204,7 +225,21 @@ form.onsubmit = async e=>{
     .maybeSingle()
 
   if(exists){
-    Swal.fire('ปีบัญชีนี้มีการบันทึกแล้ว','','warning')
+    Swal.fire({
+  title: 'บันทึกสำเร็จ',
+  text: 'ข้อมูลถูกบันทึกเรียบร้อย',
+  icon: 'success',
+  background: '#020617',
+  color: '#e2e8f0',
+  confirmButtonColor: '#22c55e',
+  showClass: {
+    popup: 'animate__animated animate__zoomIn'
+  },
+  hideClass: {
+    popup: 'animate__animated animate__zoomOut'
+  }
+})
+
     return
   }
 
