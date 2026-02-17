@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-<meta charset="UTF-8" />
-<title>Loan Request Form</title>
+<meta charset="UTF-8">
+<title>ระบบคำขอกู้เงิน</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -10,62 +10,66 @@
 <body class="bg-gray-100 p-6">
 
 <div class="max-w-5xl mx-auto bg-white shadow-xl rounded-2xl p-6 space-y-6">
-  <h1 class="text-2xl font-bold text-center">หนังสือคำขอกู้เงิน</h1>
 
-  <!-- MEMBER SEARCH -->
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-    <input id="member_id" class="border p-2 rounded" placeholder="เลขทะเบียนสมาชิก" />
-    <button onclick="loadMember()" class="bg-blue-600 text-white px-4 py-2 rounded">ค้นหาสมาชิก</button>
-  </div>
+<h1 class="text-2xl font-bold text-center">หนังสือคำขอกู้เงิน</h1>
 
-  <!-- PERSONAL -->
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-    <input id="full_name" class="border p-2 rounded" placeholder="ชื่อ-สกุล" />
-    <input id="phone" class="border p-2 rounded" placeholder="โทรศัพท์" />
-    <input id="group" class="border p-2 rounded" placeholder="กลุ่ม" />
-  </div>
-
-  <!-- LOAN INFO -->
-  <div class="border-t pt-4 space-y-3">
-    <select id="loan_type" class="border p-2 rounded w-full" onchange="calcInstallment()">
-      <option value="">ประเภทเงินกู้</option>
-      <option value="emergency">ระยะฉุกเฉิน (รายเดือน)</option>
-      <option value="short">ระยะสั้น (รายปี)</option>
-      <option value="medium">ระยะปานกลาง (รายปี)</option>
-      <option value="long">ระยะยาว (รายปี)</option>
-    </select>
-
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <input id="loan_amount" class="border p-2 rounded" placeholder="จำนวนเงิน" oninput="calcInstallment()" />
-      <input id="periods" class="border p-2 rounded" placeholder="จำนวนงวด" oninput="calcInstallment()" />
-      <input id="interest_rate" value="7.75" class="border p-2 rounded" oninput="calcInstallment()" />
-    </div>
-
-    <input id="pay_per_period" class="border p-2 rounded w-full" placeholder="ยอดผ่อนต่องวด (แก้ได้)" oninput="manualPay()" />
-  </div>
-
-  <!-- TABLE -->
-  <div class="border-t pt-4">
-    <table class="w-full border text-sm">
-      <thead class="bg-gray-200">
-        <tr>
-          <th class="border p-2">งวด</th>
-          <th class="border p-2">ยอดผ่อน</th>
-          <th class="border p-2">ดอกเบี้ย</th>
-          <th class="border p-2">คงเหลือ</th>
-        </tr>
-      </thead>
-      <tbody id="tbl"></tbody>
-    </table>
-  </div>
-
-  <button onclick="saveLoan()" class="bg-green-600 text-white px-6 py-3 rounded-xl w-full">บันทึก</button>
+<!-- MEMBER -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+  <input id="member_id" class="border p-2 rounded" placeholder="เลขสมาชิก">
+  <button onclick="loadMember()" class="bg-blue-600 text-white px-4 py-2 rounded">ค้นหา</button>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+  <input id="full_name" class="border p-2 rounded" placeholder="ชื่อ-สกุล">
+  <input id="phone" class="border p-2 rounded" placeholder="โทรศัพท์">
+  <input id="group" class="border p-2 rounded" placeholder="กลุ่ม">
+</div>
+
+<!-- LOAN -->
+<div class="border-t pt-4 space-y-3">
+
+<select id="loan_type" class="border p-2 rounded w-full" onchange="calcInstallment()">
+  <option value="">ประเภทเงินกู้</option>
+  <option value="emergency">ระยะฉุกเฉิน (รายเดือน)</option>
+  <option value="short">ระยะสั้น (รายปี)</option>
+  <option value="medium">ระยะปานกลาง (รายปี)</option>
+  <option value="long">ระยะยาว (รายปี)</option>
+</select>
+
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+  <input id="loan_amount" class="border p-2 rounded" placeholder="จำนวนเงิน" oninput="calcInstallment()">
+  <input id="periods" class="border p-2 rounded" placeholder="จำนวนงวด" oninput="calcInstallment()">
+  <input id="interest_rate" value="7.75" class="border p-2 rounded" oninput="calcInstallment()">
+</div>
+
+<input id="pay_per_period" class="border p-2 rounded w-full"
+ placeholder="ยอดผ่อนต่องวด (แก้ได้)" oninput="manualPay()">
+
+</div>
+
+<!-- TABLE -->
+<div class="border-t pt-4">
+<table class="w-full border text-sm">
+<thead class="bg-gray-200">
+<tr>
+<th class="border p-2">งวด</th>
+<th class="border p-2">ยอดผ่อน</th>
+<th class="border p-2">ดอกเบี้ย</th>
+<th class="border p-2">คงเหลือ</th>
+</tr>
+</thead>
+<tbody id="tbl"></tbody>
+</table>
+</div>
+
+<button onclick="saveLoan()" class="bg-green-600 text-white px-6 py-3 rounded-xl w-full">
+บันทึกคำขอกู้
+</button>
+
+</div>
 
 <script>
-/* ===== CREATE CLIENT (ใช้ชื่อ sb แทน supabase) ===== */
+/* ===== SUPABASE CLIENT (ชื่อ sb กันชน) ===== */
 const sb = window.supabase.createClient(
   'https://ttottijljxoinptmhgtu.supabase.co',
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'
@@ -73,27 +77,25 @@ const sb = window.supabase.createClient(
 
 /* ===== LOAD MEMBER ===== */
 async function loadMember(){
-  const id = document.getElementById('member_id').value;
-  if(!id) return alert('กรอก member id');
+  const id = member_id.value;
+  if(!id) return alert('กรอกเลขสมาชิก');
 
-  const { data, error } = await sb
+  const {data,error} = await sb
     .from('members')
     .select('title,first_name,last_name,phone,group')
-    .eq('member_id', id)
+    .eq('member_id',id)
     .single();
 
   if(error || !data) return alert('ไม่พบสมาชิก');
 
-  document.getElementById('full_name').value =
-    data.title + data.first_name + ' ' + data.last_name;
-  document.getElementById('phone').value = data.phone || '';
-  document.getElementById('group').value = data.group || '';
+  full_name.value = data.title + data.first_name + ' ' + data.last_name;
+  phone.value = data.phone || '';
+  group.value = data.group || '';
 }
 
 /* ===== PERIOD TYPE ===== */
-function getDiv(){
-  const t = document.getElementById('loan_type').value;
-  return t === 'emergency' ? 12 : 1;
+function getDivisor(){
+  return loan_type.value === 'emergency' ? 12 : 1;
 }
 
 /* ===== AUTO CALC ===== */
@@ -101,9 +103,10 @@ function calcInstallment(){
   const amount = parseFloat(loan_amount.value)||0;
   const n = parseInt(periods.value)||0;
   const rate = (parseFloat(interest_rate.value)||0)/100;
+
   if(amount<=0 || n<=0) return;
 
-  const div = getDiv();
+  const div = getDivisor();
   const interestTotal = amount * rate * (n/div);
   const total = amount + interestTotal;
   const per = total / n;
@@ -123,11 +126,10 @@ function renderTable(per){
   const amount = parseFloat(loan_amount.value)||0;
   const n = parseInt(periods.value)||0;
   const rate = (parseFloat(interest_rate.value)||0)/100;
-  const div = getDiv();
+  const div = getDivisor();
 
   let remain = amount;
   const r = rate/div;
-  const tbl = document.getElementById('tbl');
   tbl.innerHTML='';
 
   for(let i=1;i<=n;i++){
@@ -157,11 +159,10 @@ async function saveLoan(){
     interest_rate: interest_rate.value
   };
 
-  const { error } = await sb.from('loan_requests').insert(payload);
-  if(error) alert('error'); else alert('saved');
+  const {error}= await sb.from('loan_requests').insert(payload);
+  if(error) alert('บันทึกไม่สำเร็จ'); else alert('บันทึกสำเร็จ');
 }
 </script>
-
 
 </body>
 </html>
