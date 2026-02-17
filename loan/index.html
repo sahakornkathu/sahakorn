@@ -12,7 +12,7 @@
 
 <h1 class="text-2xl font-bold text-center">หนังสือคำขอกู้เงิน</h1>
 
-<!-- ================= MEMBER SEARCH ================= -->
+<!-- MEMBER SEARCH -->
 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
   <input id="member_id" class="border p-2 rounded" placeholder="เลขสมาชิก">
   <button onclick="loadMember()" class="bg-blue-600 text-white px-4 py-2 rounded">
@@ -26,7 +26,7 @@
   <input id="group" class="border p-2 rounded" placeholder="กลุ่ม">
 </div>
 
-<!-- ================= REGISTER ADDRESS ================= -->
+<!-- REGISTER ADDRESS -->
 <div class="border-t pt-4">
 <h2 class="font-bold mb-2">ที่อยู่ตามทะเบียนบ้าน</h2>
 <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -41,7 +41,7 @@
 </div>
 </div>
 
-<!-- ================= CURRENT ADDRESS ================= -->
+<!-- CURRENT ADDRESS -->
 <div class="border-t pt-4">
 <div class="flex justify-between items-center mb-2">
 <h2 class="font-bold">ที่อยู่ปัจจุบัน</h2>
@@ -51,18 +51,58 @@
 </div>
 
 <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-<input id="c_house_no" class="border p-2 rounded" placeholder="เลขที่">
-<input id="c_moo" class="border p-2 rounded" placeholder="หมู่">
-<input id="c_village" class="border p-2 rounded" placeholder="หมู่บ้าน">
-<input id="c_street" class="border p-2 rounded" placeholder="ถนน">
-<input id="c_subdistrict" class="border p-2 rounded" placeholder="ตำบล">
-<input id="c_district" class="border p-2 rounded" placeholder="อำเภอ">
-<input id="c_province" class="border p-2 rounded" placeholder="จังหวัด">
-<input id="c_postal_code" class="border p-2 rounded" placeholder="รหัสไปรษณีย์">
+<input id="c_house_no" class="border p-2 rounded">
+<input id="c_moo" class="border p-2 rounded">
+<input id="c_village" class="border p-2 rounded">
+<input id="c_street" class="border p-2 rounded">
+<input id="c_subdistrict" class="border p-2 rounded">
+<input id="c_district" class="border p-2 rounded">
+<input id="c_province" class="border p-2 rounded">
+<input id="c_postal_code" class="border p-2 rounded">
 </div>
 </div>
 
-<!-- ================= LOAN TYPE ================= -->
+<!-- RESIDENCE TYPE -->
+<div class="border-t pt-4 space-y-3">
+<label class="font-semibold">ลักษณะที่อยู่อาศัย</label>
+
+<div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+
+<label class="flex items-center gap-2">
+<input type="checkbox" id="live_parent"> อาศัยอยู่กับบิดา / มารดา
+</label>
+
+<label class="flex items-center gap-2">
+<input type="checkbox" id="live_relative"> อาศัยอยู่กับญาติ
+</label>
+
+<label class="flex items-center gap-2">
+<input type="checkbox" id="live_rent" onchange="toggleRent()"> บ้านเช่า
+</label>
+
+<label class="flex items-center gap-2">
+<input type="checkbox" id="live_self"> ของตนเอง
+</label>
+
+<label class="flex items-center gap-2">
+<input type="checkbox" id="live_spouse"> คู่สมรส
+</label>
+
+<label class="flex items-center gap-2">
+<input type="checkbox" id="live_other" onchange="toggleOtherLive()"> อื่น ๆ
+</label>
+</div>
+
+<div id="rent_box" class="hidden">
+<input id="rent_price" class="border p-2 rounded w-full" placeholder="ค่าเช่าเดือนละ (บาท)">
+</div>
+
+<div id="other_live_box" class="hidden">
+<input id="other_live_text" class="border p-2 rounded w-full" placeholder="โปรดระบุเพิ่มเติม">
+</div>
+</div>
+
+<!-- LOAN TYPE -->
 <div class="border-t pt-4 space-y-2">
 <label class="font-semibold">ประเภทเงินกู้</label>
 <select id="loan_type" class="border p-2 rounded w-full">
@@ -74,7 +114,7 @@
 </select>
 </div>
 
-<!-- ================= PURPOSE ================= -->
+<!-- PURPOSE -->
 <div class="border-t pt-4 space-y-2">
 <label class="font-semibold">วัตถุประสงค์การกู้เงิน</label>
 
@@ -89,13 +129,12 @@
 </select>
 
 <div id="other_purpose_box" class="hidden">
-<input id="other_purpose_text"
-       class="border p-2 rounded w-full mt-2"
-       placeholder="โปรดระบุวัตถุประสงค์เพิ่มเติม">
+<input id="other_purpose_text" class="border p-2 rounded w-full mt-2"
+placeholder="โปรดระบุวัตถุประสงค์เพิ่มเติม">
 </div>
 </div>
 
-<!-- ================= SAVE ================= -->
+<!-- SAVE -->
 <div class="text-center pt-4">
 <button onclick="saveLoan()" class="bg-green-600 text-white px-6 py-3 rounded-xl">
 บันทึกข้อมูล
@@ -105,83 +144,69 @@
 </div>
 
 <script>
-/* ================= SUPABASE ================= */
 const sb = window.supabase.createClient(
   'https://ttottijljxoinptmhgtu.supabase.co',
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'
 );
 
-/* ================= LOAD MEMBER ================= */
 async function loadMember(){
-const id = member_id.value;
-if(!id) return alert('กรอกเลขสมาชิก');
+const id=member_id.value;
+if(!id)return alert('กรอกเลขสมาชิก');
+const {data}=await sb.from('members').select('*').eq('member_id',id).single();
+if(!data)return alert('ไม่พบ');
 
-const {data,error} = await sb
-  .from('members')
-  .select('*')
-  .eq('member_id', id)
-  .single();
+full_name.value=data.first_name+' '+data.last_name;
+phone.value=data.phone||'';
+group.value=data.group||'';
 
-if(error || !data) return alert('ไม่พบสมาชิก');
-
-full_name.value = (data.first_name||'') + ' ' + (data.last_name||'');
-phone.value = data.phone || '';
-group.value = data.group || '';
-
-house_no.value = data.house_no || '';
-moo.value = data.moo || '';
-village.value = data.village || '';
-street.value = data.street || '';
-subdistrict.value = data.subdistrict || '';
-district.value = data.district || '';
-province.value = data.province || '';
-postal_code.value = data.postal_code || '';
+house_no.value=data.house_no||'';
+moo.value=data.moo||'';
+village.value=data.village||'';
+street.value=data.street||'';
+subdistrict.value=data.subdistrict||'';
+district.value=data.district||'';
+province.value=data.province||'';
+postal_code.value=data.postal_code||'';
 }
 
-/* ================= COPY ADDRESS ================= */
 function copyAddress(){
-c_house_no.value = house_no.value;
-c_moo.value = moo.value;
-c_village.value = village.value;
-c_street.value = street.value;
-c_subdistrict.value = subdistrict.value;
-c_district.value = district.value;
-c_province.value = province.value;
-c_postal_code.value = postal_code.value;
+c_house_no.value=house_no.value;
+c_moo.value=moo.value;
+c_village.value=village.value;
+c_street.value=street.value;
+c_subdistrict.value=subdistrict.value;
+c_district.value=district.value;
+c_province.value=province.value;
+c_postal_code.value=postal_code.value;
 }
 
-/* ================= PURPOSE CHANGE ================= */
+function toggleRent(){
+rent_box.classList.toggle('hidden',!live_rent.checked);
+if(!live_rent.checked) rent_price.value='';
+}
+
+function toggleOtherLive(){
+other_live_box.classList.toggle('hidden',!live_other.checked);
+if(!live_other.checked) other_live_text.value='';
+}
+
 function handlePurposeChange(){
-const purpose = loan_purpose.value;
-const box = document.getElementById('other_purpose_box');
-
-if(purpose === 'other'){
-  box.classList.remove('hidden');
-}else{
-  box.classList.add('hidden');
-  other_purpose_text.value = '';
-}
+other_purpose_box.classList.toggle('hidden',loan_purpose.value!=='other');
+if(loan_purpose.value!=='other') other_purpose_text.value='';
 }
 
-/* ================= SAVE ================= */
 async function saveLoan(){
-const purposeValue =
-loan_purpose.value === 'other'
-? other_purpose_text.value
-: loan_purpose.value;
+const purpose=loan_purpose.value==='other'?other_purpose_text.value:loan_purpose.value;
 
-const payload = {
-member_id: member_id.value,
-loan_type: loan_type.value,
-purpose: purposeValue,
-house_no: house_no.value,
-current_house_no: c_house_no.value
-};
+await sb.from('loan_requests').insert({
+member_id:member_id.value,
+loan_type:loan_type.value,
+purpose:purpose,
+rent_price:rent_price.value||null,
+other_live:other_live_text.value||null
+});
 
-const {error} = await sb.from('loan_requests').insert(payload);
-
-if(error) alert('บันทึกไม่สำเร็จ');
-else alert('บันทึกสำเร็จ');
+alert('บันทึกสำเร็จ');
 }
 </script>
 
