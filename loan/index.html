@@ -73,7 +73,7 @@
 <input id="interest_rate" value="7.75" class="border p-2 rounded" oninput="calcInstallment()">
 </div>
 
-<input id="pay_per_period" class="border p-2 rounded w-full" placeholder="ยอดผ่อน" readonly>
+<input id="pay_per_period" class="border p-2 rounded w-full" placeholder="ยอดผ่อน/เดือน" readonly>
 </div>
 
 <!-- TABLE -->
@@ -98,8 +98,7 @@
 <script>
 const sb = window.supabase.createClient(
   'https://ttottijljxoinptmhgtu.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'
-);
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y');
 
 /* MEMBER */
 async function loadMember(){
@@ -108,6 +107,7 @@ if(!data)return alert('ไม่พบ');
 full_name.value=data.first_name+' '+data.last_name;
 phone.value=data.phone||'';
 group.value=data.group||'';
+
 house_no.value=data.house_no||'';
 moo.value=data.moo||'';
 village.value=data.village||'';
@@ -129,7 +129,7 @@ c_province.value=province.value;
 c_postal_code.value=postal_code.value;
 }
 
-/* LOAN CALC */
+/* LOAN */
 function calcInstallment(){
 const P=parseFloat(loan_amount.value)||0;
 const n=parseInt(periods.value)||0;
@@ -139,21 +139,21 @@ if(P<=0||n<=0)return;
 tbl.innerHTML='';
 
 if(loan_type.value==='emergency'){
-// PMT
 const r=annual/12;
-const PMT=Math.ceil((P*r)/(1-Math.pow(1+r,-n)));
-pay_per_period.value=PMT;
+const PMT=(P*r)/(1-Math.pow(1+r,-n));
+pay_per_period.value=Math.ceil(PMT);
 
 let remain=P;
 for(let i=1;i<=n;i++){
 const interest=Math.ceil(remain*r);
-const principal=Math.ceil(PMT-interest);
+let principal=Math.ceil(PMT-interest);
+if(principal<0)principal=0;
+const pay=Math.ceil(principal+interest);
 remain=Math.ceil(remain-principal);
 if(remain<0)remain=0;
-tbl.innerHTML+=row(i,PMT,interest,remain);
+tbl.innerHTML+=row(i,pay,interest,remain);
 }
 }else{
-// ดอกปีคงที่
 const interestMonth=Math.ceil((P*annual)/12);
 const principalMonth=Math.ceil(P/n);
 const pay=Math.ceil(principalMonth+interestMonth);
