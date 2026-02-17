@@ -62,42 +62,45 @@
   <button onclick="saveLoan()" class="bg-green-600 text-white px-6 py-3 rounded-xl w-full">บันทึก</button>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <script>
-// ===== SUPABASE (ประกาศครั้งเดียวเท่านั้น) =====
-const supabase = window.supabase.createClient(
+/* ===== CREATE CLIENT (ใช้ชื่อ sb แทน supabase) ===== */
+const sb = window.supabase.createClient(
   'https://ttottijljxoinptmhgtu.supabase.co',
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'
 );
 
-// ===== LOAD MEMBER =====
+/* ===== LOAD MEMBER ===== */
 async function loadMember(){
-  const id = member_id.value;
+  const id = document.getElementById('member_id').value;
   if(!id) return alert('กรอก member id');
 
-  const {data,error} = await supabase
+  const { data, error } = await sb
     .from('members')
     .select('title,first_name,last_name,phone,group')
-    .eq('member_id',id)
+    .eq('member_id', id)
     .single();
 
   if(error || !data) return alert('ไม่พบสมาชิก');
 
-  full_name.value = data.title + data.first_name + ' ' + data.last_name;
-  phone.value = data.phone || '';
-  group.value = data.group || '';
+  document.getElementById('full_name').value =
+    data.title + data.first_name + ' ' + data.last_name;
+  document.getElementById('phone').value = data.phone || '';
+  document.getElementById('group').value = data.group || '';
 }
 
-// ===== PERIOD CONFIG =====
+/* ===== PERIOD TYPE ===== */
 function getDiv(){
-  return loan_type.value === 'emergency' ? 12 : 1;
+  const t = document.getElementById('loan_type').value;
+  return t === 'emergency' ? 12 : 1;
 }
 
-// ===== AUTO CALC =====
+/* ===== AUTO CALC ===== */
 function calcInstallment(){
   const amount = parseFloat(loan_amount.value)||0;
   const n = parseInt(periods.value)||0;
   const rate = (parseFloat(interest_rate.value)||0)/100;
-
   if(amount<=0 || n<=0) return;
 
   const div = getDiv();
@@ -106,17 +109,17 @@ function calcInstallment(){
   const per = total / n;
 
   pay_per_period.value = per.toFixed(2);
-  render(per);
+  renderTable(per);
 }
 
-// ===== MANUAL PAY =====
+/* ===== MANUAL PAY ===== */
 function manualPay(){
   const per = parseFloat(pay_per_period.value)||0;
-  if(per>0) render(per);
+  if(per>0) renderTable(per);
 }
 
-// ===== TABLE =====
-function render(per){
+/* ===== TABLE ===== */
+function renderTable(per){
   const amount = parseFloat(loan_amount.value)||0;
   const n = parseInt(periods.value)||0;
   const rate = (parseFloat(interest_rate.value)||0)/100;
@@ -124,6 +127,7 @@ function render(per){
 
   let remain = amount;
   const r = rate/div;
+  const tbl = document.getElementById('tbl');
   tbl.innerHTML='';
 
   for(let i=1;i<=n;i++){
@@ -134,15 +138,15 @@ function render(per){
 
     tbl.innerHTML += `
       <tr>
-        <td class='border p-2 text-center'>${i}</td>
-        <td class='border p-2 text-right'>${per.toFixed(2)}</td>
-        <td class='border p-2 text-right'>${interest.toFixed(2)}</td>
-        <td class='border p-2 text-right'>${remain.toFixed(2)}</td>
+        <td class="border p-2 text-center">${i}</td>
+        <td class="border p-2 text-right">${per.toFixed(2)}</td>
+        <td class="border p-2 text-right">${interest.toFixed(2)}</td>
+        <td class="border p-2 text-right">${remain.toFixed(2)}</td>
       </tr>`;
   }
 }
 
-// ===== SAVE =====
+/* ===== SAVE ===== */
 async function saveLoan(){
   const payload={
     member_id: member_id.value,
@@ -153,10 +157,11 @@ async function saveLoan(){
     interest_rate: interest_rate.value
   };
 
-  const {error}= await supabase.from('loan_requests').insert(payload);
+  const { error } = await sb.from('loan_requests').insert(payload);
   if(error) alert('error'); else alert('saved');
 }
 </script>
+
 
 </body>
 </html>
