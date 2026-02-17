@@ -12,22 +12,24 @@
 
 <h1 class="text-2xl font-bold text-center">หนังสือคำขอกู้เงิน</h1>
 
-<!-- MEMBER -->
-<div class="grid grid-cols-3 gap-4">
-<input id="member_id" class="border p-2 rounded" placeholder="เลขสมาชิก">
-<button onclick="loadMember()" class="bg-blue-600 text-white px-4 py-2 rounded">ค้นหา</button>
+<!-- ================= MEMBER SEARCH ================= -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+  <input id="member_id" class="border p-2 rounded" placeholder="เลขสมาชิก">
+  <button onclick="loadMember()" class="bg-blue-600 text-white px-4 py-2 rounded">
+    ค้นหาสมาชิก
+  </button>
 </div>
 
-<div class="grid grid-cols-3 gap-4">
-<input id="full_name" class="border p-2 rounded" placeholder="ชื่อ-สกุล">
-<input id="phone" class="border p-2 rounded" placeholder="โทรศัพท์">
-<input id="group" class="border p-2 rounded" placeholder="กลุ่ม">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+  <input id="full_name" class="border p-2 rounded" placeholder="ชื่อ-สกุล">
+  <input id="phone" class="border p-2 rounded" placeholder="โทรศัพท์">
+  <input id="group" class="border p-2 rounded" placeholder="กลุ่ม">
 </div>
 
-<!-- REGISTER ADDRESS -->
-<div>
-<h2 class="font-bold">ที่อยู่ทะเบียนบ้าน</h2>
-<div class="grid grid-cols-4 gap-2">
+<!-- ================= REGISTER ADDRESS ================= -->
+<div class="border-t pt-4">
+<h2 class="font-bold mb-2">ที่อยู่ตามทะเบียนบ้าน</h2>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
 <input id="house_no" class="border p-2 rounded" placeholder="เลขที่">
 <input id="moo" class="border p-2 rounded" placeholder="หมู่">
 <input id="village" class="border p-2 rounded" placeholder="หมู่บ้าน">
@@ -39,137 +41,147 @@
 </div>
 </div>
 
-<!-- CURRENT ADDRESS -->
-<div>
-<div class="flex justify-between">
+<!-- ================= CURRENT ADDRESS ================= -->
+<div class="border-t pt-4">
+<div class="flex justify-between items-center mb-2">
 <h2 class="font-bold">ที่อยู่ปัจจุบัน</h2>
-<button onclick="copyAddress()" class="bg-gray-700 text-white px-2 rounded">คัดลอก</button>
+<button onclick="copyAddress()" class="bg-gray-700 text-white px-3 py-1 rounded">
+คัดลอกจากทะเบียนบ้าน
+</button>
 </div>
-<div class="grid grid-cols-4 gap-2">
-<input id="c_house_no" class="border p-2 rounded">
-<input id="c_moo" class="border p-2 rounded">
-<input id="c_village" class="border p-2 rounded">
-<input id="c_street" class="border p-2 rounded">
-<input id="c_subdistrict" class="border p-2 rounded">
-<input id="c_district" class="border p-2 rounded">
-<input id="c_province" class="border p-2 rounded">
-<input id="c_postal_code" class="border p-2 rounded">
+
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+<input id="c_house_no" class="border p-2 rounded" placeholder="เลขที่">
+<input id="c_moo" class="border p-2 rounded" placeholder="หมู่">
+<input id="c_village" class="border p-2 rounded" placeholder="หมู่บ้าน">
+<input id="c_street" class="border p-2 rounded" placeholder="ถนน">
+<input id="c_subdistrict" class="border p-2 rounded" placeholder="ตำบล">
+<input id="c_district" class="border p-2 rounded" placeholder="อำเภอ">
+<input id="c_province" class="border p-2 rounded" placeholder="จังหวัด">
+<input id="c_postal_code" class="border p-2 rounded" placeholder="รหัสไปรษณีย์">
 </div>
 </div>
 
-<!-- LOAN -->
-<div>
-<select id="loan_type" class="border p-2 rounded w-full" onchange="calcInstallment()">
-<option value="">ประเภทเงินกู้</option>
-<option value="emergency">ฉุกเฉิน</option>
-<option value="short">สั้น</option>
-<option value="medium">กลาง</option>
-<option value="long">ยาว</option>
+<!-- ================= LOAN TYPE ================= -->
+<div class="border-t pt-4 space-y-2">
+<label class="font-semibold">ประเภทเงินกู้</label>
+<select id="loan_type" class="border p-2 rounded w-full">
+<option value="">-- เลือกประเภท --</option>
+<option value="emergency">ระยะฉุกเฉิน</option>
+<option value="short">ระยะสั้น</option>
+<option value="medium">ระยะปานกลาง</option>
+<option value="long">ระยะยาว</option>
+</select>
+</div>
+
+<!-- ================= PURPOSE ================= -->
+<div class="border-t pt-4 space-y-2">
+<label class="font-semibold">วัตถุประสงค์การกู้เงิน</label>
+
+<select id="loan_purpose" class="border p-2 rounded w-full"
+        onchange="handlePurposeChange()">
+<option value="">-- เลือกวัตถุประสงค์ --</option>
+<option value="เพื่อเป็นทุนสำรองค่าใช้จ่ายภายในบ้าน">เพื่อเป็นทุนสำรองค่าใช้จ่ายภายในบ้าน</option>
+<option value="เพื่อเป็นทุนหมุนเวียนในการทำธุรกิจ">เพื่อเป็นทุนหมุนเวียนในการทำธุรกิจ</option>
+<option value="เพื่อซ่อมแซมบ้านอยู่อาศัย">เพื่อซ่อมแซมบ้านอยู่อาศัย</option>
+<option value="เพื่อเป็นทุนการศึกษา">เพื่อเป็นทุนการศึกษา</option>
+<option value="other">อื่นๆ</option>
 </select>
 
-<div class="grid grid-cols-3 gap-2 mt-2">
-<input id="loan_amount" class="border p-2 rounded" placeholder="เงินกู้" oninput="calcInstallment()">
-<input id="periods" class="border p-2 rounded" placeholder="งวด" oninput="calcInstallment()">
-<input id="interest_rate" value="7.75" class="border p-2 rounded" oninput="calcInstallment()">
+<div id="other_purpose_box" class="hidden">
+<input id="other_purpose_text"
+       class="border p-2 rounded w-full mt-2"
+       placeholder="โปรดระบุวัตถุประสงค์เพิ่มเติม">
+</div>
 </div>
 
-<input id="pay_per_period" class="border p-2 rounded w-full mt-2" readonly>
+<!-- ================= SAVE ================= -->
+<div class="text-center pt-4">
+<button onclick="saveLoan()" class="bg-green-600 text-white px-6 py-3 rounded-xl">
+บันทึกข้อมูล
+</button>
 </div>
-
-<!-- TABLE -->
-<table class="w-full border text-sm mt-4">
-<thead class="bg-gray-200">
-<tr>
-<th class="border p-2">งวด</th>
-<th class="border p-2">ยอดผ่อน</th>
-<th class="border p-2">เงินต้น</th>
-<th class="border p-2">ดอกเบี้ย</th>
-<th class="border p-2">คงเหลือ</th>
-</tr>
-</thead>
-<tbody id="tbl"></tbody>
-</table>
 
 </div>
 
 <script>
+/* ================= SUPABASE ================= */
 const sb = window.supabase.createClient(
   'https://ttottijljxoinptmhgtu.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y');
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'
+);
 
+/* ================= LOAD MEMBER ================= */
 async function loadMember(){
-const {data}=await sb.from('members').select('*').eq('member_id',member_id.value).single();
-if(!data)return alert('ไม่พบ');
-full_name.value=data.first_name+' '+data.last_name;
-phone.value=data.phone||'';
-group.value=data.group||'';
-house_no.value=data.house_no||'';
-moo.value=data.moo||'';
-village.value=data.village||'';
-street.value=data.street||'';
-subdistrict.value=data.subdistrict||'';
-district.value=data.district||'';
-province.value=data.province||'';
-postal_code.value=data.postal_code||'';
+const id = member_id.value;
+if(!id) return alert('กรอกเลขสมาชิก');
+
+const {data,error} = await sb
+  .from('members')
+  .select('*')
+  .eq('member_id', id)
+  .single();
+
+if(error || !data) return alert('ไม่พบสมาชิก');
+
+full_name.value = (data.first_name||'') + ' ' + (data.last_name||'');
+phone.value = data.phone || '';
+group.value = data.group || '';
+
+house_no.value = data.house_no || '';
+moo.value = data.moo || '';
+village.value = data.village || '';
+street.value = data.street || '';
+subdistrict.value = data.subdistrict || '';
+district.value = data.district || '';
+province.value = data.province || '';
+postal_code.value = data.postal_code || '';
 }
 
+/* ================= COPY ADDRESS ================= */
 function copyAddress(){
-c_house_no.value=house_no.value;
-c_moo.value=moo.value;
-c_village.value=village.value;
-c_street.value=street.value;
-c_subdistrict.value=subdistrict.value;
-c_district.value=district.value;
-c_province.value=province.value;
-c_postal_code.value=postal_code.value;
+c_house_no.value = house_no.value;
+c_moo.value = moo.value;
+c_village.value = village.value;
+c_street.value = street.value;
+c_subdistrict.value = subdistrict.value;
+c_district.value = district.value;
+c_province.value = province.value;
+c_postal_code.value = postal_code.value;
 }
 
-function calcInstallment(){
-const P=parseFloat(loan_amount.value)||0;
-const n=parseInt(periods.value)||0;
-const annual=(parseFloat(interest_rate.value)||0)/100;
-if(P<=0||n<=0)return;
+/* ================= PURPOSE CHANGE ================= */
+function handlePurposeChange(){
+const purpose = loan_purpose.value;
+const box = document.getElementById('other_purpose_box');
 
-tbl.innerHTML='';
-
-if(loan_type.value==='emergency'){
-const r=annual/12;
-const PMT=(P*r)/(1-Math.pow(1+r,-n));
-pay_per_period.value=Math.ceil(PMT);
-
-let remain=P;
-for(let i=1;i<=n;i++){
-const interest=Math.ceil(remain*r);
-let principal=Math.ceil(PMT-interest);
-if(principal<0)principal=0;
-const pay=Math.ceil(principal+interest);
-remain=Math.ceil(remain-principal);
-if(remain<0)remain=0;
-tbl.innerHTML+=row(i,pay,principal,interest,remain);
-}
+if(purpose === 'other'){
+  box.classList.remove('hidden');
 }else{
-const interestMonth=Math.ceil((P*annual)/12);
-const principalMonth=Math.ceil(P/n);
-const pay=Math.ceil(principalMonth+interestMonth);
-pay_per_period.value=pay;
-
-let remain=P;
-for(let i=1;i<=n;i++){
-remain=Math.ceil(remain-principalMonth);
-if(remain<0)remain=0;
-tbl.innerHTML+=row(i,pay,principalMonth,interestMonth,remain);
-}
+  box.classList.add('hidden');
+  other_purpose_text.value = '';
 }
 }
 
-function row(i,pay,principal,interest,remain){
-return `<tr>
-<td class="border p-2 text-center">${i}</td>
-<td class="border p-2 text-right">${pay}</td>
-<td class="border p-2 text-right">${principal}</td>
-<td class="border p-2 text-right">${interest}</td>
-<td class="border p-2 text-right">${remain}</td>
-</tr>`;
+/* ================= SAVE ================= */
+async function saveLoan(){
+const purposeValue =
+loan_purpose.value === 'other'
+? other_purpose_text.value
+: loan_purpose.value;
+
+const payload = {
+member_id: member_id.value,
+loan_type: loan_type.value,
+purpose: purposeValue,
+house_no: house_no.value,
+current_house_no: c_house_no.value
+};
+
+const {error} = await sb.from('loan_requests').insert(payload);
+
+if(error) alert('บันทึกไม่สำเร็จ');
+else alert('บันทึกสำเร็จ');
 }
 </script>
 
