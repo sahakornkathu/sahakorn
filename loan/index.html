@@ -1,154 +1,216 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-<meta charset="UTF-8">
-<title>หนังสือสัญญาเงินกู้</title>
-<style>
-body {
-  font-family: "Sarabun", sans-serif;
-  margin: 40px;
-  line-height: 1.6;
-}
-.container {
-  max-width: 900px;
-  margin: auto;
-}
-h1 {
-  text-align: center;
-}
-.section {
-  margin-top: 20px;
-}
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 10px;
-}
-th, td {
-  border: 1px solid #000;
-  padding: 6px;
-  text-align: center;
-}
-.no-print {
-  margin-top: 20px;
-}
-@media print {
-  .no-print {
-    display: none;
-  }
-}
-</style>
+<meta charset="UTF-8" />
+<title>แบบฟอร์มคำขอกู้เงิน</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
+<body class="bg-gray-100 p-6">
 
-<body>
+<div class="max-w-5xl mx-auto bg-white shadow-xl rounded-2xl p-6 space-y-6">
+  <h1 class="text-2xl font-bold text-center">หนังสือคำขอกู้เงิน</h1>
 
-<div class="container">
+  <!-- MEMBER SEARCH -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div>
+      <label class="font-semibold">เลขทะเบียนสมาชิก</label>
+      <input id="member_id" class="w-full border p-2 rounded" placeholder="กรอก member_id" />
+    </div>
+    <div class="flex items-end">
+      <button onclick="loadMember()" class="bg-blue-600 text-white px-4 py-2 rounded w-full">ค้นหาสมาชิก</button>
+    </div>
+  </div>
 
-<h1>หนังสือสัญญาเงินกู้</h1>
+  <!-- PERSONAL INFO -->
+  <div class="border-t pt-4">
+    <h2 class="font-bold text-lg mb-2">ข้อมูลส่วนบุคคล</h2>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <input id="full_name" class="border p-2 rounded" placeholder="ชื่อ-นามสกุล" />
+      <input id="group" class="border p-2 rounded" placeholder="กลุ่ม" />
+      <input id="phone" class="border p-2 rounded" placeholder="โทรศัพท์" />
+      <input id="id_card" class="border p-2 rounded" placeholder="บัตรประชาชน" />
+      <input id="birthday" class="border p-2 rounded" placeholder="วันเกิด" />
+      <input id="age" class="border p-2 rounded" placeholder="อายุ" />
+    </div>
+  </div>
 
-<div class="section">
-เลขที่สัญญา: <span id="contract_no">LN-0001</span><br>
-วันที่ทำสัญญา: <span id="contract_date">01/01/2026</span>
-</div>
+  <!-- ADDRESS REGISTER -->
+  <div>
+    <h2 class="font-bold text-lg mb-2">ที่อยู่ตามทะเบียนบ้าน</h2>
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <input id="house_no" class="border p-2 rounded" placeholder="เลขที่บ้าน" />
+      <input id="moo" class="border p-2 rounded" placeholder="หมู่" />
+      <input id="village" class="border p-2 rounded" placeholder="หมู่บ้าน" />
+      <input id="street" class="border p-2 rounded" placeholder="ถนน" />
+      <input id="subdistrict" class="border p-2 rounded" placeholder="ตำบล" />
+      <input id="district" class="border p-2 rounded" placeholder="อำเภอ" />
+      <input id="province" class="border p-2 rounded" placeholder="จังหวัด" />
+      <input id="postal_code" class="border p-2 rounded" placeholder="รหัสไปรษณีย์" />
+    </div>
+  </div>
 
-<div class="section">
-ข้าพเจ้า <b id="member_name">นายตัวอย่าง ใจดี</b><br>
-เลขบัตรประชาชน <b id="member_cid">1234567890123</b>
-</div>
+  <!-- ADDRESS CURRENT -->
+  <div class="border-t pt-4">
+    <div class="flex justify-between items-center mb-2">
+      <h2 class="font-bold text-lg">ที่อยู่ปัจจุบัน</h2>
+      <button onclick="copyAddress()" class="bg-gray-700 text-white px-3 py-1 rounded text-sm">
+        คัดลอกจากทะเบียนบ้าน
+      </button>
+    </div>
 
-<div class="section">
-ตกลงกู้เงินจำนวน <b id="loan_amount">500,000</b> บาท<br>
-ประเภทเงินกู้: <b id="loan_type">ระยะยาว</b>
-</div>
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <input id="c_house_no" class="border p-2 rounded" placeholder="เลขที่บ้าน" />
+      <input id="c_moo" class="border p-2 rounded" placeholder="หมู่" />
+      <input id="c_village" class="border p-2 rounded" placeholder="หมู่บ้าน" />
+      <input id="c_street" class="border p-2 rounded" placeholder="ถนน" />
+      <input id="c_subdistrict" class="border p-2 rounded" placeholder="ตำบล" />
+      <input id="c_district" class="border p-2 rounded" placeholder="อำเภอ" />
+      <input id="c_province" class="border p-2 rounded" placeholder="จังหวัด" />
+      <input id="c_postal_code" class="border p-2 rounded" placeholder="รหัสไปรษณีย์" />
+    </div>
+  </div>
 
-<div class="section">
-ตกลงผ่อนชำระเดือนละ <b id="installment_amount">12,500</b> บาท<br>
-จำนวนงวดทั้งหมด <b id="installment_months">48</b> งวด
-</div>
+  <!-- LOAN INFO -->
+  <div class="border-t pt-4">
+    <h2 class="font-bold text-lg mb-2">ข้อมูลเงินกู้</h2>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <select id="loan_type" class="border p-2 rounded" onchange="calcInstallment()">
+        <option value="">ประเภทเงินกู้</option>
+        <option value="emergency">ระยะฉุกเฉิน (ผ่อนรายเดือน)</option>
+        <option value="short">ระยะสั้น (ผ่อนรายปี)</option>
+        <option value="medium">ระยะปานกลาง (ผ่อนรายปี)</option>
+        <option value="long">ระยะยาว (ผ่อนรายปี)</option>
+      </select>
 
-<div class="section">
-<b>ตารางผ่อนชำระ</b>
-<table>
-<thead>
-<tr>
-<th>งวดที่</th>
-<th>วันครบกำหนด</th>
-<th>จำนวนเงิน</th>
-</tr>
-</thead>
-<tbody id="installment_table">
-</tbody>
-</table>
-</div>
+      <input id="loan_amount" class="border p-2 rounded" placeholder="จำนวนเงิน" oninput="calcInstallment()" />
+      <input id="months" class="border p-2 rounded" placeholder="จำนวนงวด" oninput="calcInstallment()" />
 
-<div class="section" style="margin-top:60px;">
-<table style="border:none;">
-<tr style="border:none;">
-<td style="border:none; text-align:center;">
-ลงชื่อ _____________________ ผู้กู้
-</td>
-<td style="border:none; text-align:center;">
-ลงชื่อ _____________________ ผู้ให้กู้
-</td>
-</tr>
-</table>
-</div>
+      <input id="interest_rate" class="border p-2 rounded bg-gray-100" value="7.75" oninput="calcInstallment()" />
 
-<div class="no-print">
-<button onclick="window.print()">🖨 พิมพ์เอกสาร</button>
-</div>
+      <input id="monthly_pay" class="border p-2 rounded" placeholder="ยอดผ่อน (แก้ได้)" oninput="calcTableFromManual()" />
 
+      <input id="purpose" class="border p-2 rounded md:col-span-2" placeholder="วัตถุประสงค์" />
+    </div>
+    <p class="text-sm text-gray-500 mt-1">* ระยะฉุกเฉิน = ผ่อนรายเดือน / อื่น ๆ = ผ่อนรายปี</p>
+  </div>
+
+  <!-- INSTALLMENT TABLE -->
+  <div class="border-t pt-4">
+    <h2 class="font-bold text-lg mb-2">ตารางผ่อนชำระ</h2>
+    <div class="overflow-auto">
+      <table class="w-full border text-sm">
+        <thead class="bg-gray-200">
+          <tr>
+            <th class="border p-2">งวดที่</th>
+            <th class="border p-2">ยอดชำระ</th>
+            <th class="border p-2">ดอกเบี้ย</th>
+            <th class="border p-2">เงินต้นคงเหลือ</th>
+          </tr>
+        </thead>
+        <tbody id="installmentTable"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- SUBMIT -->
+  <div class="text-center">
+    <button onclick="saveLoan()" class="bg-green-600 text-white px-6 py-3 rounded-xl">บันทึกคำขอกู้</button>
+  </div>
 </div>
 
 <script>
-// ===== ตัวอย่างข้อมูล =====
-const data = {
-  contract_no: "LN-2026-0001",
-  contract_date: "01/01/2026",
-  member_name: "นายสมชาย ใจดี",
-  member_cid: "1234567890123",
-  loan_amount: 500000,
-  loan_type: "ระยะยาว",
-  installment_amount: 12500,
-  installment_months: 12,
-  first_due: "2026-02-01"
-};
+const supabase = window.supabase.createClient(
+  'https://ttottijljxoinptmhgtu.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'
+);
 
-// ===== ใส่ข้อมูลลงหน้า =====
-document.getElementById("contract_no").innerText = data.contract_no;
-document.getElementById("contract_date").innerText = data.contract_date;
-document.getElementById("member_name").innerText = data.member_name;
-document.getElementById("member_cid").innerText = data.member_cid;
-document.getElementById("loan_amount").innerText = data.loan_amount.toLocaleString();
-document.getElementById("loan_type").innerText = data.loan_type;
-document.getElementById("installment_amount").innerText = data.installment_amount.toLocaleString();
-document.getElementById("installment_months").innerText = data.installment_months;
+function getPeriodConfig() {
+  const type = loan_type.value;
+  if (type === 'emergency') {
+    return { divisor: 12, label: 'เดือน' }; // รายเดือน
+  }
+  return { divisor: 1, label: 'ปี' }; // รายปี
+}
 
-// ===== สร้างตารางผ่อน =====
-function generateInstallments() {
-  const tbody = document.getElementById("installment_table");
-  tbody.innerHTML = "";
+function calcInstallment() {
+  const amount = parseFloat(loan_amount.value) || 0;
+  const periods = parseInt(months.value) || 0;
+  const rate = (parseFloat(interest_rate.value) || 0) / 100;
 
-  let date = new Date(data.first_due);
+  if (amount <= 0 || periods <= 0) return;
 
-  for (let i = 1; i <= data.installment_months; i++) {
-    const tr = document.createElement("tr");
+  const cfg = getPeriodConfig();
 
-    const due = date.toLocaleDateString("th-TH");
+  const interestTotal = amount * rate * (periods / cfg.divisor);
+  const totalPay = amount + interestTotal;
+  const perPeriod = totalPay / periods;
 
-    tr.innerHTML = `
-      <td>${i}</td>
-      <td>${due}</td>
-      <td>${data.installment_amount.toLocaleString()}</td>
-    `;
+  monthly_pay.value = perPeriod.toFixed(2);
+  renderTable(perPeriod);
+}
 
-    tbody.appendChild(tr);
+function calcTableFromManual() {
+  const per = parseFloat(monthly_pay.value) || 0;
+  if (per > 0) renderTable(per);
+}
 
-    date.setMonth(date.getMonth() + 1);
+function renderTable(perPeriod) {
+  const amount = parseFloat(loan_amount.value) || 0;
+  const periods = parseInt(months.value) || 0;
+  const rate = (parseFloat(interest_rate.value) || 0) / 100;
+  const cfg = getPeriodConfig();
+
+  const tbody = document.getElementById('installmentTable');
+  tbody.innerHTML = '';
+
+  let remain = amount;
+  const periodRate = rate / cfg.divisor;
+
+  for (let i = 1; i <= periods; i++) {
+    const interest = remain * periodRate;
+    const principal = perPeriod - interest;
+    remain -= principal;
+    if (remain < 0) remain = 0;
+
+    tbody.innerHTML += `
+      <tr>
+        <td class="border p-2 text-center">${i}</td>
+        <td class="border p-2 text-right">${perPeriod.toFixed(2)}</td>
+        <td class="border p-2 text-right">${interest.toFixed(2)}</td>
+        <td class="border p-2 text-right">${remain.toFixed(2)}</td>
+      </tr>`;
   }
 }
 
-generateInstallments();
+function copyAddress() {
+  c_house_no.value = house_no.value;
+  c_moo.value = moo.value;
+  c_village.value = village.value;
+  c_street.value = street.value;
+  c_subdistrict.value = subdistrict.value;
+  c_district.value = district.value;
+  c_province.value = province.value;
+  c_postal_code.value = postal_code.value;
+}
+
+async function saveLoan() {
+  const payload = {
+    member_id: member_id.value,
+    loan_type: loan_type.value,
+    loan_amount: loan_amount.value,
+    periods: months.value,
+    pay_per_period: monthly_pay.value,
+    interest_rate: interest_rate.value,
+    purpose: purpose.value,
+    status: 'pending'
+  };
+
+  const { error } = await supabase.from('loan_requests').insert(payload);
+
+  if (error) alert('บันทึกไม่สำเร็จ');
+  else alert('บันทึกสำเร็จ');
+}
 </script>
 
 </body>
