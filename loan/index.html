@@ -18,7 +18,7 @@
 <input id="phone" class="border p-2 rounded" placeholder="โทรศัพท์">
 </div>
 
-<!-- REGISTER ADDRESS -->
+<!-- ADDRESS -->
 <div>
 <h2 class="font-bold">ที่อยู่ทะเบียนบ้าน</h2>
 <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
@@ -29,11 +29,10 @@
 </div>
 </div>
 
-<!-- CURRENT ADDRESS -->
 <div>
 <div class="flex justify-between">
 <h2 class="font-bold">ที่อยู่ปัจจุบัน</h2>
-<button onclick="copyAddress()" class="bg-gray-700 text-white px-3 py-1 rounded">คัดลอก</button>
+<button onclick="copyAddress()" class="bg-gray-700 text-white px-2 rounded">คัดลอก</button>
 </div>
 <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
 <input id="c_house_no" class="border p-2 rounded">
@@ -47,76 +46,52 @@
 <div>
 <label class="font-semibold">ลักษณะที่อยู่อาศัย</label>
 <div class="grid grid-cols-2 gap-2 text-sm">
-<label><input type="checkbox" id="live_parent"> บิดา/มารดา</label>
-<label><input type="checkbox" id="live_relative"> ญาติ</label>
 <label><input type="checkbox" id="live_rent" onchange="toggleRent()"> บ้านเช่า</label>
-<label><input type="checkbox" id="live_self"> ของตนเอง</label>
-<label><input type="checkbox" id="live_spouse"> คู่สมรส</label>
 <label><input type="checkbox" id="live_other" onchange="toggleOtherLive()"> อื่นๆ</label>
 </div>
-
-<div id="rent_box" class="hidden mt-2">
-<input id="rent_price" class="border p-2 rounded w-full" placeholder="ค่าเช่าเดือนละ">
+<div id="rent_box" class="hidden"><input class="border p-2 rounded w-full" placeholder="ค่าเช่า"></div>
+<div id="other_live_box" class="hidden"><input class="border p-2 rounded w-full" placeholder="ระบุ"></div>
 </div>
 
-<div id="other_live_box" class="hidden mt-2">
-<input id="other_live_text" class="border p-2 rounded w-full" placeholder="ระบุเพิ่มเติม">
-</div>
-</div>
-
-<!-- OCCUPATION (เดิมแบบธรรมดา) -->
+<!-- OCCUPATION -->
 <div>
 <label class="font-semibold">อาชีพผู้กู้</label>
-<div class="grid grid-cols-2 gap-2 text-sm">
 
-<label><input type="checkbox" id="job_business"> ธุรกิจส่วนตัว</label>
-<label><input type="checkbox" id="job_agriculture"> การเกษตร</label>
-<label><input type="checkbox" id="job_fishery"> ประมง</label>
-<label><input type="checkbox" id="job_rentroom"> ห้องเช่า/ขับวิน</label>
-<label><input type="checkbox" id="job_freelance"> รับจ้าง</label>
-<label><input type="checkbox" id="job_private"> บริษัทเอกชน</label>
-<label><input type="checkbox" id="job_government"> ข้าราชการ/รัฐวิสาหกิจ</label>
-<label><input type="checkbox" id="job_other_chk" onchange="toggleJobOther()"> อื่นๆ</label>
-
+<label><input type="checkbox" id="job_business" onchange="toggleBusiness()"> ธุรกิจส่วนตัว</label>
+<div id="business_box" class="ml-6 hidden">
+<label><input type="checkbox" id="biz_agri" onchange="biz_agri_text.classList.toggle('hidden')"> เกษตร</label>
+<input id="biz_agri_text" class="border p-2 rounded w-full hidden">
 </div>
 
-<div id="job_other_box" class="hidden mt-2">
-<input id="job_other_text" class="border p-2 rounded w-full" placeholder="ระบุอาชีพ">
+<label><input type="checkbox" id="job_freelance" onchange="toggleFreelance()"> รับจ้าง</label>
+<div id="freelance_box" class="ml-6 hidden">
+<label><input type="checkbox" id="free_agri" onchange="free_agri_text.classList.toggle('hidden')"> เกษตร</label>
+<input id="free_agri_text" class="border p-2 rounded w-full hidden">
 </div>
 </div>
 
 <!-- LOAN TYPE -->
-<div>
-<label class="font-semibold">ประเภทเงินกู้</label>
-<select id="loan_type" class="border p-2 rounded w-full">
-<option value="">เลือกประเภท</option>
-<option>ระยะฉุกเฉิน</option>
-<option>ระยะสั้น</option>
-<option>ระยะปานกลาง</option>
-<option>ระยะยาว</option>
-</select>
-</div>
-
-<!-- PURPOSE (เดิม dropdown) -->
-<div>
-<label class="font-semibold">วัตถุประสงค์เงินกู้</label>
-<select id="loan_purpose" class="border p-2 rounded w-full" onchange="togglePurposeOther()">
-<option value="">เลือก</option>
-<option>ทุนสำรองภายในบ้าน</option>
-<option>หมุนเวียนธุรกิจ</option>
-<option>ซ่อมบ้าน</option>
-<option>การศึกษา</option>
-<option value="other">อื่นๆ</option>
+<select id="loan_type" onchange="updatePurpose()" class="border p-2 rounded w-full">
+<option value="">เลือกประเภทเงินกู้</option>
+<option value="emergency">ฉุกเฉิน</option>
+<option value="normal">สั้น/กลาง/ยาว</option>
 </select>
 
-<div id="purpose_other_box" class="hidden mt-2">
-<input id="purpose_other_text" class="border p-2 rounded w-full" placeholder="ระบุวัตถุประสงค์">
+<!-- PURPOSE -->
+<div id="purpose_emergency" class="hidden">
+<label><input type="checkbox"> ทุนสำรอง</label>
+</div>
+
+<div id="purpose_normal" class="hidden">
+<label><input type="checkbox"> ซื้อที่ดิน</label>
+<label><input type="checkbox" id="pn_other_chk" onchange="pn_other_box.classList.toggle('hidden')"> อื่นๆ</label>
+<div id="pn_other_box" class="hidden">
+<input class="border p-2 rounded w-full">
 </div>
 </div>
 
-<!-- SAVE -->
-<button onclick="saveForm()" class="bg-green-600 text-white px-6 py-3 rounded-xl w-full">
-บันทึกข้อมูล
+<button class="bg-green-600 text-white px-6 py-3 rounded-xl w-full">
+บันทึก
 </button>
 
 </div>
@@ -131,13 +106,13 @@ c_district.value=district.value;
 
 function toggleRent(){ rent_box.classList.toggle('hidden',!live_rent.checked); }
 function toggleOtherLive(){ other_live_box.classList.toggle('hidden',!live_other.checked); }
-function toggleJobOther(){ job_other_box.classList.toggle('hidden',!job_other_chk.checked); }
-function togglePurposeOther(){
-purpose_other_box.classList.toggle('hidden',loan_purpose.value!=='other');
-}
 
-function saveForm(){
-alert('บันทึกข้อมูลเรียบร้อย');
+function toggleBusiness(){ business_box.classList.toggle('hidden',!job_business.checked); }
+function toggleFreelance(){ freelance_box.classList.toggle('hidden',!job_freelance.checked); }
+
+function updatePurpose(){
+purpose_emergency.classList.toggle('hidden',loan_type.value!=='emergency');
+purpose_normal.classList.toggle('hidden',loan_type.value!=='normal');
 }
 </script>
 
