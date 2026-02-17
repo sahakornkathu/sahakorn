@@ -8,24 +8,23 @@
 </head>
 
 <body class="bg-gray-100 p-6">
-
 <div class="max-w-6xl mx-auto bg-white shadow-xl rounded-2xl p-6 space-y-6">
 
 <h1 class="text-2xl font-bold text-center">หนังสือคำขอกู้เงิน</h1>
 
-<!-- ================= MEMBER SEARCH ================= -->
+<!-- MEMBER -->
 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-  <input id="member_id" class="border p-2 rounded" placeholder="เลขสมาชิก">
-  <button onclick="loadMember()" class="bg-blue-600 text-white px-4 py-2 rounded">ค้นหา</button>
+<input id="member_id" class="border p-2 rounded" placeholder="เลขสมาชิก">
+<button onclick="loadMember()" class="bg-blue-600 text-white px-4 py-2 rounded">ค้นหา</button>
 </div>
 
 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-  <input id="full_name" class="border p-2 rounded" placeholder="ชื่อ-สกุล">
-  <input id="phone" class="border p-2 rounded" placeholder="โทรศัพท์">
-  <input id="group" class="border p-2 rounded" placeholder="กลุ่ม">
+<input id="full_name" class="border p-2 rounded" placeholder="ชื่อ-สกุล">
+<input id="phone" class="border p-2 rounded" placeholder="โทรศัพท์">
+<input id="group" class="border p-2 rounded" placeholder="กลุ่ม">
 </div>
 
-<!-- ================= REGISTER ADDRESS ================= -->
+<!-- REGISTER ADDRESS -->
 <div class="border-t pt-4">
 <h2 class="font-bold">ที่อยู่ตามทะเบียนบ้าน</h2>
 <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -40,51 +39,44 @@
 </div>
 </div>
 
-<!-- ================= CURRENT ADDRESS ================= -->
+<!-- CURRENT ADDRESS -->
 <div class="border-t pt-4">
-<div class="flex justify-between items-center">
+<div class="flex justify-between">
 <h2 class="font-bold">ที่อยู่ปัจจุบัน</h2>
-<button onclick="copyAddress()" class="bg-gray-700 text-white px-3 py-1 rounded">
-คัดลอกจากทะเบียนบ้าน
-</button>
+<button onclick="copyAddress()" class="bg-gray-700 text-white px-3 py-1 rounded">คัดลอก</button>
 </div>
-
 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2">
-<input id="c_house_no" class="border p-2 rounded" placeholder="เลขที่">
-<input id="c_moo" class="border p-2 rounded" placeholder="หมู่">
-<input id="c_village" class="border p-2 rounded" placeholder="หมู่บ้าน">
-<input id="c_street" class="border p-2 rounded" placeholder="ถนน">
-<input id="c_subdistrict" class="border p-2 rounded" placeholder="ตำบล">
-<input id="c_district" class="border p-2 rounded" placeholder="อำเภอ">
-<input id="c_province" class="border p-2 rounded" placeholder="จังหวัด">
-<input id="c_postal_code" class="border p-2 rounded" placeholder="รหัสไปรษณีย์">
+<input id="c_house_no" class="border p-2 rounded">
+<input id="c_moo" class="border p-2 rounded">
+<input id="c_village" class="border p-2 rounded">
+<input id="c_street" class="border p-2 rounded">
+<input id="c_subdistrict" class="border p-2 rounded">
+<input id="c_district" class="border p-2 rounded">
+<input id="c_province" class="border p-2 rounded">
+<input id="c_postal_code" class="border p-2 rounded">
 </div>
 </div>
 
-<!-- ================= LOAN INFO ================= -->
+<!-- LOAN -->
 <div class="border-t pt-4 space-y-3">
-
 <select id="loan_type" class="border p-2 rounded w-full" onchange="calcInstallment()">
 <option value="">ประเภทเงินกู้</option>
-<option value="emergency">ระยะฉุกเฉิน (รายเดือน)</option>
-<option value="short">ระยะสั้น (รายปี)</option>
-<option value="medium">ระยะปานกลาง (รายปี)</option>
-<option value="long">ระยะยาว (รายปี)</option>
+<option value="emergency">ระยะฉุกเฉิน</option>
+<option value="short">ระยะสั้น</option>
+<option value="medium">ระยะปานกลาง</option>
+<option value="long">ระยะยาว</option>
 </select>
 
-<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-<input id="loan_amount" class="border p-2 rounded" placeholder="จำนวนเงิน" oninput="calcInstallment()">
-<input id="periods" class="border p-2 rounded" placeholder="จำนวนงวด" oninput="calcInstallment()">
+<div class="grid grid-cols-3 gap-4">
+<input id="loan_amount" class="border p-2 rounded" placeholder="เงินกู้" oninput="calcInstallment()">
+<input id="periods" class="border p-2 rounded" placeholder="งวด" oninput="calcInstallment()">
 <input id="interest_rate" value="7.75" class="border p-2 rounded" oninput="calcInstallment()">
 </div>
 
-<input id="pay_per_period" class="border p-2 rounded w-full"
-placeholder="ยอดผ่อนต่องวด (แก้ได้)" oninput="manualPay()">
-
+<input id="pay_per_period" class="border p-2 rounded w-full" placeholder="ยอดผ่อน" readonly>
 </div>
 
-<!-- ================= TABLE ================= -->
-<div class="border-t pt-4">
+<!-- TABLE -->
 <table class="w-full border text-sm">
 <thead class="bg-gray-200">
 <tr>
@@ -96,38 +88,26 @@ placeholder="ยอดผ่อนต่องวด (แก้ได้)" oninp
 </thead>
 <tbody id="tbl"></tbody>
 </table>
-</div>
 
 <button onclick="saveLoan()" class="bg-green-600 text-white px-6 py-3 rounded-xl w-full">
-บันทึกคำขอกู้
+บันทึก
 </button>
 
 </div>
 
 <script>
-/* ================= SUPABASE ================= */
 const sb = window.supabase.createClient(
   'https://ttottijljxoinptmhgtu.supabase.co',
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'
 );
 
-/* ================= LOAD MEMBER ================= */
+/* MEMBER */
 async function loadMember(){
-const id = member_id.value;
-if(!id) return alert('กรอกเลขสมาชิก');
-
-const {data,error} = await sb
-  .from('members')
-  .select('*')
-  .eq('member_id',id)
-  .single();
-
-if(error || !data) return alert('ไม่พบสมาชิก');
-
-full_name.value = (data.title||'')+(data.first_name||'')+' '+(data.last_name||'');
-phone.value = data.phone||'';
-group.value = data.group||'';
-
+const {data}=await sb.from('members').select('*').eq('member_id',member_id.value).single();
+if(!data)return alert('ไม่พบ');
+full_name.value=data.first_name+' '+data.last_name;
+phone.value=data.phone||'';
+group.value=data.group||'';
 house_no.value=data.house_no||'';
 moo.value=data.moo||'';
 village.value=data.village||'';
@@ -138,7 +118,6 @@ province.value=data.province||'';
 postal_code.value=data.postal_code||'';
 }
 
-/* ================= COPY ADDRESS ================= */
 function copyAddress(){
 c_house_no.value=house_no.value;
 c_moo.value=moo.value;
@@ -150,65 +129,63 @@ c_province.value=province.value;
 c_postal_code.value=postal_code.value;
 }
 
-/* ================= LOAN CALC ================= */
-function getDivisor(){return loan_type.value==='emergency'?12:1;}
-
+/* LOAN CALC */
 function calcInstallment(){
-const amount=parseFloat(loan_amount.value)||0;
+const P=parseFloat(loan_amount.value)||0;
 const n=parseInt(periods.value)||0;
-const rate=(parseFloat(interest_rate.value)||0)/100;
-if(amount<=0||n<=0)return;
+const annual=(parseFloat(interest_rate.value)||0)/100;
+if(P<=0||n<=0)return;
 
-const div=getDivisor();
-const interestTotal=amount*rate*(n/div);
-const total=amount+interestTotal;
-const per=total/n;
-pay_per_period.value=per.toFixed(2);
-renderTable(per);
-}
-
-function manualPay(){
-const per=parseFloat(pay_per_period.value)||0;
-if(per>0)renderTable(per);
-}
-
-function renderTable(per){
-let remain=parseFloat(loan_amount.value)||0;
-const n=parseInt(periods.value)||0;
-const rate=(parseFloat(interest_rate.value)||0)/100;
-const div=getDivisor();
-const r=rate/div;
 tbl.innerHTML='';
+
+if(loan_type.value==='emergency'){
+// PMT
+const r=annual/12;
+const PMT=Math.ceil((P*r)/(1-Math.pow(1+r,-n)));
+pay_per_period.value=PMT;
+
+let remain=P;
 for(let i=1;i<=n;i++){
-const interest=remain*r;
-const principal=per-interest;
-remain-=principal;
+const interest=Math.ceil(remain*r);
+const principal=Math.ceil(PMT-interest);
+remain=Math.ceil(remain-principal);
 if(remain<0)remain=0;
-tbl.innerHTML+=`<tr>
+tbl.innerHTML+=row(i,PMT,interest,remain);
+}
+}else{
+// ดอกปีคงที่
+const interestMonth=Math.ceil((P*annual)/12);
+const principalMonth=Math.ceil(P/n);
+const pay=Math.ceil(principalMonth+interestMonth);
+pay_per_period.value=pay;
+
+let remain=P;
+for(let i=1;i<=n;i++){
+remain=Math.ceil(remain-principalMonth);
+if(remain<0)remain=0;
+tbl.innerHTML+=row(i,pay,interestMonth,remain);
+}
+}
+}
+
+function row(i,pay,interest,remain){
+return `<tr>
 <td class="border p-2 text-center">${i}</td>
-<td class="border p-2 text-right">${per.toFixed(2)}</td>
-<td class="border p-2 text-right">${interest.toFixed(2)}</td>
-<td class="border p-2 text-right">${remain.toFixed(2)}</td>
+<td class="border p-2 text-right">${pay}</td>
+<td class="border p-2 text-right">${interest}</td>
+<td class="border p-2 text-right">${remain}</td>
 </tr>`;
 }
-}
 
-/* ================= SAVE LOAN ================= */
 async function saveLoan(){
-const payload={
+await sb.from('loan_requests').insert({
 member_id:member_id.value,
 loan_type:loan_type.value,
 loan_amount:loan_amount.value,
 periods:periods.value,
-pay_per_period:pay_per_period.value,
-interest_rate:interest_rate.value,
-house_no:house_no.value,
-c_house_no:c_house_no.value
-};
-
-const {error}=await sb.from('loan_requests').insert(payload);
-if(error) alert('บันทึกไม่สำเร็จ');
-else alert('บันทึกสำเร็จ');
+pay_per_period:pay_per_period.value
+});
+alert('บันทึกแล้ว');
 }
 </script>
 
