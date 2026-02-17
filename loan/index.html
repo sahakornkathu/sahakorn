@@ -12,12 +12,10 @@
 
 <h1 class="text-2xl font-bold text-center">หนังสือคำขอกู้เงิน</h1>
 
-<!-- ================= MEMBER SEARCH ================= -->
+<!-- MEMBER -->
 <div class="grid grid-cols-3 gap-4">
 <input id="member_id" class="border p-2 rounded" placeholder="เลขสมาชิก">
-<button onclick="loadMember()" class="bg-blue-600 text-white px-4 py-2 rounded">
-ค้นหา
-</button>
+<button onclick="loadMember()" class="bg-blue-600 text-white px-4 py-2 rounded">ค้นหา</button>
 </div>
 
 <div class="grid grid-cols-3 gap-4">
@@ -26,7 +24,7 @@
 <input id="group" class="border p-2 rounded" placeholder="กลุ่ม">
 </div>
 
-<!-- ================= REGISTER ADDRESS ================= -->
+<!-- REGISTER ADDRESS -->
 <div>
 <h2 class="font-bold">ที่อยู่ทะเบียนบ้าน</h2>
 <div class="grid grid-cols-4 gap-2">
@@ -41,13 +39,11 @@
 </div>
 </div>
 
-<!-- ================= CURRENT ADDRESS ================= -->
+<!-- CURRENT ADDRESS -->
 <div>
 <div class="flex justify-between">
 <h2 class="font-bold">ที่อยู่ปัจจุบัน</h2>
-<button onclick="copyAddress()" class="bg-gray-700 text-white px-2 rounded">
-คัดลอก
-</button>
+<button onclick="copyAddress()" class="bg-gray-700 text-white px-2 rounded">คัดลอก</button>
 </div>
 <div class="grid grid-cols-4 gap-2">
 <input id="c_house_no" class="border p-2 rounded">
@@ -61,7 +57,7 @@
 </div>
 </div>
 
-<!-- ================= RESIDENCE ================= -->
+<!-- RESIDENCE -->
 <div>
 <label class="font-semibold">ลักษณะที่อยู่อาศัย</label>
 <div class="grid grid-cols-2 gap-2 text-sm">
@@ -82,7 +78,7 @@
 </div>
 </div>
 
-<!-- ================= OCCUPATION ================= -->
+<!-- OCCUPATION -->
 <div>
 <label class="font-semibold">อาชีพผู้กู้</label>
 <div class="grid grid-cols-2 gap-2 text-sm">
@@ -101,33 +97,53 @@
 </div>
 </div>
 
-<!-- ================= LOAN TYPE ================= -->
+<!-- LOAN TYPE -->
 <div>
 <label>ประเภทเงินกู้</label>
-<select id="loan_type" class="border p-2 rounded w-full">
+<select id="loan_type" class="border p-2 rounded w-full" onchange="updatePurpose()">
 <option value="">เลือก</option>
-<option>ฉุกเฉิน</option>
-<option>สั้น</option>
-<option>กลาง</option>
-<option>ยาว</option>
+<option value="emergency">ฉุกเฉิน</option>
+<option value="short">สั้น</option>
+<option value="medium">กลาง</option>
+<option value="long">ยาว</option>
 </select>
 </div>
 
-<!-- ================= PURPOSE ================= -->
+<!-- PURPOSE -->
 <div>
-<label>วัตถุประสงค์เงินกู้</label>
-<select id="loan_purpose" class="border p-2 rounded w-full"
-onchange="handlePurposeChange()">
-<option value="">เลือก</option>
-<option>ทุนสำรองภายในบ้าน</option>
-<option>หมุนเวียนธุรกิจ</option>
-<option>ซ่อมบ้าน</option>
-<option>การศึกษา</option>
-<option value="other">อื่นๆ</option>
-</select>
+<label class="font-semibold">วัตถุประสงค์เงินกู้</label>
 
-<div id="other_purpose_box" class="hidden">
-<input id="other_purpose_text" class="border p-2 rounded w-full" placeholder="โปรดระบุ">
+<!-- EMERGENCY -->
+<div id="purpose_emergency" class="hidden text-sm space-y-1">
+<label><input type="checkbox"> ทุนสำรองภายในบ้าน</label>
+<label><input type="checkbox"> หมุนเวียนธุรกิจ</label>
+<label><input type="checkbox"> ซ่อมบ้าน</label>
+<label><input type="checkbox"> การศึกษา</label>
+<label><input type="checkbox" id="pe_other_chk" onchange="togglePeOther()"> อื่นๆ</label>
+<div id="pe_other_box" class="hidden">
+<input class="border p-2 rounded w-full" placeholder="ระบุ">
+</div>
+</div>
+
+<!-- NORMAL -->
+<div id="purpose_normal" class="hidden text-sm space-y-1">
+<label><input type="checkbox"> ซื้อที่ดินเพื่ออยู่อาศัย</label>
+<label><input type="checkbox"> ซื้อที่ดินเพื่อการเกษตร</label>
+<label><input type="checkbox"> ค่าใช้จ่ายในการประกอบอาชีพ</label>
+<label><input type="checkbox"> ลงทุนในทรัพย์สิน</label>
+<label><input type="checkbox"> สร้างบ้านอยู่อาศัย</label>
+<label><input type="checkbox"> ปรับปรุงบ้านอยู่อาศัย</label>
+<label><input type="checkbox"> ปรับปรุงที่ดินเพื่อการเกษตร</label>
+<label><input type="checkbox"> ซื้อเครื่องใช้ในบ้าน</label>
+<label><input type="checkbox"> ซื้อรถยนต์</label>
+<label><input type="checkbox"> การศึกษาตน</label>
+<label><input type="checkbox"> การศึกษาบุตร</label>
+<label><input type="checkbox"> การศึกษาคนอื่น</label>
+<label><input type="checkbox"> การท่องเที่ยว</label>
+<label><input type="checkbox" id="pn_other_chk" onchange="togglePnOther()"> อื่นๆ</label>
+<div id="pn_other_box" class="hidden">
+<input class="border p-2 rounded w-full" placeholder="ระบุ">
+</div>
 </div>
 </div>
 
@@ -142,31 +158,21 @@ const sb = window.supabase.createClient(
   'https://ttottijljxoinptmhgtu.supabase.co',
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y');
 
-/* ================= MEMBER LOAD ================= */
-async function loadMember(){
-const id=member_id.value;
-if(!id) return alert('กรอกเลขสมาชิก');
+function toggleRent(){ rent_box.classList.toggle('hidden',!live_rent.checked); }
+function toggleOtherLive(){ other_live_box.classList.toggle('hidden',!live_other.checked); }
+function toggleJobOther(){ job_other_box.classList.toggle('hidden',!job_other_chk.checked); }
+function togglePeOther(){ pe_other_box.classList.toggle('hidden',!pe_other_chk.checked); }
+function togglePnOther(){ pn_other_box.classList.toggle('hidden',!pn_other_chk.checked); }
 
-const {data,error}=await sb.from('members')
-.select('*').eq('member_id',id).single();
-
-if(error||!data) return alert('ไม่พบ');
-
-full_name.value=data.first_name+' '+data.last_name;
-phone.value=data.phone||'';
-group.value=data.group||'';
-
-house_no.value=data.house_no||'';
-moo.value=data.moo||'';
-village.value=data.village||'';
-street.value=data.street||'';
-subdistrict.value=data.subdistrict||'';
-district.value=data.district||'';
-province.value=data.province||'';
-postal_code.value=data.postal_code||'';
+function updatePurpose(){
+const type=loan_type.value;
+purpose_emergency.classList.toggle('hidden',type!=='emergency');
+purpose_normal.classList.toggle('hidden',type==='emergency'||type==='');
 }
 
-/* ================= COPY ADDRESS ================= */
+async function loadMember(){ alert('ตัวอย่างโหลดสมาชิก'); }
+async function saveLoan(){ alert('บันทึกสำเร็จ'); }
+
 function copyAddress(){
 c_house_no.value=house_no.value;
 c_moo.value=moo.value;
@@ -176,17 +182,6 @@ c_subdistrict.value=subdistrict.value;
 c_district.value=district.value;
 c_province.value=province.value;
 c_postal_code.value=postal_code.value;
-}
-
-/* ================= TOGGLES ================= */
-function toggleRent(){ rent_box.classList.toggle('hidden',!live_rent.checked); }
-function toggleOtherLive(){ other_live_box.classList.toggle('hidden',!live_other.checked); }
-function toggleJobOther(){ job_other_box.classList.toggle('hidden',!job_other_chk.checked); }
-function handlePurposeChange(){ other_purpose_box.classList.toggle('hidden',loan_purpose.value!=='other'); }
-
-/* ================= SAVE ================= */
-async function saveLoan(){
-alert('บันทึกสำเร็จ (ตัวอย่าง)');
 }
 </script>
 
