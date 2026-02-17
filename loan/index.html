@@ -13,21 +13,21 @@
 <h1 class="text-2xl font-bold text-center">หนังสือคำขอกู้เงิน</h1>
 
 <!-- MEMBER -->
-<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+<div class="grid grid-cols-3 gap-4">
 <input id="member_id" class="border p-2 rounded" placeholder="เลขสมาชิก">
 <button onclick="loadMember()" class="bg-blue-600 text-white px-4 py-2 rounded">ค้นหา</button>
 </div>
 
-<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+<div class="grid grid-cols-3 gap-4">
 <input id="full_name" class="border p-2 rounded" placeholder="ชื่อ-สกุล">
 <input id="phone" class="border p-2 rounded" placeholder="โทรศัพท์">
 <input id="group" class="border p-2 rounded" placeholder="กลุ่ม">
 </div>
 
 <!-- REGISTER ADDRESS -->
-<div class="border-t pt-4">
-<h2 class="font-bold">ที่อยู่ตามทะเบียนบ้าน</h2>
-<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+<div>
+<h2 class="font-bold">ที่อยู่ทะเบียนบ้าน</h2>
+<div class="grid grid-cols-4 gap-2">
 <input id="house_no" class="border p-2 rounded" placeholder="เลขที่">
 <input id="moo" class="border p-2 rounded" placeholder="หมู่">
 <input id="village" class="border p-2 rounded" placeholder="หมู่บ้าน">
@@ -40,12 +40,12 @@
 </div>
 
 <!-- CURRENT ADDRESS -->
-<div class="border-t pt-4">
+<div>
 <div class="flex justify-between">
 <h2 class="font-bold">ที่อยู่ปัจจุบัน</h2>
-<button onclick="copyAddress()" class="bg-gray-700 text-white px-3 py-1 rounded">คัดลอก</button>
+<button onclick="copyAddress()" class="bg-gray-700 text-white px-2 rounded">คัดลอก</button>
 </div>
-<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2">
+<div class="grid grid-cols-4 gap-2">
 <input id="c_house_no" class="border p-2 rounded">
 <input id="c_moo" class="border p-2 rounded">
 <input id="c_village" class="border p-2 rounded">
@@ -58,40 +58,37 @@
 </div>
 
 <!-- LOAN -->
-<div class="border-t pt-4 space-y-3">
+<div>
 <select id="loan_type" class="border p-2 rounded w-full" onchange="calcInstallment()">
 <option value="">ประเภทเงินกู้</option>
-<option value="emergency">ระยะฉุกเฉิน</option>
-<option value="short">ระยะสั้น</option>
-<option value="medium">ระยะปานกลาง</option>
-<option value="long">ระยะยาว</option>
+<option value="emergency">ฉุกเฉิน</option>
+<option value="short">สั้น</option>
+<option value="medium">กลาง</option>
+<option value="long">ยาว</option>
 </select>
 
-<div class="grid grid-cols-3 gap-4">
+<div class="grid grid-cols-3 gap-2 mt-2">
 <input id="loan_amount" class="border p-2 rounded" placeholder="เงินกู้" oninput="calcInstallment()">
 <input id="periods" class="border p-2 rounded" placeholder="งวด" oninput="calcInstallment()">
 <input id="interest_rate" value="7.75" class="border p-2 rounded" oninput="calcInstallment()">
 </div>
 
-<input id="pay_per_period" class="border p-2 rounded w-full" placeholder="ยอดผ่อน/เดือน" readonly>
+<input id="pay_per_period" class="border p-2 rounded w-full mt-2" readonly>
 </div>
 
 <!-- TABLE -->
-<table class="w-full border text-sm">
+<table class="w-full border text-sm mt-4">
 <thead class="bg-gray-200">
 <tr>
 <th class="border p-2">งวด</th>
 <th class="border p-2">ยอดผ่อน</th>
+<th class="border p-2">เงินต้น</th>
 <th class="border p-2">ดอกเบี้ย</th>
 <th class="border p-2">คงเหลือ</th>
 </tr>
 </thead>
 <tbody id="tbl"></tbody>
 </table>
-
-<button onclick="saveLoan()" class="bg-green-600 text-white px-6 py-3 rounded-xl w-full">
-บันทึก
-</button>
 
 </div>
 
@@ -100,14 +97,12 @@ const sb = window.supabase.createClient(
   'https://ttottijljxoinptmhgtu.supabase.co',
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y');
 
-/* MEMBER */
 async function loadMember(){
 const {data}=await sb.from('members').select('*').eq('member_id',member_id.value).single();
 if(!data)return alert('ไม่พบ');
 full_name.value=data.first_name+' '+data.last_name;
 phone.value=data.phone||'';
 group.value=data.group||'';
-
 house_no.value=data.house_no||'';
 moo.value=data.moo||'';
 village.value=data.village||'';
@@ -129,7 +124,6 @@ c_province.value=province.value;
 c_postal_code.value=postal_code.value;
 }
 
-/* LOAN */
 function calcInstallment(){
 const P=parseFloat(loan_amount.value)||0;
 const n=parseInt(periods.value)||0;
@@ -151,7 +145,7 @@ if(principal<0)principal=0;
 const pay=Math.ceil(principal+interest);
 remain=Math.ceil(remain-principal);
 if(remain<0)remain=0;
-tbl.innerHTML+=row(i,pay,interest,remain);
+tbl.innerHTML+=row(i,pay,principal,interest,remain);
 }
 }else{
 const interestMonth=Math.ceil((P*annual)/12);
@@ -163,29 +157,19 @@ let remain=P;
 for(let i=1;i<=n;i++){
 remain=Math.ceil(remain-principalMonth);
 if(remain<0)remain=0;
-tbl.innerHTML+=row(i,pay,interestMonth,remain);
+tbl.innerHTML+=row(i,pay,principalMonth,interestMonth,remain);
 }
 }
 }
 
-function row(i,pay,interest,remain){
+function row(i,pay,principal,interest,remain){
 return `<tr>
 <td class="border p-2 text-center">${i}</td>
 <td class="border p-2 text-right">${pay}</td>
+<td class="border p-2 text-right">${principal}</td>
 <td class="border p-2 text-right">${interest}</td>
 <td class="border p-2 text-right">${remain}</td>
 </tr>`;
-}
-
-async function saveLoan(){
-await sb.from('loan_requests').insert({
-member_id:member_id.value,
-loan_type:loan_type.value,
-loan_amount:loan_amount.value,
-periods:periods.value,
-pay_per_period:pay_per_period.value
-});
-alert('บันทึกแล้ว');
 }
 </script>
 
