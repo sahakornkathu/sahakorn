@@ -61,6 +61,7 @@
   <div class="field"><label>บ้านเลขที่</label><input id="house_no"></div>
   <div class="field"><label>หมู่</label><input id="moo"></div>
   <div class="field"><label>ถนน</label><input id="street"></div>
+  <div class="field"><label>ซอย</label><input id="soi"></div>
   <div class="field"><label>หมู่บ้าน</label><input id="village"></div>
 
   <div class="field"><label>ตำบล</label><input id="subdistrict"></div>
@@ -384,6 +385,7 @@ window.viewMember = async function(id){
     <div>บ้านเลขที่ : ${show(data.house_no)}</div>
     <div>หมู่ : ${show(data.moo)}</div>
     <div>ถนน : ${show(data.street)}</div>
+    <div>ซอย : ${show(data.soi)}</div>
     <div>หมู่บ้าน : ${show(data.village)}</div>
     <div>ตำบล : ${show(data.subdistrict)}</div>
     <div>อำเภอ : ${show(data.district)}</div>
@@ -527,6 +529,7 @@ const today = new Date().toLocaleDateString('th-TH',{year:'numeric',month:'long'
   <td style="text-align:left">
     ${r.house_no||''} หมู่ ${r.moo||''}
     ${r.village||''} ${r.subdistrict||''}
+    ซอย ${r.soi||''}
     ${r.district||''} ${r.province||''}
   </td>
   <td>${r.phone||''}</td>
@@ -683,7 +686,7 @@ ${allData.map(r=>`
       ${r.title||''}${r.first_name||''} ${r.last_name||''}
     </div>
     <div class="row"><span class="label">ที่อยู่ :</span>
-      ${r.house_no||''} หมู่ ${r.moo||''} ${r.village||''}
+      ${r.house_no||''} หมู่ ${r.moo||''} ซอย ${r.soi||''} ${r.village||''}
       ${r.subdistrict||''} ${r.district||''} ${r.province||''}
     </div>
     <div class="row"><span class="label">โทรศัพท์ :</span> ${r.phone||''}</div>
