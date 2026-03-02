@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+
+<title>สุ่มสิทธิ์ประชุมใหญ่</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<style>
+.spinBox{
+  font-size:28px;
+  font-weight:bold;
+  height:110px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:16px;
+  background:linear-gradient(45deg,#0ea5e9,#9333ea);
+  color:white;
+}
+.glow{animation: glow 1s infinite alternate;}
+@keyframes glow{
+ from{box-shadow:0 0 10px #fff}
+ to{box-shadow:0 0 30px #facc15}
+}
+</style>
+</head>
+
+<body class="bg-slate-900 text-white p-6">
+
+<div class="max-w-3xl mx-auto space-y-6">
+
+<h1 class="text-2xl text-center text-yellow-400 font-bold">
+สุ่มสิทธิ์ประชุมใหญ่
+</h1>
+
+<div class="grid md:grid-cols-3 gap-3">
+<select id="groupSel" class="text-black p-2 rounded">
+<option value="">เลือกกลุ่ม</option>
+<option>1</option><option>2</option><option>3</option>
+<option>4</option><option>5</option><option>6</option>
+<option>7</option><option>8</option><option>9</option>
+</select>
+
+<select id="fiscalYear" class="text-black p-2 rounded"></select>
+<input id="quota" class="text-black p-2 rounded" placeholder="สิทธิ์ทั้งหมด">
+</div>
+
+<button onclick="loadPool()" class="w-full bg-blue-600 p-3 rounded">
+โหลดรายชื่อ
+</button>
+
+<div id="spinBox" class="spinBox">ยังไม่ได้สุ่ม</div>
+
+<div class="flex justify-center">
+<button onclick="randomMember()" class="bg-purple-600 px-10 py-4 rounded text-lg">
+🎲 สุ่มรายชื่อ
+</button>
+</div>
+
+<div id="remainBox" class="text-center text-sky-400"></div>
+
+<div class="bg-slate-800 p-4 rounded-xl">
+<h2 class="text-yellow-400 font-bold mb-3">ผู้ได้รับสิทธิ์แล้ว</h2>
+<div id="winnerList"></div>
+</div>
+<div class="flex justify-center mt-3">
+  <button onclick="printLetters()"
+    class="bg-green-600 hover:bg-green-700 px-6 py-2 rounded">
+    🖨️ ปริ้นจดหมายส่งสมาชิก
+  </button>
+</div>
+  
+</div>
+
+<script>
+const sb = supabase.createClient(
+ 'https://ttottijljxoinptmhgtu.supabase.co',
+ 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y'
+)
+
+let pool=[]
+let lockPool=[]
+let normalPool=[]
+let winner=null
+
+// สุ่ม lock
+  function shuffleArray(arr){
+ for(let i = arr.length - 1; i > 0; i--){
+  const j = Math.floor(Math.random() * (i + 1))
+  ;[arr[i], arr[j]] = [arr[j], arr[i]]
+ }
+ return arr
+}
+
+  
+async function loadFiscalYear(){
+ const {data, error} = await sb
+  .from('member_meeting')
+  .select('fiscal_year')
+
+ console.log('YEAR DATA:', data, error)
+
+ if(!data || data.length === 0){
+  fiscalYear.innerHTML = '<option value="">ไม่มีปีบัญชี</option>'
+  return
+ }
+
+ const years = [...new Set(
+  data
+   .map(d => d.fiscal_year)
+   .filter(Boolean) // ตัด null
+ )]
+
+ fiscalYear.innerHTML = '<option value="">ปีบัญชี</option>'
+ years.forEach(y=>{
+  fiscalYear.innerHTML += `<option value="${y}">${y}</option>`
+ })
+}
+
+
+async function loadPool(){
+ const g=groupSel.value
+ const fy=fiscalYear.value
+ if(!g||!fy) return alert('เลือกกลุ่ม/ปี')
+
+ const {data}=await sb.from('member_meeting')
+ .select('*')
+ .eq('meeting_type','ประชุมกลุ่ม')
+ .eq('group',g)
+ .eq('fiscal_year',fy)
+
+ pool=data||[]
+ remainBox.innerText=`ทั้งหมด ${pool.length}`
+ loadWinnerList()
+}
+
+async function randomMember(){
+ // if(!q) return alert('กรอกโควต้า')
+  const q = parseInt(quota.value || 0)
+
+if(!q){
+ await Swal.fire({
+  icon: 'warning',
+  title: 'กรุณากรอกจำนวนสิทธิ์',
+  html: `
+    <div class="text-lg mt-2">
+      โปรดระบุจำนวนโควต้าก่อนสุ่ม
+    </div>
+  `,
+  background: '#0f172a',
+  color: '#fff',
+  confirmButtonText: 'ตกลง',
+
+  showClass: {
+    popup: 'animate__animated animate__bounceIn'
+  },
+  hideClass: {
+    popup: 'animate__animated animate__fadeOut'
+  }
+ })
+ return
+}
+
+
+ // ===== คนที่ได้แล้ว =====
+ const {data:used}=await sb.from('meeting_random')
+ .select('member_id')
+ .eq('group',groupSel.value)
+ .eq('fiscal_year',fiscalYear.value)
+
+ const usedIds=(used||[]).map(u=>u.member_id)
+ // if(usedIds.length>=q) return alert('ครบโควต้าแล้ว')
+  if(usedIds.length >= q){
+ await Swal.fire({
+  icon: 'info',
+  title: 'ครบจำนวนสิทธิ์แล้ว',
+  html: `
+    <div class="text-lg mt-2">
+      โควต้ากลุ่มนี้เต็มแล้ว<br>
+      ไม่สามารถสุ่มเพิ่มได้
+    </div>
+  `,
+  background: '#0f172a',
+  color: '#fff',
+  confirmButtonText: 'ตกลง',
+
+  showClass: {
+    popup: 'animate__animated animate__shakeX'
+  },
+  hideClass: {
+    popup: 'animate__animated animate__fadeOut'
+  }
+ })
+ return
+}
+
+
+ // ===== ตัดออก =====
+ const available=pool.filter(p=>!usedIds.includes(p.member_id))
+ lockPool=available.filter(m=>m.is_lock==true)
+ normalPool=available.filter(m=>m.is_lock!=true)
+
+ // if(available.length===0) return alert('ไม่มีคนเหลือ')
+  if(available.length === 0){
+ await Swal.fire({
+  icon: 'info',
+  title: 'ไม่มีรายชื่อให้สุ่มแล้ว',
+  html: `
+    <div class="text-lg mt-2">
+      สมาชิกกลุ่มนี้ได้รับสิทธิ์ครบแล้ว<br>
+      หรือไม่มีรายชื่อคงเหลือ
+    </div>
+  `,
+  background: '#0f172a',
+  color: '#fff',
+  confirmButtonText: 'ตกลง',
+
+  showClass: {
+    popup: 'animate__animated animate__fadeInDown'
+  },
+  hideClass: {
+    popup: 'animate__animated animate__fadeOutUp'
+  }
+ })
+ return
+}
+
+
+ let box=document.getElementById('spinBox')
+ box.classList.remove('glow')
+
+ let t=0
+ const iv=setInterval(()=>{
+
+  const r=available[Math.floor(Math.random()*available.length)]
+  box.innerText=r.first_name+' '+r.last_name
+  t++
+
+  if(t>20){
+   clearInterval(iv)
+
+ let finalPick = null
+
+// จำนวน slot ที่เหลือ
+const remainSlot = q - usedIds.length
+
+// ถ้า slot ที่เหลือ <= จำนวน lock
+// ต้องบังคับ lock
+if(lockPool.length > 0 && remainSlot <= lockPool.length){
+ finalPick = lockPool[Math.floor(Math.random()*lockPool.length)]
+}else{
+ // สุ่มรวม
+ let mixed = shuffleArray([
+  ...lockPool,
+  ...normalPool
+ ])
+ finalPick = mixed[0]
+}
+
+
+   winner=finalPick
+   box.innerText=finalPick.first_name+' '+finalPick.last_name
+   box.classList.add('glow')
+   showPopup(finalPick)
+  }
+
+ },120)
+}
+
+async function showPopup(r){
+
+ const {data:dup}=await sb.from('meeting_random')
+ .select('member_id')
+ .eq('member_id',r.member_id)
+ .eq('group',r.group)
+ .eq('fiscal_year',fiscalYear.value)
+
+ if(dup.length>0){
+  alert('ซ้ำ')
+  winner=null
+  return
+ }
+
+ const res = await Swal.fire({
+  title: '🎉 ผู้ได้รับสิทธิ์ 🎉',
+  html: `
+    <div class="text-3xl font-bold text-yellow-400 mt-2">
+      ${r.first_name} ${r.last_name}
+    </div>
+  `,
+  background: '#0f172a',
+  color: '#fff',
+  confirmButtonText: 'บันทึก',
+  showCancelButton: true,
+  cancelButtonText: 'ยกเลิก',
+
+  showClass: {
+    popup: 'animate__animated animate__zoomIn animate__faster'
+  },
+  hideClass: {
+    popup: 'animate__animated animate__fadeOut'
+  }
+ })
+
+ if(!res.isConfirmed){
+  winner=null
+  return
+ }
+
+ await sb.from('meeting_random').insert([{
+  member_id:r.member_id,
+  first_name:r.first_name,
+  last_name:r.last_name,
+  group:r.group,
+  fiscal_year:fiscalYear.value
+ }])
+
+ winner=null
+ loadPool()
+}
+
+async function printLetters(){
+
+ // ===== ดึงรายชื่อผู้ได้รับสิทธิ์ =====
+ const {data:winners} = await sb.from('meeting_random')
+  .select('*')
+  .eq('group', groupSel.value)
+  .eq('fiscal_year', fiscalYear.value)
+
+ if(!winners || winners.length===0){
+  Swal.fire('ไม่พบรายชื่อ','','warning')
+  return
+ }
+
+ // ===== ดึง member_id =====
+ const ids = winners.map(w=>w.member_id)
+
+ // ===== ดึงข้อมูลสมาชิก =====
+ const {data:members} = await sb.from('members')
+  .select(`
+    member_id,
+    house_no,
+    moo,
+    subdistrict,
+    district,
+    province,
+    phone
+  `)
+  .in('member_id', ids)
+
+ // ===== map lookup =====
+ const memberMap = {}
+ members.forEach(m=>{
+  memberMap[m.member_id] = m
+ })
+
+ // ===== สร้าง HTML =====
+ let html = `
+ <html>
+ <head>
+ <title>จดหมายเชิญประชุม</title>
+ <style>
+  body{
+    font-family: TH Sarabun New, sans-serif;
+    padding:20px;
+    font-size:20px;
+  }
+  .page{
+    page-break-after:always;
+    margin-bottom:40px;
+  }
+  .title{
+    text-align:center;
+    font-size:28px;
+    font-weight:bold;
+    margin-bottom:20px;
+  }
+ </style>
+ </head>
+ <body>
+ `
+
+ winners.forEach(r=>{
+
+  const m = memberMap[r.member_id] || {}
+
+  html += `
+  <div class="page">
+
+    <div class="title">หนังสือเชิญประชุมใหญ่</div>
+
+    <p>เรียน คุณ ${r.first_name} ${r.last_name}</p>
+
+    <p>
+      ที่อยู่:
+      ${m.house_no||'-'} หมู่ ${m.moo||'-'}
+      ${m.subdistrict||''}
+      ${m.district||''}
+      ${m.province||''}
+    </p>
+
+    <p>โทรศัพท์: ${m.phone||'-'}</p>
+
+    <br>
+
+    <p>
+      ขอเชิญท่านเข้าร่วมประชุมใหญ่ประจำปีบัญชี
+      ${fiscalYear.value}
+    </p>
+
+    <p>
+      ท่านได้รับสิทธิ์เป็นตัวแทนกลุ่ม ${r.group}
+      เพื่อเข้าร่วมประชุมตามวันและเวลาที่กำหนด
+    </p>
+
+    <br><br>
+
+    <p>ขอแสดงความนับถือ</p>
+    <br><br><br>
+
+    <p>.............................................</p>
+    <p>ประธานกรรมการ</p>
+
+  </div>
+  `
+ })
+
+ html += `</body></html>`
+
+ const w = window.open('', '_blank')
+ w.document.write(html)
+ w.document.close()
+ w.print()
+}
+async function loadWinnerList(){
+ const {data}=await sb.from('meeting_random')
+ .select('*')
+ .eq('group',groupSel.value)
+ .eq('fiscal_year',fiscalYear.value)
+
+ winnerList.innerHTML=''
+ ;(data||[]).forEach(r=>{
+  winnerList.innerHTML+=`
+  <div class="flex justify-between bg-slate-700 p-2 rounded mb-2">
+   <div>${r.first_name} ${r.last_name}</div>
+  </div>`
+ })
+}
+
+loadFiscalYear()
+</script>
+
+</body>
+</html>
