@@ -355,13 +355,12 @@ async function printLetters(){
   `)
   .in('member_id', ids)
 
- // ===== map lookup =====
  const memberMap = {}
  members.forEach(m=>{
   memberMap[m.member_id] = m
  })
 
- // ===== HTML PRINT =====
+ // ===== HTML =====
  let html = `
  <html>
  <head>
@@ -369,8 +368,9 @@ async function printLetters(){
  <style>
   body{
     font-family: TH Sarabun New, sans-serif;
-    font-size:22px;
-    padding:30px;
+    font-size:24px;
+    padding:35px;
+    line-height:1.7;
   }
   .page{
     page-break-after:always;
@@ -378,7 +378,7 @@ async function printLetters(){
   }
   .title{
     text-align:center;
-    font-size:30px;
+    font-size:34px;
     font-weight:bold;
     margin-bottom:20px;
   }
@@ -396,22 +396,21 @@ async function printLetters(){
 
     <div class="title">หนังสือเชิญประชุมใหญ่</div>
 
-    <p>รหัสสมาชิก ${r.member_id}</p>
+    <p><b>รหัสสมาชิก</b> ${r.member_id}</p>
 
     <p>เรียน คุณ ${r.first_name} ${r.last_name}</p>
 
     <p>
-      ที่อยู่:
+      <b>ที่อยู่:</b>
       ${m.house_no||'-'}
       หมู่ ${m.moo||'-'}
-      ${m.soi ? 'ซ.'+m.soi : ''}
-      ${m.village ? 'หมู่บ้าน'+m.village : ''}
-      ${m.subdistrict||''}
-      ${m.district||''}
-      ${m.province||''}
+      หมู่บ้าน ${m.village||'-'}
+      ซอย ${m.soi||'-'}
+      อำเภอ${m.district||'-'}
+      จังหวัด${m.province||'-'}
     </p>
 
-    <p>โทรศัพท์: ${m.phone||'-'}</p>
+    <p><b>โทรศัพท์:</b> ${m.phone||'-'}</p>
 
   </div>
   `
