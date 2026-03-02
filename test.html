@@ -324,10 +324,9 @@ async function showPopup(r){
  loadPool()
 }
 
-
 async function printLetters(){
 
- // ===== รายชื่อผู้ได้สิทธิ์ =====
+ // ===== รายชื่อผู้ได้รับสิทธิ์ =====
  const {data:winners} = await sb.from('meeting_random')
   .select('*')
   .eq('group', groupSel.value)
@@ -338,7 +337,7 @@ async function printLetters(){
   return
  }
 
- // ===== ดึง member_id =====
+ // ===== member_id =====
  const ids = winners.map(w=>w.member_id)
 
  // ===== ดึงข้อมูลสมาชิก =====
@@ -347,6 +346,8 @@ async function printLetters(){
     member_id,
     house_no,
     moo,
+    soi,
+    village,
     subdistrict,
     district,
     province,
@@ -354,6 +355,7 @@ async function printLetters(){
   `)
   .in('member_id', ids)
 
+ // ===== map lookup =====
  const memberMap = {}
  members.forEach(m=>{
   memberMap[m.member_id] = m
@@ -400,7 +402,10 @@ async function printLetters(){
 
     <p>
       ที่อยู่:
-      ${m.house_no||'-'} หมู่ ${m.moo||'-'}
+      ${m.house_no||'-'}
+      หมู่ ${m.moo||'-'}
+      ${m.soi ? 'ซ.'+m.soi : ''}
+      ${m.village ? 'หมู่บ้าน'+m.village : ''}
       ${m.subdistrict||''}
       ${m.district||''}
       ${m.province||''}
@@ -412,7 +417,10 @@ async function printLetters(){
   `
  })
 
- html += `</body></html>`
+ html += `
+ </body>
+ </html>
+ `
 
  const w = window.open('', '_blank')
  w.document.write(html)
