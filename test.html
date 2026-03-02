@@ -324,9 +324,10 @@ async function showPopup(r){
  loadPool()
 }
 
+
 async function printLetters(){
 
- // ===== ดึงรายชื่อผู้ได้รับสิทธิ์ =====
+ // ===== รายชื่อผู้ได้สิทธิ์ =====
  const {data:winners} = await sb.from('meeting_random')
   .select('*')
   .eq('group', groupSel.value)
@@ -353,22 +354,21 @@ async function printLetters(){
   `)
   .in('member_id', ids)
 
- // ===== map lookup =====
  const memberMap = {}
  members.forEach(m=>{
   memberMap[m.member_id] = m
  })
 
- // ===== สร้าง HTML =====
+ // ===== HTML PRINT =====
  let html = `
  <html>
  <head>
- <title>จดหมายเชิญประชุม</title>
+ <title>หนังสือเชิญประชุมใหญ่</title>
  <style>
   body{
     font-family: TH Sarabun New, sans-serif;
-    padding:20px;
-    font-size:20px;
+    font-size:22px;
+    padding:30px;
   }
   .page{
     page-break-after:always;
@@ -376,7 +376,7 @@ async function printLetters(){
   }
   .title{
     text-align:center;
-    font-size:28px;
+    font-size:30px;
     font-weight:bold;
     margin-bottom:20px;
   }
@@ -394,6 +394,8 @@ async function printLetters(){
 
     <div class="title">หนังสือเชิญประชุมใหญ่</div>
 
+    <p>รหัสสมาชิก ${r.member_id}</p>
+
     <p>เรียน คุณ ${r.first_name} ${r.last_name}</p>
 
     <p>
@@ -406,26 +408,6 @@ async function printLetters(){
 
     <p>โทรศัพท์: ${m.phone||'-'}</p>
 
-    <br>
-
-    <p>
-      ขอเชิญท่านเข้าร่วมประชุมใหญ่ประจำปีบัญชี
-      ${fiscalYear.value}
-    </p>
-
-    <p>
-      ท่านได้รับสิทธิ์เป็นตัวแทนกลุ่ม ${r.group}
-      เพื่อเข้าร่วมประชุมตามวันและเวลาที่กำหนด
-    </p>
-
-    <br><br>
-
-    <p>ขอแสดงความนับถือ</p>
-    <br><br><br>
-
-    <p>.............................................</p>
-    <p>ประธานกรรมการ</p>
-
   </div>
   `
  })
@@ -437,6 +419,7 @@ async function printLetters(){
  w.document.close()
  w.print()
 }
+  
 async function loadWinnerList(){
  const {data}=await sb.from('meeting_random')
  .select('*')
