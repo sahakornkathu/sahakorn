@@ -172,7 +172,7 @@ member_id.addEventListener('input', ()=>{
   clearTimeout(typingTimer)
 
   typingTimer = setTimeout(async ()=>{
-    if(member_id.value.length < 3) return
+    if(member_id.value.length < 1) return
 
     // const { data, error } = await db.from('members')
     //   .select('title,first_name,last_name,group')
