@@ -429,8 +429,9 @@ async function printLetters(){
     </p>
 
     <p><b>โทรศัพท์:</b> ${m.phone||'-'}</p>
-
-  </div>
+    <div style="margin-top:20px">
+  <img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${r.member_id}"></div>
+    </div>
   `
  })
 
