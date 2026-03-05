@@ -213,7 +213,7 @@ async function loadMembers(){
   while (!finished) {
     let q = supabaseClient
       .from('members')
-      .select(`
+    .select(`
   member_id,
   title,
   first_name,
@@ -222,6 +222,7 @@ async function loadMembers(){
   house_no,
   moo,
   village,
+  soi,
   street,
   subdistrict,
   district,
@@ -359,8 +360,8 @@ function renderMore(){
         </span>
       </div>
 
- <div class="text-sm text-slate-400">
-📍 ${m.house_no||'-'} ม.${m.moo||'-'} หมู่บ้าน${m.village||'-'} ถ.${m.street||'-'} ต.${m.subdistrict||'-'} อ.${m.district||'-'} จ.${m.province||'-'}
+<div class="text-sm text-slate-400">
+📍 ${m.house_no||'-'} ม.${m.moo||'-'} หมู่บ้าน${m.village||'-'} ซ.${m.soi||'-'} ถ.${m.street||'-'} ต.${m.subdistrict||'-'} อ.${m.district||'-'} จ.${m.province||'-'}
 </div>
 
       <button onclick="pinGPS(${m.member_id})"
