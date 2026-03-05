@@ -214,21 +214,23 @@ async function loadMembers(){
     let q = supabaseClient
       .from('members')
       .select(`
-        member_id,
-        title,
-        first_name,
-        last_name,
-        group,
-        house_no,
-        moo,
-        subdistrict,
-        district,
-        province,
-        phone,
-        member_status,
-        lat,
-        lng
-      `)
+  member_id,
+  title,
+  first_name,
+  last_name,
+  group,
+  house_no,
+  moo,
+  village,
+  street,
+  subdistrict,
+  district,
+  province,
+  phone,
+  member_status,
+  lat,
+  lng
+`)
       .in('member_status', ['สมาชิก','สมาชิกสมทบ'])
       .order('member_id', { ascending: true })
       .range(from, from + STEP - 1)
@@ -357,10 +359,9 @@ function renderMore(){
         </span>
       </div>
 
-      <div class="text-sm text-slate-400">
-        📍 ${m.house_no||'-'} ม.${m.moo||'-'}
-        ${m.subdistrict||''} ${m.district||''} ${m.province||''}
-      </div>
+ <div class="text-sm text-slate-400">
+📍 ${m.house_no||'-'} ม.${m.moo||'-'} หมู่บ้าน${m.village||'-'} ถ.${m.street||'-'} ต.${m.subdistrict||'-'} อ.${m.district||'-'} จ.${m.province||'-'}
+</div>
 
       <button onclick="pinGPS(${m.member_id})"
         class="w-full bg-blue-600 rounded py-1">
