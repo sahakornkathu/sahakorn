@@ -244,11 +244,11 @@ if(!q){
 
  let box=document.getElementById('spinBox')
  box.classList.remove('glow')
-
+const spinPool = [...lockPool, ...normalPool]
  let t=0
  const iv=setInterval(()=>{
 
-  const r=available[Math.floor(Math.random()*available.length)]
+  const r=spinPool[Math.floor(Math.random()*spinPool.length)]
   box.innerText=r.first_name+' '+r.last_name
   t++
 
