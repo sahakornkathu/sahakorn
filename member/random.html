@@ -380,6 +380,11 @@ async function printLetters(){
  let html = `
  <html>
  <head>
+ <div class="page">
+
+  <div class="qr">
+    <img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${r.member_id}">
+  </div>
  <title>หนังสือเชิญประชุมใหญ่</title>
  <style>
   body{
