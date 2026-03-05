@@ -65,7 +65,7 @@
 <div id="remainBox" class="text-center text-sky-400"></div>
 
 <div class="bg-slate-800 p-4 rounded-xl">
-<h2 class="text-yellow-400 font-bold mb-3">ผู้ได้รับสิทธิ์แล้ว</h2>
+<h2 id="winnerTitle" class="text-yellow-400 font-bold mb-3">ผู้ได้รับสิทธิ์แล้ว (0 คน)</h2>
 <div id="winnerList"></div>
 </div>
 <div class="flex justify-center mt-3">
@@ -566,12 +566,17 @@ async function printSignReport(){
 }
   
 async function loadWinnerList(){
+
  const {data}=await sb.from('meeting_random')
  .select('*')
  .eq('group',groupSel.value)
  .eq('fiscal_year',fiscalYear.value)
 
+ // ⭐ แสดงจำนวน
+ winnerTitle.innerText = `ผู้ได้รับสิทธิ์แล้ว (${data.length} คน)`
+
  winnerList.innerHTML=''
+
  ;(data||[]).forEach(r=>{
   winnerList.innerHTML+=`
   <div class="flex justify-between bg-slate-700 p-2 rounded mb-2">
