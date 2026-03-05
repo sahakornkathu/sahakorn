@@ -557,12 +557,12 @@ init()
   btn.innerHTML = '🔄 รีเฟรชข้อมูลจากฐานข้อมูล'
 }
 
-
-  let qrScanner
+let qrScanner
 
 function openScanner(){
 
-  document.getElementById('scanModal').classList.remove('hidden')
+  const modal = document.getElementById('scanModal')
+  modal.classList.remove('hidden')
 
   setTimeout(()=>{
 
@@ -570,7 +570,10 @@ function openScanner(){
 
     qrScanner.start(
       { facingMode: "environment" },
-      { fps: 10, qrbox: 250 },
+      {
+        fps: 10,
+        qrbox: { width: 250, height: 250 }
+      },
 
       (decodedText) => {
 
@@ -578,25 +581,44 @@ function openScanner(){
 
         resetAndRender()
 
-        closeScanner()
+        stopScanner()
+
+        Swal.fire({
+          icon:'success',
+          title:'สแกนสำเร็จ',
+          text:'สมาชิก '+decodedText,
+          timer:1200,
+          showConfirmButton:false
+        })
 
       }
-    )
+
+    ).catch(err=>{
+      console.log(err)
+      Swal.fire('ผิดพลาด','เปิดกล้องไม่ได้','error')
+    })
 
   },300)
 
 }
 
-function closeScanner(){
+function stopScanner(){
 
-  scanModal.classList.add('hidden')
+  const modal = document.getElementById('scanModal')
+  modal.classList.add('hidden')
 
   if(qrScanner){
-    qrScanner.stop().then(()=>{
+
+    qrScanner.stop()
+    .then(()=>{
       qrScanner.clear()
+      qrScanner = null
     })
+    .catch(()=>{})
+
   }
 }
+ 
   
 </script>
   <div id="scanModal"
@@ -606,7 +628,7 @@ function closeScanner(){
     
     <div class="flex justify-between mb-2">
       <div class="font-bold">📷 สแกน QR สมาชิก</div>
-      <button onclick="closeScanner()">✕</button>
+      <button onclick="stopScanner()">✕</button>
     </div>
 
     <div id="qr-reader" style="width:100%"></div>
