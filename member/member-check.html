@@ -778,6 +778,35 @@ el.classList.remove("ring","ring-yellow-400","ring-4")
 },300)
 
 }
+
+
+
+ function handleSearch(){
+
+const input = document.getElementById("searchInput")
+const clearBtn = document.getElementById("clearBtn")
+
+if(input.value.length > 0){
+clearBtn.classList.remove("hidden")
+}else{
+clearBtn.classList.add("hidden")
+}
+
+resetAndRender()
+
+}
+
+function clearSearch(){
+
+const input = document.getElementById("searchInput")
+
+input.value = ""
+
+document.getElementById("clearBtn").classList.add("hidden")
+
+resetAndRender()
+
+} 
 </script>
  <div id="scanModal"
 class="fixed inset-0 bg-black/80 hidden flex items-center justify-center"
