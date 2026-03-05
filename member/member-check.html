@@ -344,7 +344,7 @@ function renderMore(){
 
   list.slice(renderIndex, renderIndex+PAGE_SIZE).forEach(m=>{
     cardList.innerHTML += `
-    <div class="bg-slate-800 rounded-xl p-4 space-y-2">
+    <div id="member-${m.member_id}" class="bg-slate-800 rounded-xl p-4 space-y-2">
       <div class="flex justify-between items-start">
         <div>
           <div class="font-bold text-lg">
@@ -587,10 +587,9 @@ function openScanner(){
 
       (decodedText) => {
 
-        document.getElementById('searchInput').value = decodedText
-
-        resetAndRender()
-
+        // document.getElementById('searchInput').value = decodedText
+        // resetAndRender()
+jumpToMember(decodedText)
         stopScanner()
 
         Swal.fire({
@@ -708,6 +707,35 @@ showConfirmButton:false
 })
 
 loadMembers()
+
+}
+
+  function jumpToMember(memberId){
+
+searchInput.value = memberId
+
+resetAndRender()
+
+setTimeout(()=>{
+
+const el = document.getElementById("member-"+memberId)
+
+if(el){
+
+el.scrollIntoView({
+behavior:"smooth",
+block:"center"
+})
+
+el.classList.add("ring","ring-yellow-400","ring-4")
+
+setTimeout(()=>{
+el.classList.remove("ring","ring-yellow-400","ring-4")
+},2000)
+
+}
+
+},300)
 
 }
 </script>
