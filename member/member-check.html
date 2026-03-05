@@ -629,7 +629,8 @@ function openScanner(){
 
         // document.getElementById('searchInput').value = decodedText
         // resetAndRender()
-jumpToMember(decodedText)
+        jumpToMember(decodedText)
+        zoomToMember(decodedText)
         stopScanner()
 
         Swal.fire({
@@ -807,6 +808,37 @@ document.getElementById("clearBtn").classList.add("hidden")
 resetAndRender()
 
 } 
+
+
+  function zoomToMember(memberId){
+
+const m = allMembers.find(x => x.member_id == memberId)
+
+if(!m) return
+
+if(m.lat && m.lng){
+
+map.setView([m.lat, m.lng], 18)
+
+L.marker([m.lat, m.lng])
+.addTo(map)
+.bindPopup(`
+<b>${m.first_name} ${m.last_name}</b><br>
+สมาชิก ${m.member_id}
+`)
+.openPopup()
+
+}else{
+
+Swal.fire({
+icon:'warning',
+title:'สมาชิกยังไม่ปักพิกัด',
+text:'ไม่สามารถเปิดแผนที่ได้'
+})
+
+}
+
+}
 </script>
  <div id="scanModal"
 class="fixed inset-0 bg-black/80 hidden flex items-center justify-center"
