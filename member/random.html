@@ -419,31 +419,36 @@ body{
   const m = memberMap[r.member_id] || {}
 
   html += `
-   <div class="page">
-<h2>หนังสือเชิญประชุมใหญ่</h2>
-    <div class="qr">
-      <img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${r.member_id}">
-    </div>
+<div class="page">
 
-    <p><b>รหัสสมาชิก</b> ${r.member_id}</p>
+<div class="qr">
+<img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${r.member_id}">
+</div>
 
-    <p>เรียน คุณ ${r.first_name} ${r.last_name}</p>
+<h2 style="text-align:center;font-size:34px;margin-bottom:25px">
+หนังสือเชิญประชุมใหญ่
+</h2>
 
-    <p>
-      <b>ที่อยู่:</b>
-      ${m.house_no||'-'}
-      ม.${m.moo||'-'}
-      หมู่บ้าน ${m.village||'-'}
-      ซ.${m.soi||'-'}
-      ถ.${m.street||'-'}
-      ต.${m.subdistrict||'-'}
-      อ.${m.district||'-'}
-      จ.${m.province||'-'}
-    </p>
+<p><b>รหัสสมาชิก</b> ${r.member_id}</p>
 
-    <p><b>โทรศัพท์:</b> ${m.phone||'-'}</p>
-    <div style="margin-top:20px">
-  `
+<p>เรียน คุณ ${r.first_name} ${r.last_name}</p>
+
+<p>
+<b>ที่อยู่:</b>
+${m.house_no||'-'}
+ม.${m.moo||'-'}
+หมู่บ้าน ${m.village||'-'}
+ซ.${m.soi||'-'}
+ถ.${m.street||'-'}
+ต.${m.subdistrict||'-'}
+อ.${m.district||'-'}
+จ.${m.province||'-'}
+</p>
+
+<p><b>โทรศัพท์:</b> ${m.phone||'-'}</p>
+
+</div>
+`
 })
 
  html += `
