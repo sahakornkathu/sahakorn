@@ -332,59 +332,82 @@ function resetAndRender(){
 }
 
 function renderMore(){
-  const kw = searchInput.value.toLowerCase()
 
-  const list = allMembers
-    .filter(m =>
-      m.member_id.toString().includes(kw) ||
-      m.first_name.toLowerCase().includes(kw) ||
-      m.last_name.toLowerCase().includes(kw)
-    )
-    .sort((a,b)=>a.member_id-b.member_id)
+const kw = searchInput.value.toLowerCase()
 
-  list.slice(renderIndex, renderIndex+PAGE_SIZE).forEach(m=>{
-    cardList.innerHTML += `
-    <div id="member-${m.member_id}" class="bg-slate-800 rounded-xl p-4 space-y-2">
-      <div class="flex justify-between items-start">
-        <div>
-          <div class="font-bold text-lg">
-            ${m.member_id} · ${m.title||''}${m.first_name} ${m.last_name}
-          </div>
-          <div class="text-xs text-slate-400">
-            กลุ่ม ${m.group}
-          </div>
-        </div>
+let list = allMembers
+.filter(m =>
+  m.member_id.toString().includes(kw) ||
+  m.first_name.toLowerCase().includes(kw) ||
+  m.last_name.toLowerCase().includes(kw)
+)
+.sort((a,b)=>a.member_id-b.member_id)
 
-        <span class="text-xs px-2 py-1 rounded ${m.lat&&m.lng?'bg-green-600':'bg-red-600'}">
-          ${m.lat&&m.lng?'📍 ปักแล้ว':'❌ ยังไม่ปัก'}
-        </span>
-      </div>
 
-<div class="text-sm text-slate-400">
-📍 ${m.house_no||'-'} ม.${m.moo||'-'} หมู่บ้าน${m.village||'-'} ซ.${m.soi||'-'} ถ.${m.street||'-'} ต.${m.subdistrict||'-'} อ.${m.district||'-'} จ.${m.province||'-'}
+// ⭐ ถ้ามีการค้นหา → แสดงแค่คนเดียว
+if(kw.length > 0){
+  list = list.slice(0,1)
+}
+
+
+list.slice(renderIndex, renderIndex+PAGE_SIZE).forEach(m=>{
+
+cardList.innerHTML += `
+<div id="member-${m.member_id}" 
+class="bg-slate-800 rounded-xl p-4 space-y-2 shadow-lg border border-slate-700">
+
+<div class="flex justify-between items-start">
+
+<div>
+<div class="font-bold text-lg">
+${m.member_id} · ${m.title||''}${m.first_name} ${m.last_name}
 </div>
 
-      <button onclick="pinGPS(${m.member_id})"
-        class="w-full bg-blue-600 rounded py-1">
-        📍 ปักพิกัด
-      </button>
+<div class="text-xs text-slate-400">
+กลุ่ม ${m.group}
+</div>
+</div>
 
-      ${m.lat&&m.lng ? `
-      <a href="https://www.google.com/maps/dir/?api=1&destination=${m.lat},${m.lng}"
-        target="_blank"
-        class="block bg-slate-700 rounded py-1 text-center">
-        🧭 นำทาง
-      </a>` : ``}
+<span class="text-xs px-2 py-1 rounded ${m.lat&&m.lng?'bg-green-600':'bg-red-600'}">
+${m.lat&&m.lng?'📍 ปักแล้ว':'❌ ยังไม่ปัก'}
+</span>
 
-      <a href="tel:${m.phone}"
-        class="block text-green-400 font-bold">
-        📞 ${m.phone||'-'}
-      </a>
-      <button onclick="editMember(${m.member_id})"class="w-full bg-amber-500 hover:bg-amber-600 rounded py-1">✏️ แก้ไขข้อมูล</button>
-    </div>`
-  })
+</div>
 
-  renderIndex += PAGE_SIZE
+<div class="text-sm text-slate-400">
+📍 ${m.house_no||'-'} ม.${m.moo||'-'} หมู่บ้าน${m.village||'-'} 
+ซ.${m.soi||'-'} ถ.${m.street||'-'} 
+ต.${m.subdistrict||'-'} อ.${m.district||'-'} จ.${m.province||'-'}
+</div>
+
+<button onclick="pinGPS(${m.member_id})"
+class="w-full bg-blue-600 rounded py-1">
+📍 ปักพิกัด
+</button>
+
+${m.lat&&m.lng ? `
+<a href="https://www.google.com/maps/dir/?api=1&destination=${m.lat},${m.lng}"
+target="_blank"
+class="block bg-slate-700 rounded py-1 text-center">
+🧭 นำทาง
+</a>` : ``}
+
+<a href="tel:${m.phone}"
+class="block text-green-400 font-bold">
+📞 ${m.phone||'-'}
+</a>
+
+<button onclick="editMember(${m.member_id})"
+class="w-full bg-amber-500 hover:bg-amber-600 rounded py-1">
+✏️ แก้ไขข้อมูล
+</button>
+
+</div>
+`
+})
+
+renderIndex += PAGE_SIZE
+
 }
 
 /* ================= GPS ================= */
