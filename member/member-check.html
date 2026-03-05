@@ -562,24 +562,29 @@ init()
 
 function openScanner(){
 
-  scanModal.classList.remove('hidden')
+  document.getElementById('scanModal').classList.remove('hidden')
 
-  qrScanner = new Html5Qrcode("qr-reader")
+  setTimeout(()=>{
 
-  qrScanner.start(
-    { facingMode: "environment" },
-    { fps: 10, qrbox: 250 },
+    qrScanner = new Html5Qrcode("qr-reader")
 
-    (decodedText) => {
+    qrScanner.start(
+      { facingMode: "environment" },
+      { fps: 10, qrbox: 250 },
 
-      document.getElementById('searchInput').value = decodedText
+      (decodedText) => {
 
-      resetAndRender()
+        document.getElementById('searchInput').value = decodedText
 
-      closeScanner()
+        resetAndRender()
 
-    }
-  )
+        closeScanner()
+
+      }
+    )
+
+  },300)
+
 }
 
 function closeScanner(){
