@@ -131,8 +131,12 @@ async function loadFiscalYear(){
 
 
 async function loadPool(){
+
  const g=groupSel.value
  const fy=fiscalYear.value
+
+ cancelPool=[]  // ⭐ reset
+
  if(!g||!fy) return alert('เลือกกลุ่ม/ปี')
 
  const {data}=await sb.from('member_meeting')
@@ -208,7 +212,7 @@ if(!q){
 
 
  // ===== ตัดออก =====
- const available=pool.filter(p=>!usedIds.includes(p.member_id))
+ const available=pool.filter(p =>!usedIds.includes(p.member_id) &&!cancelPool.includes(p.member_id))
  lockPool=available.filter(m=>m.is_lock==true)
  normalPool=available.filter(m=>m.is_lock!=true)
 
@@ -314,10 +318,14 @@ async function showPopup(r){
   }
  })
 
- if(!res.isConfirmed){
-  winner=null
-  return
- }
+if(!res.isConfirmed){
+
+ // ⭐ เก็บรายชื่อที่กดยกเลิก
+ cancelPool.push(r.member_id)
+
+ winner=null
+ return
+}
 
  await sb.from('meeting_random').insert([{
   member_id:r.member_id,
