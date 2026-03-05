@@ -65,10 +65,22 @@
 <div id="remainBox" class="text-center text-sky-400"></div>
 
 <div class="bg-slate-800 p-4 rounded-xl">
-<h2 class="text-yellow-400 font-bold mb-3">ผู้ได้รับสิทธิ์แล้ว</h2>
+<h2 id="winnerTitle" class="text-yellow-400 font-bold mb-3">ผู้ได้รับสิทธิ์แล้ว (0 คน)</h2>
 <div id="winnerList"></div>
 </div>
-
+<div class="flex justify-center mt-3">
+  <button onclick="printLetters()"
+    class="bg-green-600 hover:bg-green-700 px-6 py-2 rounded">
+    🖨️ ปริ้นจดหมายส่งสมาชิก
+  </button>
+</div>
+  <div class="flex justify-center mt-3">
+  <button onclick="printSignReport()"
+    class="bg-purple-600 hover:bg-purple-700 px-6 py-2 rounded">
+    🖨️ ปริ้นรายงานลงชื่อประชุมใหญ่
+  </button>
+</div>
+  
 </div>
 
 <script>
@@ -80,6 +92,7 @@ const sb = supabase.createClient(
 let pool=[]
 let lockPool=[]
 let normalPool=[]
+let cancelPool=[]   // ⭐ เพิ่มตัวนี้
 let winner=null
 
 // สุ่ม lock
@@ -318,14 +331,253 @@ async function showPopup(r){
  loadPool()
 }
 
+async function printLetters(){
 
+ // ===== รายชื่อผู้ได้รับสิทธิ์ =====
+ const {data:winners} = await sb.from('meeting_random')
+  .select('*')
+  .eq('group', groupSel.value)
+  .eq('fiscal_year', fiscalYear.value)
+
+ if(!winners || winners.length===0){
+  Swal.fire('ไม่พบรายชื่อ','','warning')
+  return
+ }
+
+ // ===== member_id =====
+ const ids = winners.map(w=>w.member_id)
+
+ // ===== ดึงข้อมูลสมาชิก =====
+ const {data:members} = await sb.from('members')
+  .select(`
+    member_id,
+    house_no,
+    moo,
+    soi,
+    village,
+    subdistrict,
+    district,
+    province,
+    phone
+  `)
+  .in('member_id', ids)
+
+ const memberMap = {}
+ members.forEach(m=>{
+  memberMap[m.member_id] = m
+ })
+
+ // ===== HTML =====
+ let html = `
+ <html>
+ <head>
+ <title>หนังสือเชิญประชุมใหญ่</title>
+ <style>
+  body{
+    font-family: TH Sarabun New, sans-serif;
+    font-size:20px;
+    padding:35px;
+    line-height:1.7;
+  }
+  .page{
+    page-break-after:always;
+    margin-bottom:40px;
+  }
+  .title{
+    text-align:center;
+    font-size:34px;
+    font-weight:bold;
+    margin-bottom:20px;
+  }
+ </style>
+ </head>
+ <body>
+ `
+
+ winners.forEach(r=>{
+
+  const m = memberMap[r.member_id] || {}
+
+  html += `
+  <div class="page">
+
+    <div class="title">หนังสือเชิญประชุมใหญ่</div>
+
+    <p><b>รหัสสมาชิก</b> ${r.member_id}</p>
+
+    <p>เรียน คุณ ${r.first_name} ${r.last_name}</p>
+
+    <p>
+      <b>ที่อยู่:</b>
+      ${m.house_no||'-'}
+      หมู่ ${m.moo||'-'}
+      หมู่บ้าน ${m.village||'-'}
+      ซอย ${m.soi||'-'}
+      อำเภอ${m.district||'-'}
+      จังหวัด${m.province||'-'}
+    </p>
+
+    <p><b>โทรศัพท์:</b> ${m.phone||'-'}</p>
+
+  </div>
+  `
+ })
+
+ html += `
+ </body>
+ </html>
+ `
+
+ const w = window.open('', '_blank')
+ w.document.write(html)
+ w.document.close()
+ w.print()
+}
+
+
+async function printSignReport(){
+
+ // ===== ผู้ได้รับสิทธิ์ =====
+ const {data:winners} = await sb.from('meeting_random')
+  .select('*')
+  .eq('group', groupSel.value)
+  .eq('fiscal_year', fiscalYear.value)
+
+ if(!winners || winners.length===0){
+  Swal.fire('ไม่พบรายชื่อ','','warning')
+  return
+ }
+
+ const ids = winners.map(w=>w.member_id)
+
+ // ===== ดึงข้อมูลสมาชิก =====
+ const {data:members} = await sb.from('members')
+  .select(`
+    member_id,
+    house_no,
+    moo,
+    soi,
+    village,
+    subdistrict,
+    district,
+    province
+  `)
+  .in('member_id', ids)
+
+ const memberMap = {}
+ members.forEach(m=>{
+  memberMap[m.member_id] = m
+ })
+
+ // ===== HTML PRINT =====
+ let html = `
+ <html>
+ <head>
+ <title>รายงานลงชื่อประชุมใหญ่</title>
+ <style>
+  @page{
+    size:A4 landscape;
+    margin:15mm;
+  }
+
+  body{
+    font-family: TH Sarabun New, sans-serif;
+    font-size:18px;
+  }
+
+  h2{
+    text-align:center;
+    margin-bottom:15px;
+  }
+
+  table{
+    width:100%;
+    border-collapse:collapse;
+  }
+
+  th,td{
+    border:1px solid #000;
+    padding:6px;
+    text-align:left;
+  }
+
+  th{
+    background:#eee;
+    text-align:center;
+  }
+
+  .phoneSpace{
+    height:28px;
+  }
+ </style>
+ </head>
+ <body>
+
+ <h2>รายงานลงชื่อประชุมใหญ่</h2>
+
+ <table>
+ <thead>
+  <tr>
+    <th style="width:10%">รหัสสมาชิก</th>
+    <th style="width:15%">ชื่อ</th>
+    <th style="width:15%">สกุล</th>
+    <th style="width:45%">ที่อยู่</th>
+    <th style="width:15%">เบอร์โทร (เขียน)</th>
+  </tr>
+ </thead>
+ <tbody>
+ `
+
+ winners.forEach(r=>{
+
+  const m = memberMap[r.member_id] || {}
+
+  const addr = `
+    ${m.house_no||'-'}
+    หมู่ ${m.moo||'-'}
+    หมู่บ้าน ${m.village||'-'}
+    ซอย ${m.soi||'-'}
+    อำเภอ${m.district||'-'}
+    จังหวัด${m.province||'-'}
+  `
+
+  html += `
+  <tr>
+    <td>${r.member_id}</td>
+    <td>${r.first_name}</td>
+    <td>${r.last_name}</td>
+    <td>${addr}</td>
+    <td class="phoneSpace"></td>
+  </tr>
+  `
+ })
+
+ html += `
+ </tbody>
+ </table>
+
+ </body>
+ </html>
+ `
+
+ const w = window.open('', '_blank')
+ w.document.write(html)
+ w.document.close()
+ w.print()
+}
+  
 async function loadWinnerList(){
+
  const {data}=await sb.from('meeting_random')
  .select('*')
  .eq('group',groupSel.value)
  .eq('fiscal_year',fiscalYear.value)
 
+ // ⭐ แสดงจำนวน
+ winnerTitle.innerText = `ผู้ได้รับสิทธิ์แล้ว (${data.length} คน)`
+
  winnerList.innerHTML=''
+
  ;(data||[]).forEach(r=>{
   winnerList.innerHTML+=`
   <div class="flex justify-between bg-slate-700 p-2 rounded mb-2">
