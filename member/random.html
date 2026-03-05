@@ -543,15 +543,14 @@ async function printSignReport(){
 
   const m = memberMap[r.member_id] || {}
 
- const addr = `
-  ${m.house_no||'-'}
-  หมู่ ${m.moo||'-'}
-  หมู่บ้าน ${m.village||'-'}
-  ซอย ${m.soi||'-'}
-  ถนน ${m.street||'-'}
-  ตำบล${m.subdistrict||'-'}
-  อำเภอ${m.district||'-'}
-  จังหวัด${m.province||'-'}
+const addr = `${m.house_no||'-'} 
+ม.${m.moo||'-'} 
+หมู่บ้าน${m.village||'-'} 
+ซ.${m.soi||'-'} 
+ถ.${m.street||'-'} 
+ต.${m.subdistrict||'-'} 
+อ.${m.district||'-'} 
+จ.${m.province||'-'}`
 `
 
   html += `
