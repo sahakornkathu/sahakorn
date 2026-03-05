@@ -521,6 +521,9 @@ async function printSignReport(){
   .phoneSpace{
     height:28px;
   }
+  .signSpace{
+  height:28px;
+}
  </style>
  </head>
  <body>
@@ -530,11 +533,12 @@ async function printSignReport(){
  <table>
  <thead>
   <tr>
-    <th style="width:10%">รหัสสมาชิก</th>
-    <th style="width:15%">ชื่อ</th>
-    <th style="width:15%">สกุล</th>
-    <th style="width:45%">ที่อยู่</th>
-    <th style="width:15%">เบอร์โทร</th>
+  <th style="width:8%">รหัสสมาชิก</th>
+  <th style="width:12%">ชื่อ</th>
+  <th style="width:12%">สกุล</th>
+  <th style="width:43%">ที่อยู่</th>
+  <th style="width:12%">เบอร์โทร</th>
+  <th style="width:13%">ลายเซ็น</th>
   </tr>
  </thead>
  <tbody>
@@ -556,11 +560,12 @@ const addr = `${m.house_no||'-'}
 
   html += `
   <tr>
-    <td>${r.member_id}</td>
-    <td>${r.first_name}</td>
-    <td>${r.last_name}</td>
-    <td>${addr}</td>
-    <td class="phoneSpace"></td>
+  <td>${r.member_id}</td>
+  <td>${r.first_name}</td>
+  <td>${r.last_name}</td>
+  <td>${addr}</td>
+  <td class="phoneSpace"></td>
+  <td class="signSpace"></td>
   </tr>
   `
  })
