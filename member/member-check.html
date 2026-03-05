@@ -638,17 +638,26 @@ const { value: form } = await Swal.fire({
 title: 'แก้ไขข้อมูลสมาชิก',
 
 html: `
-<input id="phone" class="swal2-input" placeholder="เบอร์โทร" value="${m.phone||''}">
+html: `
 
-<input id="house_no" class="swal2-input" placeholder="เลขทะเบียนบ้าน" value="${m.house_no||''}">
+<input id="house_no" class="swal2-input" placeholder="เลขที่" value="${m.house_no||''}">
 
 <input id="moo" class="swal2-input" placeholder="หมู่" value="${m.moo||''}">
 
-<input id="village" class="swal2-input" placeholder="หมู่บ้าน" value="${m.village||''}">
-
 <input id="soi" class="swal2-input" placeholder="ซอย" value="${m.soi||''}">
 
+<input id="village" class="swal2-input" placeholder="หมู่บ้าน" value="${m.village||''}">
+
 <input id="street" class="swal2-input" placeholder="ถนน" value="${m.street||''}">
+
+<input id="subdistrict" class="swal2-input" placeholder="ตำบล" value="${m.subdistrict||''}">
+
+<input id="district" class="swal2-input" placeholder="อำเภอ" value="${m.district||''}">
+
+<input id="province" class="swal2-input" placeholder="จังหวัด" value="${m.province||''}">
+
+<input id="phone" class="swal2-input" placeholder="เบอร์โทรศัพท์" value="${m.phone||''}">
+
 `,
 
 focusConfirm:false,
@@ -661,12 +670,15 @@ preConfirm:()=>{
 
 return{
 
-phone:document.getElementById('phone').value,
 house_no:document.getElementById('house_no').value,
 moo:document.getElementById('moo').value,
-village:document.getElementById('village').value,
 soi:document.getElementById('soi').value,
-street:document.getElementById('street').value
+village:document.getElementById('village').value,
+street:document.getElementById('street').value,
+subdistrict:document.getElementById('subdistrict').value,
+district:document.getElementById('district').value,
+province:document.getElementById('province').value,
+phone:document.getElementById('phone').value
 
 }
 
