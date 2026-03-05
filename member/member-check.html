@@ -380,6 +380,7 @@ function renderMore(){
         class="block text-green-400 font-bold">
         📞 ${m.phone||'-'}
       </a>
+      <button onclick="editMember(${m.member_id})"class="w-full bg-amber-500 hover:bg-amber-600 rounded py-1">✏️ แก้ไขข้อมูล</button>
     </div>`
   })
 
@@ -628,7 +629,75 @@ function stopScanner(){
   }
 }
  
-  
+async function editMember(memberId){
+
+const m = allMembers.find(x=>x.member_id==memberId)
+
+const { value: form } = await Swal.fire({
+
+title: 'แก้ไขข้อมูลสมาชิก',
+
+html: `
+<input id="phone" class="swal2-input" placeholder="เบอร์โทร" value="${m.phone||''}">
+
+<input id="house_no" class="swal2-input" placeholder="เลขทะเบียนบ้าน" value="${m.house_no||''}">
+
+<input id="moo" class="swal2-input" placeholder="หมู่" value="${m.moo||''}">
+
+<input id="village" class="swal2-input" placeholder="หมู่บ้าน" value="${m.village||''}">
+
+<input id="soi" class="swal2-input" placeholder="ซอย" value="${m.soi||''}">
+
+<input id="street" class="swal2-input" placeholder="ถนน" value="${m.street||''}">
+`,
+
+focusConfirm:false,
+
+showCancelButton:true,
+
+confirmButtonText:'บันทึก',
+
+preConfirm:()=>{
+
+return{
+
+phone:document.getElementById('phone').value,
+house_no:document.getElementById('house_no').value,
+moo:document.getElementById('moo').value,
+village:document.getElementById('village').value,
+soi:document.getElementById('soi').value,
+street:document.getElementById('street').value
+
+}
+
+}
+
+})
+
+if(!form) return
+
+const { error } = await supabaseClient
+.from('members')
+.update(form)
+.eq('member_id', memberId)
+
+if(error){
+
+Swal.fire('ผิดพลาด','บันทึกไม่สำเร็จ','error')
+return
+
+}
+
+Swal.fire({
+icon:'success',
+title:'บันทึกแล้ว',
+timer:1200,
+showConfirmButton:false
+})
+
+loadMembers()
+
+}
 </script>
  <div id="scanModal"
 class="fixed inset-0 bg-black/80 hidden flex items-center justify-center"
