@@ -419,12 +419,13 @@ async function printLetters(){
     <p>
       <b>ที่อยู่:</b>
       ${m.house_no||'-'}
+      ม.${m.moo||'-'}
       หมู่บ้าน ${m.village||'-'}
-      ซอย ${m.soi||'-'}
-      ถนน ${m.street||'-'}
-      ตำบล${m.subdistrict||'-'}
-      อำเภอ${m.district||'-'}
-      จังหวัด${m.province||'-'}
+      ซ.${m.soi||'-'}
+      ถ.${m.street||'-'}
+      ต.${m.subdistrict||'-'}
+      อ.${m.district||'-'}
+      จ.${m.province||'-'}
     </p>
 
     <p><b>โทรศัพท์:</b> ${m.phone||'-'}</p>
