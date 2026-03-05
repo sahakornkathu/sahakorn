@@ -22,21 +22,39 @@
 <!-- SEARCH -->
 <div class="sticky top-0 z-50 bg-slate-800 p-3 shadow">
   
-<div class="relative">
+<div class="relative flex items-center">
 
+<!-- 🔍 icon -->
+<span class="material-icons absolute left-4 text-slate-400 text-xl">
+search
+</span>
+
+<!-- input -->
 <input id="searchInput"
-oninput="resetAndRender()"
-class="w-full rounded-full px-5 py-3 pr-14 text-black"
-placeholder="🔍 ค้นหา">
+oninput="handleSearch()"
+class="w-full rounded-full pl-12 pr-20 py-3 text-black border border-slate-300 focus:outline-none focus:ring-2 focus:ring-green-500"
+placeholder="ค้นหาเลขสมาชิก / ชื่อ / นามสกุล">
 
+<!-- ❌ clear -->
+<button id="clearBtn"
+onclick="clearSearch()"
+class="absolute right-10 text-slate-400 hover:text-slate-600 hidden">
+
+<span class="material-icons text-xl">close</span>
+
+</button>
+
+<!-- QR scan -->
 <button
 onclick="openScanner()"
-class="absolute right-3 top-1/2 -translate-y-1/2">
-<span class="material-icons text-slate-500 text-2xl">
+class="absolute right-3 text-slate-500 hover:text-black">
+
+<span class="material-icons text-2xl">
 qr_code_scanner
 </span>
+
 </button>
-  
+
 </div>
   
 <div class="px-3 pb-2">
