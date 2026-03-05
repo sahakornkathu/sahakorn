@@ -92,6 +92,7 @@ const sb = supabase.createClient(
 let pool=[]
 let lockPool=[]
 let normalPool=[]
+let cancelPool=[]   // ⭐ เพิ่มตัวนี้
 let winner=null
 
 // สุ่ม lock
