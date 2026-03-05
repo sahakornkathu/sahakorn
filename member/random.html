@@ -358,16 +358,17 @@ async function printLetters(){
  // ===== ดึงข้อมูลสมาชิก =====
  const {data:members} = await sb.from('members')
   .select(`
-    member_id,
-    house_no,
-    moo,
-    soi,
-    village,
-    subdistrict,
-    district,
-    province,
-    phone
-  `)
+  member_id,
+  house_no,
+  moo,
+  soi,
+  village,
+  street,
+  subdistrict,
+  district,
+  province,
+  phone
+`)
   .in('member_id', ids)
 
  const memberMap = {}
@@ -418,9 +419,10 @@ async function printLetters(){
     <p>
       <b>ที่อยู่:</b>
       ${m.house_no||'-'}
-      หมู่ ${m.moo||'-'}
       หมู่บ้าน ${m.village||'-'}
       ซอย ${m.soi||'-'}
+      ถนน ${m.street||'-'}
+      ตำบล${m.subdistrict||'-'}
       อำเภอ${m.district||'-'}
       จังหวัด${m.province||'-'}
     </p>
@@ -461,15 +463,16 @@ async function printSignReport(){
  // ===== ดึงข้อมูลสมาชิก =====
  const {data:members} = await sb.from('members')
   .select(`
-    member_id,
-    house_no,
-    moo,
-    soi,
-    village,
-    subdistrict,
-    district,
-    province
-  `)
+  member_id,
+  house_no,
+  moo,
+  soi,
+  village,
+  street,
+  subdistrict,
+  district,
+  province
+`)
   .in('member_id', ids)
 
  const memberMap = {}
@@ -540,14 +543,16 @@ async function printSignReport(){
 
   const m = memberMap[r.member_id] || {}
 
-  const addr = `
-    ${m.house_no||'-'}
-    หมู่ ${m.moo||'-'}
-    หมู่บ้าน ${m.village||'-'}
-    ซอย ${m.soi||'-'}
-    อำเภอ${m.district||'-'}
-    จังหวัด${m.province||'-'}
-  `
+ const addr = `
+  ${m.house_no||'-'}
+  หมู่ ${m.moo||'-'}
+  หมู่บ้าน ${m.village||'-'}
+  ซอย ${m.soi||'-'}
+  ถนน ${m.street||'-'}
+  ตำบล${m.subdistrict||'-'}
+  อำเภอ${m.district||'-'}
+  จังหวัด${m.province||'-'}
+`
 
   html += `
   <tr>
