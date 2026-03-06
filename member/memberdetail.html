@@ -15,15 +15,17 @@
 
 <div class="max-w-xl mx-auto">
 
+<!-- Dashboard -->
+
 <div class="bg-white rounded-xl p-4 shadow mb-4">
 
 <h2 class="text-lg font-bold mb-2">
-สวัสดี <span id="displayName"></span>
+สวัสดี <span id="displayName">...</span>
 </h2>
 
 <div class="grid grid-cols-2 gap-2">
 
-<button onclick="showProfile()"
+<button onclick="openProfile()"
 class="bg-green-600 text-white p-3 rounded">
 ข้อมูลสมาชิก
 </button>
@@ -43,6 +45,8 @@ class="bg-green-600 text-white p-3 rounded">
 </div>
 
 </div>
+
+<!-- Profile -->
 
 <div id="profileCard"
 class="bg-white rounded-xl p-4 shadow hidden">
@@ -118,6 +122,10 @@ async function init(){
 
 console.log("INIT START")
 
+let userId = null
+
+try{
+
 await liff.init({ liffId:"2009012101-mBy1yERI" })
 
 console.log("LIFF READY")
@@ -129,13 +137,35 @@ if(!liff.isLoggedIn()){
 
 const profile = await liff.getProfile()
 
-console.log("PROFILE",profile)
-
 document.getElementById("displayName").innerText = profile.displayName
 
-const userId = profile.userId
+userId = profile.userId
 
-console.log("USERID",userId)
+}catch(e){
+
+console.log("LIFF ERROR",e)
+
+}
+
+/* DEV MODE สำหรับทดสอบในคอม */
+
+if(!userId){
+
+console.log("DEV MODE")
+
+document.getElementById("displayName").innerText = "Developer"
+
+userId = "DEV_USER_TEST"
+
+}
+
+console.log("USERID:",userId)
+
+loadMember(userId)
+
+}
+
+async function loadMember(userId){
 
 const { data, error } = await supabase
 .from("members")
@@ -143,12 +173,15 @@ const { data, error } = await supabase
 .eq("line_user_id",userId)
 .maybeSingle()
 
-console.log("DATA",data)
-console.log("ERROR",error)
+console.log("DATA:",data)
+console.log("ERROR:",error)
 
 if(!data){
- alert("ไม่พบข้อมูลสมาชิก กรุณาติดต่อเจ้าหน้าที่")
- return
+
+alert("ไม่พบข้อมูลสมาชิก")
+
+return
+
 }
 
 memberId = data.member_id
@@ -171,9 +204,7 @@ document.getElementById("phone").value = data.phone || ""
 
 }
 
-init()
-
-function showProfile(){
+function openProfile(){
 
 document.getElementById("profileCard").classList.remove("hidden")
 
@@ -221,6 +252,8 @@ alert("บันทึกสำเร็จ")
 location.reload()
 
 }
+
+init()
 
 </script>
 
