@@ -15,9 +15,7 @@
 
 <div class="max-w-xl mx-auto">
 
-<!-- Dashboard -->
-
-<div id="dashboard" class="bg-white rounded-xl p-4 shadow mb-4 hidden">
+<div class="bg-white rounded-xl p-4 shadow mb-4">
 
 <h2 class="text-lg font-bold mb-2">
 สวัสดี <span id="displayName"></span>
@@ -45,30 +43,6 @@ class="bg-green-600 text-white p-3 rounded">
 </div>
 
 </div>
-
-<!-- Link Member -->
-
-<div id="linkMember"
-class="bg-white rounded-xl p-4 shadow hidden">
-
-<h2 class="font-bold mb-3">ผูกบัญชีสมาชิก</h2>
-
-<input id="member_input"
-class="border p-2 w-full mb-2 rounded"
-placeholder="เลขสมาชิก">
-
-<input id="idcard_input"
-class="border p-2 w-full mb-3 rounded"
-placeholder="เลขบัตรประชาชน">
-
-<button onclick="linkMember()"
-class="bg-blue-600 text-white p-2 rounded w-full">
-ผูกบัญชี
-</button>
-
-</div>
-
-<!-- Profile -->
 
 <div id="profileCard"
 class="bg-white rounded-xl p-4 shadow hidden">
@@ -138,96 +112,66 @@ const supabase = supabase.createClient(
 "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y"
 )
 
-let memberId=null
-let userId=null
+let memberId = null
 
 async function init(){
 
+console.log("INIT START")
+
 await liff.init({ liffId:"2009012101-mBy1yERI" })
 
-const profile=await liff.getProfile()
+console.log("LIFF READY")
 
-userId=profile.userId
-
-document.getElementById("displayName").innerText=profile.displayName
-
-checkMember()
-
+if(!liff.isLoggedIn()){
+ liff.login()
+ return
 }
 
-async function checkMember(){
+const profile = await liff.getProfile()
 
-const {data}=await supabase
+console.log("PROFILE",profile)
+
+document.getElementById("displayName").innerText = profile.displayName
+
+const userId = profile.userId
+
+console.log("USERID",userId)
+
+const { data, error } = await supabase
 .from("members")
 .select("*")
 .eq("line_user_id",userId)
 .maybeSingle()
 
-if(!data){
-
-document.getElementById("linkMember").classList.remove("hidden")
-
-}else{
-
-loadProfile(data)
-
-}
-
-}
-
-function loadProfile(data){
-
-memberId=data.member_id
-
-document.getElementById("dashboard").classList.remove("hidden")
-
-document.getElementById("member_id").innerText=data.member_id
-document.getElementById("name").innerText=data.first_name+" "+data.last_name
-document.getElementById("group").innerText=data.group
-
-document.getElementById("house_no").value=data.house_no||""
-document.getElementById("moo").value=data.moo||""
-document.getElementById("soi").value=data.soi||""
-document.getElementById("village").value=data.village||""
-document.getElementById("street").value=data.street||""
-document.getElementById("subdistrict").value=data.subdistrict||""
-document.getElementById("district").value=data.district||""
-document.getElementById("province").value=data.province||""
-document.getElementById("postal_code").value=data.postal_code||""
-
-document.getElementById("phone").value=data.phone||""
-
-}
-
-async function linkMember(){
-
-const member=document.getElementById("member_input").value
-const idcard=document.getElementById("idcard_input").value
-
-const {data}=await supabase
-.from("members")
-.select("*")
-.eq("member_id",member)
-.eq("id_card",idcard)
-.maybeSingle()
+console.log("DATA",data)
+console.log("ERROR",error)
 
 if(!data){
+ alert("ไม่พบข้อมูลสมาชิก กรุณาติดต่อเจ้าหน้าที่")
+ return
+}
 
-alert("ไม่พบข้อมูลสมาชิก")
-return
+memberId = data.member_id
+
+document.getElementById("member_id").innerText = data.member_id
+document.getElementById("name").innerText = data.first_name+" "+data.last_name
+document.getElementById("group").innerText = data.group
+
+document.getElementById("house_no").value = data.house_no || ""
+document.getElementById("moo").value = data.moo || ""
+document.getElementById("soi").value = data.soi || ""
+document.getElementById("village").value = data.village || ""
+document.getElementById("street").value = data.street || ""
+document.getElementById("subdistrict").value = data.subdistrict || ""
+document.getElementById("district").value = data.district || ""
+document.getElementById("province").value = data.province || ""
+document.getElementById("postal_code").value = data.postal_code || ""
+
+document.getElementById("phone").value = data.phone || ""
 
 }
 
-await supabase
-.from("members")
-.update({line_user_id:userId})
-.eq("member_id",member)
-
-alert("ผูกบัญชีสำเร็จ")
-
-location.reload()
-
-}
+init()
 
 function showProfile(){
 
@@ -244,7 +188,7 @@ const fields=[
 ]
 
 fields.forEach(id=>{
-document.getElementById(id).disabled=false
+ document.getElementById(id).disabled=false
 })
 
 document.getElementById("editBtn").classList.add("hidden")
@@ -277,8 +221,6 @@ alert("บันทึกสำเร็จ")
 location.reload()
 
 }
-
-init()
 
 </script>
 
