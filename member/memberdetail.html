@@ -17,7 +17,7 @@
 
 <!-- Dashboard -->
 
-<div class="bg-white rounded-xl p-4 shadow mb-4">
+<div id="dashboard" class="bg-white rounded-xl p-4 shadow mb-4 hidden">
 
 <h2 class="text-lg font-bold mb-2">
 สวัสดี <span id="displayName"></span>
@@ -43,6 +43,28 @@ class="bg-green-600 text-white p-3 rounded">
 </button>
 
 </div>
+
+</div>
+
+<!-- Link Member -->
+
+<div id="linkMember"
+class="bg-white rounded-xl p-4 shadow hidden">
+
+<h2 class="font-bold mb-3">ผูกบัญชีสมาชิก</h2>
+
+<input id="member_input"
+class="border p-2 w-full mb-2 rounded"
+placeholder="เลขสมาชิก">
+
+<input id="idcard_input"
+class="border p-2 w-full mb-3 rounded"
+placeholder="เลขบัตรประชาชน">
+
+<button onclick="linkMember()"
+class="bg-blue-600 text-white p-2 rounded w-full">
+ผูกบัญชี
+</button>
 
 </div>
 
@@ -94,17 +116,13 @@ class="border p-2 w-full rounded">
 <button id="editBtn"
 onclick="edit()"
 class="bg-blue-600 text-white px-4 py-2 rounded">
-
 แก้ไข
-
 </button>
 
 <button id="saveBtn"
 onclick="save()"
 class="bg-green-600 text-white px-4 py-2 rounded hidden">
-
 บันทึก
-
 </button>
 
 </div>
@@ -120,45 +138,96 @@ const supabase = supabase.createClient(
 "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y"
 )
 
-let memberId = null
+let memberId=null
+let userId=null
 
 async function init(){
 
 await liff.init({ liffId:"2009012101-mBy1yERI" })
 
-const profile = await liff.getProfile()
+const profile=await liff.getProfile()
 
-document.getElementById("displayName").innerText = profile.displayName
+userId=profile.userId
 
-const userId = profile.userId
+document.getElementById("displayName").innerText=profile.displayName
 
-const {data} = await supabase
-.from("members")
-.select("*")
-.eq("line_user_id",userId)
-.single()
-
-memberId = data.member_id
-
-document.getElementById("member_id").innerText = data.member_id
-document.getElementById("name").innerText = data.first_name+" "+data.last_name
-document.getElementById("group").innerText = data.group
-
-document.getElementById("house_no").value = data.house_no || ""
-document.getElementById("moo").value = data.moo || ""
-document.getElementById("soi").value = data.soi || ""
-document.getElementById("village").value = data.village || ""
-document.getElementById("street").value = data.street || ""
-document.getElementById("subdistrict").value = data.subdistrict || ""
-document.getElementById("district").value = data.district || ""
-document.getElementById("province").value = data.province || ""
-document.getElementById("postal_code").value = data.postal_code || ""
-
-document.getElementById("phone").value = data.phone || ""
+checkMember()
 
 }
 
-init()
+async function checkMember(){
+
+const {data}=await supabase
+.from("members")
+.select("*")
+.eq("line_user_id",userId)
+.maybeSingle()
+
+if(!data){
+
+document.getElementById("linkMember").classList.remove("hidden")
+
+}else{
+
+loadProfile(data)
+
+}
+
+}
+
+function loadProfile(data){
+
+memberId=data.member_id
+
+document.getElementById("dashboard").classList.remove("hidden")
+
+document.getElementById("member_id").innerText=data.member_id
+document.getElementById("name").innerText=data.first_name+" "+data.last_name
+document.getElementById("group").innerText=data.group
+
+document.getElementById("house_no").value=data.house_no||""
+document.getElementById("moo").value=data.moo||""
+document.getElementById("soi").value=data.soi||""
+document.getElementById("village").value=data.village||""
+document.getElementById("street").value=data.street||""
+document.getElementById("subdistrict").value=data.subdistrict||""
+document.getElementById("district").value=data.district||""
+document.getElementById("province").value=data.province||""
+document.getElementById("postal_code").value=data.postal_code||""
+
+document.getElementById("phone").value=data.phone||""
+
+}
+
+async function linkMember(){
+
+const member=document.getElementById("member_input").value
+const idcard=document.getElementById("idcard_input").value
+
+const {data}=await supabase
+.from("members")
+.select("*")
+.eq("member_id",member)
+.eq("id_card",idcard)
+.maybeSingle()
+
+if(!data){
+
+alert("ไม่พบข้อมูลสมาชิก")
+return
+
+}
+
+await supabase
+.from("members")
+.update({line_user_id:userId})
+.eq("member_id",member)
+
+alert("ผูกบัญชีสำเร็จ")
+
+location.reload()
+
+}
 
 function showProfile(){
 
@@ -168,14 +237,14 @@ document.getElementById("profileCard").classList.remove("hidden")
 
 function edit(){
 
-const fields = [
+const fields=[
 "house_no","moo","soi","village",
 "street","subdistrict","district",
 "province","postal_code","phone"
 ]
 
 fields.forEach(id=>{
- document.getElementById(id).disabled=false
+document.getElementById(id).disabled=false
 })
 
 document.getElementById("editBtn").classList.add("hidden")
@@ -208,6 +277,8 @@ alert("บันทึกสำเร็จ")
 location.reload()
 
 }
+
+init()
 
 </script>
 
