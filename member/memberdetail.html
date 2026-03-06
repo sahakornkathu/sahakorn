@@ -3,7 +3,7 @@
 <head>
 
 <meta charset="UTF-8">
-<title>ข้อมูลสมาชิก</title>
+<title>Member Mini App</title>
 
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
@@ -11,24 +11,55 @@
 
 </head>
 
-<body class="bg-gray-100 p-5">
+<body class="bg-gray-100 p-4">
 
-<div class="max-w-xl mx-auto bg-white rounded-xl shadow p-6">
+<div class="max-w-xl mx-auto">
 
-<h1 class="text-xl font-bold mb-4">ข้อมูลสมาชิก</h1>
+<!-- Dashboard -->
 
-<div class="space-y-2">
+<div class="bg-white rounded-xl p-4 shadow mb-4">
+
+<h2 class="text-lg font-bold mb-2">
+สวัสดี <span id="displayName"></span>
+</h2>
+
+<div class="grid grid-cols-2 gap-2">
+
+<button onclick="showProfile()"
+class="bg-green-600 text-white p-3 rounded">
+ข้อมูลสมาชิก
+</button>
+
+<button class="bg-gray-400 text-white p-3 rounded">
+หุ้นของฉัน
+</button>
+
+<button class="bg-gray-400 text-white p-3 rounded">
+ปันผล
+</button>
+
+<button class="bg-gray-400 text-white p-3 rounded">
+ข่าวสหกรณ์
+</button>
+
+</div>
+
+</div>
+
+<!-- Profile -->
+
+<div id="profileCard"
+class="bg-white rounded-xl p-4 shadow hidden">
+
+<h2 class="font-bold mb-3">ข้อมูลสมาชิก</h2>
+
+<div class="space-y-1 mb-4">
 
 <div>เลขสมาชิก : <span id="member_id"></span></div>
 <div>ชื่อ : <span id="name"></span></div>
 <div>กลุ่ม : <span id="group"></span></div>
-<div>เลขบัตรประชาชน : <span id="id_card"></span></div>
 
 </div>
-
-<hr class="my-4">
-
-<h2 class="font-bold mb-2">ที่อยู่</h2>
 
 <div class="grid grid-cols-2 gap-2">
 
@@ -48,20 +79,23 @@
 
 </div>
 
-<div class="mt-4">
+<div class="mt-3">
 
-<label class="block mb-1">เบอร์โทรศัพท์</label>
-<input id="phone" disabled class="border p-2 w-full rounded">
+<label class="text-sm">เบอร์โทร</label>
+
+<input id="phone"
+disabled
+class="border p-2 w-full rounded">
 
 </div>
 
-<div class="mt-6 space-x-2">
+<div class="mt-4 space-x-2">
 
 <button id="editBtn"
 onclick="edit()"
 class="bg-blue-600 text-white px-4 py-2 rounded">
 
-แก้ไขข้อมูล
+แก้ไข
 
 </button>
 
@@ -72,6 +106,8 @@ class="bg-green-600 text-white px-4 py-2 rounded hidden">
 บันทึก
 
 </button>
+
+</div>
 
 </div>
 
@@ -88,9 +124,11 @@ let memberId = null
 
 async function init(){
 
-await liff.init({ liffId:"LIFF_ID" })
+await liff.init({ liffId:"2009012101-mBy1yERI" })
 
 const profile = await liff.getProfile()
+
+document.getElementById("displayName").innerText = profile.displayName
 
 const userId = profile.userId
 
@@ -103,9 +141,8 @@ const {data} = await supabase
 memberId = data.member_id
 
 document.getElementById("member_id").innerText = data.member_id
-document.getElementById("name").innerText = data.first_name + " " + data.last_name
+document.getElementById("name").innerText = data.first_name+" "+data.last_name
 document.getElementById("group").innerText = data.group
-document.getElementById("id_card").innerText = data.id_card
 
 document.getElementById("house_no").value = data.house_no || ""
 document.getElementById("moo").value = data.moo || ""
@@ -123,15 +160,22 @@ document.getElementById("phone").value = data.phone || ""
 
 init()
 
+function showProfile(){
+
+document.getElementById("profileCard").classList.remove("hidden")
+
+}
+
 function edit(){
 
 const fields = [
-"house_no","moo","soi","village","street",
-"subdistrict","district","province","postal_code","phone"
+"house_no","moo","soi","village",
+"street","subdistrict","district",
+"province","postal_code","phone"
 ]
 
 fields.forEach(id=>{
- document.getElementById(id).disabled = false
+ document.getElementById(id).disabled=false
 })
 
 document.getElementById("editBtn").classList.add("hidden")
@@ -159,7 +203,7 @@ phone:document.getElementById("phone").value
 })
 .eq("member_id",memberId)
 
-alert("บันทึกข้อมูลสำเร็จ")
+alert("บันทึกสำเร็จ")
 
 location.reload()
 
