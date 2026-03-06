@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+
+<meta charset="UTF-8">
+<title>ข้อมูลสมาชิก</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+</head>
+
+<body class="bg-gray-100 p-5">
+
+<div class="max-w-xl mx-auto bg-white rounded-xl shadow p-6">
+
+<h1 class="text-xl font-bold mb-4">ข้อมูลสมาชิก</h1>
+
+<div class="space-y-2">
+
+<div>เลขสมาชิก : <span id="member_id"></span></div>
+<div>ชื่อ : <span id="name"></span></div>
+<div>กลุ่ม : <span id="group"></span></div>
+<div>เลขบัตรประชาชน : <span id="id_card"></span></div>
+
+</div>
+
+<hr class="my-4">
+
+<h2 class="font-bold mb-2">ที่อยู่</h2>
+
+<div class="grid grid-cols-2 gap-2">
+
+<input id="house_no" disabled class="border p-2 rounded" placeholder="เลขที่บ้าน">
+<input id="moo" disabled class="border p-2 rounded" placeholder="หมู่">
+
+<input id="soi" disabled class="border p-2 rounded" placeholder="ซอย">
+<input id="village" disabled class="border p-2 rounded" placeholder="หมู่บ้าน">
+
+<input id="street" disabled class="border p-2 rounded" placeholder="ถนน">
+<input id="subdistrict" disabled class="border p-2 rounded" placeholder="ตำบล">
+
+<input id="district" disabled class="border p-2 rounded" placeholder="อำเภอ">
+<input id="province" disabled class="border p-2 rounded" placeholder="จังหวัด">
+
+<input id="postal_code" disabled class="border p-2 rounded" placeholder="รหัสไปรษณีย์">
+
+</div>
+
+<div class="mt-4">
+
+<label class="block mb-1">เบอร์โทรศัพท์</label>
+<input id="phone" disabled class="border p-2 w-full rounded">
+
+</div>
+
+<div class="mt-6 space-x-2">
+
+<button id="editBtn"
+onclick="edit()"
+class="bg-blue-600 text-white px-4 py-2 rounded">
+
+แก้ไขข้อมูล
+
+</button>
+
+<button id="saveBtn"
+onclick="save()"
+class="bg-green-600 text-white px-4 py-2 rounded hidden">
+
+บันทึก
+
+</button>
+
+</div>
+
+</div>
+
+<script>
+
+const supabase = supabase.createClient(
+"https://ttottijljxoinptmhgtu.supabase.co",
+"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y"
+)
+
+let memberId = null
+
+async function init(){
+
+await liff.init({ liffId:"LIFF_ID" })
+
+const profile = await liff.getProfile()
+
+const userId = profile.userId
+
+const {data} = await supabase
+.from("members")
+.select("*")
+.eq("line_user_id",userId)
+.single()
+
+memberId = data.member_id
+
+document.getElementById("member_id").innerText = data.member_id
+document.getElementById("name").innerText = data.first_name + " " + data.last_name
+document.getElementById("group").innerText = data.group
+document.getElementById("id_card").innerText = data.id_card
+
+document.getElementById("house_no").value = data.house_no || ""
+document.getElementById("moo").value = data.moo || ""
+document.getElementById("soi").value = data.soi || ""
+document.getElementById("village").value = data.village || ""
+document.getElementById("street").value = data.street || ""
+document.getElementById("subdistrict").value = data.subdistrict || ""
+document.getElementById("district").value = data.district || ""
+document.getElementById("province").value = data.province || ""
+document.getElementById("postal_code").value = data.postal_code || ""
+
+document.getElementById("phone").value = data.phone || ""
+
+}
+
+init()
+
+function edit(){
+
+const fields = [
+"house_no","moo","soi","village","street",
+"subdistrict","district","province","postal_code","phone"
+]
+
+fields.forEach(id=>{
+ document.getElementById(id).disabled = false
+})
+
+document.getElementById("editBtn").classList.add("hidden")
+document.getElementById("saveBtn").classList.remove("hidden")
+
+}
+
+async function save(){
+
+await supabase
+.from("members")
+.update({
+
+house_no:document.getElementById("house_no").value,
+moo:document.getElementById("moo").value,
+soi:document.getElementById("soi").value,
+village:document.getElementById("village").value,
+street:document.getElementById("street").value,
+subdistrict:document.getElementById("subdistrict").value,
+district:document.getElementById("district").value,
+province:document.getElementById("province").value,
+postal_code:document.getElementById("postal_code").value,
+phone:document.getElementById("phone").value
+
+})
+.eq("member_id",memberId)
+
+alert("บันทึกข้อมูลสำเร็จ")
+
+location.reload()
+
+}
+
+</script>
+
+</body>
+</html>
