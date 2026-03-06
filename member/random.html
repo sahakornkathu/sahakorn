@@ -321,8 +321,10 @@ async function showPopup(r){
 if(!res.isConfirmed){
 
  // ⭐ เก็บรายชื่อที่กดยกเลิก
- cancelPool.push(r.member_id)
-
+ // cancelPool.push(r.member_id)
+if(!cancelPool.includes(r.member_id)){
+  cancelPool.push(r.member_id)
+}
  winner=null
  return
 }
