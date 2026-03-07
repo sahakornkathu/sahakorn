@@ -3,9 +3,7 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<title>ระบบสมาชิก</title>
-
-<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<title>Supabase Test</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -14,38 +12,16 @@
 body{
 font-family:sans-serif;
 background:#f3f4f6;
-padding:30px;
+padding:40px;
 }
 
-.card{
-max-width:520px;
+.box{
+max-width:600px;
 margin:auto;
 background:white;
-padding:25px;
-border-radius:14px;
+padding:30px;
+border-radius:12px;
 box-shadow:0 8px 20px rgba(0,0,0,0.1);
-}
-
-.profile{
-text-align:center;
-margin-bottom:20px;
-}
-
-.profile img{
-width:110px;
-height:110px;
-border-radius:50%;
-}
-
-.name{
-font-size:20px;
-font-weight:bold;
-margin-top:10px;
-}
-
-.section{
-margin-top:20px;
-line-height:1.8;
 }
 
 input{
@@ -57,13 +33,18 @@ border-radius:8px;
 }
 
 button{
-margin-top:15px;
+margin-top:10px;
 padding:10px 15px;
-border:none;
 background:#06c755;
+border:none;
 color:white;
 border-radius:8px;
 cursor:pointer;
+}
+
+.result{
+margin-top:20px;
+line-height:1.8;
 }
 
 .debug{
@@ -72,7 +53,7 @@ background:black;
 color:#0f0;
 padding:10px;
 font-size:12px;
-border-radius:6px;
+border-radius:8px;
 }
 
 </style>
@@ -81,14 +62,15 @@ border-radius:6px;
 
 <body>
 
-<div class="card">
+<div class="box">
 
-<div class="profile">
-<img id="profilePic">
-<div class="name" id="displayName"></div>
-</div>
+<h2>ทดสอบ Supabase Members</h2>
 
-<div id="memberArea"></div>
+<input id="lineid" placeholder="ใส่ LINE USER ID">
+
+<button onclick="searchMember()">ค้นหาสมาชิก</button>
+
+<div class="result" id="result"></div>
 
 <div class="debug" id="debug"></div>
 
@@ -96,139 +78,58 @@ border-radius:6px;
 
 <script>
 
-const LIFF_ID = "2009012101-mBy1yERI"
-
 const supabase = window.supabase.createClient(
 "https://ttottijljxoinptmhgtu.supabase.co",
 "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y"
 )
 
-let LINE_USER_ID = null
+async function searchMember(){
 
-async function main(){
+const lineid = document.getElementById("lineid").value
 
-await liff.init({ liffId: LIFF_ID })
+debug("Searching : "+lineid)
 
-if(!liff.isLoggedIn()){
-liff.login()
+const { data, error } = await supabase
+.from("members")
+.select("*")
+.eq("line_user_id", lineid)
+
+debug("Result : "+JSON.stringify(data))
+
+if(error){
+
+debug("ERROR : "+error.message)
+
 return
-}
-
-const profile = await liff.getProfile()
-
-LINE_USER_ID = profile.userId
-
-document.getElementById("profilePic").src = profile.pictureUrl
-document.getElementById("displayName").innerText = profile.displayName
-
-debug("LINE USER ID : "+LINE_USER_ID)
-
-checkMember()
 
 }
-
-async function checkMember(){
-
-const { data } = await supabase
-.from("members")
-.select("*")
-.eq("line_user_id", LINE_USER_ID)
-
-debug("MEMBER RESULT : "+JSON.stringify(data))
-
-if(data && data.length > 0){
-
-showMember(data[0])
-
-}else{
-
-showBindForm()
-
-}
-
-}
-
-function showMember(m){
-
-document.getElementById("memberArea").innerHTML = `
-
-<div class="section">
-
-<div><b>รหัสสมาชิก :</b> ${m.member_id}</div>
-<div><b>ชื่อ :</b> ${m.title} ${m.first_name} ${m.last_name}</div>
-<div><b>เลขบัตร :</b> ${m.id_card}</div>
-<div><b>เบอร์โทร :</b> ${m.phone}</div>
-<div><b>สถานะ :</b> ${m.member_status}</div>
-
-</div>
-
-`
-
-}
-
-function showBindForm(){
-
-document.getElementById("memberArea").innerHTML = `
-
-<div class="section">
-
-<h3>ไม่พบสมาชิก</h3>
-
-กรุณากรอกเลขบัตรประชาชนเพื่อผูก LINE
-
-<input id="idcard" placeholder="เลขบัตรประชาชน">
-
-<button onclick="bindMember()">ผูก LINE กับสมาชิก</button>
-
-</div>
-
-`
-
-}
-
-async function bindMember(){
-
-const idcard = document.getElementById("idcard").value
-
-const { data } = await supabase
-.from("members")
-.select("*")
-.eq("id_card", idcard)
 
 if(!data || data.length == 0){
 
-alert("ไม่พบสมาชิก")
+document.getElementById("result").innerHTML = "ไม่พบสมาชิก"
 
 return
 
 }
 
-const member = data[0]
+const m = data[0]
 
-await supabase
-.from("members")
-.update({
-line_user_id: LINE_USER_ID
-})
-.eq("id_card", idcard)
+document.getElementById("result").innerHTML = `
 
-alert("ผูก LINE สำเร็จ")
+<div>รหัสสมาชิก : ${m.member_id}</div>
+<div>ชื่อ : ${m.title} ${m.first_name} ${m.last_name}</div>
+<div>เลขบัตร : ${m.id_card}</div>
+<div>เบอร์โทร : ${m.phone}</div>
 
-checkMember()
+`
 
 }
 
 function debug(msg){
 
-const el = document.getElementById("debug")
-
-el.innerHTML += "<br>"+msg
-
-console.log(msg)
+document.getElementById("debug").innerHTML += "<br>"+msg
 
 }
-
-main()
 
 </script>
 
