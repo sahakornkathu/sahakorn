@@ -3,7 +3,7 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<title>Member Profile</title>
+<title>LINE Mini App Member</title>
 
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
@@ -12,28 +12,27 @@
 <style>
 
 body{
-font-family:sans-serif;
-background:#f5f6fa;
+font-family:Arial;
+background:#f4f6f9;
 padding:30px;
 }
 
 .card{
-max-width:500px;
+max-width:520px;
 margin:auto;
 background:white;
 padding:30px;
-border-radius:15px;
-box-shadow:0 10px 25px rgba(0,0,0,0.1);
+border-radius:16px;
+box-shadow:0 8px 20px rgba(0,0,0,0.1);
 }
 
 .profile{
 text-align:center;
-margin-bottom:20px;
 }
 
 .profile img{
-width:100px;
-height:100px;
+width:110px;
+height:110px;
 border-radius:50%;
 }
 
@@ -43,14 +42,23 @@ font-weight:bold;
 margin-top:10px;
 }
 
-.info{
-margin-top:20px;
+.section{
+margin-top:25px;
 line-height:1.8;
 }
 
 .label{
 font-weight:bold;
-color:#555;
+color:#444;
+}
+
+.debug{
+margin-top:25px;
+background:#111;
+color:#0f0;
+padding:12px;
+font-size:12px;
+border-radius:8px;
 }
 
 </style>
@@ -65,13 +73,19 @@ color:#555;
 
 <img id="profilePic">
 
-<div class="name" id="displayName"></div>
+<div class="name" id="displayName">Loading...</div>
 
 </div>
 
-<div class="info" id="memberInfo">
+<div class="section" id="memberInfo">
 
 กำลังโหลดข้อมูลสมาชิก...
+
+</div>
+
+<div class="debug" id="debugPanel">
+
+DEBUG...
 
 </div>
 
@@ -79,7 +93,8 @@ color:#555;
 
 <script>
 
-const LIFF_ID = "2009012101-mBy1yERI"
+const LIFF_ID = "2009012101-mBy1yERI
+"
 
 const supabase = window.supabase.createClient(
 "https://ttottijljxoinptmhgtu.supabase.co",
@@ -97,10 +112,14 @@ return
 
 const profile = await liff.getProfile()
 
+const userId = profile.userId
+
 document.getElementById("profilePic").src = profile.pictureUrl
 document.getElementById("displayName").innerText = profile.displayName
 
-loadMember(profile.userId)
+debug("LINE USER ID : "+userId)
+
+loadMember(userId)
 
 }
 
@@ -110,42 +129,68 @@ const { data, error } = await supabase
 .from("members")
 .select("*")
 .eq("line_user_id", userId)
-.single()
 
-if(error || !data){
+debug("SUPABASE RESULT : "+JSON.stringify(data))
+
+if(error){
+
+debug("SUPABASE ERROR : "+error.message)
 
 document.getElementById("memberInfo").innerHTML =
-"ไม่พบข้อมูลสมาชิก"
+"เกิดข้อผิดพลาดในการโหลดข้อมูล"
 
 return
 
 }
 
+if(!data || data.length === 0){
+
+document.getElementById("memberInfo").innerHTML =
+"❌ ไม่พบสมาชิกที่เชื่อม LINE นี้"
+
+return
+
+}
+
+const m = data[0]
+
 document.getElementById("memberInfo").innerHTML = `
 
-<div><span class="label">รหัสสมาชิก:</span> ${data.member_id}</div>
+<div><span class="label">รหัสสมาชิก :</span> ${m.member_id}</div>
 
-<div><span class="label">ชื่อ:</span> ${data.title} ${data.first_name} ${data.last_name}</div>
+<div><span class="label">ชื่อ :</span> ${m.title} ${m.first_name} ${m.last_name}</div>
 
-<div><span class="label">เลขบัตร:</span> ${data.id_card}</div>
+<div><span class="label">เลขบัตรประชาชน :</span> ${m.id_card}</div>
 
-<div><span class="label">เบอร์โทร:</span> ${data.phone}</div>
+<div><span class="label">เบอร์โทร :</span> ${m.phone}</div>
 
-<div><span class="label">ที่อยู่:</span> 
-${data.house_no} หมู่ ${data.moo} 
-${data.soi ?? ""} 
-${data.street ?? ""} 
-${data.subdistrict} 
-${data.district} 
-${data.province} 
+<div><span class="label">สถานะสมาชิก :</span> ${m.member_status}</div>
 
+<div><span class="label">กลุ่ม :</span> ${m.group}</div>
+
+<div><span class="label">ที่อยู่ :</span>
+${m.house_no} หมู่ ${m.moo}
+${m.soi ?? ""}
+${m.street ?? ""}
+${m.subdistrict}
+${m.district}
+${m.province}
+${m.postal_code}
 </div>
 
-<div><span class="label">สถานะสมาชิก:</span> ${data.member_status}</div>
-
-<div><span class="label">กลุ่ม:</span> ${data.group}</div>
-
 `
+
+debug("MATCH MEMBER ID : "+m.member_id)
+
+}
+
+function debug(msg){
+
+const el = document.getElementById("debugPanel")
+
+el.innerHTML += "<br>"+msg
+
+console.log(msg)
 
 }
 
