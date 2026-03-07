@@ -1,47 +1,56 @@
 <!DOCTYPE html>
+
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<title>LINE Mini App Profile</title>
+<title>Member Profile</title>
 
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
 
 body{
 font-family:sans-serif;
-background:#f3f4f6;
-display:flex;
-justify-content:center;
-align-items:center;
-height:100vh;
+background:#f5f6fa;
+padding:30px;
 }
 
 .card{
+max-width:500px;
+margin:auto;
 background:white;
 padding:30px;
-border-radius:16px;
-text-align:center;
-box-shadow:0 10px 30px rgba(0,0,0,0.1);
-width:320px;
+border-radius:15px;
+box-shadow:0 10px 25px rgba(0,0,0,0.1);
 }
 
-img{
-width:120px;
-height:120px;
+.profile{
+text-align:center;
+margin-bottom:20px;
+}
+
+.profile img{
+width:100px;
+height:100px;
 border-radius:50%;
-margin-bottom:15px;
 }
 
 .name{
 font-size:22px;
 font-weight:bold;
-margin-bottom:5px;
+margin-top:10px;
 }
 
-.userid{
-font-size:12px;
-color:#666;
+.info{
+margin-top:20px;
+line-height:1.8;
+}
+
+.label{
+font-weight:bold;
+color:#555;
 }
 
 </style>
@@ -52,21 +61,34 @@ color:#666;
 
 <div class="card">
 
+<div class="profile">
+
 <img id="profilePic">
 
-<div class="name" id="displayName">Loading...</div>
+<div class="name" id="displayName"></div>
 
-<div class="userid" id="userId"></div>
+</div>
+
+<div class="info" id="memberInfo">
+
+กำลังโหลดข้อมูลสมาชิก...
+
+</div>
 
 </div>
 
 <script>
 
+const LIFF_ID = "2009012101-mBy1yERI"
+
+const supabase = window.supabase.createClient(
+"https://ttottijljxoinptmhgtu.supabase.co",
+"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y"
+)
+
 async function main(){
 
-await liff.init({
-liffId:"2009012101-mBy1yERI"
-})
+await liff.init({ liffId: LIFF_ID })
 
 if(!liff.isLoggedIn()){
 liff.login()
@@ -76,10 +98,54 @@ return
 const profile = await liff.getProfile()
 
 document.getElementById("profilePic").src = profile.pictureUrl
-
 document.getElementById("displayName").innerText = profile.displayName
 
-document.getElementById("userId").innerText = profile.userId
+loadMember(profile.userId)
+
+}
+
+async function loadMember(userId){
+
+const { data, error } = await supabase
+.from("members")
+.select("*")
+.eq("line_user_id", userId)
+.single()
+
+if(error || !data){
+
+document.getElementById("memberInfo").innerHTML =
+"ไม่พบข้อมูลสมาชิก"
+
+return
+
+}
+
+document.getElementById("memberInfo").innerHTML = `
+
+<div><span class="label">รหัสสมาชิก:</span> ${data.member_id}</div>
+
+<div><span class="label">ชื่อ:</span> ${data.title} ${data.first_name} ${data.last_name}</div>
+
+<div><span class="label">เลขบัตร:</span> ${data.id_card}</div>
+
+<div><span class="label">เบอร์โทร:</span> ${data.phone}</div>
+
+<div><span class="label">ที่อยู่:</span> 
+${data.house_no} หมู่ ${data.moo} 
+${data.soi ?? ""} 
+${data.street ?? ""} 
+${data.subdistrict} 
+${data.district} 
+${data.province} 
+${data.postal_code}
+</div>
+
+<div><span class="label">สถานะสมาชิก:</span> ${data.member_status}</div>
+
+<div><span class="label">กลุ่ม:</span> ${data.group}</div>
+
+`
 
 }
 
