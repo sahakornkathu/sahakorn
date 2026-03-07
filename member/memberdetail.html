@@ -3,7 +3,7 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<title>Supabase Test</title>
+<title>Supabase Member Test</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -11,7 +11,7 @@
 
 body{
 font-family:sans-serif;
-background:#f3f4f6;
+background:#f4f6f9;
 padding:40px;
 }
 
@@ -68,7 +68,7 @@ border-radius:8px;
 
 <input id="lineid" placeholder="ใส่ LINE USER ID">
 
-<button onclick="searchMember()">ค้นหาสมาชิก</button>
+<button id="btnSearch">ค้นหาสมาชิก</button>
 
 <div class="result" id="result"></div>
 
@@ -78,23 +78,34 @@ border-radius:8px;
 
 <script>
 
-const supabase = window.supabase.createClient(
-"https://ttottijljxoinptmhgtu.supabase.co",
-"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y"
+const SUPABASE_URL = "https://ttottijljxoinptmhgtu.supabase.co"
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y"
+
+const sb = window.supabase.createClient(
+SUPABASE_URL,
+SUPABASE_KEY
 )
+
+document.getElementById("btnSearch").addEventListener("click", searchMember)
 
 async function searchMember(){
 
-const lineid = document.getElementById("lineid").value
+const lineid = document.getElementById("lineid").value.trim()
 
-debug("Searching : "+lineid)
+debug("Searching line_user_id : "+lineid)
 
-const { data, error } = await supabase
+if(!lineid){
+
+alert("กรุณาใส่ LINE USER ID")
+
+return
+
+}
+
+const { data, error } = await sb
 .from("members")
 .select("*")
 .eq("line_user_id", lineid)
-
-debug("Result : "+JSON.stringify(data))
 
 if(error){
 
@@ -104,9 +115,12 @@ return
 
 }
 
-if(!data || data.length == 0){
+debug("RESULT : "+JSON.stringify(data))
 
-document.getElementById("result").innerHTML = "ไม่พบสมาชิก"
+if(!data || data.length === 0){
+
+document.getElementById("result").innerHTML =
+"<b>ไม่พบสมาชิก</b>"
 
 return
 
@@ -114,20 +128,25 @@ return
 
 const m = data[0]
 
-document.getElementById("result").innerHTML = `
+document.getElementById("result").innerHTML =
 
-<div>รหัสสมาชิก : ${m.member_id}</div>
-<div>ชื่อ : ${m.title} ${m.first_name} ${m.last_name}</div>
-<div>เลขบัตร : ${m.id_card}</div>
-<div>เบอร์โทร : ${m.phone}</div>
-
+`
+<div><b>รหัสสมาชิก :</b> ${m.member_id}</div>
+<div><b>ชื่อ :</b> ${m.title} ${m.first_name} ${m.last_name}</div>
+<div><b>เลขบัตร :</b> ${m.id_card}</div>
+<div><b>เบอร์โทร :</b> ${m.phone ?? "-"}</div>
+<div><b>สถานะ :</b> ${m.member_status}</div>
 `
 
 }
 
 function debug(msg){
 
-document.getElementById("debug").innerHTML += "<br>"+msg
+const el = document.getElementById("debug")
+
+el.innerHTML += "<br>"+msg
+
+console.log(msg)
 
 }
 
