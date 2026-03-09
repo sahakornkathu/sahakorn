@@ -98,6 +98,10 @@ border-bottom:2px solid #eee;
 padding-bottom:5px;
 }
 
+hr{
+margin:12px 0;
+}
+
 </style>
 
 </head>
@@ -126,6 +130,27 @@ const sb = window.supabase.createClient(
 
 let member = null
 
+
+function formatThaiDate(dateStr){
+
+if(!dateStr) return ""
+
+const months = [
+"มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน",
+"กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"
+]
+
+const d = new Date(dateStr)
+
+const day = d.getDate()
+const month = months[d.getMonth()]
+const year = d.getFullYear() + 543
+
+return `${day} ${month} ${year}`
+
+}
+
+
 async function init(){
 
 await liff.init({ liffId: LIFF_ID })
@@ -143,6 +168,7 @@ document.getElementById("lineName").innerText = profile.displayName
 loadMember(profile.userId)
 
 }
+
 
 async function loadMember(userId){
 
@@ -167,6 +193,7 @@ renderView()
 
 }
 
+
 function renderView(){
 
 document.getElementById("memberData").innerHTML = `
@@ -183,7 +210,11 @@ document.getElementById("memberData").innerHTML = `
 
 <div class="row"><span class="label">สถานะ :</span> ${member.member_status ?? ""}</div>
 
-<div class="row"><span class="label">วันสมัคร :</span> ${member.join_date ?? ""}</div>
+<div class="row"><span class="label">วันสมัคร :</span> ${formatThaiDate(member.join_date)}</div>
+
+<div class="row"><span class="label">เลขบัตรประชาชน :</span> ${member.id_card ?? ""}</div>
+
+<div class="row"><span class="label">วันเกิด :</span> ${formatThaiDate(member.birthday)}</div>
 
 <hr>
 
@@ -216,6 +247,7 @@ document.getElementById("memberData").innerHTML = `
 `
 }
 
+
 function renderEdit(){
 
 document.getElementById("memberData").innerHTML = `
@@ -227,6 +259,10 @@ document.getElementById("memberData").innerHTML = `
 <div class="row"><span class="label">รหัสสมาชิก :</span> ${member.member_id}</div>
 
 <div class="row"><span class="label">กลุ่ม :</span> ${member.group ?? ""}</div>
+
+<div class="row"><span class="label">เลขบัตรประชาชน :</span> ${member.id_card ?? ""}</div>
+
+<div class="row"><span class="label">วันเกิด :</span> ${formatThaiDate(member.birthday)}</div>
 
 <hr>
 
@@ -271,6 +307,7 @@ document.getElementById("memberData").innerHTML = `
 `
 }
 
+
 async function saveMember(){
 
 await sb
@@ -297,6 +334,7 @@ alert("บันทึกข้อมูลสำเร็จ")
 loadMember(member.line_user_id)
 
 }
+
 
 function showError(msg){
 
