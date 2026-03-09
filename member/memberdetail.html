@@ -512,6 +512,9 @@ document.getElementById("app").innerHTML=`
 <label>นามสกุล</label>
 <input id="last_name" value="${member.last_name}">
 
+<label>วันเกิด</label>
+<input type="date" id="birthday" value="${member.birthday ?? ""}">
+
 <label>เบอร์โทร</label>
 <input id="phone" value="${member.phone ?? ""}">
 
