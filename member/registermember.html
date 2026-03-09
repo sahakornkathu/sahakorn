@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<title>ลงทะเบียน LINE</title>
+
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+
+body{
+font-family:sans-serif;
+background:#f3f4f6;
+padding:20px;
+}
+
+.container{
+max-width:500px;
+margin:auto;
+}
+
+.card{
+background:white;
+padding:20px;
+border-radius:12px;
+box-shadow:0 4px 12px rgba(0,0,0,0.1);
+}
+
+h3{
+margin-top:0;
+}
+
+input{
+width:100%;
+padding:10px;
+margin-top:10px;
+border:1px solid #ccc;
+border-radius:6px;
+}
+
+button{
+margin-top:10px;
+padding:10px;
+background:#06c755;
+border:none;
+color:white;
+border-radius:6px;
+width:100%;
+}
+
+.error{
+color:red;
+margin-top:10px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<div id="app"></div>
+
+</div>
+
+<script>
+
+const LIFF_ID="1660910795-lqG2kvea"
+
+const sb=window.supabase.createClient(
+"https://ttottijljxoinptmhgtu.supabase.co",
+"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y"
+)
+
+let LINE_USER_ID=null
+
+async function init(){
+
+await liff.init({liffId:LIFF_ID})
+
+if(!liff.isLoggedIn()){
+liff.login()
+return
+}
+
+const profile=await liff.getProfile()
+
+LINE_USER_ID=profile.userId
+
+checkLineUser()
+
+}
+
+async function checkLineUser(){
+
+const {data}=await sb
+.from("members")
+.select("*")
+.eq("line_user_id",LINE_USER_ID)
+
+if(data && data.length>0){
+
+checkStatus(data[0])
+
+}else{
+
+showRegister()
+
+}
+
+}
+
+function showRegister(){
+
+document.getElementById("app").innerHTML=`
+
+<div class="card">
+
+<h3>ลงทะเบียน LINE</h3>
+
+<p>กรอกเลขบัตรประชาชนเพื่อเชื่อมบัญชี LINE</p>
+
+<input id="idcard" placeholder="เลขบัตรประชาชน 13 หลัก">
+
+<button onclick="register()">ลงทะเบียน</button>
+
+<div id="error" class="error"></div>
+
+</div>
+
+`
+
+}
+
+async function register(){
+
+const idcard=document.getElementById("idcard").value
+
+if(idcard.length!=13){
+
+document.getElementById("error").innerText="เลขบัตรไม่ถูกต้อง"
+
+return
+
+}
+
+const {data}=await sb
+.from("members")
+.select("*")
+.eq("id_card",idcard)
+
+if(!data || data.length===0){
+
+document.getElementById("error").innerText="ไม่พบข้อมูลสมาชิก"
+
+return
+
+}
+
+await sb
+.from("members")
+.update({
+line_user_id:LINE_USER_ID,
+line_register_status:"pending",
+line_register_date:new Date()
+})
+.eq("id_card",idcard)
+
+showPending()
+
+}
+
+function showPending(){
+
+document.getElementById("app").innerHTML=`
+
+<div class="card">
+
+<h3>รอการอนุมัติ</h3>
+
+<p>ระบบได้รับข้อมูลของคุณแล้ว</p>
+
+<p>กรุณารอผู้ดูแลอนุมัติการใช้งาน</p>
+
+</div>
+
+`
+
+}
+
+function checkStatus(member){
+
+if(member.line_register_status==="approved"){
+
+showProfile(member)
+
+}else{
+
+showPending()
+
+}
+
+}
+
+function showProfile(member){
+
+document.getElementById("app").innerHTML=`
+
+<div class="card">
+
+<h3>ข้อมูลสมาชิก</h3>
+
+<div>รหัสสมาชิก : ${member.member_id}</div>
+
+<div>ชื่อ : ${member.first_name} ${member.last_name}</div>
+
+<div>กลุ่ม : ${member.group}</div>
+
+</div>
+
+`
+
+}
+
+init()
+
+</script>
+
+</body>
+</html>
