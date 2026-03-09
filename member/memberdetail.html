@@ -25,6 +25,8 @@ max-width:480px;
 margin:auto;
 }
 
+/* PROFILE HEADER */
+
 .header{
 text-align:center;
 padding:26px 15px;
@@ -43,6 +45,8 @@ border:4px solid white;
 margin-bottom:8px;
 }
 
+/* CARD */
+
 .card{
 background:white;
 border-radius:14px;
@@ -56,6 +60,8 @@ margin-top:0;
 font-size:16px;
 }
 
+/* ROW */
+
 .row{
 display:flex;
 justify-content:space-between;
@@ -67,6 +73,8 @@ border-bottom:1px solid #eee;
 .row:last-child{
 border-bottom:none;
 }
+
+/* BUTTON */
 
 button{
 border:none;
@@ -89,6 +97,8 @@ width:100%;
 margin-top:10px;
 }
 
+/* EDIT BUTTON */
+
 .edit-btn{
 position:absolute;
 top:12px;
@@ -98,6 +108,8 @@ color:white;
 padding:8px 10px;
 font-size:13px;
 }
+
+/* INPUT */
 
 input{
 width:100%;
@@ -229,7 +241,7 @@ document.documentElement.classList.add("dark")
 
 }
 
-/* DATE FORMAT */
+/* DATE */
 
 function thaiDate(date){
 
@@ -337,14 +349,10 @@ const {data}=await sb
 .maybeSingle()
 
 if(data){
-
 member=data
 showProfile()
-
 }else{
-
 showBindPage()
-
 }
 
 }
@@ -491,6 +499,22 @@ document.getElementById("app").innerHTML=`
 
 </div>
 
+
+<div class="card">
+
+<h3>📍 ที่อยู่</h3>
+
+<div class="row"><b>บ้านเลขที่ :</b> ${member.house_no ?? ""}</div>
+<div class="row"><b>หมู่ :</b> ${member.moo ?? ""}</div>
+<div class="row"><b>ซอย :</b> ${member.soi ?? ""}</div>
+<div class="row"><b>ตำบล :</b> ${member.subdistrict ?? ""}</div>
+<div class="row"><b>อำเภอ :</b> ${member.district ?? ""}</div>
+<div class="row"><b>จังหวัด :</b> ${member.province ?? ""}</div>
+
+<button class="danger" onclick="unbind()">ยกเลิกผูกบัญชี LINE</button>
+
+</div>
+
 </div>
 
 
@@ -527,10 +551,28 @@ document.getElementById("app").innerHTML=`
 <input id="last_name" value="${member.last_name}">
 
 <label>วันเกิด (พ.ศ.)</label>
-<input id="birthday" value="${formatThaiDateInput(member.birthday)}" placeholder="dd/mm/yyyy">
+<input id="birthday" value="${formatThaiDateInput(member.birthday)}">
 
 <label>เบอร์โทร</label>
 <input id="phone" value="${member.phone ?? ""}">
+
+<label>บ้านเลขที่</label>
+<input id="house_no" value="${member.house_no ?? ""}">
+
+<label>หมู่</label>
+<input id="moo" value="${member.moo ?? ""}">
+
+<label>ซอย</label>
+<input id="soi" value="${member.soi ?? ""}">
+
+<label>ตำบล</label>
+<input id="subdistrict" value="${member.subdistrict ?? ""}">
+
+<label>อำเภอ</label>
+<input id="district" value="${member.district ?? ""}">
+
+<label>จังหวัด</label>
+<input id="province" value="${member.province ?? ""}">
 
 <button class="primary" onclick="saveMember()">บันทึก</button>
 
@@ -549,12 +591,35 @@ await sb
 first_name:document.getElementById("first_name").value,
 last_name:document.getElementById("last_name").value,
 birthday:convertThaiToISO(document.getElementById("birthday").value),
-phone:document.getElementById("phone").value
+phone:document.getElementById("phone").value,
+house_no:document.getElementById("house_no").value,
+moo:document.getElementById("moo").value,
+soi:document.getElementById("soi").value,
+subdistrict:document.getElementById("subdistrict").value,
+district:document.getElementById("district").value,
+province:document.getElementById("province").value
 
 })
 .eq("line_user_id",userId)
 
 checkBind()
+
+}
+
+async function unbind(){
+
+if(!confirm("ต้องการยกเลิกผูกบัญชี LINE ?")) return
+
+await sb
+.from("members")
+.update({
+line_user_id:null,
+line_display_name:null,
+line_picture:null
+})
+.eq("line_user_id",userId)
+
+location.reload()
 
 }
 
