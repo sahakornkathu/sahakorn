@@ -3,7 +3,7 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<title>Member Mini App</title>
+<title>ผูกบัญชี LINE</title>
 
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
@@ -13,12 +13,12 @@
 
 body{
 font-family:sans-serif;
-background:#f3f4f6;
+background:#f4f6f9;
 padding:20px;
 }
 
 .container{
-max-width:600px;
+max-width:500px;
 margin:auto;
 }
 
@@ -26,80 +26,25 @@ margin:auto;
 background:white;
 padding:20px;
 border-radius:12px;
-box-shadow:0 6px 18px rgba(0,0,0,0.08);
-margin-bottom:15px;
-position:relative;
-}
-
-.profile{
-text-align:center;
-}
-
-.profile img{
-width:90px;
-height:90px;
-border-radius:50%;
-}
-
-.name{
-font-size:20px;
-font-weight:bold;
-margin-top:10px;
-}
-
-.row{
-margin-bottom:8px;
-}
-
-.label{
-font-weight:bold;
-color:#555;
+box-shadow:0 4px 12px rgba(0,0,0,0.1);
 }
 
 input{
 width:100%;
-padding:8px;
+padding:10px;
+margin-top:10px;
 border:1px solid #ccc;
 border-radius:6px;
-margin-bottom:8px;
 }
 
 button{
-padding:8px 12px;
-border:none;
+margin-top:10px;
+padding:10px;
 background:#06c755;
+border:none;
 color:white;
-border-radius:8px;
-cursor:pointer;
-}
-
-button.cancel{
-background:#888;
-margin-left:5px;
-}
-
-.edit-btn{
-position:absolute;
-top:15px;
-right:15px;
-}
-
-.error{
-color:red;
-font-weight:bold;
-text-align:center;
-}
-
-h3{
-margin-top:0;
-margin-bottom:10px;
-color:#06c755;
-border-bottom:2px solid #eee;
-padding-bottom:5px;
-}
-
-hr{
-margin:12px 0;
+border-radius:6px;
+width:100%;
 }
 
 </style>
@@ -110,236 +55,140 @@ margin:12px 0;
 
 <div class="container">
 
-<div class="card profile">
-<img id="linePic">
-<div class="name" id="lineName">Loading...</div>
-</div>
-
-<div id="memberData"></div>
+<div id="app"></div>
 
 </div>
 
 <script>
 
-const LIFF_ID = "1660910795-ZwhoBm8e"
+const LIFF_ID="1660910795-ZwhoBm8e"
 
 const sb = window.supabase.createClient(
 "https://ttottijljxoinptmhgtu.supabase.co",
 "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y"
 )
 
-let member = null
-
-
-function formatThaiDate(dateStr){
-
-if(!dateStr) return ""
-
-const months = [
-"มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน",
-"กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"
-]
-
-const d = new Date(dateStr)
-
-const day = d.getDate()
-const month = months[d.getMonth()]
-const year = d.getFullYear() + 543
-
-return `${day} ${month} ${year}`
-
-}
-
+let userId
+let profile
 
 async function init(){
 
-await liff.init({ liffId: LIFF_ID })
+await liff.init({liffId:LIFF_ID})
 
 if(!liff.isLoggedIn()){
 liff.login()
 return
 }
 
-const profile = await liff.getProfile()
+profile = await liff.getProfile()
 
-document.getElementById("linePic").src = profile.pictureUrl
-document.getElementById("lineName").innerText = profile.displayName
+userId = profile.userId
 
-loadMember(profile.userId)
+checkBind()
 
 }
 
+async function checkBind(){
 
-async function loadMember(userId){
-
-const { data, error } = await sb
+const {data}=await sb
 .from("members")
 .select("*")
-.eq("line_user_id", userId)
+.eq("line_user_id",userId)
 
-if(error){
-showError("Database error")
-return
-}
+if(data.length>0){
 
-if(!data || data.length === 0){
-showError("ไม่พบสมาชิกที่เชื่อมกับ LINE นี้")
-return
-}
+showProfile(data[0])
 
-member = data[0]
+}else{
 
-renderView()
+showBindPage()
 
 }
 
+}
 
-function renderView(){
+function showBindPage(){
 
-document.getElementById("memberData").innerHTML = `
+document.getElementById("app").innerHTML=`
 
 <div class="card">
 
-<button class="edit-btn" onclick="renderEdit()">แก้ไข</button>
+<h3>ผูกบัญชี LINE</h3>
 
-<h3>ข้อมูลสมาชิก</h3>
+<p>กรอกเลขบัตรประชาชนสมาชิก</p>
 
-<div class="row"><span class="label">รหัสสมาชิก :</span> ${member.member_id}</div>
+<input id="idcard" placeholder="เลขบัตรประชาชน">
 
-<div class="row"><span class="label">กลุ่ม :</span> ${member.group ?? ""}</div>
-
-<div class="row"><span class="label">สถานะ :</span> ${member.member_status ?? ""}</div>
-
-<div class="row"><span class="label">วันสมัคร :</span> ${formatThaiDate(member.join_date)}</div>
-
-<div class="row"><span class="label">เลขบัตรประชาชน :</span> ${member.id_card ?? ""}</div>
-
-<div class="row"><span class="label">วันเกิด :</span> ${formatThaiDate(member.birthday)}</div>
-
-<hr>
-
-<div class="row"><span class="label">ชื่อ :</span> ${member.first_name}</div>
-
-<div class="row"><span class="label">นามสกุล :</span> ${member.last_name}</div>
-
-<div class="row"><span class="label">เบอร์โทร :</span> ${member.phone ?? ""}</div>
-
-<hr>
-
-<div class="row"><span class="label">บ้านเลขที่ :</span> ${member.house_no ?? ""}</div>
-
-<div class="row"><span class="label">หมู่ :</span> ${member.moo ?? ""}</div>
-
-<div class="row"><span class="label">ซอย :</span> ${member.soi ?? ""}</div>
-
-<div class="row"><span class="label">ถนน :</span> ${member.street ?? ""}</div>
-
-<div class="row"><span class="label">ตำบล :</span> ${member.subdistrict ?? ""}</div>
-
-<div class="row"><span class="label">อำเภอ :</span> ${member.district ?? ""}</div>
-
-<div class="row"><span class="label">จังหวัด :</span> ${member.province ?? ""}</div>
-
-<div class="row"><span class="label">รหัสไปรษณีย์ :</span> ${member.postal_code ?? ""}</div>
+<button onclick="bind()">ผูกบัญชี</button>
 
 </div>
 
 `
+
 }
 
+async function bind(){
 
-function renderEdit(){
+const idcard=document.getElementById("idcard").value
 
-document.getElementById("memberData").innerHTML = `
+const {data}=await sb
+.from("members")
+.select("*")
+.eq("id_card",idcard)
 
-<div class="card">
+if(data.length==0){
 
-<h3>แก้ไขข้อมูลสมาชิก</h3>
+alert("ไม่พบข้อมูลสมาชิก")
 
-<div class="row"><span class="label">รหัสสมาชิก :</span> ${member.member_id}</div>
+return
 
-<div class="row"><span class="label">กลุ่ม :</span> ${member.group ?? ""}</div>
-
-<div class="row"><span class="label">เลขบัตรประชาชน :</span> ${member.id_card ?? ""}</div>
-
-<div class="row"><span class="label">วันเกิด :</span> ${formatThaiDate(member.birthday)}</div>
-
-<hr>
-
-<label>ชื่อ</label>
-<input id="first_name" value="${member.first_name}">
-
-<label>นามสกุล</label>
-<input id="last_name" value="${member.last_name}">
-
-<label>เบอร์โทร</label>
-<input id="phone" value="${member.phone ?? ""}">
-
-<label>บ้านเลขที่</label>
-<input id="house_no" value="${member.house_no ?? ""}">
-
-<label>หมู่</label>
-<input id="moo" value="${member.moo ?? ""}">
-
-<label>ซอย</label>
-<input id="soi" value="${member.soi ?? ""}">
-
-<label>ถนน</label>
-<input id="street" value="${member.street ?? ""}">
-
-<label>ตำบล</label>
-<input id="subdistrict" value="${member.subdistrict ?? ""}">
-
-<label>อำเภอ</label>
-<input id="district" value="${member.district ?? ""}">
-
-<label>จังหวัด</label>
-<input id="province" value="${member.province ?? ""}">
-
-<label>รหัสไปรษณีย์</label>
-<input id="postal_code" value="${member.postal_code ?? ""}">
-
-<button onclick="saveMember()">บันทึก</button>
-<button class="cancel" onclick="renderView()">ยกเลิก</button>
-
-</div>
-
-`
 }
 
+if(data[0].line_user_id){
 
-async function saveMember(){
+alert("สมาชิกนี้ผูก LINE แล้ว")
+
+return
+
+}
 
 await sb
 .from("members")
 .update({
 
-first_name:document.getElementById("first_name").value,
-last_name:document.getElementById("last_name").value,
-phone:document.getElementById("phone").value,
-house_no:document.getElementById("house_no").value,
-moo:document.getElementById("moo").value,
-soi:document.getElementById("soi").value,
-street:document.getElementById("street").value,
-subdistrict:document.getElementById("subdistrict").value,
-district:document.getElementById("district").value,
-province:document.getElementById("province").value,
-postal_code:document.getElementById("postal_code").value
+line_user_id:userId,
+line_display_name:profile.displayName,
+line_picture:profile.pictureUrl,
+line_bind_date:new Date()
 
 })
-.eq("member_id", member.member_id)
+.eq("id_card",idcard)
 
-alert("บันทึกข้อมูลสำเร็จ")
-
-loadMember(member.line_user_id)
+checkBind()
 
 }
 
+function showProfile(member){
 
-function showError(msg){
+document.getElementById("app").innerHTML=`
 
-document.getElementById("memberData").innerHTML =
-`<div class="card error">${msg}</div>`
+<div class="card">
+
+<h3>ข้อมูลสมาชิก</h3>
+
+<img src="${member.line_picture}" width="80" style="border-radius:50%">
+
+<p>${member.first_name} ${member.last_name}</p>
+
+<p>รหัสสมาชิก : ${member.member_id}</p>
+
+<p>กลุ่ม : ${member.group}</p>
+
+<p>เบอร์โทร : ${member.phone ?? ""}</p>
+
+</div>
+
+`
 
 }
 
