@@ -47,12 +47,29 @@ margin-top:10px;
 }
 
 .row{
-margin-bottom:8px;
+margin-bottom:10px;
 }
 
 .label{
 font-weight:bold;
 color:#555;
+}
+
+input{
+width:100%;
+padding:8px;
+border:1px solid #ccc;
+border-radius:6px;
+}
+
+button{
+margin-top:10px;
+padding:10px 14px;
+border:none;
+background:#06c755;
+color:white;
+border-radius:8px;
+cursor:pointer;
 }
 
 .error{
@@ -90,16 +107,15 @@ const sb = window.supabase.createClient(
 "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y"
 )
 
+let memberId = null
+
 async function init(){
 
 await liff.init({ liffId: LIFF_ID })
 
 if(!liff.isLoggedIn()){
-
 liff.login()
-
 return
-
 }
 
 const profile = await liff.getProfile()
@@ -107,31 +123,22 @@ const profile = await liff.getProfile()
 document.getElementById("linePic").src = profile.pictureUrl
 document.getElementById("lineName").innerText = profile.displayName
 
-checkMember(profile.userId)
+loadMember(profile.userId)
 
 }
 
-async function checkMember(userId){
+async function loadMember(userId){
 
-const { data, error } = await sb
+const { data } = await sb
 .from("members")
 .select("*")
 .eq("line_user_id", userId)
 
-if(error){
-
-showError("Database error")
-
-return
-
-}
-
 if(!data || data.length === 0){
 
-showError("ไม่พบสมาชิกที่ผูกกับ LINE นี้")
+showError("ไม่พบสมาชิก")
 
 return
-
 }
 
 renderMember(data[0])
@@ -140,37 +147,102 @@ renderMember(data[0])
 
 function renderMember(m){
 
-document.getElementById("memberData").innerHTML =
+memberId = m.member_id
 
-`
+document.getElementById("memberData").innerHTML = `
+
 <div class="card">
 
-<div class="row"><span class="label">รหัสสมาชิก :</span> ${m.member_id}</div>
+<div class="row">
 
-<div class="row"><span class="label">ชื่อ :</span> ${m.title} ${m.first_name} ${m.last_name}</div>
+<span class="label">ชื่อ</span>
 
-<div class="row"><span class="label">เลขบัตร :</span> ${m.id_card}</div>
-
-<div class="row"><span class="label">วันสมัคร :</span> ${m.join_date}</div>
-
-<div class="row"><span class="label">สถานะ :</span> ${m.member_status}</div>
-
-<div class="row"><span class="label">เบอร์โทร :</span> ${m.phone}</div>
-
-<div class="row"><span class="label">ที่อยู่ :</span>
-
-${m.house_no} หมู่ ${m.moo}
-${m.soi ?? ""}
-${m.street ?? ""}
-${m.subdistrict}
-${m.district}
-${m.province}
-${m.postal_code}
+<input id="first_name" value="${m.first_name}">
 
 </div>
+
+<div class="row">
+
+<span class="label">นามสกุล</span>
+
+<input id="last_name" value="${m.last_name}">
+
+</div>
+
+<div class="row">
+
+<span class="label">เบอร์โทร</span>
+
+<input id="phone" value="${m.phone ?? ""}">
+
+</div>
+
+<div class="row">
+
+<span class="label">บ้านเลขที่</span>
+
+<input id="house_no" value="${m.house_no ?? ""}">
+
+</div>
+
+<div class="row">
+
+<span class="label">หมู่</span>
+
+<input id="moo" value="${m.moo ?? ""}">
+
+</div>
+
+<div class="row">
+
+<span class="label">ตำบล</span>
+
+<input id="subdistrict" value="${m.subdistrict ?? ""}">
+
+</div>
+
+<div class="row">
+
+<span class="label">อำเภอ</span>
+
+<input id="district" value="${m.district ?? ""}">
+
+</div>
+
+<div class="row">
+
+<span class="label">จังหวัด</span>
+
+<input id="province" value="${m.province ?? ""}">
+
+</div>
+
+<button onclick="saveMember()">บันทึกข้อมูล</button>
 
 </div>
 `
+
+}
+
+async function saveMember(){
+
+await sb
+.from("members")
+.update({
+
+first_name:document.getElementById("first_name").value,
+last_name:document.getElementById("last_name").value,
+phone:document.getElementById("phone").value,
+house_no:document.getElementById("house_no").value,
+moo:document.getElementById("moo").value,
+subdistrict:document.getElementById("subdistrict").value,
+district:document.getElementById("district").value,
+province:document.getElementById("province").value
+
+})
+.eq("member_id", memberId)
+
+alert("บันทึกข้อมูลสำเร็จ")
 
 }
 
