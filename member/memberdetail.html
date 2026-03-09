@@ -420,6 +420,7 @@ const {data}=await sb
 .from("member_meeting")
 .select("*")
 .eq("member_id",member.member_id)
+.order("fiscal_year",{ascending:false})
 .order("meeting_date",{ascending:false})
 
 if(!data || data.length===0){
@@ -427,15 +428,35 @@ return "<div>ยังไม่มีข้อมูลประชุม</div>"
 }
 
 let html=""
+let currentYear=null
 
 data.forEach(m=>{
 
+if(currentYear!==m.fiscal_year){
+
+currentYear=m.fiscal_year
+
 html+=`
 
-<div class="row"><b>ปีงบประมาณ :</b> ${m.fiscal_year}</div>
-<div class="row"><b>ประเภทประชุม :</b> ${m.meeting_type}</div>
-<div class="row"><b>วันที่ประชุม :</b> ${thaiDate(m.meeting_date)}</div>
-<hr>
+<div style="
+font-weight:bold;
+margin-top:10px;
+margin-bottom:6px;
+color:#06c755;
+">
+ปีบัญชี ${currentYear}
+</div>
+
+`
+
+}
+
+html+=`
+
+<div class="row">
+<span>${m.meeting_type}</span>
+<span>${thaiDate(m.meeting_date)}</span>
+</div>
 
 `
 
