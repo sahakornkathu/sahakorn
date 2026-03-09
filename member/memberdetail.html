@@ -104,6 +104,12 @@ border-radius:6px;
 display:none;
 }
 
+  label{
+display:block;
+margin-top:10px;
+font-weight:bold;
+font-size:14px;
+}
 </style>
 
 </head>
@@ -357,27 +363,43 @@ document.getElementById("app").innerHTML=`
 
 <div class="card">
 
-<h3>แก้ไขข้อมูลสมาชิก</h3>
+<h3>👤 แก้ไขข้อมูลส่วนตัว</h3>
 
-<input id="first_name" value="${member.first_name}" placeholder="ชื่อ">
+<label>ชื่อ</label>
+<input id="first_name" value="${member.first_name}">
 
-<input id="last_name" value="${member.last_name}" placeholder="นามสกุล">
+<label>นามสกุล</label>
+<input id="last_name" value="${member.last_name}">
 
-<input id="phone" value="${member.phone ?? ""}" placeholder="เบอร์โทร">
+<label>เบอร์โทร</label>
+<input id="phone" value="${member.phone ?? ""}">
 
-<input id="house_no" value="${member.house_no ?? ""}" placeholder="บ้านเลขที่">
+</div>
 
-<input id="moo" value="${member.moo ?? ""}" placeholder="หมู่">
 
-<input id="soi" value="${member.soi ?? ""}" placeholder="ซอย">
+<div class="card">
 
-<input id="subdistrict" value="${member.subdistrict ?? ""}" placeholder="ตำบล">
+<h3>📍 แก้ไขที่อยู่</h3>
 
-<input id="district" value="${member.district ?? ""}" placeholder="อำเภอ">
+<label>บ้านเลขที่</label>
+<input id="house_no" value="${member.house_no ?? ""}">
 
-<input id="province" value="${member.province ?? ""}" placeholder="จังหวัด">
+<label>หมู่</label>
+<input id="moo" value="${member.moo ?? ""}">
 
-<button class="primary" onclick="saveMember()">บันทึก</button>
+<label>ซอย</label>
+<input id="soi" value="${member.soi ?? ""}">
+
+<label>ตำบล</label>
+<input id="subdistrict" value="${member.subdistrict ?? ""}">
+
+<label>อำเภอ</label>
+<input id="district" value="${member.district ?? ""}">
+
+<label>จังหวัด</label>
+<input id="province" value="${member.province ?? ""}">
+
+<button class="primary" onclick="saveMember()">บันทึกข้อมูล</button>
 
 </div>
 
