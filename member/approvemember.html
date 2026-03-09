@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<title>Admin - อนุมัติสมาชิก (Realtime)</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+
+body{
+font-family:sans-serif;
+background:#f4f6f9;
+padding:30px;
+}
+
+.container{
+max-width:1100px;
+margin:auto;
+}
+
+.card{
+background:white;
+padding:20px;
+border-radius:12px;
+box-shadow:0 4px 12px rgba(0,0,0,0.1);
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+margin-top:15px;
+}
+
+th,td{
+border-bottom:1px solid #eee;
+padding:10px;
+}
+
+th{
+background:#fafafa;
+}
+
+button{
+padding:6px 10px;
+border:none;
+border-radius:6px;
+cursor:pointer;
+}
+
+.approve{
+background:#06c755;
+color:white;
+}
+
+.reject{
+background:#ff4d4f;
+color:white;
+}
+
+.status{
+margin-top:10px;
+color:#888;
+font-size:14px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="card">
+
+<h2>อนุมัติสมาชิก LINE</h2>
+
+<div class="status" id="status"></div>
+
+<table>
+
+<thead>
+
+<tr>
+<th>รหัสสมาชิก</th>
+<th>ชื่อ</th>
+<th>เลขบัตร</th>
+<th>กลุ่ม</th>
+<th>เบอร์โทร</th>
+<th>จัดการ</th>
+</tr>
+
+</thead>
+
+<tbody id="memberTable"></tbody>
+
+</table>
+
+</div>
+
+</div>
+
+<script>
+
+const supabase = window.supabase.createClient(
+"https://ttottijljxoinptmhgtu.supabase.co",
+"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y"
+)
+
+async function loadMembers(){
+
+const { data } = await supabase
+.from("members")
+.select("*")
+.eq("line_register_status","pending")
+.order("member_id",{ascending:true})
+
+renderTable(data)
+
+}
+
+function renderTable(data){
+
+const table = document.getElementById("memberTable")
+
+table.innerHTML=""
+
+data.forEach(m=>{
+
+table.innerHTML+=`
+
+<tr>
+
+<td>${m.member_id}</td>
+
+<td>${m.first_name} ${m.last_name}</td>
+
+<td>${m.id_card}</td>
+
+<td>${m.group ?? ""}</td>
+
+<td>${m.phone ?? ""}</td>
+
+<td>
+
+<button class="approve" onclick="approve('${m.member_id}')">
+อนุมัติ
+</button>
+
+<button class="reject" onclick="reject('${m.member_id}')">
+ปฏิเสธ
+</button>
+
+</td>
+
+</tr>
+
+`
+
+})
+
+}
+
+async function approve(memberId){
+
+await supabase
+.from("members")
+.update({
+line_register_status:"approved"
+})
+.eq("member_id",memberId)
+
+}
+
+async function reject(memberId){
+
+await supabase
+.from("members")
+.update({
+line_register_status:"reject"
+})
+.eq("member_id",memberId)
+
+}
+
+function startRealtime(){
+
+supabase
+.channel('members-channel')
+
+.on(
+'postgres_changes',
+{
+event:'*',
+schema:'public',
+table:'members'
+},
+payload => {
+
+document.getElementById("status").innerText =
+"Realtime update : "+new Date().toLocaleTimeString()
+
+loadMembers()
+
+}
+
+)
+.subscribe()
+
+}
+
+loadMembers()
+
+startRealtime()
+
+</script>
+
+</body>
+</html>
