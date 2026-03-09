@@ -87,11 +87,8 @@ text-align:center;
 <div class="container">
 
 <div class="card profile">
-
 <img id="linePic">
-
 <div class="name" id="lineName">Loading...</div>
-
 </div>
 
 <div id="memberData"></div>
@@ -107,7 +104,7 @@ const sb = window.supabase.createClient(
 "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y"
 )
 
-let memberId = null
+let member = null
 
 async function init(){
 
@@ -141,13 +138,40 @@ showError("ไม่พบสมาชิก")
 return
 }
 
-renderMember(data[0])
+member = data[0]
+
+renderView()
 
 }
 
-function renderMember(m){
+function renderView(){
 
-memberId = m.member_id
+document.getElementById("memberData").innerHTML = `
+
+<div class="card">
+
+<div class="row"><b>ชื่อ :</b> ${member.first_name} ${member.last_name}</div>
+
+<div class="row"><b>เบอร์โทร :</b> ${member.phone ?? ""}</div>
+
+<div class="row"><b>บ้านเลขที่ :</b> ${member.house_no ?? ""}</div>
+
+<div class="row"><b>หมู่ :</b> ${member.moo ?? ""}</div>
+
+<div class="row"><b>ตำบล :</b> ${member.subdistrict ?? ""}</div>
+
+<div class="row"><b>อำเภอ :</b> ${member.district ?? ""}</div>
+
+<div class="row"><b>จังหวัด :</b> ${member.province ?? ""}</div>
+
+<button onclick="renderEdit()">แก้ไขข้อมูล</button>
+
+</div>
+`
+
+}
+
+function renderEdit(){
 
 document.getElementById("memberData").innerHTML = `
 
@@ -155,69 +179,71 @@ document.getElementById("memberData").innerHTML = `
 
 <div class="row">
 
-<span class="label">ชื่อ</span>
+<label>ชื่อ</label>
 
-<input id="first_name" value="${m.first_name}">
-
-</div>
-
-<div class="row">
-
-<span class="label">นามสกุล</span>
-
-<input id="last_name" value="${m.last_name}">
+<input id="first_name" value="${member.first_name}">
 
 </div>
 
 <div class="row">
 
-<span class="label">เบอร์โทร</span>
+<label>นามสกุล</label>
 
-<input id="phone" value="${m.phone ?? ""}">
-
-</div>
-
-<div class="row">
-
-<span class="label">บ้านเลขที่</span>
-
-<input id="house_no" value="${m.house_no ?? ""}">
+<input id="last_name" value="${member.last_name}">
 
 </div>
 
 <div class="row">
 
-<span class="label">หมู่</span>
+<label>เบอร์โทร</label>
 
-<input id="moo" value="${m.moo ?? ""}">
-
-</div>
-
-<div class="row">
-
-<span class="label">ตำบล</span>
-
-<input id="subdistrict" value="${m.subdistrict ?? ""}">
+<input id="phone" value="${member.phone ?? ""}">
 
 </div>
 
 <div class="row">
 
-<span class="label">อำเภอ</span>
+<label>บ้านเลขที่</label>
 
-<input id="district" value="${m.district ?? ""}">
+<input id="house_no" value="${member.house_no ?? ""}">
 
 </div>
 
 <div class="row">
 
-<span class="label">จังหวัด</span>
+<label>หมู่</label>
 
-<input id="province" value="${m.province ?? ""}">
+<input id="moo" value="${member.moo ?? ""}">
 
 </div>
 
-<button onclick="saveMember()">บันทึกข้อมูล</button>
+<div class="row">
+
+<label>ตำบล</label>
+
+<input id="subdistrict" value="${member.subdistrict ?? ""}">
+
+</div>
+
+<div class="row">
+
+<label>อำเภอ</label>
+
+<input id="district" value="${member.district ?? ""}">
+
+</div>
+
+<div class="row">
+
+<label>จังหวัด</label>
+
+<input id="province" value="${member.province ?? ""}">
+
+</div>
+
+<button onclick="saveMember()">บันทึก</button>
+
+<button onclick="renderView()">ยกเลิก</button>
 
 </div>
 `
@@ -240,9 +266,11 @@ district:document.getElementById("district").value,
 province:document.getElementById("province").value
 
 })
-.eq("member_id", memberId)
+.eq("member_id", member.member_id)
 
 alert("บันทึกข้อมูลสำเร็จ")
+
+loadMember(member.line_user_id)
 
 }
 
