@@ -28,6 +28,7 @@ padding:20px;
 border-radius:12px;
 box-shadow:0 6px 18px rgba(0,0,0,0.08);
 margin-bottom:15px;
+position:relative;
 }
 
 .profile{
@@ -60,13 +61,11 @@ width:100%;
 padding:8px;
 border:1px solid #ccc;
 border-radius:6px;
-margin-top:4px;
 margin-bottom:8px;
 }
 
 button{
-margin-top:10px;
-padding:10px 14px;
+padding:8px 12px;
 border:none;
 background:#06c755;
 color:white;
@@ -77,6 +76,12 @@ cursor:pointer;
 button.cancel{
 background:#888;
 margin-left:5px;
+}
+
+.edit-btn{
+position:absolute;
+top:15px;
+right:15px;
 }
 
 .error{
@@ -168,6 +173,8 @@ document.getElementById("memberData").innerHTML = `
 
 <div class="card">
 
+<button class="edit-btn" onclick="renderEdit()">แก้ไข</button>
+
 <h3>ข้อมูลสมาชิก</h3>
 
 <div class="row"><span class="label">รหัสสมาชิก :</span> ${member.member_id}</div>
@@ -186,12 +193,7 @@ document.getElementById("memberData").innerHTML = `
 
 <div class="row"><span class="label">เบอร์โทร :</span> ${member.phone ?? ""}</div>
 
-</div>
-
-
-<div class="card">
-
-<h3>ที่อยู่</h3>
+<hr>
 
 <div class="row"><span class="label">บ้านเลขที่ :</span> ${member.house_no ?? ""}</div>
 
@@ -211,13 +213,6 @@ document.getElementById("memberData").innerHTML = `
 
 </div>
 
-
-<div class="card">
-
-<button onclick="renderEdit()">แก้ไขข้อมูล</button>
-
-</div>
-
 `
 }
 
@@ -227,15 +222,11 @@ document.getElementById("memberData").innerHTML = `
 
 <div class="card">
 
-<h3>ข้อมูลสมาชิก</h3>
+<h3>แก้ไขข้อมูลสมาชิก</h3>
 
 <div class="row"><span class="label">รหัสสมาชิก :</span> ${member.member_id}</div>
 
 <div class="row"><span class="label">กลุ่ม :</span> ${member.group ?? ""}</div>
-
-<div class="row"><span class="label">สถานะ :</span> ${member.member_status ?? ""}</div>
-
-<div class="row"><span class="label">วันสมัคร :</span> ${member.join_date ?? ""}</div>
 
 <hr>
 
@@ -247,13 +238,6 @@ document.getElementById("memberData").innerHTML = `
 
 <label>เบอร์โทร</label>
 <input id="phone" value="${member.phone ?? ""}">
-
-</div>
-
-
-<div class="card">
-
-<h3>ที่อยู่</h3>
 
 <label>บ้านเลขที่</label>
 <input id="house_no" value="${member.house_no ?? ""}">
