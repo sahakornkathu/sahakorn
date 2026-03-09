@@ -45,6 +45,7 @@ border:none;
 color:white;
 border-radius:6px;
 width:100%;
+cursor:pointer;
 }
 
 </style>
@@ -54,9 +55,7 @@ width:100%;
 <body>
 
 <div class="container">
-
 <div id="app"></div>
-
 </div>
 
 <script>
@@ -81,7 +80,6 @@ return
 }
 
 profile = await liff.getProfile()
-
 userId = profile.userId
 
 checkBind()
@@ -90,19 +88,20 @@ checkBind()
 
 async function checkBind(){
 
-const {data}=await sb
+const {data,error}=await sb
 .from("members")
 .select("*")
 .eq("line_user_id",userId)
+.single()
 
-if(data.length>0){
+if(error && error.code !== "PGRST116"){
+console.error(error)
+}
 
-showProfile(data[0])
-
+if(data){
+showProfile(data)
 }else{
-
 showBindPage()
-
 }
 
 }
@@ -129,40 +128,45 @@ document.getElementById("app").innerHTML=`
 
 async function bind(){
 
-const idcard=document.getElementById("idcard").value
+const idcard=document.getElementById("idcard").value.trim()
 
-const {data}=await sb
+if(!idcard){
+alert("กรอกเลขบัตรประชาชน")
+return
+}
+
+const {data,error}=await sb
 .from("members")
 .select("*")
 .eq("id_card",idcard)
+.single()
 
-if(data.length==0){
-
+if(error){
 alert("ไม่พบข้อมูลสมาชิก")
-
+console.error(error)
 return
-
 }
 
-if(data[0].line_user_id){
-
+if(data.line_user_id){
 alert("สมาชิกนี้ผูก LINE แล้ว")
-
 return
-
 }
 
-await sb
+const {error:updateError}=await sb
 .from("members")
 .update({
-
 line_user_id:userId,
 line_display_name:profile.displayName,
 line_picture:profile.pictureUrl,
-line_bind_date:new Date()
-
+line_bind_date:new Date().toISOString()
 })
 .eq("id_card",idcard)
+
+if(updateError){
+console.error(updateError)
+alert("เกิดข้อผิดพลาด")
+return
+}
 
 checkBind()
 
