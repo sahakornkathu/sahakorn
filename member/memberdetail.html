@@ -43,23 +43,6 @@ border-radius:50%;
 margin-bottom:10px;
 }
 
-.title{
-font-weight:bold;
-margin-bottom:10px;
-display:flex;
-justify-content:space-between;
-align-items:center;
-cursor:pointer;
-}
-
-.section{
-margin-top:10px;
-}
-
-.row{
-margin-bottom:6px;
-}
-
 .edit-btn{
 position:absolute;
 top:15px;
@@ -70,6 +53,10 @@ border:none;
 padding:8px 10px;
 border-radius:6px;
 cursor:pointer;
+}
+
+.row{
+margin-bottom:6px;
 }
 
 .primary{
@@ -108,8 +95,33 @@ font-weight:bold;
 font-size:14px;
 }
 
-.hidden{
+/* TAB */
+
+.tabs{
+display:flex;
+margin-bottom:15px;
+border-bottom:2px solid #eee;
+}
+
+.tab{
+flex:1;
+text-align:center;
+padding:10px;
+cursor:pointer;
+font-weight:bold;
+}
+
+.tab.active{
+border-bottom:3px solid #06c755;
+color:#06c755;
+}
+
+.tab-content{
 display:none;
+}
+
+.tab-content.active{
+display:block;
 }
 
 /* DARK MODE */
@@ -173,11 +185,9 @@ localStorage.setItem("theme","light")
 }
 
 function loadTheme(){
-
 if(localStorage.getItem("theme")==="dark"){
 document.documentElement.classList.add("dark")
 }
-
 }
 
 function thaiDate(date){
@@ -212,6 +222,21 @@ return age
 
 }
 
+function openTab(tab){
+
+document.querySelectorAll(".tab").forEach(t=>{
+t.classList.remove("active")
+})
+
+document.querySelectorAll(".tab-content").forEach(c=>{
+c.classList.remove("active")
+})
+
+document.getElementById("tabBtn_"+tab).classList.add("active")
+document.getElementById("tab_"+tab).classList.add("active")
+
+}
+
 async function init(){
 
 await liff.init({liffId:LIFF_ID})
@@ -222,7 +247,6 @@ return
 }
 
 profile=await liff.getProfile()
-
 userId=profile.userId
 
 checkBind()
@@ -238,14 +262,10 @@ const {data}=await sb
 .maybeSingle()
 
 if(data){
-
 member=data
 showProfile()
-
 }else{
-
 showBindPage()
-
 }
 
 }
@@ -303,13 +323,40 @@ checkBind()
 
 }
 
-function toggle(id){
+async function loadMeeting(){
 
-document.getElementById(id).classList.toggle("hidden")
+const {data}=await sb
+.from("member_meeting")
+.select("*")
+.eq("member_id",member.member_id)
+.order("meeting_date",{ascending:false})
+
+if(!data || data.length===0){
+return "<div>ยังไม่มีข้อมูลประชุม</div>"
+}
+
+let html=""
+
+data.forEach(m=>{
+
+html+=`
+
+<div class="row"><b>ปีงบประมาณ :</b> ${m.fiscal_year}</div>
+<div class="row"><b>ประเภทประชุม :</b> ${m.meeting_type}</div>
+<div class="row"><b>วันที่ประชุม :</b> ${thaiDate(m.meeting_date)}</div>
+<hr>
+
+`
+
+})
+
+return html
 
 }
 
-function showProfile(){
+async function showProfile(){
+
+const meetingHTML=await loadMeeting()
 
 document.getElementById("app").innerHTML=`
 
@@ -323,29 +370,34 @@ document.getElementById("app").innerHTML=`
 </div>
 
 
-<div class="card">
+<div class="tabs">
 
-<div class="title" onclick="toggle('memberInfo')">
-📋 ข้อมูลสมาชิก
+<div id="tabBtn_person" class="tab active" onclick="openTab('person')">
+ข้อมูลส่วนบุคคล
 </div>
 
-<div id="memberInfo" class="section">
+<div id="tabBtn_meeting" class="tab" onclick="openTab('meeting')">
+ข้อมูลประชุม
+</div>
+
+</div>
+
+
+<div id="tab_person" class="tab-content active">
+
+<div class="card">
+
+<h3>📋 ข้อมูลสมาชิก</h3>
 
 <div class="row"><b>รหัสสมาชิก :</b> ${member.member_id}</div>
 <div class="row"><b>เลขบัตร :</b> ${member.id_card}</div>
 
 </div>
 
-</div>
-
 
 <div class="card">
 
-<div class="title" onclick="toggle('personalInfo')">
-👤 ข้อมูลส่วนตัว
-</div>
-
-<div id="personalInfo" class="section">
+<h3>👤 ข้อมูลส่วนตัว</h3>
 
 <div class="row"><b>ชื่อ :</b> ${member.first_name}</div>
 <div class="row"><b>นามสกุล :</b> ${member.last_name}</div>
@@ -355,16 +407,10 @@ document.getElementById("app").innerHTML=`
 
 </div>
 
-</div>
-
 
 <div class="card">
 
-<div class="title" onclick="toggle('addressInfo')">
-📍 ที่อยู่
-</div>
-
-<div id="addressInfo" class="section">
+<h3>📍 ที่อยู่</h3>
 
 <div class="row"><b>บ้านเลขที่ :</b> ${member.house_no ?? ""}</div>
 <div class="row"><b>หมู่ :</b> ${member.moo ?? ""}</div>
@@ -373,9 +419,22 @@ document.getElementById("app").innerHTML=`
 <div class="row"><b>อำเภอ :</b> ${member.district ?? ""}</div>
 <div class="row"><b>จังหวัด :</b> ${member.province ?? ""}</div>
 
+<button class="danger" onclick="unbind()">ยกเลิกผูกบัญชี LINE</button>
+
 </div>
 
-<button class="danger" onclick="unbind()">ยกเลิกผูกบัญชี LINE</button>
+</div>
+
+
+<div id="tab_meeting" class="tab-content">
+
+<div class="card">
+
+<h3>🗳 ข้อมูลการเข้าร่วมประชุม</h3>
+
+${meetingHTML}
+
+</div>
 
 </div>
 
