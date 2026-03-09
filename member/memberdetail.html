@@ -8,8 +8,11 @@
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
 <style>
+
 body{
 font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
 background:#f4f6f9;
@@ -31,6 +34,7 @@ background:linear-gradient(135deg,#06c755,#00a94f);
 color:white;
 border-radius:16px;
 margin-bottom:15px;
+position:relative;
 }
 
 .header img{
@@ -116,6 +120,10 @@ font-size:15px;
 margin-bottom:10px;
 }
 
+label{
+font-weight:bold;
+}
+
 /* TAB */
 
 .tabs{
@@ -133,20 +141,28 @@ padding:12px;
 font-weight:bold;
 font-size:14px;
 cursor:pointer;
-color:#000;   /* ตัวหนังสือสีดำ */
+color:#000;
 }
 
 .tab.active{
 background:#06c755;
-color:#000;   /* active ก็ยังเป็นสีดำ */
-}
-.dark .tab{
-color:#fff;
+color:#000;
 }
 
-.dark .tab.active{
-color:#fff;
+.tab-content{
+display:none;
+animation:fade 0.25s ease;
 }
+
+.tab-content.active{
+display:block;
+}
+
+@keyframes fade{
+from{opacity:0}
+to{opacity:1}
+}
+
 /* DARK MODE */
 
 .dark body{
@@ -162,6 +178,14 @@ background:#1e1e1e;
 background:#2b2b2b;
 color:white;
 border:1px solid #444;
+}
+
+.dark .tab{
+color:#fff;
+}
+
+.dark .tab.active{
+color:#fff;
 }
 
 </style>
@@ -381,7 +405,7 @@ const meetingHTML=await loadMeeting()
 
 document.getElementById("app").innerHTML=`
 
-<div class="card header">
+<div class="header">
 
 <button class="edit-btn" onclick="editMember()">แก้ไข</button>
 
