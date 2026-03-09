@@ -3,7 +3,9 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<title>Supabase Member Test</title>
+<title>Member Profile</title>
+
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -11,49 +13,52 @@
 
 body{
 font-family:sans-serif;
-background:#f4f6f9;
-padding:40px;
+background:#f3f4f6;
+padding:30px;
 }
 
-.box{
+.container{
 max-width:600px;
 margin:auto;
+}
+
+.card{
 background:white;
-padding:30px;
+padding:20px;
 border-radius:12px;
-box-shadow:0 8px 20px rgba(0,0,0,0.1);
+box-shadow:0 6px 18px rgba(0,0,0,0.1);
+margin-bottom:15px;
 }
 
-input{
-width:100%;
-padding:10px;
+.profile{
+text-align:center;
+}
+
+.profile img{
+width:90px;
+height:90px;
+border-radius:50%;
+}
+
+.name{
+font-size:20px;
+font-weight:bold;
 margin-top:10px;
-border:1px solid #ccc;
-border-radius:8px;
 }
 
-button{
-margin-top:10px;
-padding:10px 15px;
-background:#06c755;
-border:none;
-color:white;
-border-radius:8px;
-cursor:pointer;
+.row{
+margin-bottom:8px;
 }
 
-.result{
-margin-top:20px;
-line-height:1.8;
+.label{
+font-weight:bold;
+color:#555;
 }
 
-.debug{
-margin-top:20px;
-background:black;
-color:#0f0;
-padding:10px;
-font-size:12px;
-border-radius:8px;
+.error{
+color:red;
+font-weight:bold;
+text-align:center;
 }
 
 </style>
@@ -62,93 +67,121 @@ border-radius:8px;
 
 <body>
 
-<div class="box">
+<div class="container">
 
-<h2>ทดสอบ Supabase Members</h2>
+<div class="card profile">
 
-<input id="lineid" placeholder="ใส่ LINE USER ID">
+<img id="linePic">
 
-<button id="btnSearch">ค้นหาสมาชิก</button>
+<div class="name" id="lineName">Loading...</div>
 
-<div class="result" id="result"></div>
+</div>
 
-<div class="debug" id="debug"></div>
+<div id="memberData"></div>
 
 </div>
 
 <script>
 
-const SUPABASE_URL = "https://ttottijljxoinptmhgtu.supabase.co"
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y"
+const LIFF_ID = "1660910795-ZwhoBm8e"
 
 const sb = window.supabase.createClient(
-SUPABASE_URL,
-SUPABASE_KEY
+"https://ttottijljxoinptmhgtu.supabase.co",
+"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y"
 )
 
-document.getElementById("btnSearch").addEventListener("click", searchMember)
+async function init(){
 
-async function searchMember(){
+await liff.init({ liffId: LIFF_ID })
 
-const lineid = document.getElementById("lineid").value.trim()
+if(!liff.isLoggedIn()){
 
-debug("Searching line_user_id : "+lineid)
-
-if(!lineid){
-
-alert("กรุณาใส่ LINE USER ID")
+liff.login()
 
 return
 
 }
+
+const profile = await liff.getProfile()
+
+document.getElementById("linePic").src = profile.pictureUrl
+document.getElementById("lineName").innerText = profile.displayName
+
+checkMember(profile.userId)
+
+}
+
+async function checkMember(userId){
 
 const { data, error } = await sb
 .from("members")
 .select("*")
-.eq("line_user_id", lineid)
+.eq("line_user_id", userId)
 
 if(error){
 
-debug("ERROR : "+error.message)
+showError("Database error")
 
 return
 
 }
-
-debug("RESULT : "+JSON.stringify(data))
 
 if(!data || data.length === 0){
 
-document.getElementById("result").innerHTML =
-"<b>ไม่พบสมาชิก</b>"
+showError("ไม่พบสมาชิกที่ผูกกับ LINE นี้")
 
 return
 
 }
 
-const m = data[0]
+renderMember(data[0])
 
-document.getElementById("result").innerHTML =
+}
+
+function renderMember(m){
+
+document.getElementById("memberData").innerHTML =
 
 `
-<div><b>รหัสสมาชิก :</b> ${m.member_id}</div>
-<div><b>ชื่อ :</b> ${m.title} ${m.first_name} ${m.last_name}</div>
-<div><b>เลขบัตร :</b> ${m.id_card}</div>
-<div><b>เบอร์โทร :</b> ${m.phone ?? "-"}</div>
-<div><b>สถานะ :</b> ${m.member_status}</div>
+<div class="card">
+
+<div class="row"><span class="label">รหัสสมาชิก :</span> ${m.member_id}</div>
+
+<div class="row"><span class="label">ชื่อ :</span> ${m.title} ${m.first_name} ${m.last_name}</div>
+
+<div class="row"><span class="label">เลขบัตร :</span> ${m.id_card}</div>
+
+<div class="row"><span class="label">วันสมัคร :</span> ${m.join_date}</div>
+
+<div class="row"><span class="label">สถานะ :</span> ${m.member_status}</div>
+
+<div class="row"><span class="label">เบอร์โทร :</span> ${m.phone}</div>
+
+<div class="row"><span class="label">ที่อยู่ :</span>
+
+${m.house_no} หมู่ ${m.moo}
+${m.soi ?? ""}
+${m.street ?? ""}
+${m.subdistrict}
+${m.district}
+${m.province}
+${m.postal_code}
+
+</div>
+
+</div>
 `
 
 }
 
-function debug(msg){
+function showError(msg){
 
-const el = document.getElementById("debug")
-
-el.innerHTML += "<br>"+msg
-
-console.log(msg)
+document.getElementById("memberData").innerHTML =
+`<div class="card error">${msg}</div>`
 
 }
+
+init()
 
 </script>
 
