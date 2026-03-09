@@ -29,7 +29,7 @@ margin:auto;
 
 .header{
 text-align:center;
-padding:25px 15px;
+padding:26px 15px;
 background:linear-gradient(135deg,#06c755,#00a94f);
 color:white;
 border-radius:16px;
@@ -65,7 +65,7 @@ font-size:16px;
 .row{
 display:flex;
 justify-content:space-between;
-padding:6px 0;
+padding:8px 0;
 font-size:14px;
 border-bottom:1px solid #eee;
 }
@@ -128,26 +128,32 @@ font-weight:bold;
 
 .tabs{
 display:flex;
-background:white;
+background:#ffffff;
 border-radius:12px;
-margin-bottom:12px;
+margin-bottom:14px;
 overflow:hidden;
+box-shadow:0 2px 6px rgba(0,0,0,0.05);
 }
 
 .tab{
 flex:1;
 text-align:center;
 padding:12px;
-font-weight:bold;
+font-weight:600;
 font-size:14px;
 cursor:pointer;
-color:#000 !important;   /* ตัวหนังสือสีดำ */
+color:#222;
+background:#f5f5f5;
+transition:0.2s;
 }
 
 .tab.active{
 background:#06c755;
-color:#000 !important;   /* active ก็ยังเป็นสีดำ */
+color:#000;
 }
+
+/* TAB CONTENT */
+
 .tab-content{
 display:none;
 animation:fade 0.25s ease;
@@ -179,13 +185,20 @@ color:white;
 border:1px solid #444;
 }
 
+.dark .tabs{
+background:#1e1e1e;
+}
+
 .dark .tab{
-color:#fff !important;
+background:#2a2a2a;
+color:#ddd;
 }
 
 .dark .tab.active{
-color:#fff !important;
+background:#06c755;
+color:#fff;
 }
+
 </style>
 
 </head>
