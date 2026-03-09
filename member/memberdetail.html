@@ -31,25 +31,31 @@ margin-bottom:15px;
 position:relative;
 }
 
-input{
-width:100%;
-padding:10px;
-margin-top:10px;
-border:1px solid #ccc;
-border-radius:6px;
+.header{
+text-align:center;
 }
 
-button{
-margin-top:10px;
-padding:10px;
-border:none;
-border-radius:6px;
+.header img{
+width:90px;
+border-radius:50%;
+margin-bottom:10px;
+}
+
+.title{
+font-weight:bold;
+margin-bottom:10px;
+display:flex;
+justify-content:space-between;
+align-items:center;
 cursor:pointer;
 }
 
-.primary{
-background:#06c755;
-color:white;
+.section{
+margin-top:10px;
+}
+
+.row{
+margin-bottom:6px;
 }
 
 .edit-btn{
@@ -58,11 +64,44 @@ top:15px;
 right:15px;
 background:#ff9800;
 color:white;
+border:none;
+padding:8px 10px;
+border-radius:6px;
+cursor:pointer;
+}
+
+.primary{
+background:#06c755;
+color:white;
+border:none;
+padding:10px;
+border-radius:6px;
+cursor:pointer;
+width:100%;
+margin-top:10px;
 }
 
 .danger{
 background:#f44336;
 color:white;
+border:none;
+padding:10px;
+border-radius:6px;
+cursor:pointer;
+width:100%;
+margin-top:10px;
+}
+
+input{
+width:100%;
+padding:10px;
+margin-top:10px;
+border:1px solid #ccc;
+border-radius:6px;
+}
+
+.hidden{
+display:none;
 }
 
 </style>
@@ -149,7 +188,6 @@ const {data}=await sb
 if(data){
 
 member=data
-
 showProfile()
 
 }else{
@@ -168,9 +206,7 @@ document.getElementById("app").innerHTML=`
 
 <h3>ผูกบัญชี LINE</h3>
 
-<p>กรอกเลขบัตรประชาชน</p>
-
-<input id="idcard">
+<input id="idcard" placeholder="เลขบัตรประชาชน">
 
 <button class="primary" onclick="bind()">ผูกบัญชี</button>
 
@@ -191,19 +227,13 @@ const {data}=await sb
 .maybeSingle()
 
 if(!data){
-
 alert("ไม่พบสมาชิก")
-
 return
-
 }
 
 if(data.line_user_id){
-
 alert("สมาชิกนี้ผูก LINE แล้ว")
-
 return
-
 }
 
 await sb
@@ -222,56 +252,96 @@ checkBind()
 
 }
 
+function toggle(id){
+
+const el=document.getElementById(id)
+
+el.classList.toggle("hidden")
+
+}
+
 function showProfile(){
 
 document.getElementById("app").innerHTML=`
 
-<div class="card">
+<div class="card header">
 
 <button class="edit-btn" onclick="editMember()">แก้ไข</button>
 
-<h3>ข้อมูลสมาชิก</h3>
+<img src="${member.line_picture}">
 
-<img src="${member.line_picture}" width="80" style="border-radius:50%">
-
-<p><b>รหัสสมาชิก :</b> ${member.member_id}</p>
-<p><b>เลขบัตร :</b> ${member.id_card}</p>
+<h3>${member.first_name} ${member.last_name}</h3>
 
 </div>
 
 
 <div class="card">
 
-<h3>ข้อมูลส่วนตัว</h3>
+<div class="title" onclick="toggle('memberInfo')">
 
-<p><b>ชื่อ :</b> ${member.first_name}</p>
+📋 ข้อมูลสมาชิก
 
-<p><b>นามสกุล :</b> ${member.last_name}</p>
+</div>
 
-<p><b>เบอร์โทร :</b> ${member.phone ?? ""}</p>
+<div id="memberInfo" class="section">
 
-<p><b>วันเกิด :</b> ${thaiDate(member.birthday)}</p>
+<div class="row"><b>รหัสสมาชิก :</b> ${member.member_id}</div>
 
-<p><b>อายุ :</b> ${calcAge(member.birthday)} ปี</p>
+<div class="row"><b>เลขบัตร :</b> ${member.id_card}</div>
+
+</div>
 
 </div>
 
 
 <div class="card">
 
-<h3>ที่อยู่</h3>
+<div class="title" onclick="toggle('personalInfo')">
 
-<p><b>บ้านเลขที่ :</b> ${member.house_no ?? ""}</p>
+👤 ข้อมูลส่วนตัว
 
-<p><b>หมู่ :</b> ${member.moo ?? ""}</p>
+</div>
 
-<p><b>ซอย :</b> ${member.soi ?? ""}</p>
+<div id="personalInfo" class="section">
 
-<p><b>ตำบล :</b> ${member.subdistrict ?? ""}</p>
+<div class="row"><b>ชื่อ :</b> ${member.first_name}</div>
 
-<p><b>อำเภอ :</b> ${member.district ?? ""}</p>
+<div class="row"><b>นามสกุล :</b> ${member.last_name}</div>
 
-<p><b>จังหวัด :</b> ${member.province ?? ""}</p>
+<div class="row"><b>เบอร์โทร :</b> ${member.phone ?? ""}</div>
+
+<div class="row"><b>วันเกิด :</b> ${thaiDate(member.birthday)}</div>
+
+<div class="row"><b>อายุ :</b> ${calcAge(member.birthday)} ปี</div>
+
+</div>
+
+</div>
+
+
+<div class="card">
+
+<div class="title" onclick="toggle('addressInfo')">
+
+📍 ที่อยู่
+
+</div>
+
+<div id="addressInfo" class="section">
+
+<div class="row"><b>บ้านเลขที่ :</b> ${member.house_no ?? ""}</div>
+
+<div class="row"><b>หมู่ :</b> ${member.moo ?? ""}</div>
+
+<div class="row"><b>ซอย :</b> ${member.soi ?? ""}</div>
+
+<div class="row"><b>ตำบล :</b> ${member.subdistrict ?? ""}</div>
+
+<div class="row"><b>อำเภอ :</b> ${member.district ?? ""}</div>
+
+<div class="row"><b>จังหวัด :</b> ${member.province ?? ""}</div>
+
+</div>
 
 <button class="danger" onclick="unbind()">ยกเลิกผูกบัญชี LINE</button>
 
@@ -287,20 +357,13 @@ document.getElementById("app").innerHTML=`
 
 <div class="card">
 
-<h3>แก้ไขข้อมูลส่วนตัว</h3>
+<h3>แก้ไขข้อมูลสมาชิก</h3>
 
 <input id="first_name" value="${member.first_name}" placeholder="ชื่อ">
 
 <input id="last_name" value="${member.last_name}" placeholder="นามสกุล">
 
 <input id="phone" value="${member.phone ?? ""}" placeholder="เบอร์โทร">
-
-</div>
-
-
-<div class="card">
-
-<h3>แก้ไขที่อยู่</h3>
 
 <input id="house_no" value="${member.house_no ?? ""}" placeholder="บ้านเลขที่">
 
