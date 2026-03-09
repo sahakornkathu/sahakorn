@@ -15,6 +15,7 @@ body{
 font-family:sans-serif;
 background:#f4f6f9;
 padding:20px;
+transition:0.3s;
 }
 
 .container{
@@ -29,6 +30,7 @@ border-radius:12px;
 box-shadow:0 4px 12px rgba(0,0,0,0.1);
 margin-bottom:15px;
 position:relative;
+transition:0.3s;
 }
 
 .header{
@@ -95,21 +97,40 @@ margin-top:10px;
 input{
 width:100%;
 padding:10px;
-margin-top:10px;
+margin-top:5px;
+margin-bottom:10px;
 border:1px solid #ccc;
 border-radius:6px;
+}
+
+label{
+font-weight:bold;
+font-size:14px;
 }
 
 .hidden{
 display:none;
 }
 
-  label{
-display:block;
-margin-top:10px;
-font-weight:bold;
-font-size:14px;
+/* DARK MODE */
+
+.dark body{
+background:#121212;
+color:#e5e5e5;
 }
+
+.dark .card{
+background:#1e1e1e;
+border:1px solid #333;
+box-shadow:none;
+}
+
+.dark input{
+background:#2a2a2a;
+color:white;
+border:1px solid #444;
+}
+
 </style>
 
 </head>
@@ -117,7 +138,13 @@ font-size:14px;
 <body>
 
 <div class="container">
+
+<div style="text-align:right;margin-bottom:10px;">
+<button onclick="toggleDark()">🌙</button>
+</div>
+
 <div id="app"></div>
+
 </div>
 
 <script>
@@ -132,6 +159,26 @@ const sb = window.supabase.createClient(
 let userId
 let profile
 let member
+
+function toggleDark(){
+
+document.documentElement.classList.toggle("dark")
+
+if(document.documentElement.classList.contains("dark")){
+localStorage.setItem("theme","dark")
+}else{
+localStorage.setItem("theme","light")
+}
+
+}
+
+function loadTheme(){
+
+if(localStorage.getItem("theme")==="dark"){
+document.documentElement.classList.add("dark")
+}
+
+}
 
 function thaiDate(date){
 
@@ -153,7 +200,6 @@ function calcAge(date){
 if(!date) return ""
 
 const birth=new Date(date)
-
 const today=new Date()
 
 let age=today.getFullYear()-birth.getFullYear()
@@ -212,7 +258,8 @@ document.getElementById("app").innerHTML=`
 
 <h3>ผูกบัญชี LINE</h3>
 
-<input id="idcard" placeholder="เลขบัตรประชาชน">
+<label>เลขบัตรประชาชน</label>
+<input id="idcard">
 
 <button class="primary" onclick="bind()">ผูกบัญชี</button>
 
@@ -245,12 +292,10 @@ return
 await sb
 .from("members")
 .update({
-
 line_user_id:userId,
 line_display_name:profile.displayName,
 line_picture:profile.pictureUrl,
 line_bind_date:new Date().toISOString()
-
 })
 .eq("id_card",idcard)
 
@@ -260,9 +305,7 @@ checkBind()
 
 function toggle(id){
 
-const el=document.getElementById(id)
-
-el.classList.toggle("hidden")
+document.getElementById(id).classList.toggle("hidden")
 
 }
 
@@ -275,7 +318,6 @@ document.getElementById("app").innerHTML=`
 <button class="edit-btn" onclick="editMember()">แก้ไข</button>
 
 <img src="${member.line_picture}">
-
 <h3>${member.first_name} ${member.last_name}</h3>
 
 </div>
@@ -284,15 +326,12 @@ document.getElementById("app").innerHTML=`
 <div class="card">
 
 <div class="title" onclick="toggle('memberInfo')">
-
 📋 ข้อมูลสมาชิก
-
 </div>
 
 <div id="memberInfo" class="section">
 
 <div class="row"><b>รหัสสมาชิก :</b> ${member.member_id}</div>
-
 <div class="row"><b>เลขบัตร :</b> ${member.id_card}</div>
 
 </div>
@@ -303,21 +342,15 @@ document.getElementById("app").innerHTML=`
 <div class="card">
 
 <div class="title" onclick="toggle('personalInfo')">
-
 👤 ข้อมูลส่วนตัว
-
 </div>
 
 <div id="personalInfo" class="section">
 
 <div class="row"><b>ชื่อ :</b> ${member.first_name}</div>
-
 <div class="row"><b>นามสกุล :</b> ${member.last_name}</div>
-
 <div class="row"><b>เบอร์โทร :</b> ${member.phone ?? ""}</div>
-
 <div class="row"><b>วันเกิด :</b> ${thaiDate(member.birthday)}</div>
-
 <div class="row"><b>อายุ :</b> ${calcAge(member.birthday)} ปี</div>
 
 </div>
@@ -328,23 +361,16 @@ document.getElementById("app").innerHTML=`
 <div class="card">
 
 <div class="title" onclick="toggle('addressInfo')">
-
 📍 ที่อยู่
-
 </div>
 
 <div id="addressInfo" class="section">
 
 <div class="row"><b>บ้านเลขที่ :</b> ${member.house_no ?? ""}</div>
-
 <div class="row"><b>หมู่ :</b> ${member.moo ?? ""}</div>
-
 <div class="row"><b>ซอย :</b> ${member.soi ?? ""}</div>
-
 <div class="row"><b>ตำบล :</b> ${member.subdistrict ?? ""}</div>
-
 <div class="row"><b>อำเภอ :</b> ${member.district ?? ""}</div>
-
 <div class="row"><b>จังหวัด :</b> ${member.province ?? ""}</div>
 
 </div>
@@ -363,7 +389,7 @@ document.getElementById("app").innerHTML=`
 
 <div class="card">
 
-<h3>👤 แก้ไขข้อมูลส่วนตัว</h3>
+<h3>แก้ไขข้อมูลสมาชิก</h3>
 
 <label>ชื่อ</label>
 <input id="first_name" value="${member.first_name}">
@@ -373,13 +399,6 @@ document.getElementById("app").innerHTML=`
 
 <label>เบอร์โทร</label>
 <input id="phone" value="${member.phone ?? ""}">
-
-</div>
-
-
-<div class="card">
-
-<h3>📍 แก้ไขที่อยู่</h3>
 
 <label>บ้านเลขที่</label>
 <input id="house_no" value="${member.house_no ?? ""}">
@@ -399,7 +418,7 @@ document.getElementById("app").innerHTML=`
 <label>จังหวัด</label>
 <input id="province" value="${member.province ?? ""}">
 
-<button class="primary" onclick="saveMember()">บันทึกข้อมูล</button>
+<button class="primary" onclick="saveMember()">บันทึก</button>
 
 </div>
 
@@ -437,11 +456,9 @@ if(!confirm("ต้องการยกเลิกผูกบัญชี LIN
 await sb
 .from("members")
 .update({
-
 line_user_id:null,
 line_display_name:null,
 line_picture:null
-
 })
 .eq("line_user_id",userId)
 
@@ -449,6 +466,7 @@ location.reload()
 
 }
 
+loadTheme()
 init()
 
 </script>
