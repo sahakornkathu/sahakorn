@@ -3,7 +3,7 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<title>Member Profile</title>
+<title>Member Mini App</title>
 
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
@@ -14,7 +14,7 @@
 body{
 font-family:sans-serif;
 background:#f3f4f6;
-padding:30px;
+padding:20px;
 }
 
 .container{
@@ -26,7 +26,7 @@ margin:auto;
 background:white;
 padding:20px;
 border-radius:12px;
-box-shadow:0 6px 18px rgba(0,0,0,0.1);
+box-shadow:0 6px 18px rgba(0,0,0,0.08);
 margin-bottom:15px;
 }
 
@@ -47,7 +47,7 @@ margin-top:10px;
 }
 
 .row{
-margin-bottom:10px;
+margin-bottom:8px;
 }
 
 .label{
@@ -60,6 +60,7 @@ width:100%;
 padding:8px;
 border:1px solid #ccc;
 border-radius:6px;
+margin-top:4px;
 }
 
 button{
@@ -72,10 +73,23 @@ border-radius:8px;
 cursor:pointer;
 }
 
+button.cancel{
+background:#888;
+margin-left:5px;
+}
+
 .error{
 color:red;
 font-weight:bold;
 text-align:center;
+}
+
+h3{
+margin-top:0;
+margin-bottom:10px;
+color:#06c755;
+border-bottom:2px solid #eee;
+padding-bottom:5px;
 }
 
 </style>
@@ -126,15 +140,18 @@ loadMember(profile.userId)
 
 async function loadMember(userId){
 
-const { data } = await sb
+const { data, error } = await sb
 .from("members")
 .select("*")
 .eq("line_user_id", userId)
 
+if(error){
+showError("Database error")
+return
+}
+
 if(!data || data.length === 0){
-
-showError("ไม่พบสมาชิก")
-
+showError("ไม่พบสมาชิกที่เชื่อมกับ LINE นี้")
 return
 }
 
@@ -150,23 +167,61 @@ document.getElementById("memberData").innerHTML = `
 
 <div class="card">
 
-<div class="row"><b>ชื่อ :</b> ${member.first_name} ${member.last_name}</div>
+<h3>ข้อมูลสมาชิก</h3>
 
-<div class="row"><b>เบอร์โทร :</b> ${member.phone ?? ""}</div>
+<div class="row"><span class="label">รหัสสมาชิก :</span> ${member.member_id}</div>
 
-<div class="row"><b>บ้านเลขที่ :</b> ${member.house_no ?? ""}</div>
+<div class="row"><span class="label">กลุ่ม :</span> ${member.group ?? ""}</div>
 
-<div class="row"><b>หมู่ :</b> ${member.moo ?? ""}</div>
+<div class="row"><span class="label">สถานะ :</span> ${member.member_status ?? ""}</div>
 
-<div class="row"><b>ตำบล :</b> ${member.subdistrict ?? ""}</div>
+<div class="row"><span class="label">วันสมัคร :</span> ${member.join_date ?? ""}</div>
 
-<div class="row"><b>อำเภอ :</b> ${member.district ?? ""}</div>
+</div>
 
-<div class="row"><b>จังหวัด :</b> ${member.province ?? ""}</div>
+
+<div class="card">
+
+<h3>ข้อมูลส่วนตัว</h3>
+
+<div class="row"><span class="label">ชื่อ :</span> ${member.first_name}</div>
+
+<div class="row"><span class="label">นามสกุล :</span> ${member.last_name}</div>
+
+<div class="row"><span class="label">เบอร์โทร :</span> ${member.phone ?? ""}</div>
+
+</div>
+
+
+<div class="card">
+
+<h3>ที่อยู่</h3>
+
+<div class="row"><span class="label">บ้านเลขที่ :</span> ${member.house_no ?? ""}</div>
+
+<div class="row"><span class="label">หมู่ :</span> ${member.moo ?? ""}</div>
+
+<div class="row"><span class="label">ซอย :</span> ${member.soi ?? ""}</div>
+
+<div class="row"><span class="label">ถนน :</span> ${member.street ?? ""}</div>
+
+<div class="row"><span class="label">ตำบล :</span> ${member.subdistrict ?? ""}</div>
+
+<div class="row"><span class="label">อำเภอ :</span> ${member.district ?? ""}</div>
+
+<div class="row"><span class="label">จังหวัด :</span> ${member.province ?? ""}</div>
+
+<div class="row"><span class="label">รหัสไปรษณีย์ :</span> ${member.postal_code ?? ""}</div>
+
+</div>
+
+
+<div class="card">
 
 <button onclick="renderEdit()">แก้ไขข้อมูล</button>
 
 </div>
+
 `
 
 }
@@ -177,75 +232,63 @@ document.getElementById("memberData").innerHTML = `
 
 <div class="card">
 
-<div class="row">
+<h3>ข้อมูลสมาชิก</h3>
+
+<div class="row"><span class="label">รหัสสมาชิก :</span> ${member.member_id}</div>
+
+<div class="row"><span class="label">กลุ่ม :</span> ${member.group ?? ""}</div>
+
+</div>
+
+
+<div class="card">
+
+<h3>แก้ไขข้อมูลส่วนตัว</h3>
 
 <label>ชื่อ</label>
-
 <input id="first_name" value="${member.first_name}">
 
-</div>
-
-<div class="row">
-
 <label>นามสกุล</label>
-
 <input id="last_name" value="${member.last_name}">
 
-</div>
-
-<div class="row">
-
 <label>เบอร์โทร</label>
-
 <input id="phone" value="${member.phone ?? ""}">
 
 </div>
 
-<div class="row">
+<div class="card">
+
+<h3>แก้ไขที่อยู่</h3>
 
 <label>บ้านเลขที่</label>
-
 <input id="house_no" value="${member.house_no ?? ""}">
 
-</div>
-
-<div class="row">
-
 <label>หมู่</label>
-
 <input id="moo" value="${member.moo ?? ""}">
 
-</div>
+<label>ซอย</label>
+<input id="soi" value="${member.soi ?? ""}">
 
-<div class="row">
+<label>ถนน</label>
+<input id="street" value="${member.street ?? ""}">
 
 <label>ตำบล</label>
-
 <input id="subdistrict" value="${member.subdistrict ?? ""}">
 
-</div>
-
-<div class="row">
-
 <label>อำเภอ</label>
-
 <input id="district" value="${member.district ?? ""}">
 
-</div>
-
-<div class="row">
-
 <label>จังหวัด</label>
-
 <input id="province" value="${member.province ?? ""}">
 
-</div>
+<label>รหัสไปรษณีย์</label>
+<input id="postal_code" value="${member.postal_code ?? ""}">
 
 <button onclick="saveMember()">บันทึก</button>
-
-<button onclick="renderView()">ยกเลิก</button>
+<button class="cancel" onclick="renderView()">ยกเลิก</button>
 
 </div>
+
 `
 
 }
@@ -261,9 +304,12 @@ last_name:document.getElementById("last_name").value,
 phone:document.getElementById("phone").value,
 house_no:document.getElementById("house_no").value,
 moo:document.getElementById("moo").value,
+soi:document.getElementById("soi").value,
+street:document.getElementById("street").value,
 subdistrict:document.getElementById("subdistrict").value,
 district:document.getElementById("district").value,
-province:document.getElementById("province").value
+province:document.getElementById("province").value,
+postal_code:document.getElementById("postal_code").value
 
 })
 .eq("member_id", member.member_id)
