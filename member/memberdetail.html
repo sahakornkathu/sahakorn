@@ -235,8 +235,14 @@ document.getElementById("app").innerHTML=`
 <img src="${member.line_picture}" width="80" style="border-radius:50%">
 
 <p><b>รหัสสมาชิก :</b> ${member.member_id}</p>
-
 <p><b>เลขบัตร :</b> ${member.id_card}</p>
+
+</div>
+
+
+<div class="card">
+
+<h3>ข้อมูลส่วนตัว</h3>
 
 <p><b>ชื่อ :</b> ${member.first_name}</p>
 
@@ -247,6 +253,13 @@ document.getElementById("app").innerHTML=`
 <p><b>วันเกิด :</b> ${thaiDate(member.birthday)}</p>
 
 <p><b>อายุ :</b> ${calcAge(member.birthday)} ปี</p>
+
+</div>
+
+
+<div class="card">
+
+<h3>ที่อยู่</h3>
 
 <p><b>บ้านเลขที่ :</b> ${member.house_no ?? ""}</p>
 
@@ -274,25 +287,32 @@ document.getElementById("app").innerHTML=`
 
 <div class="card">
 
-<h3>แก้ไขข้อมูล</h3>
+<h3>แก้ไขข้อมูลส่วนตัว</h3>
 
-<input id="first_name" value="${member.first_name}">
+<input id="first_name" value="${member.first_name}" placeholder="ชื่อ">
 
-<input id="last_name" value="${member.last_name}">
+<input id="last_name" value="${member.last_name}" placeholder="นามสกุล">
 
-<input id="phone" value="${member.phone ?? ""}">
+<input id="phone" value="${member.phone ?? ""}" placeholder="เบอร์โทร">
 
-<input id="house_no" value="${member.house_no ?? ""}">
+</div>
 
-<input id="moo" value="${member.moo ?? ""}">
 
-<input id="soi" value="${member.soi ?? ""}">
+<div class="card">
 
-<input id="subdistrict" value="${member.subdistrict ?? ""}">
+<h3>แก้ไขที่อยู่</h3>
 
-<input id="district" value="${member.district ?? ""}">
+<input id="house_no" value="${member.house_no ?? ""}" placeholder="บ้านเลขที่">
 
-<input id="province" value="${member.province ?? ""}">
+<input id="moo" value="${member.moo ?? ""}" placeholder="หมู่">
+
+<input id="soi" value="${member.soi ?? ""}" placeholder="ซอย">
+
+<input id="subdistrict" value="${member.subdistrict ?? ""}" placeholder="ตำบล">
+
+<input id="district" value="${member.district ?? ""}" placeholder="อำเภอ">
+
+<input id="province" value="${member.province ?? ""}" placeholder="จังหวัด">
 
 <button class="primary" onclick="saveMember()">บันทึก</button>
 
