@@ -61,6 +61,7 @@ padding:8px;
 border:1px solid #ccc;
 border-radius:6px;
 margin-top:4px;
+margin-bottom:8px;
 }
 
 button{
@@ -177,12 +178,7 @@ document.getElementById("memberData").innerHTML = `
 
 <div class="row"><span class="label">วันสมัคร :</span> ${member.join_date ?? ""}</div>
 
-</div>
-
-
-<div class="card">
-
-<h3>ข้อมูลส่วนตัว</h3>
+<hr>
 
 <div class="row"><span class="label">ชื่อ :</span> ${member.first_name}</div>
 
@@ -223,7 +219,6 @@ document.getElementById("memberData").innerHTML = `
 </div>
 
 `
-
 }
 
 function renderEdit(){
@@ -238,12 +233,11 @@ document.getElementById("memberData").innerHTML = `
 
 <div class="row"><span class="label">กลุ่ม :</span> ${member.group ?? ""}</div>
 
-</div>
+<div class="row"><span class="label">สถานะ :</span> ${member.member_status ?? ""}</div>
 
+<div class="row"><span class="label">วันสมัคร :</span> ${member.join_date ?? ""}</div>
 
-<div class="card">
-
-<h3>แก้ไขข้อมูลส่วนตัว</h3>
+<hr>
 
 <label>ชื่อ</label>
 <input id="first_name" value="${member.first_name}">
@@ -256,9 +250,10 @@ document.getElementById("memberData").innerHTML = `
 
 </div>
 
+
 <div class="card">
 
-<h3>แก้ไขที่อยู่</h3>
+<h3>ที่อยู่</h3>
 
 <label>บ้านเลขที่</label>
 <input id="house_no" value="${member.house_no ?? ""}">
@@ -290,7 +285,6 @@ document.getElementById("memberData").innerHTML = `
 </div>
 
 `
-
 }
 
 async function saveMember(){
