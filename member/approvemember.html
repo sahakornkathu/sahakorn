@@ -3,7 +3,7 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<title>Admin - อนุมัติสมาชิก (Realtime)</title>
+<title>Admin - อนุมัติสมาชิก LINE</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -27,6 +27,21 @@ border-radius:12px;
 box-shadow:0 4px 12px rgba(0,0,0,0.1);
 }
 
+h2{
+margin-top:0;
+}
+
+.search{
+margin-top:10px;
+}
+
+input{
+padding:8px;
+border:1px solid #ccc;
+border-radius:6px;
+width:250px;
+}
+
 table{
 width:100%;
 border-collapse:collapse;
@@ -36,6 +51,7 @@ margin-top:15px;
 th,td{
 border-bottom:1px solid #eee;
 padding:10px;
+text-align:left;
 }
 
 th{
@@ -59,10 +75,16 @@ background:#ff4d4f;
 color:white;
 }
 
+.counter{
+margin-top:10px;
+font-size:14px;
+color:#666;
+}
+
 .status{
 margin-top:10px;
-color:#888;
-font-size:14px;
+font-size:13px;
+color:#999;
 }
 
 </style>
@@ -76,6 +98,14 @@ font-size:14px;
 <div class="card">
 
 <h2>อนุมัติสมาชิก LINE</h2>
+
+<div class="search">
+<input id="search" placeholder="ค้นหาชื่อ หรือ เลขบัตร">
+</div>
+
+<div class="counter">
+สมาชิกที่รออนุมัติ : <b id="count">0</b>
+</div>
 
 <div class="status" id="status"></div>
 
@@ -104,26 +134,37 @@ font-size:14px;
 
 <script>
 
-const supabase = window.supabase.createClient(
+const sb = window.supabase.createClient(
 "https://ttottijljxoinptmhgtu.supabase.co",
 "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y"
 )
 
+let members=[]
+
 async function loadMembers(){
 
-const { data } = await supabase
+const { data, error } = await sb
 .from("members")
 .select("*")
 .eq("line_register_status","pending")
 .order("member_id",{ascending:true})
 
+if(error){
+alert("โหลดข้อมูลไม่ได้")
+return
+}
+
+members=data
+
 renderTable(data)
+
+document.getElementById("count").innerText=data.length
 
 }
 
 function renderTable(data){
 
-const table = document.getElementById("memberTable")
+const table=document.getElementById("memberTable")
 
 table.innerHTML=""
 
@@ -165,7 +206,9 @@ table.innerHTML+=`
 
 async function approve(memberId){
 
-await supabase
+if(!confirm("อนุมัติสมาชิกนี้ ?")) return
+
+await sb
 .from("members")
 .update({
 line_register_status:"approved"
@@ -176,7 +219,9 @@ line_register_status:"approved"
 
 async function reject(memberId){
 
-await supabase
+if(!confirm("ปฏิเสธสมาชิกนี้ ?")) return
+
+await sb
 .from("members")
 .update({
 line_register_status:"reject"
@@ -187,29 +232,44 @@ line_register_status:"reject"
 
 function startRealtime(){
 
-supabase
-.channel('members-channel')
+sb
+.channel("members-channel")
 
 .on(
-'postgres_changes',
+"postgres_changes",
 {
-event:'*',
-schema:'public',
-table:'members'
+event:"*",
+schema:"public",
+table:"members"
 },
-payload => {
+payload=>{
 
-document.getElementById("status").innerText =
+document.getElementById("status").innerText=
 "Realtime update : "+new Date().toLocaleTimeString()
 
 loadMembers()
 
 }
-
 )
+
 .subscribe()
 
 }
+
+document.getElementById("search").addEventListener("keyup",function(){
+
+const keyword=this.value.toLowerCase()
+
+const filtered=members.filter(m=>
+
+(m.first_name+" "+m.last_name).toLowerCase().includes(keyword) ||
+m.id_card.includes(keyword)
+
+)
+
+renderTable(filtered)
+
+})
 
 loadMembers()
 
