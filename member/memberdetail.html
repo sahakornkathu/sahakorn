@@ -25,8 +25,6 @@ max-width:480px;
 margin:auto;
 }
 
-/* PROFILE HEADER */
-
 .header{
 text-align:center;
 padding:26px 15px;
@@ -45,8 +43,6 @@ border:4px solid white;
 margin-bottom:8px;
 }
 
-/* CARD */
-
 .card{
 background:white;
 border-radius:14px;
@@ -60,8 +56,6 @@ margin-top:0;
 font-size:16px;
 }
 
-/* ROW */
-
 .row{
 display:flex;
 justify-content:space-between;
@@ -73,8 +67,6 @@ border-bottom:1px solid #eee;
 .row:last-child{
 border-bottom:none;
 }
-
-/* BUTTON */
 
 button{
 border:none;
@@ -97,8 +89,6 @@ width:100%;
 margin-top:10px;
 }
 
-/* EDIT BUTTON */
-
 .edit-btn{
 position:absolute;
 top:12px;
@@ -108,8 +98,6 @@ color:white;
 padding:8px 10px;
 font-size:13px;
 }
-
-/* INPUT */
 
 input{
 width:100%;
@@ -128,7 +116,7 @@ font-weight:bold;
 
 .tabs{
 display:flex;
-background:#ffffff;
+background:white;
 border-radius:12px;
 margin-bottom:14px;
 overflow:hidden;
@@ -144,7 +132,6 @@ font-size:14px;
 cursor:pointer;
 color:#222;
 background:#f5f5f5;
-transition:0.2s;
 }
 
 .tab.active{
@@ -152,20 +139,12 @@ background:#06c755;
 color:#000;
 }
 
-/* TAB CONTENT */
-
 .tab-content{
 display:none;
-animation:fade 0.25s ease;
 }
 
 .tab-content.active{
 display:block;
-}
-
-@keyframes fade{
-from{opacity:0}
-to{opacity:1}
 }
 
 /* DARK MODE */
@@ -228,6 +207,8 @@ let userId
 let profile
 let member
 
+/* DARK MODE */
+
 function toggleDark(){
 
 document.documentElement.classList.toggle("dark")
@@ -241,10 +222,14 @@ localStorage.setItem("theme","light")
 }
 
 function loadTheme(){
+
 if(localStorage.getItem("theme")==="dark"){
 document.documentElement.classList.add("dark")
 }
+
 }
+
+/* DATE FORMAT */
 
 function thaiDate(date){
 
@@ -278,6 +263,38 @@ return age
 
 }
 
+/* THAI DATE INPUT */
+
+function formatThaiDateInput(date){
+
+if(!date) return ""
+
+const d=new Date(date)
+
+const day=String(d.getDate()).padStart(2,"0")
+const month=String(d.getMonth()+1).padStart(2,"0")
+const year=d.getFullYear()+543
+
+return `${day}/${month}/${year}`
+
+}
+
+function convertThaiToISO(date){
+
+if(!date) return null
+
+const parts=date.split("/")
+
+const day=parts[0]
+const month=parts[1]
+const year=parts[2]-543
+
+return `${year}-${month}-${day}`
+
+}
+
+/* TAB */
+
 function openTab(tab){
 
 document.querySelectorAll(".tab").forEach(t=>{
@@ -292,6 +309,8 @@ document.getElementById("tabBtn_"+tab).classList.add("active")
 document.getElementById("tab_"+tab).classList.add("active")
 
 }
+
+/* INIT */
 
 async function init(){
 
@@ -318,13 +337,19 @@ const {data}=await sb
 .maybeSingle()
 
 if(data){
+
 member=data
 showProfile()
+
 }else{
+
 showBindPage()
+
 }
 
 }
+
+/* BIND */
 
 function showBindPage(){
 
@@ -370,14 +395,15 @@ await sb
 .update({
 line_user_id:userId,
 line_display_name:profile.displayName,
-line_picture:profile.pictureUrl,
-line_bind_date:new Date().toISOString()
+line_picture:profile.pictureUrl
 })
 .eq("id_card",idcard)
 
 checkBind()
 
 }
+
+/* MEETING */
 
 async function loadMeeting(){
 
@@ -409,6 +435,8 @@ html+=`
 return html
 
 }
+
+/* PROFILE */
 
 async function showProfile(){
 
@@ -463,22 +491,6 @@ document.getElementById("app").innerHTML=`
 
 </div>
 
-
-<div class="card">
-
-<h3>📍 ที่อยู่</h3>
-
-<div class="row"><b>บ้านเลขที่ :</b> ${member.house_no ?? ""}</div>
-<div class="row"><b>หมู่ :</b> ${member.moo ?? ""}</div>
-<div class="row"><b>ซอย :</b> ${member.soi ?? ""}</div>
-<div class="row"><b>ตำบล :</b> ${member.subdistrict ?? ""}</div>
-<div class="row"><b>อำเภอ :</b> ${member.district ?? ""}</div>
-<div class="row"><b>จังหวัด :</b> ${member.province ?? ""}</div>
-
-<button class="danger" onclick="unbind()">ยกเลิกผูกบัญชี LINE</button>
-
-</div>
-
 </div>
 
 
@@ -498,6 +510,8 @@ ${meetingHTML}
 
 }
 
+/* EDIT */
+
 function editMember(){
 
 document.getElementById("app").innerHTML=`
@@ -512,29 +526,11 @@ document.getElementById("app").innerHTML=`
 <label>นามสกุล</label>
 <input id="last_name" value="${member.last_name}">
 
-<label>วันเกิด</label>
-<input type="date" id="birthday" value="${member.birthday ?? ""}">
+<label>วันเกิด (พ.ศ.)</label>
+<input id="birthday" value="${formatThaiDateInput(member.birthday)}" placeholder="dd/mm/yyyy">
 
 <label>เบอร์โทร</label>
 <input id="phone" value="${member.phone ?? ""}">
-
-<label>บ้านเลขที่</label>
-<input id="house_no" value="${member.house_no ?? ""}">
-
-<label>หมู่</label>
-<input id="moo" value="${member.moo ?? ""}">
-
-<label>ซอย</label>
-<input id="soi" value="${member.soi ?? ""}">
-
-<label>ตำบล</label>
-<input id="subdistrict" value="${member.subdistrict ?? ""}">
-
-<label>อำเภอ</label>
-<input id="district" value="${member.district ?? ""}">
-
-<label>จังหวัด</label>
-<input id="province" value="${member.province ?? ""}">
 
 <button class="primary" onclick="saveMember()">บันทึก</button>
 
@@ -552,35 +548,13 @@ await sb
 
 first_name:document.getElementById("first_name").value,
 last_name:document.getElementById("last_name").value,
-phone:document.getElementById("phone").value,
-house_no:document.getElementById("house_no").value,
-moo:document.getElementById("moo").value,
-soi:document.getElementById("soi").value,
-subdistrict:document.getElementById("subdistrict").value,
-district:document.getElementById("district").value,
-province:document.getElementById("province").value
+birthday:convertThaiToISO(document.getElementById("birthday").value),
+phone:document.getElementById("phone").value
 
 })
 .eq("line_user_id",userId)
 
 checkBind()
-
-}
-
-async function unbind(){
-
-if(!confirm("ต้องการยกเลิกผูกบัญชี LINE ?")) return
-
-await sb
-.from("members")
-.update({
-line_user_id:null,
-line_display_name:null,
-line_picture:null
-})
-.eq("line_user_id",userId)
-
-location.reload()
 
 }
 
