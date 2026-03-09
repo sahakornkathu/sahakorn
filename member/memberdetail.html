@@ -92,7 +92,7 @@ const {data,error}=await sb
 .from("members")
 .select("*")
 .eq("line_user_id",userId)
-.single()
+.maybeSingle()
 
 if(error && error.code !== "PGRST116"){
 console.error(error)
@@ -139,7 +139,7 @@ const {data,error}=await sb
 .from("members")
 .select("*")
 .eq("id_card",idcard)
-.single()
+.maybeSingle()
 
 if(error){
 alert("ไม่พบข้อมูลสมาชิก")
