@@ -382,6 +382,99 @@ checkBind()
 
 }
 
+// UNBIND
+async function unbind(){
+
+if(!confirm("ต้องการยกเลิกผูกบัญชี LINE ?")) return
+
+await sb
+.from("members")
+.update({
+line_user_id:null,
+line_display_name:null,
+line_picture:null
+})
+.eq("line_user_id",userId)
+
+location.reload()
+
+}
+
+// Editmember
+
+  /* EDIT */
+
+function editMember(){
+
+document.getElementById("app").innerHTML=`
+
+<div class="card">
+
+<h3>แก้ไขข้อมูลสมาชิก</h3>
+
+<label>ชื่อ</label>
+<input id="first_name" value="${member.first_name}">
+
+<label>นามสกุล</label>
+<input id="last_name" value="${member.last_name}">
+
+<label>วันเกิด (พ.ศ.)</label>
+<input id="birthday" value="${formatThaiDateInput(member.birthday)}">
+
+<label>เบอร์โทร</label>
+<input id="phone" value="${member.phone ?? ""}">
+
+<label>บ้านเลขที่</label>
+<input id="house_no" value="${member.house_no ?? ""}">
+
+<label>หมู่</label>
+<input id="moo" value="${member.moo ?? ""}">
+
+<label>ซอย</label>
+<input id="soi" value="${member.soi ?? ""}">
+
+<label>ตำบล</label>
+<input id="subdistrict" value="${member.subdistrict ?? ""}">
+
+<label>อำเภอ</label>
+<input id="district" value="${member.district ?? ""}">
+
+<label>จังหวัด</label>
+<input id="province" value="${member.province ?? ""}">
+
+<button class="primary" onclick="saveMember()">บันทึก</button>
+
+</div>
+
+`
+
+}
+
+// SAVEMEMBER
+
+  async function saveMember(){
+
+await sb
+.from("members")
+.update({
+
+first_name:document.getElementById("first_name").value,
+last_name:document.getElementById("last_name").value,
+birthday:convertThaiToISO(document.getElementById("birthday").value),
+phone:document.getElementById("phone").value,
+house_no:document.getElementById("house_no").value,
+moo:document.getElementById("moo").value,
+soi:document.getElementById("soi").value,
+subdistrict:document.getElementById("subdistrict").value,
+district:document.getElementById("district").value,
+province:document.getElementById("province").value
+
+})
+.eq("line_user_id",userId)
+
+checkBind()
+
+}
 /* MEETING */
 
 async function loadMeeting(){
