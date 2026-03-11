@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html>
+
+<html lang="th">
 <head>
 
 <meta charset="UTF-8">
@@ -7,39 +8,58 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
 <style>
 
 body{
-font-family:sans-serif;
+font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
 background:#f4f6f9;
-padding:30px;
+padding:20px;
+}
+
+.container{
+max-width:600px;
+margin:auto;
 }
 
 .card{
-max-width:500px;
-margin:auto;
 background:white;
-padding:25px;
-border-radius:12px;
+padding:20px;
+border-radius:14px;
 box-shadow:0 4px 12px rgba(0,0,0,0.1);
+margin-bottom:15px;
 }
 
 input{
 width:100%;
-padding:10px;
-margin-top:8px;
+padding:12px;
+margin-top:6px;
 margin-bottom:12px;
 border:1px solid #ccc;
-border-radius:6px;
+border-radius:8px;
 }
 
 button{
 background:#06c755;
 color:white;
-padding:10px;
 border:none;
-border-radius:6px;
+padding:12px;
+border-radius:10px;
 width:100%;
+font-size:15px;
+cursor:pointer;
+}
+
+.row{
+display:flex;
+justify-content:space-between;
+padding:6px 0;
+border-bottom:1px solid #eee;
+}
+
+h2{
+margin-top:0;
 }
 
 </style>
@@ -48,12 +68,83 @@ width:100%;
 
 <body>
 
+<div class="container">
+
 <div class="card">
 
-<h2>บันทึกหุ้นสมาชิก</h2>
+<h2>ค้นหาสมาชิก</h2>
 
-<label>รหัสสมาชิก</label>
-<input id="member_id">
+<label>รหัสสมาชิก</label> <input id="member_id">
+
+<button onclick="searchMember()">ค้นหา</button>
+
+</div>
+
+<div id="memberInfo"></div>
+
+<div id="shareForm"></div>
+
+</div>
+
+<script>
+
+const sb = window.supabase.createClient(
+"https://ttottijljxoinptmhgtu.supabase.co",
+"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y"
+)
+
+let currentMember=null
+
+async function searchMember(){
+
+const id=document.getElementById("member_id").value
+
+const {data}=await sb
+.from("members")
+.select("*")
+.eq("member_id",id)
+.maybeSingle()
+
+if(!data){
+
+alert("ไม่พบสมาชิก")
+return
+
+}
+
+currentMember=data
+
+document.getElementById("memberInfo").innerHTML=`
+
+<div class="card">
+
+<h2>ข้อมูลสมาชิก</h2>
+
+<div class="row">
+<span>รหัสสมาชิก</span>
+<span>${data.member_id}</span>
+</div>
+
+<div class="row">
+<span>ชื่อ</span>
+<span>${data.first_name} ${data.last_name}</span>
+</div>
+
+</div>
+
+`
+
+showShareForm()
+
+}
+
+function showShareForm(){
+
+document.getElementById("shareForm").innerHTML=`
+
+<div class="card">
+
+<h2>บันทึกหุ้น</h2>
 
 <label>ปีบัญชี</label>
 <input id="fiscal_year">
@@ -70,31 +161,51 @@ width:100%;
 <label>ยอดคงเหลือ</label>
 <input id="share_balance">
 
-<button onclick="save()">บันทึก</button>
+<button onclick="saveShare()">บันทึก</button>
 
 </div>
 
-<script>
+`
 
-const sb = window.supabase.createClient(
-"https://ttottijljxoinptmhgtu.supabase.co",
-"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y"
-)
+}
 
-async function save(){
+async function saveShare(){
 
-await sb
+const year=document.getElementById("fiscal_year").value
+
+const {data}=await sb
 .from("member_share")
-.insert({
+.select("*")
+.eq("member_id",currentMember.member_id)
+.eq("fiscal_year",year)
+.maybeSingle()
 
-member_id:document.getElementById("member_id").value,
-fiscal_year:document.getElementById("fiscal_year").value,
+const payload={
+
+member_id:currentMember.member_id,
+fiscal_year:year,
 share_begin:document.getElementById("share_begin").value,
 share_buy:document.getElementById("share_buy").value,
 share_sell:document.getElementById("share_sell").value,
 share_balance:document.getElementById("share_balance").value
 
-})
+}
+
+if(data){
+
+await sb
+.from("member_share")
+.update(payload)
+.eq("member_id",currentMember.member_id)
+.eq("fiscal_year",year)
+
+}else{
+
+await sb
+.from("member_share")
+.insert(payload)
+
+}
 
 alert("บันทึกสำเร็จ")
 
