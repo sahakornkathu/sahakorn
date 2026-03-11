@@ -86,6 +86,16 @@ background:#eee;
 
 <div id="formBox"></div>
 
+<div class="card">
+
+<label>ค้นหาปีบัญชี</label>
+
+<select id="yearFilter" onchange="loadReport()">
+<option value="all">ทุกปี</option>
+</select>
+
+</div>
+  
 <div id="reportBox"></div>
 
 </div>
@@ -208,6 +218,27 @@ loadReport()
 
 }
 
+
+async function loadYearFilter(){
+
+const {data}=await sb
+.from("member_share_tx")
+.select("fiscal_year")
+.eq("member_id",member.member_id)
+
+let years=[...new Set(data.map(r=>r.fiscal_year))]
+
+years.sort((a,b)=>b-a)
+
+let html='<option value="all">ทุกปี</option>'
+
+years.forEach(y=>{
+html+=`<option value="${y}">${y}</option>`
+})
+
+document.getElementById("yearFilter").innerHTML=html
+
+}  
 /* ฟอร์ม */
 
 function showForm(){
@@ -342,10 +373,20 @@ loadReport()
 
 async function loadReport(){
 
-const {data}=await sb
+let query=sb
 .from("member_share_tx")
 .select("*")
 .eq("member_id",member.member_id)
+
+const year=document.getElementById("yearFilter")?.value
+
+if(year && year!=="all"){
+
+query=query.eq("fiscal_year",year)
+
+}
+
+const {data}=await query
 .order("fiscal_year",{ascending:false})
 .order("trans_date",{ascending:true})
 
