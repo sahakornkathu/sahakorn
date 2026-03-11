@@ -372,26 +372,42 @@ function openTab(tab){
   document.getElementById("tab_"+tab)?.classList.add("active");
 }
 
+
 /* INIT */
 async function init(){
 
-  await liff.init({liffId:LIFF_ID});
+  try{
 
-  if(!liff.isLoggedIn()){
-    liff.login();
-    return;
+    await liff.init({ liffId: LIFF_ID });
+
+    if(!liff.isLoggedIn()){
+      liff.login();
+      return;
+    }
+
+    if(!liff.isInClient()){
+      console.log("เปิดผ่าน browser");
+    }
+
+    const profileData = await liff.getProfile();
+
+    profile = profileData;
+    userId = profile.userId;
+
+    console.log("LINE USER:",userId);
+
+    renderEnvInfo();
+
+    await checkBind();
+
+  }catch(err){
+
+    console.error("LIFF ERROR",err);
+
+    document.getElementById("app").innerHTML=
+    "<div class='card'>โหลดข้อมูลไม่สำเร็จ</div>";
+
   }
-
-  await liff.ready;
-
-  // เปลี่ยน background ของ LIFF
-  liff.setBackgroundColor({color:"#121212"});
-
-  profile = await liff.getProfile();
-  userId = profile.userId;
-
-  renderEnvInfo();
-  checkBind();
 
 }
 
@@ -407,18 +423,33 @@ function renderEnvInfo(){
 }
 
 async function checkBind(){
-  const {data}=await sb
-    .from("members")
-    .select("*")
-    .eq("line_user_id",userId)
-    .maybeSingle();
 
-  if(data){
-    member=data;
-    showProfile();
-  }else{
-    showBindPage();
+  try{
+
+    const {data,error}=await sb
+      .from("members")
+      .select("*")
+      .eq("line_user_id",userId)
+      .maybeSingle();
+
+    if(error){
+      console.log(error);
+      return;
+    }
+
+    if(data){
+      member=data;
+      showProfile();
+    }else{
+      showBindPage();
+    }
+
+  }catch(e){
+
+    console.log(e);
+
   }
+
 }
 
 /* BIND */
@@ -715,7 +746,7 @@ async function showProfile(){
   document.getElementById("app").innerHTML=`
     <div class="header">
       <button class="edit-btn" onclick="editMember()">แก้ไข</button>
-      <img src="${member.line_picture || ""}">
+      <img src="${member.line_picture || profile.pictureUrl}">
       <h3>${profile.displayName}</h3>
     </div>
 
