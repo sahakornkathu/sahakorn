@@ -8,6 +8,8 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
@@ -19,7 +21,7 @@ padding:20px;
 }
 
 .container{
-max-width:600px;
+max-width:900px;
 margin:auto;
 }
 
@@ -33,9 +35,9 @@ margin-bottom:15px;
 
 input{
 width:100%;
-padding:12px;
+padding:10px;
 margin-top:6px;
-margin-bottom:12px;
+margin-bottom:10px;
 border:1px solid #ccc;
 border-radius:8px;
 }
@@ -44,22 +46,27 @@ button{
 background:#06c755;
 color:white;
 border:none;
-padding:12px;
-border-radius:10px;
-width:100%;
-font-size:15px;
+padding:10px;
+border-radius:8px;
 cursor:pointer;
+margin-top:5px;
+}
+
+.danger{
+background:#e53935;
 }
 
 .row{
 display:flex;
 justify-content:space-between;
-padding:6px 0;
 border-bottom:1px solid #eee;
+padding:6px 0;
 }
 
-h2{
-margin-top:0;
+.result{
+cursor:pointer;
+padding:6px;
+border-bottom:1px solid #eee;
 }
 
 </style>
@@ -72,15 +79,33 @@ margin-top:0;
 
 <div class="card">
 
-<h2>ค้นหาสมาชิก</h2>
+<h2>📈 Dashboard หุ้น</h2>
 
-<label>รหัสสมาชิก</label> <input id="member_id">
+<div class="row">
+<span>จำนวนสมาชิก</span>
+<span id="totalMember">0</span>
+</div>
 
-<button onclick="searchMember()">ค้นหา</button>
+<div class="row">
+<span>หุ้นรวมทั้งหมด</span>
+<span id="totalShare">0</span>
+</div>
+
+</div>
+
+<div class="card">
+
+<h2>🔎 ค้นหาสมาชิก</h2>
+
+<input id="search" placeholder="พิมพ์ชื่อสมาชิก" onkeyup="searchMember()">
+
+<div id="result"></div>
 
 </div>
 
 <div id="memberInfo"></div>
+
+<div id="shareList"></div>
 
 <div id="shareForm"></div>
 
@@ -95,9 +120,61 @@ const sb = window.supabase.createClient(
 
 let currentMember=null
 
+/* DASHBOARD */
+
+async function loadDashboard(){
+
+const {data}=await sb
+.from("member_share")
+.select("share_balance")
+
+let total=0
+
+data?.forEach(r=>{
+total+=Number(r.share_balance)
+})
+
+document.getElementById("totalShare").innerText=total
+
+const {count}=await sb
+.from("members")
+.select("*",{count:"exact",head:true})
+
+document.getElementById("totalMember").innerText=count
+
+}
+
+/* SEARCH MEMBER */
+
 async function searchMember(){
 
-const id=document.getElementById("member_id").value
+const key=document.getElementById("search").value
+
+const {data}=await sb
+.from("members")
+.select("*")
+.ilike("first_name","%"+key+"%")
+.limit(10)
+
+let html=""
+
+data?.forEach(m=>{
+
+html+=`
+<div class="result" onclick="selectMember(${m.member_id})">
+${m.member_id} - ${m.first_name} ${m.last_name}
+</div>
+`
+
+})
+
+document.getElementById("result").innerHTML=html
+
+}
+
+/* SELECT MEMBER */
+
+async function selectMember(id){
 
 const {data}=await sb
 .from("members")
@@ -105,20 +182,13 @@ const {data}=await sb
 .eq("member_id",id)
 .maybeSingle()
 
-if(!data){
-
-alert("ไม่พบสมาชิก")
-return
-
-}
-
 currentMember=data
 
 document.getElementById("memberInfo").innerHTML=`
 
 <div class="card">
 
-<h2>ข้อมูลสมาชิก</h2>
+<h3>ข้อมูลสมาชิก</h3>
 
 <div class="row">
 <span>รหัสสมาชิก</span>
@@ -134,9 +204,44 @@ document.getElementById("memberInfo").innerHTML=`
 
 `
 
+loadShare()
+
+}
+
+/* LOAD SHARE */
+
+async function loadShare(){
+
+const {data}=await sb
+.from("member_share")
+.select("*")
+.eq("member_id",currentMember.member_id)
+.order("fiscal_year",{ascending:false})
+
+let html=`<div class="card"><h3>📊 หุ้นทุกปี</h3>`
+
+data?.forEach(s=>{
+
+html+=`
+
+<div class="row">
+<span>ปี ${s.fiscal_year}</span>
+<span>${s.share_balance}</span>
+</div>
+
+`
+
+})
+
+html+=`</div>`
+
+document.getElementById("shareList").innerHTML=html
+
 showShareForm()
 
 }
+
+/* SHARE FORM */
 
 function showShareForm(){
 
@@ -144,24 +249,19 @@ document.getElementById("shareForm").innerHTML=`
 
 <div class="card">
 
-<h2>บันทึกหุ้น</h2>
+<h3>➕ เพิ่ม / ➖ หักหุ้น</h3>
 
 <label>ปีบัญชี</label>
 <input id="fiscal_year">
 
-<label>ยอดยกมา</label>
-<input id="share_begin">
+<label>จำนวนหุ้น</label>
+<input id="amount">
 
-<label>ซื้อระหว่างปี</label>
-<input id="share_buy">
+<button onclick="addShare()">เพิ่มหุ้น</button>
 
-<label>ขายระหว่างปี</label>
-<input id="share_sell">
+<button class="danger" onclick="sellShare()">หักหุ้น</button>
 
-<label>ยอดคงเหลือ</label>
-<input id="share_balance">
-
-<button onclick="saveShare()">บันทึก</button>
+<button onclick="exportExcel()">Export Excel</button>
 
 </div>
 
@@ -169,9 +269,12 @@ document.getElementById("shareForm").innerHTML=`
 
 }
 
-async function saveShare(){
+/* ADD SHARE */
+
+async function addShare(){
 
 const year=document.getElementById("fiscal_year").value
+const amount=Number(document.getElementById("amount").value)
 
 const {data}=await sb
 .from("member_share")
@@ -180,36 +283,81 @@ const {data}=await sb
 .eq("fiscal_year",year)
 .maybeSingle()
 
-const payload={
-
-member_id:currentMember.member_id,
-fiscal_year:year,
-share_begin:document.getElementById("share_begin").value,
-share_buy:document.getElementById("share_buy").value,
-share_sell:document.getElementById("share_sell").value,
-share_balance:document.getElementById("share_balance").value
-
-}
-
 if(data){
 
 await sb
 .from("member_share")
-.update(payload)
-.eq("member_id",currentMember.member_id)
-.eq("fiscal_year",year)
+.update({
+share_buy:data.share_buy+amount,
+share_balance:data.share_balance+amount
+})
+.eq("id",data.id)
 
 }else{
 
 await sb
 .from("member_share")
-.insert(payload)
+.insert({
+member_id:currentMember.member_id,
+fiscal_year:year,
+share_begin:0,
+share_buy:amount,
+share_sell:0,
+share_balance:amount
+})
 
 }
 
-alert("บันทึกสำเร็จ")
+loadShare()
+loadDashboard()
 
 }
+
+/* SELL SHARE */
+
+async function sellShare(){
+
+const year=document.getElementById("fiscal_year").value
+const amount=Number(document.getElementById("amount").value)
+
+const {data}=await sb
+.from("member_share")
+.select("*")
+.eq("member_id",currentMember.member_id)
+.eq("fiscal_year",year)
+.maybeSingle()
+
+await sb
+.from("member_share")
+.update({
+share_sell:data.share_sell+amount,
+share_balance:data.share_balance-amount
+})
+.eq("id",data.id)
+
+loadShare()
+loadDashboard()
+
+}
+
+/* EXPORT */
+
+async function exportExcel(){
+
+const {data}=await sb
+.from("member_share")
+.select("*")
+
+const ws=XLSX.utils.json_to_sheet(data)
+const wb=XLSX.utils.book_new()
+
+XLSX.utils.book_append_sheet(wb,ws,"share")
+
+XLSX.writeFile(wb,"share_report.xlsx")
+
+}
+
+loadDashboard()
 
 </script>
 
