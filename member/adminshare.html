@@ -19,7 +19,7 @@ padding:20px;
 }
 
 .container{
-max-width:500px;
+max-width:600px;
 margin:auto;
 }
 
@@ -55,6 +55,17 @@ display:flex;
 justify-content:space-between;
 padding:6px 0;
 border-bottom:1px solid #eee;
+font-size:14px;
+}
+
+.table{
+margin-top:10px;
+}
+
+.header{
+font-weight:bold;
+background:#eee;
+padding:6px;
 }
 
 </style>
@@ -79,6 +90,8 @@ border-bottom:1px solid #eee;
 
 <div id="formBox"></div>
 
+<div id="reportBox"></div>
+
 </div>
 
 <script>
@@ -90,7 +103,7 @@ const sb = window.supabase.createClient(
 
 let member=null
 
-/* แปลงวันที่ไทย */
+/* แปลงวันที่ พ.ศ. → ISO */
 
 function thaiToISO(date){
 
@@ -103,12 +116,17 @@ return `${year}-${month}-${day}`
 
 }
 
-/* คำนวณปีบัญชี */
+/* แปลงวันที่ ISO → พ.ศ. */
 
-function getFiscalYear(date){
+function isoToThai(date){
 
 const d=new Date(date)
-return d.getFullYear()+543
+
+const day=String(d.getDate()).padStart(2,"0")
+const month=String(d.getMonth()+1).padStart(2,"0")
+const year=d.getFullYear()+543
+
+return `${day}/${month}/${year}`
 
 }
 
@@ -155,9 +173,11 @@ document.getElementById("memberBox").innerHTML=`
 
 showForm()
 
+loadReport()
+
 }
 
-/* แสดงฟอร์ม */
+/* ฟอร์ม */
 
 function showForm(){
 
@@ -184,7 +204,7 @@ document.getElementById("formBox").innerHTML=`
 
 }
 
-/* บันทึกหุ้น */
+/* บันทึก */
 
 async function saveShare(){
 
@@ -193,10 +213,11 @@ const buy=Number(document.getElementById("buy").value||0)
 const sell=Number(document.getElementById("sell").value||0)
 
 const iso=thaiToISO(date)
-const year=getFiscalYear(iso)
+
+const year=new Date(iso).getFullYear()+543
 
 await sb
-.from("member_share")
+.from("member_share_tx")
 .insert({
 
 member_id:member.member_id,
@@ -208,6 +229,76 @@ share_sell:sell
 })
 
 alert("บันทึกสำเร็จ")
+
+loadReport()
+
+}
+
+/* โหลดรายงาน */
+
+async function loadReport(){
+
+const {data}=await sb
+.from("member_share_tx")
+.select("*")
+.eq("member_id",member.member_id)
+.order("trans_date",{ascending:false})
+
+let html=`
+
+<div class="card">
+
+<h3>รายงานซื้อขายหุ้น</h3>
+
+<div class="row header">
+<span>วันที่</span>
+<span>ซื้อ</span>
+<span>ขาย</span>
+</div>
+
+`
+
+let totalBuy=0
+let totalSell=0
+
+data?.forEach(r=>{
+
+totalBuy+=Number(r.share_buy)
+totalSell+=Number(r.share_sell)
+
+html+=`
+
+<div class="row">
+<span>${isoToThai(r.trans_date)}</span>
+<span>${r.share_buy}</span>
+<span>${r.share_sell}</span>
+</div>
+
+`
+
+})
+
+const balance=totalBuy-totalSell
+
+html+=`
+
+<div class="row header">
+<span>รวม</span>
+<span>${totalBuy}</span>
+<span>${totalSell}</span>
+</div>
+
+<div class="row">
+<span>ยอดคงเหลือ</span>
+<span>${balance}</span>
+<span></span>
+</div>
+
+</div>
+
+`
+
+document.getElementById("reportBox").innerHTML=html
 
 }
 
