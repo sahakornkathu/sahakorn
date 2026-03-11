@@ -776,11 +776,39 @@ ${meetingHTML}
 
 <div class="card">
 
+<label>เลือกปีบัญชี</label>
+
+<select id="shareYearFilter" onchange="reloadShareTx()">
+${shareYears}
+</select>
+
+</div>
+
+<div class="card">
+
 <h3>💰 หุ้นสหกรณ์</h3>
 
 <div id="shareSummaryBox">
-
 ${shareHTML}
+</div>
+
+</div>
+
+<div class="card">
+
+<h3>📊 รายงานซื้อขายหุ้น</h3>
+
+<div class="row" style="font-weight:bold">
+<span>วันที่</span>
+<span>ซื้อ</span>
+<span>ขาย</span>
+</div>
+
+<div id="shareTxBox">
+${shareTxHTML}
+</div>
+
+</div>
 
 </div>
 
