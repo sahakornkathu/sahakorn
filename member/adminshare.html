@@ -48,6 +48,7 @@ border:none;
 color:white;
 border-radius:8px;
 font-size:15px;
+cursor:pointer;
 }
 
 .row{
@@ -58,14 +59,9 @@ border-bottom:1px solid #eee;
 font-size:14px;
 }
 
-.table{
-margin-top:10px;
-}
-
 .header{
 font-weight:bold;
 background:#eee;
-padding:6px;
 }
 
 </style>
@@ -103,7 +99,7 @@ const sb = window.supabase.createClient(
 
 let member=null
 
-/* แปลงวันที่ พ.ศ. → ISO */
+/* แปลง พ.ศ → ISO */
 
 function thaiToISO(date){
 
@@ -116,7 +112,7 @@ return `${year}-${month}-${day}`
 
 }
 
-/* แปลงวันที่ ISO → พ.ศ. */
+/* ISO → พ.ศ */
 
 function isoToThai(date){
 
@@ -127,6 +123,41 @@ const month=String(d.getMonth()+1).padStart(2,"0")
 const year=d.getFullYear()+543
 
 return `${day}/${month}/${year}`
+
+}
+
+/* วันที่วันนี้ */
+
+function getTodayThai(){
+
+const d=new Date()
+
+const day=String(d.getDate()).padStart(2,"0")
+const month=String(d.getMonth()+1).padStart(2,"0")
+const year=d.getFullYear()+543
+
+return `${day}/${month}/${year}`
+
+}
+
+/* คำนวณปีบัญชี */
+
+function getFiscalYear(iso){
+
+const d=new Date(iso)
+
+const month=d.getMonth()+1
+const year=d.getFullYear()+543
+
+if(month>=4){
+
+return year
+
+}else{
+
+return year-1
+
+}
 
 }
 
@@ -188,7 +219,7 @@ document.getElementById("formBox").innerHTML=`
 <h3>บันทึกซื้อ / ขายหุ้น</h3>
 
 <label>วันที่ (พ.ศ.)</label>
-<input id="date" placeholder="dd/mm/yyyy">
+<input id="date" value="${getTodayThai()}">
 
 <label>ซื้อหุ้น</label>
 <input id="buy">
@@ -209,12 +240,13 @@ document.getElementById("formBox").innerHTML=`
 async function saveShare(){
 
 const date=document.getElementById("date").value
+
 const buy=Number(document.getElementById("buy").value||0)
 const sell=Number(document.getElementById("sell").value||0)
 
 const iso=thaiToISO(date)
 
-const year=new Date(iso).getFullYear()+543
+const fiscal=getFiscalYear(iso)
 
 await sb
 .from("member_share_tx")
@@ -222,7 +254,7 @@ await sb
 
 member_id:member.member_id,
 trans_date:iso,
-fiscal_year:year,
+fiscal_year:fiscal,
 share_buy:buy,
 share_sell:sell
 
