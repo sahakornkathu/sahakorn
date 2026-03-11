@@ -551,10 +551,18 @@ return html
 
 async function loadShare(){
 
-const {data}=await sb
+const year=document.getElementById("shareYearFilter")?.value
+
+let query=sb
 .from("member_share")
 .select("*")
 .eq("member_id",member.member_id)
+
+if(year && year!=="all"){
+query=query.eq("fiscal_year",year)
+}
+
+const {data}=await query
 .order("fiscal_year",{ascending:false})
 
 if(!data || data.length===0){
@@ -562,27 +570,19 @@ return "<div>ยังไม่มีข้อมูลหุ้น</div>"
 }
 
 let html=""
-let currentYear=null
 
 data.forEach(s=>{
 
-if(currentYear!==s.fiscal_year){
-
-currentYear=s.fiscal_year
-
 html+=`
+
 <div style="
 font-weight:bold;
 margin-top:10px;
 margin-bottom:6px;
 color:#06c755;
 ">
-ปีบัญชี ${currentYear}
+ปีบัญชี ${s.fiscal_year}
 </div>
-`
-}
-
-html+=`
 
 <div class="row">
 <span>ยอดยกมา</span>
@@ -820,9 +820,11 @@ init()
   
 async function reloadShareTx(){
 
-const html=await loadShareTx()
+const shareHTML=await loadShare()
+const txHTML=await loadShareTx()
 
-document.getElementById("shareTxBox").innerHTML=html
+document.getElementById("shareSummaryBox").innerHTML=shareHTML
+document.getElementById("shareTxBox").innerHTML=txHTML
 
 }
 </script>
