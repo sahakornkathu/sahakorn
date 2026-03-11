@@ -546,44 +546,6 @@ return html
 
 }
 
-/* SHARE */
-
-async function loadShare(){
-
-const {data}=await sb
-.from("member_share")
-.select("*")
-.eq("member_id",member.member_id)
-.order("fiscal_year",{ascending:false})
-
-if(!data || data.length===0){
-return "<div>ยังไม่มีข้อมูลหุ้น</div>"
-}
-
-let html=""
-
-data.forEach(s=>{
-
-html+=`
-
-<div class="card">
-
-<h3>ปีบัญชี ${s.fiscal_year}</h3>
-
-<div class="row"><span>ยอดยกมา</span><span>${s.share_begin ?? 0}</span></div>
-<div class="row"><span>ซื้อระหว่างปี</span><span>${s.share_buy ?? 0}</span></div>
-<div class="row"><span>ขายระหว่างปี</span><span>${s.share_sell ?? 0}</span></div>
-<div class="row"><span><b>ยอดคงเหลือ</b></span><span><b>${s.share_balance ?? 0}</b></span></div>
-
-</div>
-
-`
-
-})
-
-return html
-
-}
 
 /* SHARE */
 
