@@ -240,13 +240,13 @@ document.getElementById("formBox").innerHTML=`
 async function saveShare(){
 
 const date=document.getElementById("date").value
-
 const buy=Number(document.getElementById("buy").value||0)
 const sell=Number(document.getElementById("sell").value||0)
 
 const iso=thaiToISO(date)
-
 const fiscal=getFiscalYear(iso)
+
+/* 1 บันทึก transaction */
 
 await sb
 .from("member_share_tx")
@@ -259,6 +259,56 @@ share_buy:buy,
 share_sell:sell
 
 })
+
+/* 2 ตรวจ summary */
+
+const {data}=await sb
+.from("member_share")
+.select("*")
+.eq("member_id",member.member_id)
+.eq("fiscal_year",fiscal)
+.maybeSingle()
+
+if(data){
+
+/* update summary */
+
+const newBuy=data.share_buy+buy
+const newSell=data.share_sell+sell
+
+const balance=data.share_begin + newBuy - newSell
+
+await sb
+.from("member_share")
+.update({
+
+share_buy:newBuy,
+share_sell:newSell,
+share_balance:balance
+
+})
+.eq("id",data.id)
+
+}else{
+
+/* insert summary ปีใหม่ */
+
+const balance=buy-sell
+
+await sb
+.from("member_share")
+.insert({
+
+member_id:member.member_id,
+fiscal_year:fiscal,
+share_begin:0,
+share_buy:buy,
+share_sell:sell,
+share_balance:balance
+
+})
+
+}
 
 alert("บันทึกสำเร็จ")
 
