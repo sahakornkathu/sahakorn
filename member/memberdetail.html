@@ -613,6 +613,72 @@ html+=`
 return html
 
 }
+
+async function loadShareTx(){
+
+const year=document.getElementById("shareYearFilter")?.value
+
+let query=sb
+.from("member_share_tx")
+.select("*")
+.eq("member_id",member.member_id)
+
+if(year && year!=="all"){
+query=query.eq("fiscal_year",year)
+}
+
+const {data}=await query
+.order("fiscal_year",{ascending:false})
+.order("trans_date",{ascending:false})
+
+if(!data || data.length===0){
+return "<div>ยังไม่มีรายการซื้อขายหุ้น</div>"
+}
+
+let html=""
+
+data.forEach(r=>{
+
+html+=`
+
+<div class="row">
+<span>${thaiDate(r.trans_date)}</span>
+<span style="color:#06c755">${r.share_buy}</span>
+<span style="color:#ff4d4f">${r.share_sell}</span>
+</div>
+
+`
+
+})
+
+return html
+
+}
+  
+async function loadShareYears(){
+
+const {data}=await sb
+.from("member_share_tx")
+.select("fiscal_year")
+.eq("member_id",member.member_id)
+
+if(!data || data.length===0){
+return '<option value="all">ทุกปี</option>'
+}
+
+const years=[...new Set(data.map(x=>x.fiscal_year))]
+
+years.sort((a,b)=>b-a)
+
+let html='<option value="all">ทุกปี</option>'
+
+years.forEach(y=>{
+html+=`<option value="${y}">${y}</option>`
+})
+
+return html
+
+}
   
 /* PROFILE */
 
@@ -620,6 +686,8 @@ async function showProfile(){
 
 const meetingHTML=await loadMeeting()
 const shareHTML=await loadShare()
+const shareYears=await loadShareYears()
+const shareTxHTML=await loadShareTx()
 
 document.getElementById("app").innerHTML=`
 
@@ -714,6 +782,33 @@ ${shareHTML}
 
 </div>
 
+
+<div class="card">
+
+<h3>📊 รายงานซื้อขายหุ้น</h3>
+
+<label>ปีบัญชี</label>
+
+<select id="shareYearFilter" onchange="reloadShareTx()">
+
+${shareYears}
+
+</select>
+
+<div class="row" style="font-weight:bold">
+<span>วันที่</span>
+<span>ซื้อ</span>
+<span>ขาย</span>
+</div>
+
+<div id="shareTxBox">
+
+${shareTxHTML}
+
+</div>
+
+</div>
+
 </div>
 
 `
@@ -722,7 +817,14 @@ ${shareHTML}
 
 loadTheme()
 init()
+  
+async function reloadShareTx(){
 
+const html=await loadShareTx()
+
+document.getElementById("shareTxBox").innerHTML=html
+
+}
 </script>
 
 </body>
