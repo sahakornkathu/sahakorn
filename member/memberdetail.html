@@ -382,7 +382,15 @@ async function init(){
   }
 
   await liff.ready;
+// ⭐ เพิ่มบรรทัดนี้
+  liff.setBackgroundColor({ color: "#121212" });
 
+  profile=await liff.getProfile();
+  userId=profile.userId;
+
+  renderEnvInfo();
+  checkBind();
+}
   profile=await liff.getProfile();
   userId=profile.userId;
 
