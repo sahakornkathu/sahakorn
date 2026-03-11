@@ -400,7 +400,37 @@ location.reload()
 
 }
 
-// Editmember
+/* THAI DATE INPUT */
+
+function formatThaiDateInput(date){
+
+if(!date) return ""
+
+const d=new Date(date)
+
+const day=String(d.getDate()).padStart(2,"0")
+const month=String(d.getMonth()+1).padStart(2,"0")
+const year=d.getFullYear()+543
+
+return `${day}/${month}/${year}`
+
+}
+
+function convertThaiToISO(date){
+
+if(!date) return null
+
+const parts=date.split("/")
+
+if(parts.length!==3) return null
+
+const day=parts[0]
+const month=parts[1]
+const year=parts[2]-543
+
+return `${year}-${month}-${day}`
+
+}
 
   /* EDIT */
 
