@@ -815,17 +815,31 @@ ${shareTxHTML}
 </div>
 
 
+<div id="tab_share" class="tab-content">
+
+<div class="card">
+
+<label>เลือกปีบัญชี</label>
+
+<select id="shareYearFilter" onchange="reloadShareTx()">
+${shareYears}
+</select>
+
+</div>
+
+<div class="card">
+
+<h3>💰 หุ้นสหกรณ์</h3>
+
+<div id="shareSummaryBox">
+${shareHTML}
+</div>
+
+</div>
+
 <div class="card">
 
 <h3>📊 รายงานซื้อขายหุ้น</h3>
-
-<label>ปีบัญชี</label>
-
-<select id="shareYearFilter" onchange="reloadShareTx()">
-
-${shareYears}
-
-</select>
 
 <div class="row" style="font-weight:bold">
 <span>วันที่</span>
@@ -834,9 +848,7 @@ ${shareYears}
 </div>
 
 <div id="shareTxBox">
-
 ${shareTxHTML}
-
 </div>
 
 </div>
