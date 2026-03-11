@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<meta charset="UTF-8">
+<title>Admin หุ้นสหกรณ์</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+
+body{
+font-family:sans-serif;
+background:#f4f6f9;
+padding:30px;
+}
+
+.card{
+max-width:500px;
+margin:auto;
+background:white;
+padding:25px;
+border-radius:12px;
+box-shadow:0 4px 12px rgba(0,0,0,0.1);
+}
+
+input{
+width:100%;
+padding:10px;
+margin-top:8px;
+margin-bottom:12px;
+border:1px solid #ccc;
+border-radius:6px;
+}
+
+button{
+background:#06c755;
+color:white;
+padding:10px;
+border:none;
+border-radius:6px;
+width:100%;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="card">
+
+<h2>บันทึกหุ้นสมาชิก</h2>
+
+<label>รหัสสมาชิก</label>
+<input id="member_id">
+
+<label>ปีบัญชี</label>
+<input id="fiscal_year">
+
+<label>ยอดยกมา</label>
+<input id="share_begin">
+
+<label>ซื้อระหว่างปี</label>
+<input id="share_buy">
+
+<label>ขายระหว่างปี</label>
+<input id="share_sell">
+
+<label>ยอดคงเหลือ</label>
+<input id="share_balance">
+
+<button onclick="save()">บันทึก</button>
+
+</div>
+
+<script>
+
+const sb = window.supabase.createClient(
+"https://ttottijljxoinptmhgtu.supabase.co",
+"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y"
+)
+
+async function save(){
+
+await sb
+.from("member_share")
+.insert({
+
+member_id:document.getElementById("member_id").value,
+fiscal_year:document.getElementById("fiscal_year").value,
+share_begin:document.getElementById("share_begin").value,
+share_buy:document.getElementById("share_buy").value,
+share_sell:document.getElementById("share_sell").value,
+share_balance:document.getElementById("share_balance").value
+
+})
+
+alert("บันทึกสำเร็จ")
+
+}
+
+</script>
+
+</body>
+</html>
