@@ -503,8 +503,8 @@ html+=`
 
 <div class="row header">
 <span>วันที่</span>
-<span>ซื้อ</span>
-<span>ขาย</span>
+<span>ซื้อหุ้น</span>
+<span>ขายหุ้น</span>
 </div>
 
 `
@@ -528,9 +528,14 @@ html+=`
 
 html+=`
 
-<div class="row header">
-<span>รวมซื้อ ${totalBuy}</span>
-<span>รวมขาย ${totalSell}</span>
+<div class="row summary">
+<span>รวมซื้อ</span>
+<span>${totalBuy}</span>
+</div>
+
+<div class="row summary">
+<span>รวมขาย</span>
+<span>${totalSell}</span>
 </div>
 
 <div class="row">
