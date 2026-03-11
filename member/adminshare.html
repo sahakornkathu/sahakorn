@@ -4,31 +4,29 @@
 <head>
 
 <meta charset="UTF-8">
-<title>Admin หุ้นสหกรณ์</title>
+<title>ซื้อขายหุ้นสหกรณ์</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
 
 body{
-font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
+font-family:sans-serif;
 background:#f4f6f9;
 padding:20px;
 }
 
 .container{
-max-width:900px;
+max-width:500px;
 margin:auto;
 }
 
 .card{
 background:white;
 padding:20px;
-border-radius:14px;
+border-radius:12px;
 box-shadow:0 4px 12px rgba(0,0,0,0.1);
 margin-bottom:15px;
 }
@@ -37,35 +35,25 @@ input{
 width:100%;
 padding:10px;
 margin-top:6px;
-margin-bottom:10px;
+margin-bottom:12px;
 border:1px solid #ccc;
-border-radius:8px;
+border-radius:6px;
 }
 
 button{
+width:100%;
+padding:12px;
 background:#06c755;
-color:white;
 border:none;
-padding:10px;
+color:white;
 border-radius:8px;
-cursor:pointer;
-margin-top:5px;
-}
-
-.danger{
-background:#e53935;
+font-size:15px;
 }
 
 .row{
 display:flex;
 justify-content:space-between;
-border-bottom:1px solid #eee;
 padding:6px 0;
-}
-
-.result{
-cursor:pointer;
-padding:6px;
 border-bottom:1px solid #eee;
 }
 
@@ -79,35 +67,17 @@ border-bottom:1px solid #eee;
 
 <div class="card">
 
-<h2>📈 Dashboard หุ้น</h2>
+<h3>ค้นหาสมาชิก</h3>
 
-<div class="row">
-<span>จำนวนสมาชิก</span>
-<span id="totalMember">0</span>
-</div>
+<label>เลขสมาชิก</label> <input id="member_id">
 
-<div class="row">
-<span>หุ้นรวมทั้งหมด</span>
-<span id="totalShare">0</span>
-</div>
+<button onclick="loadMember()">โหลดข้อมูล</button>
 
 </div>
 
-<div class="card">
+<div id="memberBox"></div>
 
-<h2>🔎 ค้นหาสมาชิก</h2>
-
-<input id="search" placeholder="พิมพ์ชื่อสมาชิก" onkeyup="searchMember()">
-
-<div id="result"></div>
-
-</div>
-
-<div id="memberInfo"></div>
-
-<div id="shareList"></div>
-
-<div id="shareForm"></div>
+<div id="formBox"></div>
 
 </div>
 
@@ -118,63 +88,35 @@ const sb = window.supabase.createClient(
 "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y"
 )
 
-let currentMember=null
+let member=null
 
-/* DASHBOARD */
+/* แปลงวันที่ไทย */
 
-async function loadDashboard(){
+function thaiToISO(date){
 
-const {data}=await sb
-.from("member_share")
-.select("share_balance")
+const p=date.split("/")
+const day=p[0]
+const month=p[1]
+const year=p[2]-543
 
-let total=0
-
-data?.forEach(r=>{
-total+=Number(r.share_balance)
-})
-
-document.getElementById("totalShare").innerText=total
-
-const {count}=await sb
-.from("members")
-.select("*",{count:"exact",head:true})
-
-document.getElementById("totalMember").innerText=count
+return `${year}-${month}-${day}`
 
 }
 
-/* SEARCH MEMBER */
+/* คำนวณปีบัญชี */
 
-async function searchMember(){
+function getFiscalYear(date){
 
-const key=document.getElementById("search").value
-
-const {data}=await sb
-.from("members")
-.select("*")
-.ilike("first_name","%"+key+"%")
-.limit(10)
-
-let html=""
-
-data?.forEach(m=>{
-
-html+=`
-<div class="result" onclick="selectMember(${m.member_id})">
-${m.member_id} - ${m.first_name} ${m.last_name}
-</div>
-`
-
-})
-
-document.getElementById("result").innerHTML=html
+const d=new Date(date)
+return d.getFullYear()+543
 
 }
 
-/* SELECT MEMBER */
+/* โหลดสมาชิก */
 
-async function selectMember(id){
+async function loadMember(){
+
+const id=document.getElementById("member_id").value
 
 const {data}=await sb
 .from("members")
@@ -182,9 +124,16 @@ const {data}=await sb
 .eq("member_id",id)
 .maybeSingle()
 
-currentMember=data
+if(!data){
 
-document.getElementById("memberInfo").innerHTML=`
+alert("ไม่พบสมาชิก")
+return
+
+}
+
+member=data
+
+document.getElementById("memberBox").innerHTML=`
 
 <div class="card">
 
@@ -204,64 +153,30 @@ document.getElementById("memberInfo").innerHTML=`
 
 `
 
-loadShare()
+showForm()
 
 }
 
-/* LOAD SHARE */
+/* แสดงฟอร์ม */
 
-async function loadShare(){
+function showForm(){
 
-const {data}=await sb
-.from("member_share")
-.select("*")
-.eq("member_id",currentMember.member_id)
-.order("fiscal_year",{ascending:false})
-
-let html=`<div class="card"><h3>📊 หุ้นทุกปี</h3>`
-
-data?.forEach(s=>{
-
-html+=`
-
-<div class="row">
-<span>ปี ${s.fiscal_year}</span>
-<span>${s.share_balance}</span>
-</div>
-
-`
-
-})
-
-html+=`</div>`
-
-document.getElementById("shareList").innerHTML=html
-
-showShareForm()
-
-}
-
-/* SHARE FORM */
-
-function showShareForm(){
-
-document.getElementById("shareForm").innerHTML=`
+document.getElementById("formBox").innerHTML=`
 
 <div class="card">
 
-<h3>➕ เพิ่ม / ➖ หักหุ้น</h3>
+<h3>บันทึกซื้อ / ขายหุ้น</h3>
 
-<label>ปีบัญชี</label>
-<input id="fiscal_year">
+<label>วันที่ (พ.ศ.)</label>
+<input id="date" placeholder="dd/mm/yyyy">
 
-<label>จำนวนหุ้น</label>
-<input id="amount">
+<label>ซื้อหุ้น</label>
+<input id="buy">
 
-<button onclick="addShare()">เพิ่มหุ้น</button>
+<label>ขายหุ้น</label>
+<input id="sell">
 
-<button class="danger" onclick="sellShare()">หักหุ้น</button>
-
-<button onclick="exportExcel()">Export Excel</button>
+<button onclick="saveShare()">บันทึก</button>
 
 </div>
 
@@ -269,95 +184,32 @@ document.getElementById("shareForm").innerHTML=`
 
 }
 
-/* ADD SHARE */
+/* บันทึกหุ้น */
 
-async function addShare(){
+async function saveShare(){
 
-const year=document.getElementById("fiscal_year").value
-const amount=Number(document.getElementById("amount").value)
+const date=document.getElementById("date").value
+const buy=Number(document.getElementById("buy").value||0)
+const sell=Number(document.getElementById("sell").value||0)
 
-const {data}=await sb
-.from("member_share")
-.select("*")
-.eq("member_id",currentMember.member_id)
-.eq("fiscal_year",year)
-.maybeSingle()
-
-if(data){
-
-await sb
-.from("member_share")
-.update({
-share_buy:data.share_buy+amount,
-share_balance:data.share_balance+amount
-})
-.eq("id",data.id)
-
-}else{
+const iso=thaiToISO(date)
+const year=getFiscalYear(iso)
 
 await sb
 .from("member_share")
 .insert({
-member_id:currentMember.member_id,
+
+member_id:member.member_id,
+trans_date:iso,
 fiscal_year:year,
-share_begin:0,
-share_buy:amount,
-share_sell:0,
-share_balance:amount
+share_buy:buy,
+share_sell:sell
+
 })
 
-}
-
-loadShare()
-loadDashboard()
+alert("บันทึกสำเร็จ")
 
 }
-
-/* SELL SHARE */
-
-async function sellShare(){
-
-const year=document.getElementById("fiscal_year").value
-const amount=Number(document.getElementById("amount").value)
-
-const {data}=await sb
-.from("member_share")
-.select("*")
-.eq("member_id",currentMember.member_id)
-.eq("fiscal_year",year)
-.maybeSingle()
-
-await sb
-.from("member_share")
-.update({
-share_sell:data.share_sell+amount,
-share_balance:data.share_balance-amount
-})
-.eq("id",data.id)
-
-loadShare()
-loadDashboard()
-
-}
-
-/* EXPORT */
-
-async function exportExcel(){
-
-const {data}=await sb
-.from("member_share")
-.select("*")
-
-const ws=XLSX.utils.json_to_sheet(data)
-const wb=XLSX.utils.book_new()
-
-XLSX.utils.book_append_sheet(wb,ws,"share")
-
-XLSX.writeFile(wb,"share_report.xlsx")
-
-}
-
-loadDashboard()
 
 </script>
 
