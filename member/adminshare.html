@@ -246,7 +246,7 @@ const sell=Number(document.getElementById("sell").value||0)
 const iso=thaiToISO(date)
 const fiscal=getFiscalYear(iso)
 
-/* 1 บันทึก transaction */
+/* บันทึก transaction */
 
 await sb
 .from("member_share_tx")
@@ -260,7 +260,7 @@ share_sell:sell
 
 })
 
-/* 2 ตรวจ summary */
+/* ตรวจ summary */
 
 const {data}=await sb
 .from("member_share")
@@ -271,7 +271,7 @@ const {data}=await sb
 
 if(data){
 
-/* update summary */
+/* update ปีเดิม */
 
 const newBuy=data.share_buy+buy
 const newSell=data.share_sell+sell
@@ -291,9 +291,31 @@ share_balance:balance
 
 }else{
 
-/* insert summary ปีใหม่ */
+/* หา balance ปีที่แล้ว */
 
-const balance=buy-sell
+const lastYear=fiscal-1
+
+const {data:last}=await sb
+.from("member_share")
+.select("share_balance")
+.eq("member_id",member.member_id)
+.eq("fiscal_year",lastYear)
+.maybeSingle()
+
+let begin=0
+
+if(last){
+
+begin=last.share_balance
+
+}
+
+/* insert ปีใหม่ */
+
+const newBuy=buy
+const newSell=sell
+
+const balance=begin + newBuy - newSell
 
 await sb
 .from("member_share")
@@ -301,9 +323,9 @@ await sb
 
 member_id:member.member_id,
 fiscal_year:fiscal,
-share_begin:0,
-share_buy:buy,
-share_sell:sell,
+share_begin:begin,
+share_buy:newBuy,
+share_sell:newSell,
 share_balance:balance
 
 })
