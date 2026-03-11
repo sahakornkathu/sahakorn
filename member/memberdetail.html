@@ -406,20 +406,15 @@ if(currentYear!==m.fiscal_year){
 
 currentYear=m.fiscal_year
 
-html+=`
-<div style="font-weight:bold;margin-top:10px;margin-bottom:6px;color:#06c755;">
-ปีบัญชี ${currentYear}
-</div>
-`
+html+=`<div style="font-weight:bold;margin-top:10px;color:#06c755;">ปีบัญชี ${currentYear}</div>`
+
 }
 
 html+=`
-
 <div class="row">
 <span>${m.meeting_type}</span>
 <span>${thaiDate(m.meeting_date)}</span>
 </div>
-
 `
 
 })
@@ -511,6 +506,35 @@ document.getElementById("app").innerHTML=`
 
 <div class="row"><b>รหัสสมาชิก :</b> ${member.member_id}</div>
 <div class="row"><b>เลขบัตร :</b> ${member.id_card}</div>
+
+</div>
+
+
+<div class="card">
+
+<h3>👤 ข้อมูลส่วนตัว</h3>
+
+<div class="row"><b>ชื่อ :</b> ${member.first_name}</div>
+<div class="row"><b>นามสกุล :</b> ${member.last_name}</div>
+<div class="row"><b>เบอร์โทร :</b> ${member.phone ?? ""}</div>
+<div class="row"><b>วันเกิด :</b> ${thaiDate(member.birthday)}</div>
+<div class="row"><b>อายุ :</b> ${calcAge(member.birthday)} ปี</div>
+
+</div>
+
+
+<div class="card">
+
+<h3>📍 ที่อยู่</h3>
+
+<div class="row"><b>บ้านเลขที่ :</b> ${member.house_no ?? ""}</div>
+<div class="row"><b>หมู่ :</b> ${member.moo ?? ""}</div>
+<div class="row"><b>ซอย :</b> ${member.soi ?? ""}</div>
+<div class="row"><b>ตำบล :</b> ${member.subdistrict ?? ""}</div>
+<div class="row"><b>อำเภอ :</b> ${member.district ?? ""}</div>
+<div class="row"><b>จังหวัด :</b> ${member.province ?? ""}</div>
+
+<button class="danger" onclick="unbind()">ยกเลิกผูกบัญชี LINE</button>
 
 </div>
 
