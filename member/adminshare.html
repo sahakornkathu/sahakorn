@@ -346,16 +346,44 @@ const {data}=await sb
 .from("member_share_tx")
 .select("*")
 .eq("member_id",member.member_id)
-.order("trans_date",{ascending:false})
+.order("fiscal_year",{ascending:false})
+.order("trans_date",{ascending:true})
 
-let html=`
+let html=`<div class="card"><h3>รายงานซื้อขายหุ้น</h3>`
 
-<div class="card">
+let currentYear=null
+let totalBuy=0
+let totalSell=0
 
-<h3>รายงานซื้อขายหุ้น</h3>
+data?.forEach(r=>{
+
+if(currentYear!==r.fiscal_year){
+
+if(currentYear!==null){
+
+html+=`
+<div class="row header">
+<span>รวมซื้อ ${totalBuy}</span>
+<span>รวมขาย ${totalSell}</span>
+</div>
+<div class="row">
+<span>คงเหลือ</span>
+<span>${totalBuy-totalSell}</span>
+</div>
+<br>
+`
+
+}
+
+currentYear=r.fiscal_year
+totalBuy=0
+totalSell=0
+
+html+=`
+
+<h4>ปีบัญชี ${currentYear}</h4>
 
 <div class="row header">
-<span>ปีบัญชี</span>
 <span>วันที่</span>
 <span>ซื้อ</span>
 <span>ขาย</span>
@@ -363,10 +391,7 @@ let html=`
 
 `
 
-let totalBuy=0
-let totalSell=0
-
-data?.forEach(r=>{
+}
 
 totalBuy+=Number(r.share_buy)
 totalSell+=Number(r.share_sell)
@@ -374,7 +399,6 @@ totalSell+=Number(r.share_sell)
 html+=`
 
 <div class="row">
-<span>${r.fiscal_year}</span>
 <span>${isoToThai(r.trans_date)}</span>
 <span>${r.share_buy}</span>
 <span>${r.share_sell}</span>
@@ -384,20 +408,16 @@ html+=`
 
 })
 
-const balance=totalBuy-totalSell
-
 html+=`
 
 <div class="row header">
-<span>รวม</span>
-<span>${totalBuy}</span>
-<span>${totalSell}</span>
+<span>รวมซื้อ ${totalBuy}</span>
+<span>รวมขาย ${totalSell}</span>
 </div>
 
 <div class="row">
-<span>ยอดคงเหลือ</span>
-<span>${balance}</span>
-<span></span>
+<span>คงเหลือ</span>
+<span>${totalBuy-totalSell}</span>
 </div>
 
 </div>
