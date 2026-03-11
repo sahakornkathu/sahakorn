@@ -276,36 +276,6 @@ return age
 
 }
 
-/* THAI DATE INPUT */
-
-function formatThaiDateInput(date){
-
-if(!date) return ""
-
-const d=new Date(date)
-
-const day=String(d.getDate()).padStart(2,"0")
-const month=String(d.getMonth()+1).padStart(2,"0")
-const year=d.getFullYear()+543
-
-return `${day}/${month}/${year}`
-
-}
-
-function convertThaiToISO(date){
-
-if(!date) return null
-
-const parts=date.split("/")
-
-const day=parts[0]
-const month=parts[1]
-const year=parts[2]-543
-
-return `${year}-${month}-${day}`
-
-}
-
 /* TAB */
 
 function openTab(tab){
@@ -437,18 +407,10 @@ if(currentYear!==m.fiscal_year){
 currentYear=m.fiscal_year
 
 html+=`
-
-<div style="
-font-weight:bold;
-margin-top:10px;
-margin-bottom:6px;
-color:#06c755;
-">
+<div style="font-weight:bold;margin-top:10px;margin-bottom:6px;color:#06c755;">
 ปีบัญชี ${currentYear}
 </div>
-
 `
-
 }
 
 html+=`
@@ -466,11 +428,51 @@ return html
 
 }
 
+/* SHARE */
+
+async function loadShare(){
+
+const {data}=await sb
+.from("member_share")
+.select("*")
+.eq("member_id",member.member_id)
+.order("fiscal_year",{ascending:false})
+
+if(!data || data.length===0){
+return "<div>ยังไม่มีข้อมูลหุ้น</div>"
+}
+
+let html=""
+
+data.forEach(s=>{
+
+html+=`
+
+<div class="card">
+
+<h3>ปีบัญชี ${s.fiscal_year}</h3>
+
+<div class="row"><span>ยอดยกมา</span><span>${s.share_begin ?? 0}</span></div>
+<div class="row"><span>ซื้อระหว่างปี</span><span>${s.share_buy ?? 0}</span></div>
+<div class="row"><span>ขายระหว่างปี</span><span>${s.share_sell ?? 0}</span></div>
+<div class="row"><span><b>ยอดคงเหลือ</b></span><span><b>${s.share_balance ?? 0}</b></span></div>
+
+</div>
+
+`
+
+})
+
+return html
+
+}
+
 /* PROFILE */
 
 async function showProfile(){
 
 const meetingHTML=await loadMeeting()
+const shareHTML=await loadShare()
 
 document.getElementById("app").innerHTML=`
 
@@ -494,6 +496,10 @@ document.getElementById("app").innerHTML=`
 ข้อมูลประชุม
 </div>
 
+<div id="tabBtn_share" class="tab" onclick="openTab('share')">
+ข้อมูลหุ้น
+</div>
+
 </div>
 
 
@@ -505,35 +511,6 @@ document.getElementById("app").innerHTML=`
 
 <div class="row"><b>รหัสสมาชิก :</b> ${member.member_id}</div>
 <div class="row"><b>เลขบัตร :</b> ${member.id_card}</div>
-
-</div>
-
-
-<div class="card">
-
-<h3>👤 ข้อมูลส่วนตัว</h3>
-
-<div class="row"><b>ชื่อ :</b> ${member.first_name}</div>
-<div class="row"><b>นามสกุล :</b> ${member.last_name}</div>
-<div class="row"><b>เบอร์โทร :</b> ${member.phone ?? ""}</div>
-<div class="row"><b>วันเกิด :</b> ${thaiDate(member.birthday)}</div>
-<div class="row"><b>อายุ :</b> ${calcAge(member.birthday)} ปี</div>
-
-</div>
-
-
-<div class="card">
-
-<h3>📍 ที่อยู่</h3>
-
-<div class="row"><b>บ้านเลขที่ :</b> ${member.house_no ?? ""}</div>
-<div class="row"><b>หมู่ :</b> ${member.moo ?? ""}</div>
-<div class="row"><b>ซอย :</b> ${member.soi ?? ""}</div>
-<div class="row"><b>ตำบล :</b> ${member.subdistrict ?? ""}</div>
-<div class="row"><b>อำเภอ :</b> ${member.district ?? ""}</div>
-<div class="row"><b>จังหวัด :</b> ${member.province ?? ""}</div>
-
-<button class="danger" onclick="unbind()">ยกเลิกผูกบัญชี LINE</button>
 
 </div>
 
@@ -552,96 +529,20 @@ ${meetingHTML}
 
 </div>
 
-`
 
-}
-
-/* EDIT */
-
-function editMember(){
-
-document.getElementById("app").innerHTML=`
+<div id="tab_share" class="tab-content">
 
 <div class="card">
 
-<h3>แก้ไขข้อมูลสมาชิก</h3>
+<h3>💰 หุ้นสหกรณ์</h3>
 
-<label>ชื่อ</label>
-<input id="first_name" value="${member.first_name}">
+${shareHTML}
 
-<label>นามสกุล</label>
-<input id="last_name" value="${member.last_name}">
-
-<label>วันเกิด (พ.ศ.)</label>
-<input id="birthday" value="${formatThaiDateInput(member.birthday)}">
-
-<label>เบอร์โทร</label>
-<input id="phone" value="${member.phone ?? ""}">
-
-<label>บ้านเลขที่</label>
-<input id="house_no" value="${member.house_no ?? ""}">
-
-<label>หมู่</label>
-<input id="moo" value="${member.moo ?? ""}">
-
-<label>ซอย</label>
-<input id="soi" value="${member.soi ?? ""}">
-
-<label>ตำบล</label>
-<input id="subdistrict" value="${member.subdistrict ?? ""}">
-
-<label>อำเภอ</label>
-<input id="district" value="${member.district ?? ""}">
-
-<label>จังหวัด</label>
-<input id="province" value="${member.province ?? ""}">
-
-<button class="primary" onclick="saveMember()">บันทึก</button>
+</div>
 
 </div>
 
 `
-
-}
-
-async function saveMember(){
-
-await sb
-.from("members")
-.update({
-
-first_name:document.getElementById("first_name").value,
-last_name:document.getElementById("last_name").value,
-birthday:convertThaiToISO(document.getElementById("birthday").value),
-phone:document.getElementById("phone").value,
-house_no:document.getElementById("house_no").value,
-moo:document.getElementById("moo").value,
-soi:document.getElementById("soi").value,
-subdistrict:document.getElementById("subdistrict").value,
-district:document.getElementById("district").value,
-province:document.getElementById("province").value
-
-})
-.eq("line_user_id",userId)
-
-checkBind()
-
-}
-
-async function unbind(){
-
-if(!confirm("ต้องการยกเลิกผูกบัญชี LINE ?")) return
-
-await sb
-.from("members")
-.update({
-line_user_id:null,
-line_display_name:null,
-line_picture:null
-})
-.eq("line_user_id",userId)
-
-location.reload()
 
 }
 
