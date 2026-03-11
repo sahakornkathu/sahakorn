@@ -213,7 +213,7 @@ document.getElementById("memberBox").innerHTML=`
 `
 
 showForm()
-
+loadYearFilter()
 loadReport()
 
 }
@@ -221,12 +221,27 @@ loadReport()
 
 async function loadYearFilter(){
 
-const {data}=await sb
+const {data,error}=await sb
 .from("member_share_tx")
 .select("fiscal_year")
 .eq("member_id",member.member_id)
 
-let years=[...new Set(data.map(r=>r.fiscal_year))]
+if(error){
+console.log(error)
+return
+}
+
+if(!data || data.length===0){
+
+document.getElementById("yearFilter").innerHTML=
+'<option value="all">ทุกปี</option>'
+
+return
+}
+
+/* เอาปีบัญชีไม่ซ้ำ */
+
+const years=[...new Set(data.map(r=>r.fiscal_year))]
 
 years.sort((a,b)=>b-a)
 
@@ -238,7 +253,7 @@ html+=`<option value="${y}">${y}</option>`
 
 document.getElementById("yearFilter").innerHTML=html
 
-}  
+}
 /* ฟอร์ม */
 
 function showForm(){
