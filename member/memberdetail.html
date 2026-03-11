@@ -1,911 +1,790 @@
 <!DOCTYPE html>
-
 <html lang="th">
 <head>
 <meta charset="UTF-8">
 <title>ข้อมูลสมาชิก</title>
 
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 
 <style>
+:root{
+  --bg:#f4f6f9;
+  --card:#ffffff;
+  --text:#222;
+  --muted:#666;
+  --line:#e9edf3;
+  --primary:#06c755;
+  --danger:#ff4d4f;
+  --shadow:0 2px 10px rgba(0,0,0,0.08);
+}
+
+*{ box-sizing:border-box; }
+
+html,body{
+  margin:0;
+  padding:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+}
 
 body{
-font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
-background:#f4f6f9;
-margin:0;
-padding:12px;
+  padding:
+    max(12px, env(safe-area-inset-top))
+    12px
+    max(12px, env(safe-area-inset-bottom))
+    12px;
 }
 
 .container{
-max-width:480px;
-margin:auto;
+  max-width:480px;
+  margin:auto;
+}
+
+/* top bar */
+.topbar{
+  display:flex;
+  justify-content:flex-end;
+  margin-bottom:10px;
+}
+
+.icon-btn{
+  border:none;
+  border-radius:10px;
+  padding:10px 12px;
+  font-size:15px;
+  cursor:pointer;
+  background:#fff;
+  box-shadow:var(--shadow);
+  color:var(--text);
 }
 
 /* PROFILE HEADER */
-
 .header{
-text-align:center;
-padding:26px 15px;
-background:linear-gradient(135deg,#06c755,#00a94f);
-color:white;
-border-radius:16px;
-margin-bottom:15px;
-position:relative;
+  text-align:center;
+  padding:26px 15px;
+  background:linear-gradient(135deg,#06c755,#00a94f);
+  color:white;
+  border-radius:16px;
+  margin-bottom:15px;
+  position:relative;
+  box-shadow:var(--shadow);
 }
 
 .header img{
-width:85px;
-height:85px;
-border-radius:50%;
-border:4px solid white;
-margin-bottom:8px;
+  width:85px;
+  height:85px;
+  border-radius:50%;
+  border:4px solid white;
+  margin-bottom:8px;
+  object-fit:cover;
+}
+
+.header h3{
+  margin:0;
+  font-size:20px;
 }
 
 /* CARD */
-
 .card{
-background:white;
-border-radius:14px;
-padding:16px;
-margin-bottom:12px;
-box-shadow:0 2px 10px rgba(0,0,0,0.08);
+  background:var(--card);
+  border-radius:14px;
+  padding:16px;
+  margin-bottom:12px;
+  box-shadow:var(--shadow);
 }
 
 .card h3{
-margin-top:0;
-font-size:16px;
+  margin:0 0 10px 0;
+  font-size:16px;
 }
 
 /* ROW */
-
 .row{
-display:flex;
-justify-content:space-between;
-padding:8px 0;
-font-size:14px;
-border-bottom:1px solid #eee;
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  padding:8px 0;
+  font-size:14px;
+  border-bottom:1px solid var(--line);
 }
 
 .row:last-child{
-border-bottom:none;
+  border-bottom:none;
+}
+
+.row span:last-child{
+  text-align:right;
+  word-break:break-word;
 }
 
 /* BUTTON */
-
 button{
-border:none;
-border-radius:10px;
-padding:12px;
-font-size:15px;
-cursor:pointer;
+  border:none;
+  border-radius:10px;
+  padding:12px;
+  font-size:15px;
+  cursor:pointer;
 }
 
 .primary{
-background:#06c755;
-color:white;
-width:100%;
+  background:var(--primary);
+  color:white;
+  width:100%;
 }
 
 .danger{
-background:#ff4d4f;
-color:white;
-width:100%;
-margin-top:10px;
+  background:var(--danger);
+  color:white;
+  width:100%;
+  margin-top:10px;
 }
 
 /* EDIT BUTTON */
-
 .edit-btn{
-position:absolute;
-top:12px;
-right:12px;
-background:#ff9800;
-color:white;
-padding:8px 10px;
-font-size:13px;
+  position:absolute;
+  top:12px;
+  right:12px;
+  background:#ff9800;
+  color:white;
+  padding:8px 10px;
+  font-size:13px;
 }
 
 /* INPUT */
-
-input{
-width:100%;
-padding:12px;
-border-radius:10px;
-border:1px solid #ddd;
-font-size:15px;
-margin-bottom:10px;
-box-sizing:border-box;
+input, select{
+  width:100%;
+  padding:12px;
+  border-radius:10px;
+  border:1px solid #ddd;
+  font-size:15px;
+  margin-bottom:10px;
+  background:#fff;
+  color:var(--text);
 }
 
-label{
-font-weight:bold;
+input:focus, select:focus{
+  outline:none;
+  border-color:var(--primary);
 }
 
 /* TAB */
-
 .tabs{
-display:flex;
-background:white;
-border-radius:12px;
-margin-bottom:14px;
-overflow:hidden;
-box-shadow:0 2px 6px rgba(0,0,0,0.05);
+  display:flex;
+  background:white;
+  border-radius:12px;
+  margin-bottom:14px;
+  overflow:hidden;
+  box-shadow:0 2px 6px rgba(0,0,0,0.05);
 }
 
 .tab{
-flex:1;
-text-align:center;
-padding:12px;
-font-weight:600;
-font-size:14px;
-cursor:pointer;
-color:#222;
-background:#f5f5f5;
+  flex:1;
+  text-align:center;
+  padding:12px 8px;
+  font-weight:600;
+  font-size:14px;
+  cursor:pointer;
+  color:#222;
+  background:#f5f5f5;
 }
 
 .tab.active{
-background:#06c755;
-color:#000;
+  background:#06c755;
+  color:#000;
 }
 
 .tab-content{
-display:none;
+  display:none;
 }
 
 .tab-content.active{
-display:block;
+  display:block;
 }
 
-/* DARK MODE */
-
-.dark body{
-background:#121212;
-color:white;
-}
-
-.dark .card{
-background:#1e1e1e;
-}
-
-.dark input{
-background:#2b2b2b;
-color:white;
-border:1px solid #444;
-}
-
-.dark .tabs{
-background:#1e1e1e;
-}
-
-.dark .tab{
-background:#2a2a2a;
-color:#ddd;
-}
-
-.dark .tab.active{
-background:#06c755;
-color:#fff;
-}
-
-  /* SHARE FILTER */
-
+/* FILTER */
 .filter-box{
-margin-bottom:10px;
+  margin-bottom:0;
 }
 
 .filter-box label{
-display:block;
-font-size:13px;
-margin-bottom:6px;
-color:#666;
-font-weight:600;
+  display:block;
+  font-size:13px;
+  margin-bottom:6px;
+  color:var(--muted);
+  font-weight:600;
 }
 
 .filter-select{
-width:100%;
-padding:12px;
-border-radius:10px;
-border:1px solid #ddd;
-background:white;
-font-size:14px;
-font-weight:600;
-appearance:none;
--webkit-appearance:none;
-background-image:url("data:image/svg+xml;utf8,<svg fill='%23666' height='20' viewBox='0 0 24 24' width='20' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
-background-repeat:no-repeat;
-background-position:right 12px center;
-background-size:18px;
+  width:100%;
+  padding:12px;
+  border-radius:10px;
+  border:1px solid #ddd;
+  background:white;
+  font-size:14px;
+  font-weight:600;
+  appearance:none;
+  -webkit-appearance:none;
+  background-image:url("data:image/svg+xml;utf8,<svg fill='%23666' height='20' viewBox='0 0 24 24' width='20' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
+  background-repeat:no-repeat;
+  background-position:right 12px center;
+  background-size:18px;
+}
+
+/* info badge */
+.env-box{
+  font-size:12px;
+  color:var(--muted);
+  margin-bottom:10px;
+  text-align:center;
+}
+
+/* DARK MODE */
+.dark body{
+  background:#121212;
+  color:white;
+}
+
+.dark .icon-btn,
+.dark .card{
+  background:#1e1e1e;
+  color:#fff;
+}
+
+.dark input,
+.dark select{
+  background:#2b2b2b;
+  color:white;
+  border:1px solid #444;
+}
+
+.dark .tabs{
+  background:#1e1e1e;
+}
+
+.dark .tab{
+  background:#2a2a2a;
+  color:#ddd;
+}
+
+.dark .tab.active{
+  background:#06c755;
+  color:#fff;
+}
+
+.dark .filter-box label{
+  color:#bbb;
 }
 
 .dark .filter-select{
-background:#2b2b2b;
-color:white;
-border:1px solid #444;
+  background:#2b2b2b;
+  color:white;
+  border:1px solid #444;
+  background-image:url("data:image/svg+xml;utf8,<svg fill='%23ddd' height='20' viewBox='0 0 24 24' width='20' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
 }
 </style>
-
 </head>
 
 <body>
 
 <div class="container">
 
-<div style="text-align:right;margin-bottom:10px;">
-<button onclick="toggleDark()">🌙</button>
-</div>
+  <div class="topbar">
+    <button class="icon-btn" onclick="toggleDark()">🌙</button>
+  </div>
 
-<div id="app"></div>
+  <div class="env-box" id="envBox"></div>
+
+  <div id="app"></div>
 
 </div>
 
 <script>
-
-const LIFF_ID="1660910795-ZwhoBm8e"
+const LIFF_ID="2009012101-mBy1yERI";
 
 const sb = window.supabase.createClient(
-"https://ttottijljxoinptmhgtu.supabase.co",
-"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y"
-)
+  "https://ttottijljxoinptmhgtu.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y"
+);
 
-let userId
-let profile
-let member
+let userId;
+let profile;
+let member;
 
 /* DARK MODE */
-
 function toggleDark(){
-
-document.documentElement.classList.toggle("dark")
-
-if(document.documentElement.classList.contains("dark")){
-localStorage.setItem("theme","dark")
-}else{
-localStorage.setItem("theme","light")
-}
-
+  document.documentElement.classList.toggle("dark");
+  if(document.documentElement.classList.contains("dark")){
+    localStorage.setItem("theme","dark");
+  }else{
+    localStorage.setItem("theme","light");
+  }
 }
 
 function loadTheme(){
-
-if(localStorage.getItem("theme")==="dark"){
-document.documentElement.classList.add("dark")
-}
-
+  if(localStorage.getItem("theme")==="dark"){
+    document.documentElement.classList.add("dark");
+  }
 }
 
 /* DATE */
-
 function thaiDate(date){
-
-if(!date) return ""
-
-const months=[
-"มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน",
-"กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"
-]
-
-const d=new Date(date)
-
-return d.getDate()+" "+months[d.getMonth()]+" "+(d.getFullYear()+543)
-
+  if(!date) return "";
+  const months=[
+    "มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน",
+    "กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"
+  ];
+  const d=new Date(date);
+  return d.getDate()+" "+months[d.getMonth()]+" "+(d.getFullYear()+543);
 }
 
 function calcAge(date){
-
-if(!date) return ""
-
-const birth=new Date(date)
-const today=new Date()
-
-let age=today.getFullYear()-birth.getFullYear()
-
-const m=today.getMonth()-birth.getMonth()
-
-if(m<0||(m===0&&today.getDate()<birth.getDate())) age--
-
-return age
-
+  if(!date) return "";
+  const birth=new Date(date);
+  const today=new Date();
+  let age=today.getFullYear()-birth.getFullYear();
+  const m=today.getMonth()-birth.getMonth();
+  if(m<0||(m===0&&today.getDate()<birth.getDate())) age--;
+  return age;
 }
 
 /* TAB */
-
 function openTab(tab){
-
-document.querySelectorAll(".tab").forEach(t=>{
-t.classList.remove("active")
-})
-
-document.querySelectorAll(".tab-content").forEach(c=>{
-c.classList.remove("active")
-})
-
-document.getElementById("tabBtn_"+tab).classList.add("active")
-document.getElementById("tab_"+tab).classList.add("active")
-
+  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+  document.querySelectorAll(".tab-content").forEach(c=>c.classList.remove("active"));
+  document.getElementById("tabBtn_"+tab)?.classList.add("active");
+  document.getElementById("tab_"+tab)?.classList.add("active");
 }
 
 /* INIT */
-
 async function init(){
+  await liff.init({liffId:LIFF_ID});
 
-await liff.init({liffId:LIFF_ID})
+  if(!liff.isLoggedIn()){
+    liff.login();
+    return;
+  }
 
-if(!liff.isLoggedIn()){
-liff.login()
-return
+  await liff.ready;
+
+  profile=await liff.getProfile();
+  userId=profile.userId;
+
+  renderEnvInfo();
+  checkBind();
 }
 
-profile=await liff.getProfile()
-userId=profile.userId
-
-checkBind()
-
+function renderEnvInfo(){
+  const el=document.getElementById("envBox");
+  try{
+    const inClient=liff.isInClient();
+    const os=liff.getOS?.() || "-";
+    el.textContent = inClient ? `เปิดผ่าน LINE • ${os}` : `เปิดผ่านเบราว์เซอร์ • ${os}`;
+  }catch{
+    el.textContent = "";
+  }
 }
 
 async function checkBind(){
+  const {data}=await sb
+    .from("members")
+    .select("*")
+    .eq("line_user_id",userId)
+    .maybeSingle();
 
-const {data}=await sb
-.from("members")
-.select("*")
-.eq("line_user_id",userId)
-.maybeSingle()
-
-if(data){
-member=data
-showProfile()
-}else{
-showBindPage()
-}
-
+  if(data){
+    member=data;
+    showProfile();
+  }else{
+    showBindPage();
+  }
 }
 
 /* BIND */
-
 function showBindPage(){
-
-document.getElementById("app").innerHTML=`
-
-<div class="card">
-
-<h3>ผูกบัญชี LINE</h3>
-
-<label>เลขบัตรประชาชน</label>
-<input id="idcard">
-
-<button class="primary" onclick="bind()">ผูกบัญชี</button>
-
-</div>
-
-`
-
+  document.getElementById("app").innerHTML=`
+    <div class="card">
+      <h3>ผูกบัญชี LINE</h3>
+      <label>เลขบัตรประชาชน</label>
+      <input id="idcard">
+      <button class="primary" onclick="bind()">ผูกบัญชี</button>
+    </div>
+  `;
 }
 
 async function bind(){
+  const idcard=document.getElementById("idcard").value;
+  const {data}=await sb
+    .from("members")
+    .select("*")
+    .eq("id_card",idcard)
+    .maybeSingle();
 
-const idcard=document.getElementById("idcard").value
+  if(!data){
+    alert("ไม่พบสมาชิก");
+    return;
+  }
 
-const {data}=await sb
-.from("members")
-.select("*")
-.eq("id_card",idcard)
-.maybeSingle()
+  if(data.line_user_id){
+    alert("สมาชิกนี้ผูก LINE แล้ว");
+    return;
+  }
 
-if(!data){
-alert("ไม่พบสมาชิก")
-return
-}
+  await sb
+    .from("members")
+    .update({
+      line_user_id:userId,
+      line_display_name:profile.displayName,
+      line_picture:profile.pictureUrl
+    })
+    .eq("id_card",idcard);
 
-if(data.line_user_id){
-alert("สมาชิกนี้ผูก LINE แล้ว")
-return
-}
-
-await sb
-.from("members")
-.update({
-line_user_id:userId,
-line_display_name:profile.displayName,
-line_picture:profile.pictureUrl
-})
-.eq("id_card",idcard)
-
-checkBind()
-
+  checkBind();
 }
 
 // UNBIND
 async function unbind(){
+  if(!confirm("ต้องการยกเลิกผูกบัญชี LINE ?")) return;
 
-if(!confirm("ต้องการยกเลิกผูกบัญชี LINE ?")) return
+  await sb
+    .from("members")
+    .update({
+      line_user_id:null,
+      line_display_name:null,
+      line_picture:null
+    })
+    .eq("line_user_id",userId);
 
-await sb
-.from("members")
-.update({
-line_user_id:null,
-line_display_name:null,
-line_picture:null
-})
-.eq("line_user_id",userId)
-
-location.reload()
-
+  location.reload();
 }
 
 /* THAI DATE INPUT */
-
 function formatThaiDateInput(date){
-
-if(!date) return ""
-
-const d=new Date(date)
-
-const day=String(d.getDate()).padStart(2,"0")
-const month=String(d.getMonth()+1).padStart(2,"0")
-const year=d.getFullYear()+543
-
-return `${day}/${month}/${year}`
-
+  if(!date) return "";
+  const d=new Date(date);
+  const day=String(d.getDate()).padStart(2,"0");
+  const month=String(d.getMonth()+1).padStart(2,"0");
+  const year=d.getFullYear()+543;
+  return `${day}/${month}/${year}`;
 }
 
 function convertThaiToISO(date){
-
-if(!date) return null
-
-const parts=date.split("/")
-
-if(parts.length!==3) return null
-
-const day=parts[0]
-const month=parts[1]
-const year=parts[2]-543
-
-return `${year}-${month}-${day}`
-
+  if(!date) return null;
+  const parts=date.split("/");
+  if(parts.length!==3) return null;
+  const day=parts[0];
+  const month=parts[1];
+  const year=parts[2]-543;
+  return `${year}-${month}-${day}`;
 }
 
-  /* EDIT */
-
+/* EDIT */
 function editMember(){
+  document.getElementById("app").innerHTML=`
+    <div class="card">
+      <h3>แก้ไขข้อมูลสมาชิก</h3>
 
-document.getElementById("app").innerHTML=`
+      <label>ชื่อ</label>
+      <input id="first_name" value="${member.first_name ?? ""}">
 
-<div class="card">
+      <label>นามสกุล</label>
+      <input id="last_name" value="${member.last_name ?? ""}">
 
-<h3>แก้ไขข้อมูลสมาชิก</h3>
+      <label>วันเกิด (พ.ศ.)</label>
+      <input id="birthday" value="${formatThaiDateInput(member.birthday)}">
 
-<label>ชื่อ</label>
-<input id="first_name" value="${member.first_name}">
+      <label>เบอร์โทร</label>
+      <input id="phone" value="${member.phone ?? ""}">
 
-<label>นามสกุล</label>
-<input id="last_name" value="${member.last_name}">
+      <label>บ้านเลขที่</label>
+      <input id="house_no" value="${member.house_no ?? ""}">
 
-<label>วันเกิด (พ.ศ.)</label>
-<input id="birthday" value="${formatThaiDateInput(member.birthday)}">
+      <label>หมู่</label>
+      <input id="moo" value="${member.moo ?? ""}">
 
-<label>เบอร์โทร</label>
-<input id="phone" value="${member.phone ?? ""}">
+      <label>ซอย</label>
+      <input id="soi" value="${member.soi ?? ""}">
 
-<label>บ้านเลขที่</label>
-<input id="house_no" value="${member.house_no ?? ""}">
+      <label>ตำบล</label>
+      <input id="subdistrict" value="${member.subdistrict ?? ""}">
 
-<label>หมู่</label>
-<input id="moo" value="${member.moo ?? ""}">
+      <label>อำเภอ</label>
+      <input id="district" value="${member.district ?? ""}">
 
-<label>ซอย</label>
-<input id="soi" value="${member.soi ?? ""}">
+      <label>จังหวัด</label>
+      <input id="province" value="${member.province ?? ""}">
 
-<label>ตำบล</label>
-<input id="subdistrict" value="${member.subdistrict ?? ""}">
-
-<label>อำเภอ</label>
-<input id="district" value="${member.district ?? ""}">
-
-<label>จังหวัด</label>
-<input id="province" value="${member.province ?? ""}">
-
-<button class="primary" onclick="saveMember()">บันทึก</button>
-
-</div>
-
-`
-
+      <button class="primary" onclick="saveMember()">บันทึก</button>
+    </div>
+  `;
 }
 
 // SAVEMEMBER
+async function saveMember(){
+  await sb
+    .from("members")
+    .update({
+      first_name:document.getElementById("first_name").value,
+      last_name:document.getElementById("last_name").value,
+      birthday:convertThaiToISO(document.getElementById("birthday").value),
+      phone:document.getElementById("phone").value,
+      house_no:document.getElementById("house_no").value,
+      moo:document.getElementById("moo").value,
+      soi:document.getElementById("soi").value,
+      subdistrict:document.getElementById("subdistrict").value,
+      district:document.getElementById("district").value,
+      province:document.getElementById("province").value
+    })
+    .eq("line_user_id",userId);
 
-  async function saveMember(){
-
-await sb
-.from("members")
-.update({
-
-first_name:document.getElementById("first_name").value,
-last_name:document.getElementById("last_name").value,
-birthday:convertThaiToISO(document.getElementById("birthday").value),
-phone:document.getElementById("phone").value,
-house_no:document.getElementById("house_no").value,
-moo:document.getElementById("moo").value,
-soi:document.getElementById("soi").value,
-subdistrict:document.getElementById("subdistrict").value,
-district:document.getElementById("district").value,
-province:document.getElementById("province").value
-
-})
-.eq("line_user_id",userId)
-
-checkBind()
-
+  checkBind();
 }
+
 /* MEETING */
-
 async function loadMeeting(){
+  const {data}=await sb
+    .from("member_meeting")
+    .select("*")
+    .eq("member_id",member.member_id)
+    .order("fiscal_year",{ascending:false})
+    .order("meeting_date",{ascending:false});
 
-const {data}=await sb
-.from("member_meeting")
-.select("*")
-.eq("member_id",member.member_id)
-.order("fiscal_year",{ascending:false})
-.order("meeting_date",{ascending:false})
+  if(!data || data.length===0){
+    return "<div>ยังไม่มีข้อมูลประชุม</div>";
+  }
 
-if(!data || data.length===0){
-return "<div>ยังไม่มีข้อมูลประชุม</div>"
+  let html="";
+  let currentYear=null;
+
+  data.forEach(m=>{
+    if(currentYear!==m.fiscal_year){
+      currentYear=m.fiscal_year;
+      html+=`<div style="font-weight:bold;margin-top:10px;color:#06c755;">ปีบัญชี ${currentYear}</div>`;
+    }
+
+    html+=`
+      <div class="row">
+        <span>${m.meeting_type}</span>
+        <span>${thaiDate(m.meeting_date)}</span>
+      </div>
+    `;
+  });
+
+  return html;
 }
-
-let html=""
-let currentYear=null
-
-data.forEach(m=>{
-
-if(currentYear!==m.fiscal_year){
-
-currentYear=m.fiscal_year
-
-html+=`<div style="font-weight:bold;margin-top:10px;color:#06c755;">ปีบัญชี ${currentYear}</div>`
-
-}
-
-html+=`
-<div class="row">
-<span>${m.meeting_type}</span>
-<span>${thaiDate(m.meeting_date)}</span>
-</div>
-`
-
-})
-
-return html
-
-}
-
 
 /* SHARE */
-
 async function loadShare(){
+  const year=document.getElementById("shareYearFilter")?.value;
 
-const year=document.getElementById("shareYearFilter")?.value
+  let query=sb
+    .from("member_share")
+    .select("*")
+    .eq("member_id",member.member_id);
 
-let query=sb
-.from("member_share")
-.select("*")
-.eq("member_id",member.member_id)
+  if(year && year!=="all"){
+    query=query.eq("fiscal_year",year);
+  }
 
-if(year && year!=="all"){
-query=query.eq("fiscal_year",year)
-}
+  const {data}=await query.order("fiscal_year",{ascending:false});
 
-const {data}=await query
-.order("fiscal_year",{ascending:false})
+  if(!data || data.length===0){
+    return "<div>ยังไม่มีข้อมูลหุ้น</div>";
+  }
 
-if(!data || data.length===0){
-return "<div>ยังไม่มีข้อมูลหุ้น</div>"
-}
+  let html="";
 
-let html=""
+  data.forEach(s=>{
+    html+=`
+      <div style="font-weight:bold;margin-top:10px;margin-bottom:6px;color:#06c755;">
+        ปีบัญชี ${s.fiscal_year}
+      </div>
 
-data.forEach(s=>{
+      <div class="row">
+        <span>ยอดยกมา</span>
+        <span>${s.share_begin ?? 0}</span>
+      </div>
 
-html+=`
+      <div class="row">
+        <span>ซื้อระหว่างปี</span>
+        <span>${s.share_buy ?? 0}</span>
+      </div>
 
-<div style="
-font-weight:bold;
-margin-top:10px;
-margin-bottom:6px;
-color:#06c755;
-">
-ปีบัญชี ${s.fiscal_year}
-</div>
+      <div class="row">
+        <span>ขายระหว่างปี</span>
+        <span>${s.share_sell ?? 0}</span>
+      </div>
 
-<div class="row">
-<span>ยอดยกมา</span>
-<span>${s.share_begin ?? 0}</span>
-</div>
+      <div class="row">
+        <span><b>ยอดคงเหลือ</b></span>
+        <span><b>${s.share_balance ?? 0}</b></span>
+      </div>
 
-<div class="row">
-<span>ซื้อระหว่างปี</span>
-<span>${s.share_buy ?? 0}</span>
-</div>
+      <hr>
+    `;
+  });
 
-<div class="row">
-<span>ขายระหว่างปี</span>
-<span>${s.share_sell ?? 0}</span>
-</div>
-
-<div class="row">
-<span><b>ยอดคงเหลือ</b></span>
-<span><b>${s.share_balance ?? 0}</b></span>
-</div>
-
-<hr>
-
-`
-
-})
-
-return html
-
+  return html;
 }
 
 async function loadShareTx(){
+  const year=document.getElementById("shareYearFilter")?.value;
 
-const year=document.getElementById("shareYearFilter")?.value
+  let query=sb
+    .from("member_share_tx")
+    .select("*")
+    .eq("member_id",member.member_id);
 
-let query=sb
-.from("member_share_tx")
-.select("*")
-.eq("member_id",member.member_id)
+  if(year && year!=="all"){
+    query=query.eq("fiscal_year",year);
+  }
 
-if(year && year!=="all"){
-query=query.eq("fiscal_year",year)
+  const {data}=await query
+    .order("fiscal_year",{ascending:false})
+    .order("trans_date",{ascending:false});
+
+  if(!data || data.length===0){
+    return "<div>ยังไม่มีรายการซื้อขายหุ้น</div>";
+  }
+
+  let html="";
+
+  data.forEach(r=>{
+    html+=`
+      <div class="row">
+        <span>${thaiDate(r.trans_date)}</span>
+        <span style="color:#06c755">${r.share_buy}</span>
+        <span style="color:#ff4d4f">${r.share_sell}</span>
+      </div>
+    `;
+  });
+
+  return html;
 }
 
-const {data}=await query
-.order("fiscal_year",{ascending:false})
-.order("trans_date",{ascending:false})
-
-if(!data || data.length===0){
-return "<div>ยังไม่มีรายการซื้อขายหุ้น</div>"
-}
-
-let html=""
-
-data.forEach(r=>{
-
-html+=`
-
-<div class="row">
-<span>${thaiDate(r.trans_date)}</span>
-<span style="color:#06c755">${r.share_buy}</span>
-<span style="color:#ff4d4f">${r.share_sell}</span>
-</div>
-
-`
-
-})
-
-return html
-
-}
-  
 async function loadShareYears(){
+  const {data}=await sb
+    .from("member_share_tx")
+    .select("fiscal_year")
+    .eq("member_id",member.member_id);
 
-const {data}=await sb
-.from("member_share_tx")
-.select("fiscal_year")
-.eq("member_id",member.member_id)
+  if(!data || data.length===0){
+    return '<option value="all">ทุกปี</option>';
+  }
 
-if(!data || data.length===0){
-return '<option value="all">ทุกปี</option>'
+  const years=[...new Set(data.map(x=>x.fiscal_year))];
+  years.sort((a,b)=>b-a);
+
+  let html='<option value="all">ทุกปี</option>';
+
+  years.forEach(y=>{
+    html+=`<option value="${y}">${y}</option>`;
+  });
+
+  return html;
 }
 
-const years=[...new Set(data.map(x=>x.fiscal_year))]
-
-years.sort((a,b)=>b-a)
-
-let html='<option value="all">ทุกปี</option>'
-
-years.forEach(y=>{
-html+=`<option value="${y}">${y}</option>`
-})
-
-return html
-
-}
-  
 /* PROFILE */
-
 async function showProfile(){
-
-const meetingHTML=await loadMeeting()
-const shareHTML=await loadShare()
-const shareYears=await loadShareYears()
-const shareTxHTML=await loadShareTx()
-
-document.getElementById("app").innerHTML=`
-
-<div class="header">
-
-<button class="edit-btn" onclick="editMember()">แก้ไข</button>
-
-<img src="${member.line_picture}">
-<h3>${profile.displayName}</h3>
-
-</div>
-
-
-<div class="tabs">
-
-<div id="tabBtn_person" class="tab active" onclick="openTab('person')">
-ข้อมูลส่วนบุคคล
-</div>
-
-<div id="tabBtn_meeting" class="tab" onclick="openTab('meeting')">
-ข้อมูลประชุม
-</div>
-
-<div id="tabBtn_share" class="tab" onclick="openTab('share')">
-ข้อมูลหุ้น
-</div>
-
-</div>
-
-
-<div id="tab_person" class="tab-content active">
-
-<div class="card">
-
-<h3>📋 ข้อมูลสมาชิก</h3>
-
-<div class="row"><b>รหัสสมาชิก :</b> ${member.member_id}</div>
-<div class="row"><b>เลขบัตรประชาชน :</b> ${member.id_card}</div>
-
-</div>
-
-
-<div class="card">
-
-<h3>👤 ข้อมูลส่วนตัว</h3>
-
-<div class="row"><b>ชื่อ :</b> ${member.first_name}</div>
-<div class="row"><b>นามสกุล :</b> ${member.last_name}</div>
-<div class="row"><b>เบอร์โทร :</b> ${member.phone ?? ""}</div>
-<div class="row"><b>วันเกิด :</b> ${thaiDate(member.birthday)}</div>
-<div class="row"><b>อายุ :</b> ${calcAge(member.birthday)} ปี</div>
-
-</div>
-
-
-<div class="card">
-
-<h3>📍 ที่อยู่</h3>
-
-<div class="row"><b>บ้านเลขที่ :</b> ${member.house_no ?? ""}</div>
-<div class="row"><b>หมู่ :</b> ${member.moo ?? ""}</div>
-<div class="row"><b>ซอย :</b> ${member.soi ?? ""}</div>
-<div class="row"><b>ตำบล :</b> ${member.subdistrict ?? ""}</div>
-<div class="row"><b>อำเภอ :</b> ${member.district ?? ""}</div>
-<div class="row"><b>จังหวัด :</b> ${member.province ?? ""}</div>
-
-<button class="danger" onclick="unbind()">ยกเลิกผูกบัญชี LINE</button>
-
-</div>
-</div>
-
-<div id="tab_meeting" class="tab-content">
-
-<div class="card">
-
-<h3>🗳 ข้อมูลการเข้าร่วมประชุม</h3>
-
-${meetingHTML}
-
-</div>
-
-</div>
-
-
-<div id="tab_share" class="tab-content">
-
-<div class="card">
-
-<label>เลือกปีบัญชี</label>
-
-<select id="shareYearFilter" onchange="reloadShareTx()">
-${shareYears}
-</select>
-
-</div>
-
-<div class="card">
-
-<h3>💰 หุ้นสหกรณ์</h3>
-
-<div id="shareSummaryBox">
-${shareHTML}
-</div>
-
-</div>
-
-<div class="card">
-
-<h3>📊 รายงานซื้อขายหุ้น</h3>
-
-<div class="row" style="font-weight:bold">
-<span>วันที่</span>
-<span>ซื้อ</span>
-<span>ขาย</span>
-</div>
-
-<div id="shareTxBox">
-${shareTxHTML}
-</div>
-
-</div>
-
-</div>
-
-</div>
-
-
-<div id="tab_share" class="tab-content">
-
-<div class="card">
-
-<label>เลือกปีบัญชี</label>
-
-<select id="shareYearFilter" onchange="reloadShareTx()">
-${shareYears}
-</select>
-
-</div>
-
-<div class="card">
-
-<h3>💰 หุ้นสหกรณ์</h3>
-
-<div id="shareSummaryBox">
-${shareHTML}
-</div>
-
-</div>
-
-<div class="card">
-
-<h3>📊 รายงานซื้อขายหุ้น</h3>
-
-<div class="row" style="font-weight:bold">
-<span>วันที่</span>
-<span>ซื้อ</span>
-<span>ขาย</span>
-</div>
-
-<div id="shareTxBox">
-${shareTxHTML}
-</div>
-
-</div>
-
-</div>
-
-`
-
+  const meetingHTML=await loadMeeting();
+  const shareHTML=await loadShare();
+  const shareYears=await loadShareYears();
+  const shareTxHTML=await loadShareTx();
+
+  document.getElementById("app").innerHTML=`
+    <div class="header">
+      <button class="edit-btn" onclick="editMember()">แก้ไข</button>
+      <img src="${member.line_picture || ""}">
+      <h3>${profile.displayName}</h3>
+    </div>
+
+    <div class="tabs">
+      <div id="tabBtn_person" class="tab active" onclick="openTab('person')">ข้อมูลส่วนบุคคล</div>
+      <div id="tabBtn_meeting" class="tab" onclick="openTab('meeting')">ข้อมูลประชุม</div>
+      <div id="tabBtn_share" class="tab" onclick="openTab('share')">ข้อมูลหุ้น</div>
+    </div>
+
+    <div id="tab_person" class="tab-content active">
+
+      <div class="card">
+        <h3>📋 ข้อมูลสมาชิก</h3>
+        <div class="row"><span><b>รหัสสมาชิก :</b></span><span>${member.member_id}</span></div>
+        <div class="row"><span><b>เลขบัตรประชาชน :</b></span><span>${member.id_card}</span></div>
+      </div>
+
+      <div class="card">
+        <h3>👤 ข้อมูลส่วนตัว</h3>
+        <div class="row"><span><b>ชื่อ :</b></span><span>${member.first_name}</span></div>
+        <div class="row"><span><b>นามสกุล :</b></span><span>${member.last_name}</span></div>
+        <div class="row"><span><b>เบอร์โทร :</b></span><span>${member.phone ?? ""}</span></div>
+        <div class="row"><span><b>วันเกิด :</b></span><span>${thaiDate(member.birthday)}</span></div>
+        <div class="row"><span><b>อายุ :</b></span><span>${calcAge(member.birthday)} ปี</span></div>
+      </div>
+
+      <div class="card">
+        <h3>📍 ที่อยู่</h3>
+        <div class="row"><span><b>บ้านเลขที่ :</b></span><span>${member.house_no ?? ""}</span></div>
+        <div class="row"><span><b>หมู่ :</b></span><span>${member.moo ?? ""}</span></div>
+        <div class="row"><span><b>ซอย :</b></span><span>${member.soi ?? ""}</span></div>
+        <div class="row"><span><b>ตำบล :</b></span><span>${member.subdistrict ?? ""}</span></div>
+        <div class="row"><span><b>อำเภอ :</b></span><span>${member.district ?? ""}</span></div>
+        <div class="row"><span><b>จังหวัด :</b></span><span>${member.province ?? ""}</span></div>
+        <button class="danger" onclick="unbind()">ยกเลิกผูกบัญชี LINE</button>
+      </div>
+
+    </div>
+
+    <div id="tab_meeting" class="tab-content">
+      <div class="card">
+        <h3>🗳 ข้อมูลการเข้าร่วมประชุม</h3>
+        ${meetingHTML}
+      </div>
+    </div>
+
+    <div id="tab_share" class="tab-content">
+      <div class="card">
+        <div class="filter-box">
+          <label>📅 ปีบัญชี</label>
+          <select class="filter-select" id="shareYearFilter" onchange="reloadShareTx()">
+            ${shareYears}
+          </select>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>💰 หุ้นสหกรณ์</h3>
+        <div id="shareSummaryBox">
+          ${shareHTML}
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>📊 รายงานซื้อขายหุ้น</h3>
+        <div class="row" style="font-weight:bold">
+          <span>วันที่</span>
+          <span>ซื้อ</span>
+          <span>ขาย</span>
+        </div>
+        <div id="shareTxBox">
+          ${shareTxHTML}
+        </div>
+      </div>
+    </div>
+  `;
 }
 
-loadTheme()
-init()
-  
 async function reloadShareTx(){
-
-const shareHTML=await loadShare()
-const txHTML=await loadShareTx()
-
-document.getElementById("shareSummaryBox").innerHTML=shareHTML
-document.getElementById("shareTxBox").innerHTML=txHTML
-
+  const shareHTML=await loadShare();
+  const txHTML=await loadShareTx();
+  document.getElementById("shareSummaryBox").innerHTML=shareHTML;
+  document.getElementById("shareTxBox").innerHTML=txHTML;
 }
+
+loadTheme();
+init();
 </script>
 
 </body>
