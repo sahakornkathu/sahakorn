@@ -689,10 +689,21 @@ document.getElementById("app").innerHTML=`
 <button class="danger" onclick="unbind()">ยกเลิกผูกบัญชี LINE</button>
 
 </div>
-
 </div>
 
 <div id="tab_meeting" class="tab-content">
+
+<div class="card">
+
+<h3>🗳 ข้อมูลการเข้าร่วมประชุม</h3>
+
+${meetingHTML}
+
+</div>
+
+</div>
+
+
 <div id="tab_share" class="tab-content">
 
 <div class="card">
@@ -700,16 +711,6 @@ document.getElementById("app").innerHTML=`
 <h3>💰 หุ้นสหกรณ์</h3>
 
 ${shareHTML}
-
-</div>
-
-</div>
-
-<div class="card">
-
-<h3>🗳 ข้อมูลการเข้าร่วมประชุม</h3>
-
-${meetingHTML}
 
 </div>
 
