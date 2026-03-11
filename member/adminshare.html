@@ -355,6 +355,7 @@ let html=`
 <h3>รายงานซื้อขายหุ้น</h3>
 
 <div class="row header">
+<span>ปีบัญชี</span>
 <span>วันที่</span>
 <span>ซื้อ</span>
 <span>ขาย</span>
@@ -373,6 +374,7 @@ totalSell+=Number(r.share_sell)
 html+=`
 
 <div class="row">
+<span>${r.fiscal_year}</span>
 <span>${isoToThai(r.trans_date)}</span>
 <span>${r.share_buy}</span>
 <span>${r.share_sell}</span>
