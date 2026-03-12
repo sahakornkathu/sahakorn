@@ -352,19 +352,20 @@ function renderMore(){
 
 const kw = searchInput.value.toLowerCase()
 
+// let list = allMembers
+// .filter(m =>
+//   m.member_id.toString().includes(kw) ||
+//   m.first_name.toLowerCase().includes(kw) ||
+//   m.last_name.toLowerCase().includes(kw)
+// )
+// .sort((a,b)=>a.member_id-b.member_id)
+
 let list = allMembers
-.filter(m =>
-  m.member_id.toString().includes(kw) ||
-  m.first_name.toLowerCase().includes(kw) ||
-  m.last_name.toLowerCase().includes(kw)
-)
+.filter(m => {
+  const text = `${m.member_id} ${m.first_name} ${m.last_name}`.toLowerCase()
+  return text.includes(kw)
+})
 .sort((a,b)=>a.member_id-b.member_id)
-
-
-// ⭐ ถ้ามีการค้นหา → แสดงแค่คนเดียว
-// if(kw.length > 0){
-//   list = list.slice(0,1)
-// }
 
 
 list.slice(renderIndex, renderIndex+PAGE_SIZE).forEach(m=>{
