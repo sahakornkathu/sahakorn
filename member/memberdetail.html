@@ -717,8 +717,9 @@ async function loadShareTx(){
 async function loadShareYears(){
 
   const {data}=await sb
-    .from("member_share_tx")
-    .select("fiscal_year")
+  .from("member_share")
+  .select("fiscal_year")
+  .eq("member_id",member.member_id)
 
   if(!data || data.length===0){
     return '<option value="all">ทุกปี</option>'
