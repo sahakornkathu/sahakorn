@@ -7,7 +7,7 @@
 <title>ซื้อขายหุ้นสหกรณ์</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
@@ -258,7 +258,10 @@ const {data}=await sb
 
 if(!data){
 
-alert("ไม่พบสมาชิก")
+Swal.fire({
+icon:'error',
+title:'ไม่พบสมาชิก'
+})
 return
 
 }
@@ -512,7 +515,13 @@ share_balance:balance
 
 }
 
-alert("บันทึกสำเร็จ")
+Swal.fire({
+icon: 'success',
+title: 'บันทึกสำเร็จ',
+text: 'ข้อมูลหุ้นถูกบันทึกแล้ว',
+timer: 1500,
+showConfirmButton: false
+})
 /* เคลียร์ช่อง input */
 document.getElementById("buy").value=""
 document.getElementById("sell").value=""
