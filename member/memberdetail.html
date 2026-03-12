@@ -715,25 +715,26 @@ async function loadShareTx(){
 }
 
 async function loadShareYears(){
+
   const {data}=await sb
     .from("member_share_tx")
     .select("fiscal_year")
-    .eq("member_id",member.member_id);
 
   if(!data || data.length===0){
-    return '<option value="all">ทุกปี</option>';
+    return '<option value="all">ทุกปี</option>'
   }
 
-  const years=[...new Set(data.map(x=>x.fiscal_year))];
-  years.sort((a,b)=>b-a);
+  const years=[...new Set(data.map(x=>x.fiscal_year))]
 
-  let html='<option value="all">ทุกปี</option>';
+  years.sort((a,b)=>b-a)
+
+  let html='<option value="all">ทุกปี</option>'
 
   years.forEach(y=>{
-    html+=`<option value="${y}">${y}</option>`;
-  });
+    html+=`<option value="${y}">${y}</option>`
+  })
 
-  return html;
+  return html
 }
 
 /* PROFILE */
