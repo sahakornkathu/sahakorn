@@ -513,7 +513,12 @@ share_balance:balance
 }
 
 alert("บันทึกสำเร็จ")
+/* เคลียร์ช่อง input */
+document.getElementById("buy").value=""
+document.getElementById("sell").value=""
 
+/* โฟกัสกลับไปที่ช่องซื้อ */
+document.getElementById("buy").focus()
 loadReport()
 
 }
