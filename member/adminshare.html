@@ -159,7 +159,18 @@ background:#fafafa;
 </div>
   
 <div id="reportBox"></div>
+  
+<div class="card">
 
+<h3>รายงานซื้อหุ้นประจำวัน</h3>
+
+<label>เลือกวันที่</label>
+<input type="date" id="dailyDate" onchange="loadDailyReport()">
+
+<div id="dailyReport"></div>
+
+</div>
+  
 </div>
 
 <script>
@@ -280,7 +291,81 @@ loadReport()
 
 }
 
+async function loadDailyReport(){
 
+const date=document.getElementById("dailyDate").value
+
+if(!date){
+document.getElementById("dailyReport").innerHTML="กรุณาเลือกวันที่"
+return
+}
+
+const {data,error}=await sb
+.from("member_share_tx")
+.select(`
+member_id,
+share_buy,
+members(first_name,last_name,group)
+`)
+.eq("trans_date",date)
+
+if(error){
+console.log(error)
+return
+}
+
+if(!data || data.length===0){
+
+document.getElementById("dailyReport").innerHTML="ไม่มีรายการในวันนี้"
+return
+
+}
+
+let total=0
+
+let html=`
+
+<div class="row header">
+<span>รหัส</span>
+<span>ชื่อ</span>
+<span>กลุ่ม</span>
+<span>ซื้อ</span>
+</div>
+
+`
+
+data.forEach(r=>{
+
+total+=Number(r.share_buy)
+
+html+=`
+
+<div class="row">
+<span>${r.member_id}</span>
+<span>${r.members.first_name} ${r.members.last_name}</span>
+<span>${r.members.group ?? "-"}</span>
+<span>${r.share_buy}</span>
+</div>
+
+`
+
+})
+
+html+=`
+
+<div class="row header">
+<span>รวม</span>
+<span></span>
+<span></span>
+<span>${total}</span>
+</div>
+
+`
+
+document.getElementById("dailyReport").innerHTML=html
+
+}
+  
 async function loadYearFilter(){
 
 const {data,error}=await sb
@@ -551,6 +636,8 @@ document.getElementById("reportBox").innerHTML=html
 
 }
 
+document.getElementById("dailyDate").value =
+new Date().toISOString().split("T")[0]
 </script>
 
 </body>
