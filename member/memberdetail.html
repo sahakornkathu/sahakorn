@@ -1067,6 +1067,7 @@ async function showProfile(){
   `;
 setTimeout(() => {
   init3DCard();
+  initGyroCard();  
 }, 100);
 }
 
@@ -1200,7 +1201,57 @@ function renderMemberCard(){
       shine.style.transform = "translateX(-120%) rotate(25deg)";
     }
   });
+}
 
+function initGyroCard(){
+
+  const card = document.getElementById("memberCard");
+  if(!card) return;
+
+  function handleOrientation(e){
+    let x = e.beta;   // หน้า/หลัง
+    let y = e.gamma;  // ซ้าย/ขวา
+
+    // จำกัดค่าไม่ให้แรงเกิน
+    x = Math.max(-30, Math.min(30, x));
+    y = Math.max(-30, Math.min(30, y));
+
+    const rotateX = -x / 6;
+    const rotateY = y / 6;
+
+    card.style.transform = `
+      rotateX(${rotateX}deg)
+      rotateY(${rotateY}deg)
+      scale(1.03)
+    `;
+  }
+
+  // 🔥 iOS ต้องขอ permission
+  if (typeof DeviceOrientationEvent !== "undefined" &&
+      typeof DeviceOrientationEvent.requestPermission === "function") {
+
+    // สร้างปุ่มขอสิทธิ์
+    const btn = document.createElement("button");
+    btn.innerText = "เปิดโหมด 3D";
+    btn.className = "primary";
+    btn.style.marginTop = "10px";
+
+    btn.onclick = async () => {
+      const permission = await DeviceOrientationEvent.requestPermission();
+      if (permission === "granted") {
+        window.addEventListener("deviceorientation", handleOrientation);
+        btn.remove();
+      } else {
+        alert("ไม่อนุญาตการเอียง");
+      }
+    };
+
+    document.getElementById("app").prepend(btn);
+
+  } else {
+    // Android ใช้ได้เลย
+    window.addEventListener("deviceorientation", handleOrientation);
+  }
 }
   
 async function reloadShareTx(){
