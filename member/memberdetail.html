@@ -1046,110 +1046,30 @@ async function showProfile(){
 function renderMemberCard(){
 
   return `
-    <div style="
-      position:relative;
-      margin-top:12px;
-      padding:18px;
-      border-radius:22px;
+   <div style="
+  margin-top:16px;
+  padding:16px;
+  border-radius:18px;
+  text-align:center;
 
-      background:
-        linear-gradient(135deg, rgba(6,199,85,0.95), rgba(0,169,79,0.85)),
-        url('https://www.transparenttextures.com/patterns/asfalt-light.png');
+  background:rgba(255,255,255,0.08);
+  backdrop-filter:blur(10px);
 
-      color:white;
+  border:1px solid rgba(255,255,255,0.2);
 
-      box-shadow:
-        0 15px 40px rgba(0,0,0,0.25),
-        inset 0 1px 0 rgba(255,255,255,0.2);
-
-      overflow:hidden;
+  box-shadow:
+    inset 0 1px 4px rgba(0,0,0,0.2),
+    0 6px 20px rgba(0,0,0,0.25);
+">
+  <img src="${getQRCode(member.member_id)}"
+    style="
+      width:140px;
+      height:140px;
+      display:block;
+      margin:auto;
+      border-radius:10px;
     ">
-
-      <!-- 🔥 glow effect -->
-      <div style="
-        position:absolute;
-        width:200px;
-        height:200px;
-        background:rgba(255,255,255,0.1);
-        filter:blur(60px);
-        top:-50px;
-        left:-50px;
-      "></div>
-
-      <!-- 🔥 profile -->
-      <img src="${member.line_picture || profile.pictureUrl}"
-        style="
-          width:56px;
-          height:56px;
-          border-radius:50%;
-          border:2px solid rgba(255,255,255,0.6);
-          position:absolute;
-          right:16px;
-          top:16px;
-          box-shadow:0 4px 12px rgba(0,0,0,0.3);
-        ">
-
-      <!-- 🔥 header -->
-      <div style="
-        font-size:12px;
-        letter-spacing:1px;
-        opacity:0.85;
-      ">
-        MEMBERSHIP CARD
-      </div>
-
-      <!-- 🔥 name -->
-      <div style="
-        font-size:20px;
-        font-weight:700;
-        margin-top:6px;
-        letter-spacing:0.3px;
-      ">
-        ${member.first_name} ${member.last_name}
-      </div>
-
-      <!-- 🔥 member id -->
-      <div style="
-        font-size:13px;
-        margin-top:4px;
-        opacity:0.9;
-      ">
-        ID: ${member.member_id}
-      </div>
-
-      <!-- 🔥 QR zone -->
-      <div style="
-        margin-top:16px;
-        background:rgba(255,255,255,0.95);
-        padding:14px;
-        border-radius:18px;
-        text-align:center;
-
-        box-shadow:
-          inset 0 1px 4px rgba(0,0,0,0.15),
-          0 6px 20px rgba(0,0,0,0.2);
-      ">
-        <img src="${getQRCode(member.member_id)}"
-          style="
-            width:140px;
-            height:140px;
-            display:block;
-            margin:auto;
-            border-radius:10px;
-          ">
-      </div>
-
-      <!-- 🔥 footer -->
-      <div style="
-        margin-top:12px;
-        font-size:11px;
-        opacity:0.7;
-        text-align:right;
-      ">
-        Cooperative System
-      </div>
-
-    </div>
+</div>
   `;
 }
   
