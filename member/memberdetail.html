@@ -659,18 +659,61 @@ async function saveMember(){
       return;
     }
 
-    await Swal.fire({
-  title: "บันทึกสำเร็จ",
-  html: `<div style="font-size:14px;color:#666">ข้อมูลถูกอัปเดตแล้ว</div>`,
-  icon: "success",
-  showConfirmButton: false,
-  timer: 1800,
+  await Swal.fire({
+  html: `
+    <div style="display:flex;flex-direction:column;align-items:center;padding:10px 5px">
 
+      <!-- ✅ ICON แบบ custom -->
+      <div style="
+        width:70px;
+        height:70px;
+        border-radius:50%;
+        background:linear-gradient(135deg,#06c755,#00a94f);
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        box-shadow:0 8px 25px rgba(6,199,85,0.35);
+        margin-bottom:12px;
+      ">
+        <svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="white" stroke-width="3">
+          <path d="M5 13l4 4L19 7"/>
+        </svg>
+      </div>
+
+      <!-- ✅ TITLE -->
+      <div style="font-size:18px;font-weight:700;margin-bottom:4px">
+        บันทึกสำเร็จ
+      </div>
+
+      <!-- ✅ SUB TEXT -->
+      <div style="font-size:13px;color:var(--muted)">
+        ข้อมูลถูกอัปเดตเรียบร้อยแล้ว
+      </div>
+
+    </div>
+  `,
+
+  background: "var(--card)",
+  showConfirmButton: false,
+  timer: 2000,
+
+  // 🔥 animation ระดับแอป
   showClass: {
-    popup: "animate__animated animate__zoomIn"
+    popup: "animate__animated animate__fadeInUp animate__faster"
   },
   hideClass: {
-    popup: "animate__animated animate__fadeOutDown"
+    popup: "animate__animated animate__fadeOutDown animate__faster"
+  },
+
+  // 🔥 progress bar
+  timerProgressBar: true,
+
+  // 🔥 glow + depth
+  didOpen: (popup) => {
+    popup.style.borderRadius = "18px";
+    popup.style.border = "1px solid rgba(6,199,85,0.25)";
+    popup.style.boxShadow = "0 15px 40px rgba(0,0,0,0.15), 0 5px 20px rgba(6,199,85,0.2)";
+    popup.style.backdropFilter = "blur(6px)";
   }
 });
 
