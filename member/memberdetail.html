@@ -559,7 +559,12 @@ async function unbind(){
 
   location.reload();
 }
-
+  
+function getQRCode(memberId){
+  const data = encodeURIComponent("MEMBER:"+memberId);
+  return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${data}`;
+}
+  
 /* THAI DATE INPUT */
 function formatThaiDateInput(date){
   if(!date) return "";
@@ -973,6 +978,21 @@ async function showProfile(){
 
       <div class="card">
         <h3>📋 ข้อมูลสมาชิก</h3>
+        
+        <div style="text-align:center;margin-top:10px;">
+  <img src="${getQRCode(member.member_id)}" 
+       style="width:160px;height:160px;border-radius:12px;box-shadow:0 4px 15px rgba(0,0,0,0.1);">
+  <div style="font-size:12px;color:var(--muted);margin-top:6px;">ใช้สำหรับสแกนยืนยันตัวตน</div>
+  <button class="primary" onclick="showQRBig()">แสดง QR เต็มจอ</button>
+</div>
+<div style="
+  margin-top:10px;
+  padding:12px;
+  border-radius:14px;
+  background:var(--card);
+  text-align:center;
+  box-shadow:var(--shadow);
+">
         <div class="row"><span><b>รหัสสมาชิก :</b></span><span>${member.member_id}</span></div>
         <div class="row"><span><b>เลขบัตรประชาชน :</b></span><span>${member.id_card}</span></div>
       </div>
@@ -1038,6 +1058,14 @@ async function showProfile(){
   `;
 }
 
+function showQRBig(){
+  Swal.fire({
+    html: `<img src="${getQRCode(member.member_id)}" style="width:250px">`,
+    background: "var(--card)",
+    showConfirmButton: false
+  });
+}
+  
 async function reloadShareTx(){
   const shareHTML=await loadShare();
   const txHTML=await loadShareTx();
