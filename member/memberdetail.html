@@ -1070,39 +1070,114 @@ async function showProfile(){
 function renderMemberCard(){
 
   return `
-  <div style="
-  margin-top:16px;
-  padding:16px;
-  border-radius:18px;
-  text-align:center;
+    <div style="
+      position:relative;
+      margin-top:14px;
+      padding:20px;
+      border-radius:24px;
 
-  background:rgba(255,255,255,0.08);
-  backdrop-filter:blur(10px);
+      background:
+        radial-gradient(circle at 20% 20%, rgba(255,255,255,0.08), transparent 40%),
+        linear-gradient(145deg, #1a1a1a, #0d0d0d);
 
-  border:1px solid rgba(255,255,255,0.2);
-">
+      color:white;
 
-  <div style="
-    display:inline-block;
-    padding:8px;
-    border-radius:16px;
+      box-shadow:
+        0 20px 60px rgba(0,0,0,0.6),
+        inset 0 1px 0 rgba(255,255,255,0.05);
 
-    animation: qrGlow 2.5s infinite ease-in-out;
-  ">
+      overflow:hidden;
+    ">
 
-    <img src="${getQRCode(member.member_id)}"
-      style="
-        width:140px;
-        height:140px;
-        display:block;
-        border-radius:12px;
+      <!-- subtle glow -->
+      <div style="
+        position:absolute;
+        width:180px;
+        height:180px;
+        background:rgba(255,255,255,0.05);
+        filter:blur(80px);
+        top:-60px;
+        right:-60px;
+      "></div>
 
-        animation: qrPulse 2.5s infinite ease-in-out;
+      <!-- PROFILE -->
+      <img src="${member.line_picture || profile.pictureUrl}"
+        style="
+          width:48px;
+          height:48px;
+          border-radius:50%;
+          border:1px solid rgba(255,255,255,0.2);
+          position:absolute;
+          right:18px;
+          top:18px;
+        ">
+
+      <!-- BRAND -->
+      <div style="
+        font-size:11px;
+        letter-spacing:1.5px;
+        opacity:0.5;
       ">
+        MEMBER PASS
+      </div>
 
-  </div>
+      <!-- NAME -->
+      <div style="
+        font-size:20px;
+        font-weight:600;
+        margin-top:8px;
+        letter-spacing:0.3px;
+      ">
+        ${member.first_name} ${member.last_name}
+      </div>
 
-</div>
+      <!-- ID -->
+      <div style="
+        font-size:12px;
+        margin-top:4px;
+        opacity:0.6;
+        letter-spacing:1px;
+      ">
+        ID • ${member.member_id}
+      </div>
+
+      <!-- DIVIDER -->
+      <div style="
+        margin:16px 0;
+        height:1px;
+        background:linear-gradient(to right, transparent, rgba(255,255,255,0.15), transparent);
+      "></div>
+
+      <!-- QR minimal -->
+      <div style="
+        display:flex;
+        justify-content:center;
+      ">
+        <img src="${getQRCode(member.member_id)}"
+          style="
+            width:120px;
+            height:120px;
+            border-radius:12px;
+            background:white;
+            padding:6px;
+
+            box-shadow:
+              0 10px 30px rgba(0,0,0,0.6);
+          ">
+      </div>
+
+      <!-- FOOT -->
+      <div style="
+        margin-top:12px;
+        font-size:10px;
+        text-align:center;
+        opacity:0.4;
+        letter-spacing:1px;
+      ">
+        SCAN FOR VERIFY
+      </div>
+
+    </div>
   `;
 }
   
