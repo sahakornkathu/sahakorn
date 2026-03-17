@@ -980,8 +980,16 @@ async function showProfile(){
         <h3>📋 ข้อมูลสมาชิก</h3>
         
         <div style="text-align:center;margin-top:10px;">
-  <img src="${getQRCode(member.member_id)}" 
-       style="width:160px;height:160px;border-radius:12px;box-shadow:0 4px 15px rgba(0,0,0,0.1);">
+  <div style="
+  display:inline-block;
+  background:#fff;
+  padding:10px;
+  border-radius:16px;
+  box-shadow:0 6px 20px rgba(0,0,0,0.1);
+">
+  <img src="${getQRCode(member.member_id)}"
+       style="width:150px;height:150px;">
+</div>
   <div style="font-size:12px;color:var(--muted);margin-top:6px;">ใช้สำหรับสแกนยืนยันตัวตน</div>
   <button class="primary" onclick="showQRBig()">แสดง QR เต็มจอ</button>
 </div>
