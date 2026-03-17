@@ -628,53 +628,79 @@ async function saveMember(){
 
     showLoading("กำลังบันทึกข้อมูล...");
 
+    // 🔥 แยกค่าทั้งหมดก่อน
+    const first_name = document.getElementById("first_name").value;
+    const last_name = document.getElementById("last_name").value;
+    const birthdayRaw = document.getElementById("birthday").value;
+    const birthday = convertThaiToISO(birthdayRaw);
+    const phone = document.getElementById("phone").value;
+    const house_no = document.getElementById("house_no").value;
+    const moo = document.getElementById("moo").value;
+    const soi = document.getElementById("soi").value;
+    const subdistrict = document.getElementById("subdistrict").value;
+    const district = document.getElementById("district").value;
+    const province = document.getElementById("province").value;
+
+    // 🔥 debug จริง
+    console.log({
+      first_name,
+      last_name,
+      birthdayRaw,
+      birthday,
+      phone,
+      house_no,
+      moo,
+      soi,
+      subdistrict,
+      district,
+      province
+    });
+
+    // ❗ กันพังตรงนี้ (ตัวสำคัญ)
+    if(!birthday){
+      alert("รูปแบบวันเกิดไม่ถูกต้อง (ตัวอย่าง: 01/01/2568)");
+      return;
+    }
+
     const {error} = await sb
       .from("members")
       .update({
-        first_name:document.getElementById("first_name").value,
-        last_name:document.getElementById("last_name").value,
-        birthday:convertThaiToISO(document.getElementById("birthday").value),
-        phone:document.getElementById("phone").value,
-        house_no:document.getElementById("house_no").value,
-        moo:document.getElementById("moo").value,
-        soi:document.getElementById("soi").value,
-        subdistrict:document.getElementById("subdistrict").value,
-        district:document.getElementById("district").value,
-        province:document.getElementById("province").value
+        first_name,
+        last_name,
+        birthday,
+        phone,
+        house_no,
+        moo,
+        soi,
+        subdistrict,
+        district,
+        province
       })
       .eq("line_user_id",userId);
 
     if(error){
-      showError(error.message);
+      console.log("SUPABASE ERROR:", error); // 🔥 สำคัญ
+      showError(error.message + " | " + (error.details || ""));
       return;
     }
 
-    // 🔥 Sweet Alert แบบ custom
     await Swal.fire({
       title: "บันทึกสำเร็จ",
-      html: `
-        <div style="font-size:14px;color:#666;margin-top:5px">
-          ข้อมูลของคุณถูกอัปเดตเรียบร้อยแล้ว
-        </div>
-      `,
       icon: "success",
-      background: "#ffffff",
-      color: "#222",
+      timer: 1500,
       showConfirmButton: false,
-      timer: 1800,
-
-      // 🔥 animation ไม่เหมือนใคร
       showClass: {
-        popup: "animate__animated animate__zoomIn animate__faster"
+        popup: "animate__animated animate__zoomIn"
       },
       hideClass: {
-        popup: "animate__animated animate__fadeOutDown animate__faster"
+        popup: "animate__animated animate__fadeOutDown"
       }
     });
 
     checkBind();
 
   }catch(err){
+    console.error("CATCH ERROR:", err);
     showError("บันทึกไม่สำเร็จ: "+err.message);
   }
 
