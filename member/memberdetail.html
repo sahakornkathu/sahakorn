@@ -762,7 +762,12 @@ async function loadMeeting(){
 /* SHARE */
 async function loadShare(){
   const dividendMap = await loadDividendMap();
-  const year=document.getElementById("shareYearFilter")?.value;
+  let year = document.getElementById("shareYearFilter")?.value;
+
+// 🔥 ถ้ายังไม่มีค่า → ใช้ปีปัจจุบัน
+if(!year){
+  year = getCurrentFiscalYear();
+}
 
   let query=sb
     .from("member_share")
@@ -885,23 +890,27 @@ async function loadShareTx(){
 async function loadShareYears(){
 
   const {data}=await sb
-  .from("member_share")
-  .select("fiscal_year")
-  .eq("member_id",member.member_id)
+    .from("member_share")
+    .select("fiscal_year")
+    .eq("member_id",member.member_id)
 
   if(!data || data.length===0){
-    return '<option value="all">ทุกปี</option>'
+    return ""
   }
 
   const years=[...new Set(data.map(x=>x.fiscal_year))]
-
   years.sort((a,b)=>b-a)
 
-  let html='<option value="all">ทุกปี</option>'
+  const currentYear = getCurrentFiscalYear();
 
-  years.forEach(y=>{
-    html+=`<option value="${y}">${y}</option>`
-  })
+  let html=''
+
+years.forEach(y=>{
+  const selected = (y === currentYear) ? "selected" : "";
+  const label = (y === currentYear) ? `${y} (ปีปัจจุบัน)` : y;
+
+  html+=`<option value="${y}" ${selected}>${label}</option>`
+})
 
   return html
 }
@@ -925,6 +934,21 @@ async function loadShareYears(){
 
   return map;
 } 
+
+
+function getCurrentFiscalYear(){
+  const today = new Date();
+  const month = today.getMonth() + 1; // 1-12
+  const year = today.getFullYear() + 543; // แปลงเป็น พ.ศ.
+
+  // 🔥 ถ้า ม.ค.–มี.ค. → ยังเป็นปีบัญชีปีก่อน
+  if(month <= 3){
+    return year - 1;
+  }
+
+  return year;
+}
+  
 /* PROFILE */
 async function showProfile(){
   const meetingHTML=await loadMeeting();
