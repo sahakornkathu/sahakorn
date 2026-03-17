@@ -761,6 +761,7 @@ async function loadMeeting(){
 
 /* SHARE */
 async function loadShare(){
+  const dividendMap = await loadDividendMap();
   const year=document.getElementById("shareYearFilter")?.value;
 
   let query=sb
@@ -781,34 +782,67 @@ async function loadShare(){
   let html="";
 
   data.forEach(s=>{
-    html+=`
-      <div style="font-weight:bold;margin-top:10px;margin-bottom:6px;color:#06c755;">
-        ปีบัญชี ${s.fiscal_year}
-      </div>
 
-      <div class="row">
-        <span>ยอดยกมา</span>
-        <span>${s.share_begin ?? 0}</span>
-      </div>
+  const d = dividendMap[s.fiscal_year] || {};
 
-      <div class="row">
-        <span>ซื้อระหว่างปี</span>
-        <span>${s.share_buy ?? 0}</span>
-      </div>
+  const totalDividend =
+    (d.dividend_share || 0) +
+    (d.dividend_loan || 0) +
+    (d.dividend_product || 0);
 
-      <div class="row">
-        <span>ขายระหว่างปี</span>
-        <span>${s.share_sell ?? 0}</span>
-      </div>
+  html+=`
+    <div style="font-weight:bold;margin-top:10px;margin-bottom:6px;color:#06c755;">
+      ปีบัญชี ${s.fiscal_year}
+    </div>
 
-      <div class="row">
-        <span><b>ยอดคงเหลือ</b></span>
-        <span><b>${s.share_balance ?? 0}</b></span>
-      </div>
+    <div class="row">
+      <span>ยอดยกมา</span>
+      <span>${Number(s.share_begin || 0).toLocaleString()}</span>
+    </div>
 
-      <hr>
-    `;
-  });
+    <div class="row">
+      <span>ซื้อระหว่างปี</span>
+      <span>${Number(s.share_buy || 0).toLocaleString()}</span>
+    </div>
+
+    <div class="row">
+      <span>ขายระหว่างปี</span>
+      <span>${Number(s.share_sell || 0).toLocaleString()}</span>
+    </div>
+
+    <div class="row">
+      <span><b>ยอดคงเหลือ</b></span>
+      <span><b>${Number(s.share_balance || 0).toLocaleString()}</b></span>
+    </div>
+
+    <!-- 🔥 ปันผล -->
+    <div style="margin-top:10px;font-weight:bold;color:#06c755;">
+      💸 ปันผล
+    </div>
+
+    <div class="row">
+      <span>ปันผลหุ้น</span>
+      <span>${Number(d.dividend_share || 0).toLocaleString()}</span>
+    </div>
+
+    <div class="row">
+      <span>ปันผลเงินกู้</span>
+      <span>${Number(d.dividend_loan || 0).toLocaleString()}</span>
+    </div>
+
+    <div class="row">
+      <span>ปันผลสินค้า</span>
+      <span>${Number(d.dividend_product || 0).toLocaleString()}</span>
+    </div>
+
+    <div class="row">
+      <span><b>รวมปันผล</b></span>
+      <span style="color:#06c755"><b>${Number(totalDividend).toLocaleString()}</b></span>
+    </div>
+
+    <hr>
+  `;
+});
 
   return html;
 }
@@ -872,6 +906,25 @@ async function loadShareYears(){
   return html
 }
 
+ async function loadDividendMap(){
+  const {data,error} = await sb
+    .from("member_dividend")
+    .select("*")
+    .eq("member_id", member.member_id);
+
+  if(error){
+    console.log(error);
+    return {};
+  }
+
+  // 🔥 แปลงเป็น map: ปี → ข้อมูล
+  const map = {};
+  data.forEach(d=>{
+    map[d.fiscal_year] = d;
+  });
+
+  return map;
+} 
 /* PROFILE */
 async function showProfile(){
   const meetingHTML=await loadMeeting();
