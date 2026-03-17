@@ -659,7 +659,22 @@ async function saveMember(){
       return;
     }
 
-    checkBind();
+    await Swal.fire({
+  title: "บันทึกสำเร็จ",
+  html: `<div style="font-size:14px;color:#666">ข้อมูลถูกอัปเดตแล้ว</div>`,
+  icon: "success",
+  showConfirmButton: false,
+  timer: 1800,
+
+  showClass: {
+    popup: "animate__animated animate__zoomIn"
+  },
+  hideClass: {
+    popup: "animate__animated animate__fadeOutDown"
+  }
+});
+
+checkBind();
 
   }catch(err){
     console.error(err);
