@@ -1065,10 +1065,6 @@ async function showProfile(){
       </div>
     </div>
   `;
-setTimeout(() => {
-  init3DCard();
-  initGyroCard();  
-}, 100);
 }
 
   function getQRCode(text){
@@ -1156,99 +1152,7 @@ function renderMemberCard(){
     </div>
   `;
 }
-  function init3DCard(){
-
-  const card = document.getElementById("memberCard");
-  const shine = document.getElementById("shine");
-
-  if(!card){
-    console.log("❌ ไม่เจอ card");
-    return;
-  }
-
-  console.log("✅ card loaded");
-
-  card.addEventListener("mousemove",(e)=>{
-    const rect = card.getBoundingClientRect();
-
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    const centerX = rect.width / 2;
-    const centerY = rect.height / 2;
-
-    const rotateX = -(y - centerY) / 10;
-    const rotateY = (x - centerX) / 10;
-
-    card.style.transform = `
-      rotateX(${rotateX}deg)
-      rotateY(${rotateY}deg)
-      scale(1.03)
-    `;
-
-    if(shine){
-      const percentX = x / rect.width * 100;
-      shine.style.transform = `
-        translateX(${percentX - 50}%)
-        rotate(25deg)
-      `;
-    }
-  });
-
-  card.addEventListener("mouseleave",()=>{
-    card.style.transform = "rotateX(0) rotateY(0) scale(1)";
-    if(shine){
-      shine.style.transform = "translateX(-120%) rotate(25deg)";
-    }
-  });
-}
-
-function initGyroCard(){
-
-  const card = document.getElementById("memberCard");
-  if(!card) return;
-
-  function handleOrientation(e){
-    let x = e.beta || 0;
-    let y = e.gamma || 0;
-
-    const rotateX = -x / 8;
-    const rotateY = y / 8;
-
-    card.style.transform = `
-      rotateX(${rotateX}deg)
-      rotateY(${rotateY}deg)
-      scale(1.03)
-    `;
-  }
-
-  // 🔥 iPhone ต้องกดก่อน
-  if (typeof DeviceOrientationEvent !== "undefined" &&
-      typeof DeviceOrientationEvent.requestPermission === "function") {
-
-    Swal.fire({
-      title: "เปิดโหมดเอียงการ์ด",
-      text: "อนุญาตให้ใช้การเอียงมือถือ",
-      confirmButtonText: "เปิดใช้งาน",
-      background: "var(--card)"
-    }).then(async (res)=>{
-      if(res.isConfirmed){
-        const permission = await DeviceOrientationEvent.requestPermission();
-
-        if(permission === "granted"){
-          window.addEventListener("deviceorientation", handleOrientation);
-        }else{
-          alert("ไม่อนุญาต");
-        }
-      }
-    });
-
-  } else {
-    // Android
-    window.addEventListener("deviceorientation", handleOrientation);
-  }
-}
-  
+ 
 async function reloadShareTx(){
   const shareHTML=await loadShare();
   const txHTML=await loadShareTx();
