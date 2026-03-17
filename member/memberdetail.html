@@ -559,12 +559,7 @@ async function unbind(){
 
   location.reload();
 }
-  
-function getQRCode(memberId){
-  const data = encodeURIComponent("MEMBER:"+memberId);
-  return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${data}`;
-}
-  
+
 /* THAI DATE INPUT */
 function formatThaiDateInput(date){
   if(!date) return "";
@@ -975,34 +970,12 @@ async function showProfile(){
     </div>
 
     <div id="tab_person" class="tab-content active">
-
+    ${renderMemberCard()}  <!-- 🔥 ใส่ตรงนี้ -->
       <div class="card">
         <h3>📋 ข้อมูลสมาชิก</h3>
-        
-        <div style="text-align:center;margin-top:10px;">
-  <div style="
-  display:inline-block;
-  background:#fff;
-  padding:10px;
-  border-radius:16px;
-  box-shadow:0 6px 20px rgba(0,0,0,0.1);
-">
-  <img src="${getQRCode(member.member_id)}"
-       style="width:150px;height:150px;">
-</div>
-  <div style="font-size:12px;color:var(--muted);margin-top:6px;">ใช้สำหรับสแกนยืนยันตัวตน</div>
-  <button class="primary" onclick="showQRBig()">แสดง QR เต็มจอ</button>
-</div>
-<div style="
-  margin-top:10px;
-  padding:12px;
-  border-radius:14px;
-  background:var(--card);
-  text-align:center;
-  box-shadow:var(--shadow);
-">
         <div class="row"><span><b>รหัสสมาชิก :</b></span><span>${member.member_id}</span></div>
         <div class="row"><span><b>เลขบัตรประชาชน :</b></span><span>${member.id_card}</span></div>
+     
       </div>
 
       <div class="card">
@@ -1066,14 +1039,60 @@ async function showProfile(){
   `;
 }
 
-function showQRBig(){
-  Swal.fire({
-    html: `<img src="${getQRCode(member.member_id)}" style="width:250px">`,
-    background: "var(--card)",
-    showConfirmButton: false
-  });
+  function getQRCode(text){
+  return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${text}`;
 }
   
+function renderMemberCard(){
+
+  return `
+    <div style="
+      margin-top:10px;
+      padding:16px;
+      border-radius:20px;
+      background:linear-gradient(135deg,#06c755,#00a94f);
+      color:white;
+      box-shadow:0 10px 30px rgba(0,0,0,0.15);
+    ">
+
+      <!-- HEADER -->
+      <div style="font-size:14px;opacity:0.9;">สหกรณ์สมาชิก</div>
+
+      <!-- NAME -->
+      <div style="font-size:18px;font-weight:bold;margin-top:4px;">
+        ${member.first_name} ${member.last_name}
+      </div>
+
+      <!-- MEMBER ID -->
+      <div style="font-size:13px;margin-top:2px;opacity:0.9;">
+        รหัสสมาชิก: ${member.member_id}
+      </div>
+
+      <!-- QR -->
+      <div style="
+        margin-top:14px;
+        background:#fff;
+        padding:10px;
+        border-radius:14px;
+        text-align:center;
+      ">
+        <img src="${getQRCode(member.member_id)}"
+             style="width:140px;height:140px;">
+      </div>
+
+      <!-- FOOTER -->
+      <div style="
+        font-size:11px;
+        margin-top:10px;
+        opacity:0.85;
+        text-align:center;
+      ">
+        ใช้สำหรับยืนยันตัวตน / สแกนเข้าระบบ
+      </div>
+
+    </div>
+  `;
+}
 async function reloadShareTx(){
   const shareHTML=await loadShare();
   const txHTML=await loadShareTx();
