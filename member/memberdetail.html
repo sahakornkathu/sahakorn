@@ -299,16 +299,17 @@ html,body{
   min-height:100%;
   background:var(--bg);
 }
-/* 🔥 QR GLOW ANIMATION */
-@keyframes cardShine {
+
+/* 🔥 SHINE วิ่ง */
+@keyframes shineMove {
   0% {
     transform: translateX(-120%) rotate(25deg);
     opacity: 0;
   }
-  20% {
-    opacity: 0.4;
+  30% {
+    opacity: 0.25;
   }
-  50% {
+  60% {
     transform: translateX(120%) rotate(25deg);
     opacity: 0;
   }
@@ -316,17 +317,22 @@ html,body{
     opacity: 0;
   }
 }
-  /* 🔥 3D perspective container */
-/* .card-3d-wrap{
-  perspective:1000px;
-} */
 
-/* 🔥 ตัวการ์ด */
-/* .card-3d{
-  transition: transform 0.15s ease;
-  transform-style: preserve-3d;
-  will-change: transform;
-} */
+/* 🔥 เงาลอย (depth breathing) */
+@keyframes cardFloat {
+  0% {
+    transform: translateY(0px) scale(1);
+    box-shadow: 0 25px 60px rgba(0,0,0,0.6);
+  }
+  50% {
+    transform: translateY(-6px) scale(1.01);
+    box-shadow: 0 35px 80px rgba(0,0,0,0.7);
+  }
+  100% {
+    transform: translateY(0px) scale(1);
+    box-shadow: 0 25px 60px rgba(0,0,0,0.6);
+  }
+}
 </style>
 </head>
 
@@ -1074,11 +1080,10 @@ async function showProfile(){
 function renderMemberCard(){
 
   return `
-    <div class="card-3d-wrap">
+    <div style="margin-top:14px;">
 
-      <div id="memberCard" class="card-3d" style="
+      <div style="
         position:relative;
-        margin-top:14px;
         padding:20px;
         border-radius:24px;
 
@@ -1087,14 +1092,13 @@ function renderMemberCard(){
 
         color:white;
 
-        box-shadow:
-          0 25px 60px rgba(0,0,0,0.6);
-
         overflow:hidden;
+
+        animation: cardFloat 4s ease-in-out infinite;
       ">
 
         <!-- 🔥 SHINE -->
-        <div class="shine-layer" style="
+        <div style="
           position:absolute;
           top:0;
           left:0;
@@ -1103,7 +1107,7 @@ function renderMemberCard(){
           pointer-events:none;
           overflow:hidden;
         ">
-          <div id="shine" style="
+          <div style="
             width:60%;
             height:200%;
             background:linear-gradient(
@@ -1112,9 +1116,23 @@ function renderMemberCard(){
               rgba(255,255,255,0.25) 50%,
               rgba(255,255,255,0) 100%
             );
-            transform:translateX(-120%) rotate(25deg);
+            animation: shineMove 4s infinite;
           "></div>
         </div>
+
+        <!-- 🔥 TOP LIGHT -->
+        <div style="
+          position:absolute;
+          top:0;
+          left:0;
+          width:100%;
+          height:40%;
+          background:linear-gradient(
+            to bottom,
+            rgba(255,255,255,0.08),
+            transparent
+          );
+        "></div>
 
         <!-- PROFILE -->
         <img src="${member.line_picture || profile.pictureUrl}"
