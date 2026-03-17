@@ -327,29 +327,28 @@ let userId;
 let profile;
 let member;
 
-/* ================= UI SAFE ================= */
-
 function showLoading(msg="กำลังโหลด..."){
   document.getElementById("app").innerHTML =
-  `<div class="card" style="text-align:center">${msg}</div>`;
+    `<div class="card" style="text-align:center">${msg}</div>`;
 }
 
 function showError(msg){
   document.getElementById("app").innerHTML =
-  `<div class="card" style="color:red;text-align:center">
-    ❌ ${msg}
-    <br><br>
-    <button class="primary" onclick="location.reload()">ลองใหม่</button>
-  </div>`;
+    `<div class="card" style="color:red;text-align:center">
+      ❌ ${msg}
+      <br><br>
+      <button class="primary" onclick="location.reload()">ลองใหม่</button>
+    </div>`;
 }
-
-/* ================= THEME ================= */
-
+  
+/* DARK MODE */
 function toggleDark(){
   document.documentElement.classList.toggle("dark");
-  localStorage.setItem("theme",
-    document.documentElement.classList.contains("dark")?"dark":"light"
-  );
+  if(document.documentElement.classList.contains("dark")){
+    localStorage.setItem("theme","dark");
+  }else{
+    localStorage.setItem("theme","light");
+  }
 }
 
 function loadTheme(){
@@ -358,25 +357,28 @@ function loadTheme(){
   }
 }
 
-/* ================= DATE ================= */
-
+/* DATE */
 function thaiDate(date){
-  if(!date) return "-";
+  if(!date) return "";
+  const months=[
+    "มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน",
+    "กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"
+  ];
   const d=new Date(date);
-  return d.toLocaleDateString("th-TH",{year:"numeric",month:"long",day:"numeric"});
+  return d.getDate()+" "+months[d.getMonth()]+" "+(d.getFullYear()+543);
 }
 
 function calcAge(date){
-  if(!date) return "-";
+  if(!date) return "";
   const birth=new Date(date);
   const today=new Date();
   let age=today.getFullYear()-birth.getFullYear();
-  if(today < new Date(birth.setFullYear(today.getFullYear()))) age--;
+  const m=today.getMonth()-birth.getMonth();
+  if(m<0||(m===0&&today.getDate()<birth.getDate())) age--;
   return age;
 }
 
-/* ================= TAB ================= */
-
+/* TAB */
 function openTab(tab){
   document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
   document.querySelectorAll(".tab-content").forEach(c=>c.classList.remove("active"));
@@ -384,52 +386,58 @@ function openTab(tab){
   document.getElementById("tab_"+tab)?.classList.add("active");
 }
 
-/* ================= INIT ================= */
 
+/* INIT */
 async function init(){
 
-  showLoading("กำลังเชื่อมต่อ LINE...");
+  showLoading("กำลังเชื่อมต่อ LINE..."); // ✅ เพิ่ม
 
   try{
 
-    try{
-      await liff.init({ liffId: LIFF_ID });
+    await liff.init({ liffId: LIFF_ID });
 
-      if(!liff.isLoggedIn()){
-        liff.login();
-        return;
-      }
-
-      profile = await liff.getProfile();
-      userId = profile.userId;
-
-    }catch(err){
-      console.warn("LIFF FAIL → TEST MODE");
-      userId="TEST_USER";
-      profile={
-        displayName:"Guest",
-        pictureUrl:"https://via.placeholder.com/100"
-      };
+    if(!liff.isLoggedIn()){
+      liff.login();
+      return;
     }
+
+    if(!liff.isInClient()){
+      console.log("เปิดผ่าน browser");
+    }
+
+    const profileData = await liff.getProfile();
+
+    profile = profileData;
+    userId = profile.userId;
+
+    console.log("LINE USER:",userId);
 
     renderEnvInfo();
 
-    showLoading("กำลังโหลดข้อมูลสมาชิก...");
+    showLoading("กำลังโหลดข้อมูลสมาชิก..."); // ✅ เพิ่ม
+
     await checkBind();
 
   }catch(err){
-    showError(err.message);
+
+    console.error("LIFF ERROR",err);
+
+    showError("โหลดข้อมูลไม่สำเร็จ: "+err.message); // ✅ เปลี่ยนจากเดิม
+
   }
+
 }
 
 function renderEnvInfo(){
   const el=document.getElementById("envBox");
-  el.textContent = window.liff?.isInClient?.()
-    ? "เปิดผ่าน LINE"
-    : "Browser Test Mode";
+  try{
+    const inClient=liff.isInClient();
+    const os=liff.getOS?.() || "-";
+    el.textContent = inClient ? `เปิดผ่าน LINE • ${os}` : `เปิดผ่านเบราว์เซอร์ • ${os}`;
+  }catch{
+    el.textContent = "";
+  }
 }
-
-/* ================= CHECK BIND ================= */
 
 async function checkBind(){
 
@@ -441,7 +449,11 @@ async function checkBind(){
       .eq("line_user_id",userId)
       .maybeSingle();
 
-    if(error) throw error;
+    if(error){
+  console.log(error);
+  showError("โหลดข้อมูลสมาชิกไม่สำเร็จ: "+error.message);
+  return;
+}
 
     if(data){
       member=data;
@@ -450,18 +462,21 @@ async function checkBind(){
       showBindPage();
     }
 
-  }catch(err){
-    showError("โหลดสมาชิกไม่สำเร็จ: "+err.message);
+  }catch(e){
+
+    console.log(e);
+
   }
+
 }
 
-/* ================= BIND ================= */
-
+/* BIND */
 function showBindPage(){
   document.getElementById("app").innerHTML=`
     <div class="card">
       <h3>ผูกบัญชี LINE</h3>
-      <input id="idcard" placeholder="เลขบัตรประชาชน">
+      <label>เลขบัตรประชาชน</label>
+      <input id="idcard">
       <button class="primary" onclick="bind()">ผูกบัญชี</button>
     </div>
   `;
@@ -478,7 +493,7 @@ async function bind(){
       return;
     }
 
-    showLoading("กำลังตรวจสอบ...");
+    showLoading("กำลังตรวจสอบข้อมูล..."); // 🔥 เพิ่ม
 
     const {data,error}=await sb
       .from("members")
@@ -486,17 +501,22 @@ async function bind(){
       .eq("id_card",idcard)
       .maybeSingle();
 
-    if(error) throw error;
+    if(error){
+      showError("โหลดข้อมูลไม่สำเร็จ: "+error.message);
+      return;
+    }
 
     if(!data){
-      showError("ไม่พบสมาชิก");
+      alert("ไม่พบสมาชิก");
       return;
     }
 
     if(data.line_user_id){
-      showError("ผูกแล้ว");
+      alert("สมาชิกนี้ผูก LINE แล้ว");
       return;
     }
+
+    showLoading("กำลังผูกบัญชี..."); // 🔥 เพิ่ม
 
     const {error:updateError}=await sb
       .from("members")
@@ -507,130 +527,361 @@ async function bind(){
       })
       .eq("id_card",idcard);
 
-    if(updateError) throw updateError;
+    if(updateError){
+      showError("ผูกบัญชีไม่สำเร็จ: "+updateError.message);
+      return;
+    }
 
     await checkBind();
 
   }catch(err){
-    showError("bind fail: "+err.message);
+
+    console.error(err);
+    showError("เกิดข้อผิดพลาด: "+err.message);
+
   }
+
 }
 
-/* ================= MEETING ================= */
+// UNBIND
+async function unbind(){
+  if(!confirm("ต้องการยกเลิกผูกบัญชี LINE ?")) return;
 
+  await sb
+    .from("members")
+    .update({
+      line_user_id:null,
+      line_display_name:null,
+      line_picture:null
+    })
+    .eq("line_user_id",userId);
+
+  location.reload();
+}
+
+/* THAI DATE INPUT */
+function formatThaiDateInput(date){
+  if(!date) return "";
+  const d=new Date(date);
+  const day=String(d.getDate()).padStart(2,"0");
+  const month=String(d.getMonth()+1).padStart(2,"0");
+  const year=d.getFullYear()+543;
+  return `${day}/${month}/${year}`;
+}
+
+function convertThaiToISO(date){
+  if(!date) return null;
+  const parts=date.split("/");
+  if(parts.length!==3) return null;
+  const day=parts[0];
+  const month=parts[1];
+  const year=parts[2]-543;
+  return `${year}-${month}-${day}`;
+}
+
+/* EDIT */
+function editMember(){
+  document.getElementById("app").innerHTML=`
+    <div class="card">
+      <h3>แก้ไขข้อมูลสมาชิก</h3>
+
+      <label>ชื่อ</label>
+      <input id="first_name" value="${member.first_name ?? ""}">
+
+      <label>นามสกุล</label>
+      <input id="last_name" value="${member.last_name ?? ""}">
+
+      <label>วันเกิด (พ.ศ.)</label>
+      <input id="birthday" value="${formatThaiDateInput(member.birthday)}">
+
+      <label>เบอร์โทร</label>
+      <input id="phone" value="${member.phone ?? ""}">
+
+      <label>บ้านเลขที่</label>
+      <input id="house_no" value="${member.house_no ?? ""}">
+
+      <label>หมู่</label>
+      <input id="moo" value="${member.moo ?? ""}">
+
+      <label>ซอย</label>
+      <input id="soi" value="${member.soi ?? ""}">
+
+      <label>ตำบล</label>
+      <input id="subdistrict" value="${member.subdistrict ?? ""}">
+
+      <label>อำเภอ</label>
+      <input id="district" value="${member.district ?? ""}">
+
+      <label>จังหวัด</label>
+      <input id="province" value="${member.province ?? ""}">
+
+      <button class="primary" onclick="saveMember()">บันทึก</button>
+    </div>
+  `;
+}
+
+// SAVEMEMBER
+async function saveMember(){
+  await sb
+    .from("members")
+    .update({
+      first_name:document.getElementById("first_name").value,
+      last_name:document.getElementById("last_name").value,
+      birthday:convertThaiToISO(document.getElementById("birthday").value),
+      phone:document.getElementById("phone").value,
+      house_no:document.getElementById("house_no").value,
+      moo:document.getElementById("moo").value,
+      soi:document.getElementById("soi").value,
+      subdistrict:document.getElementById("subdistrict").value,
+      district:document.getElementById("district").value,
+      province:document.getElementById("province").value
+    })
+    .eq("line_user_id",userId);
+
+  checkBind();
+}
+
+/* MEETING */
 async function loadMeeting(){
-  try{
-    const {data,error}=await sb
-      .from("member_meeting")
-      .select("*")
-      .eq("member_id",member.member_id);
+  const {data}=await sb
+    .from("member_meeting")
+    .select("*")
+    .eq("member_id",member.member_id)
+    .order("fiscal_year",{ascending:false})
+    .order("meeting_date",{ascending:false});
 
-    if(error) throw error;
+  if(!data || data.length===0){
+    return "<div>ยังไม่มีข้อมูลประชุม</div>";
+  }
 
-    if(!data || data.length===0) return "ไม่มีข้อมูล";
+  let html="";
+  let currentYear=null;
 
-    return data.map(m=>`
+  data.forEach(m=>{
+    if(currentYear!==m.fiscal_year){
+      currentYear=m.fiscal_year;
+      html+=`<div style="font-weight:bold;margin-top:10px;color:#06c755;">ปีบัญชี ${currentYear}</div>`;
+    }
+
+    html+=`
       <div class="row">
         <span>${m.meeting_type}</span>
         <span>${thaiDate(m.meeting_date)}</span>
       </div>
-    `).join("");
+    `;
+  });
 
-  }catch(err){
-    return "โหลดไม่สำเร็จ";
-  }
+  return html;
 }
 
-/* ================= SHARE ================= */
-
+/* SHARE */
 async function loadShare(){
-  try{
-    const {data,error}=await sb
-      .from("member_share")
-      .select("*")
-      .eq("member_id",member.member_id);
+  const year=document.getElementById("shareYearFilter")?.value;
 
-    if(error) throw error;
+  let query=sb
+    .from("member_share")
+    .select("*")
+    .eq("member_id",member.member_id);
 
-    if(!data || data.length===0) return "ไม่มีข้อมูล";
-
-    return data.map(s=>`
-      <div class="row">
-        <span>ปี ${s.fiscal_year}</span>
-        <span>${s.share_balance}</span>
-      </div>
-    `).join("");
-
-  }catch(err){
-    return "โหลดไม่สำเร็จ";
+  if(year && year!=="all"){
+    query=query.eq("fiscal_year",year);
   }
+
+  const {data}=await query.order("fiscal_year",{ascending:false});
+
+  if(!data || data.length===0){
+    return "<div>ยังไม่มีข้อมูลหุ้น</div>";
+  }
+
+  let html="";
+
+  data.forEach(s=>{
+    html+=`
+      <div style="font-weight:bold;margin-top:10px;margin-bottom:6px;color:#06c755;">
+        ปีบัญชี ${s.fiscal_year}
+      </div>
+
+      <div class="row">
+        <span>ยอดยกมา</span>
+        <span>${s.share_begin ?? 0}</span>
+      </div>
+
+      <div class="row">
+        <span>ซื้อระหว่างปี</span>
+        <span>${s.share_buy ?? 0}</span>
+      </div>
+
+      <div class="row">
+        <span>ขายระหว่างปี</span>
+        <span>${s.share_sell ?? 0}</span>
+      </div>
+
+      <div class="row">
+        <span><b>ยอดคงเหลือ</b></span>
+        <span><b>${s.share_balance ?? 0}</b></span>
+      </div>
+
+      <hr>
+    `;
+  });
+
+  return html;
 }
 
-/* ================= PROFILE ================= */
+async function loadShareTx(){
+  const year=document.getElementById("shareYearFilter")?.value;
 
+  let query=sb
+    .from("member_share_tx")
+    .select("*")
+    .eq("member_id",member.member_id);
+
+  if(year && year!=="all"){
+    query=query.eq("fiscal_year",year);
+  }
+
+  const {data}=await query
+    .order("fiscal_year",{ascending:false})
+    .order("trans_date",{ascending:false});
+
+  if(!data || data.length===0){
+    return "<div>ยังไม่มีรายการซื้อขายหุ้น</div>";
+  }
+
+  let html="";
+
+  data.forEach(r=>{
+    html+=`
+      <div class="row">
+        <span>${thaiDate(r.trans_date)}</span>
+        <span style="color:#06c755">${r.share_buy}</span>
+        <span style="color:#ff4d4f">${r.share_sell}</span>
+      </div>
+    `;
+  });
+
+  return html;
+}
+
+async function loadShareYears(){
+
+  const {data}=await sb
+  .from("member_share")
+  .select("fiscal_year")
+  .eq("member_id",member.member_id)
+
+  if(!data || data.length===0){
+    return '<option value="all">ทุกปี</option>'
+  }
+
+  const years=[...new Set(data.map(x=>x.fiscal_year))]
+
+  years.sort((a,b)=>b-a)
+
+  let html='<option value="all">ทุกปี</option>'
+
+  years.forEach(y=>{
+    html+=`<option value="${y}">${y}</option>`
+  })
+
+  return html
+}
+
+/* PROFILE */
 async function showProfile(){
-
-  showLoading("กำลังโหลดข้อมูล...");
-
-  const meetingHTML = await loadMeeting();
-  const shareHTML = await loadShare();
+  const meetingHTML=await loadMeeting();
+  const shareHTML=await loadShare();
+  const shareYears=await loadShareYears();
+  const shareTxHTML=await loadShareTx();
 
   document.getElementById("app").innerHTML=`
     <div class="header">
-      <img src="${member?.line_picture || profile?.pictureUrl}">
-      <h3>${profile?.displayName}</h3>
+      <button class="edit-btn" onclick="editMember()">แก้ไข</button>
+      <img src="${member.line_picture || profile.pictureUrl}">
+      <h3>${profile.displayName}</h3>
     </div>
 
     <div class="tabs">
-      <div id="tabBtn_person" class="tab active" onclick="openTab('person')">ข้อมูล</div>
-      <div id="tabBtn_meeting" class="tab" onclick="openTab('meeting')">ประชุม</div>
-      <div id="tabBtn_share" class="tab" onclick="openTab('share')">หุ้น</div>
+      <div id="tabBtn_person" class="tab active" onclick="openTab('person')">ข้อมูลส่วนบุคคล</div>
+      <div id="tabBtn_meeting" class="tab" onclick="openTab('meeting')">ข้อมูลประชุม</div>
+      <div id="tabBtn_share" class="tab" onclick="openTab('share')">ข้อมูลหุ้น</div>
     </div>
 
     <div id="tab_person" class="tab-content active">
+
       <div class="card">
-        <div class="row"><span>รหัส</span><span>${member.member_id}</span></div>
-        <div class="row"><span>ชื่อ</span><span>${member.first_name}</span></div>
+        <h3>📋 ข้อมูลสมาชิก</h3>
+        <div class="row"><span><b>รหัสสมาชิก :</b></span><span>${member.member_id}</span></div>
+        <div class="row"><span><b>เลขบัตรประชาชน :</b></span><span>${member.id_card}</span></div>
       </div>
+
+      <div class="card">
+        <h3>👤 ข้อมูลส่วนตัว</h3>
+        <div class="row"><span><b>ชื่อ :</b></span><span>${member.first_name}</span></div>
+        <div class="row"><span><b>นามสกุล :</b></span><span>${member.last_name}</span></div>
+        <div class="row"><span><b>เบอร์โทร :</b></span><span>${member.phone ?? ""}</span></div>
+        <div class="row"><span><b>วันเกิด :</b></span><span>${thaiDate(member.birthday)}</span></div>
+        <div class="row"><span><b>อายุ :</b></span><span>${calcAge(member.birthday)} ปี</span></div>
+      </div>
+
+      <div class="card">
+        <h3>📍 ที่อยู่</h3>
+        <div class="row"><span><b>บ้านเลขที่ :</b></span><span>${member.house_no ?? ""}</span></div>
+        <div class="row"><span><b>หมู่ :</b></span><span>${member.moo ?? ""}</span></div>
+        <div class="row"><span><b>ซอย :</b></span><span>${member.soi ?? ""}</span></div>
+        <div class="row"><span><b>ตำบล :</b></span><span>${member.subdistrict ?? ""}</span></div>
+        <div class="row"><span><b>อำเภอ :</b></span><span>${member.district ?? ""}</span></div>
+        <div class="row"><span><b>จังหวัด :</b></span><span>${member.province ?? ""}</span></div>
+        <button class="danger" onclick="unbind()">ยกเลิกผูกบัญชี LINE</button>
+      </div>
+
     </div>
 
     <div id="tab_meeting" class="tab-content">
-      <div class="card">${meetingHTML}</div>
+      <div class="card">
+        <h3>🗳 ข้อมูลการเข้าร่วมประชุม</h3>
+        ${meetingHTML}
+      </div>
     </div>
 
     <div id="tab_share" class="tab-content">
-      <div class="card">${shareHTML}</div>
-    </div>
+      <div class="card">
+        <div class="filter-box">
+          <label>📅 ปีบัญชี</label>
+          <select class="filter-select" id="shareYearFilter" onchange="reloadShareTx()">
+            ${shareYears}
+          </select>
+        </div>
+      </div>
 
-    <button class="danger" onclick="unbind()">ยกเลิกผูก</button>
+      <div class="card">
+        <h3>💰 หุ้นสหกรณ์</h3>
+        <div id="shareSummaryBox">
+          ${shareHTML}
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>📊 รายงานซื้อขายหุ้น</h3>
+        <div class="row" style="font-weight:bold">
+          <span>วันที่</span>
+          <span>ซื้อ</span>
+          <span>ขาย</span>
+        </div>
+        <div id="shareTxBox">
+          ${shareTxHTML}
+        </div>
+      </div>
+    </div>
   `;
 }
 
-/* ================= UNBIND ================= */
-
-async function unbind(){
-
-  if(!confirm("ยืนยัน?")) return;
-
-  try{
-
-    showLoading("กำลังดำเนินการ...");
-
-    const {error}=await sb
-      .from("members")
-      .update({line_user_id:null})
-      .eq("line_user_id",userId);
-
-    if(error) throw error;
-
-    location.reload();
-
-  }catch(err){
-    showError(err.message);
-  }
+async function reloadShareTx(){
+  const shareHTML=await loadShare();
+  const txHTML=await loadShareTx();
+  document.getElementById("shareSummaryBox").innerHTML=shareHTML;
+  document.getElementById("shareTxBox").innerHTML=txHTML;
 }
-
-/* ================= START ================= */
 
 loadTheme();
 init();
