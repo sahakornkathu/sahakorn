@@ -1065,6 +1065,9 @@ async function showProfile(){
       </div>
     </div>
   `;
+setTimeout(() => {
+  init3DCard();
+}, 100);
 }
 
   function getQRCode(text){
@@ -1151,6 +1154,53 @@ function renderMemberCard(){
       </div>
     </div>
   `;
+}
+  function init3DCard(){
+
+  const card = document.getElementById("memberCard");
+  const shine = document.getElementById("shine");
+
+  if(!card){
+    console.log("❌ ไม่เจอ card");
+    return;
+  }
+
+  console.log("✅ card loaded");
+
+  card.addEventListener("mousemove",(e)=>{
+    const rect = card.getBoundingClientRect();
+
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+
+    const rotateX = -(y - centerY) / 10;
+    const rotateY = (x - centerX) / 10;
+
+    card.style.transform = `
+      rotateX(${rotateX}deg)
+      rotateY(${rotateY}deg)
+      scale(1.03)
+    `;
+
+    if(shine){
+      const percentX = x / rect.width * 100;
+      shine.style.transform = `
+        translateX(${percentX - 50}%)
+        rotate(25deg)
+      `;
+    }
+  });
+
+  card.addEventListener("mouseleave",()=>{
+    card.style.transform = "rotateX(0) rotateY(0) scale(1)";
+    if(shine){
+      shine.style.transform = "translateX(-120%) rotate(25deg)";
+    }
+  });
+
 }
   
 async function reloadShareTx(){
