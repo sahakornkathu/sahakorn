@@ -1209,15 +1209,11 @@ function initGyroCard(){
   if(!card) return;
 
   function handleOrientation(e){
-    let x = e.beta;   // หน้า/หลัง
-    let y = e.gamma;  // ซ้าย/ขวา
+    let x = e.beta || 0;
+    let y = e.gamma || 0;
 
-    // จำกัดค่าไม่ให้แรงเกิน
-    x = Math.max(-30, Math.min(30, x));
-    y = Math.max(-30, Math.min(30, y));
-
-    const rotateX = -x / 6;
-    const rotateY = y / 6;
+    const rotateX = -x / 8;
+    const rotateY = y / 8;
 
     card.style.transform = `
       rotateX(${rotateX}deg)
@@ -1226,30 +1222,29 @@ function initGyroCard(){
     `;
   }
 
-  // 🔥 iOS ต้องขอ permission
+  // 🔥 iPhone ต้องกดก่อน
   if (typeof DeviceOrientationEvent !== "undefined" &&
       typeof DeviceOrientationEvent.requestPermission === "function") {
 
-    // สร้างปุ่มขอสิทธิ์
-    const btn = document.createElement("button");
-    btn.innerText = "เปิดโหมด 3D";
-    btn.className = "primary";
-    btn.style.marginTop = "10px";
+    Swal.fire({
+      title: "เปิดโหมดเอียงการ์ด",
+      text: "อนุญาตให้ใช้การเอียงมือถือ",
+      confirmButtonText: "เปิดใช้งาน",
+      background: "var(--card)"
+    }).then(async (res)=>{
+      if(res.isConfirmed){
+        const permission = await DeviceOrientationEvent.requestPermission();
 
-    btn.onclick = async () => {
-      const permission = await DeviceOrientationEvent.requestPermission();
-      if (permission === "granted") {
-        window.addEventListener("deviceorientation", handleOrientation);
-        btn.remove();
-      } else {
-        alert("ไม่อนุญาตการเอียง");
+        if(permission === "granted"){
+          window.addEventListener("deviceorientation", handleOrientation);
+        }else{
+          alert("ไม่อนุญาต");
+        }
       }
-    };
-
-    document.getElementById("app").prepend(btn);
+    });
 
   } else {
-    // Android ใช้ได้เลย
+    // Android
     window.addEventListener("deviceorientation", handleOrientation);
   }
 }
