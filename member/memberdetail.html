@@ -360,6 +360,18 @@ const sb = window.supabase.createClient(
 
 let userId;
 let profile;
+const labelMap = {
+  first_name:"ชื่อ",
+  last_name:"นามสกุล",
+  phone:"เบอร์โทร",
+  house_no:"บ้านเลขที่",
+  moo:"หมู่",
+  soi:"ซอย",
+  subdistrict:"ตำบล",
+  district:"อำเภอ",
+  province:"จังหวัด",
+  birthday:"วันเกิด"
+};
 let member;
 
 function showLoading(msg="กำลังโหลด..."){
@@ -655,6 +667,28 @@ function editMember(){
   `;
 }
 
+async function notifyAdmin(changes){
+
+  let text = `<b>📢 มีการแก้ไขข้อมูลสมาชิก</b>\n`;
+  text += `👤 ${member.first_name} ${member.last_name}\n`;
+  text += `🆔 ${member.member_id}\n\n`;
+
+  Object.keys(changes).forEach(key=>{
+    const label = labelMap[key] || key;
+
+    text += `🔹 <b>${label}</b>\n`;
+    text += `จาก: ${changes[key].old || "-"}\n`;
+    text += `เป็น: ${changes[key].new || "-"}\n\n`;
+  });
+
+  await fetch("https://ttottijljxoinptmhgtu.supabase.co/functions/v1/EditMemberTelegram",{
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({ message:text })
+  });
+
+}
+  
 // SAVEMEMBER
 async function saveMember(){
 
@@ -671,6 +705,38 @@ async function saveMember(){
       return;
     }
 
+    // 🔥 NEW DATA (เพิ่ม)
+    const newData = {
+      first_name:document.getElementById("first_name").value,
+      last_name:document.getElementById("last_name").value,
+      birthday: birthday,
+      phone:document.getElementById("phone").value,
+      house_no:document.getElementById("house_no").value,
+      moo:document.getElementById("moo").value,
+      soi:document.getElementById("soi").value,
+      subdistrict:document.getElementById("subdistrict").value,
+      district:document.getElementById("district").value,
+      province:document.getElementById("province").value
+    };
+
+    // 🔥 DIFF CHANGE (เพิ่ม)
+    const changes = {};
+
+    Object.keys(newData).forEach(key=>{
+      if(String(member[key] || "") !== String(newData[key] || "")){
+        changes[key] = {
+          old: member[key],
+          new: newData[key]
+        };
+      }
+    });
+
+    if(Object.keys(changes).length === 0){
+      alert("ไม่มีการเปลี่ยนแปลง");
+      return;
+    }
+
+    // ✅ โค้ดเดิมคุณ (ไม่แก้)
     const {error} = await sb
       .from("members")
       .update({
@@ -693,65 +759,67 @@ async function saveMember(){
       return;
     }
 
-  await Swal.fire({
-  html: `
-    <div style="display:flex;flex-direction:column;align-items:center;padding:10px 5px">
+    // 🔥 เพิ่ม: save log
+    await sb.from("member_logs").insert({
+      member_id: member.member_id,
+      line_user_id: userId,
+      action: "update_profile",
+      changes: changes
+    });
 
-      <!-- ✅ ICON แบบ custom -->
-      <div style="
-        width:70px;
-        height:70px;
-        border-radius:50%;
-        background:linear-gradient(135deg,#06c755,#00a94f);
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        box-shadow:0 8px 25px rgba(6,199,85,0.35);
-        margin-bottom:12px;
-      ">
-        <svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="white" stroke-width="3">
-          <path d="M5 13l4 4L19 7"/>
-        </svg>
-      </div>
+    // 🔥 เพิ่ม: notify telegram
+    await notifyAdmin(changes);
 
-      <!-- ✅ TITLE -->
-      <div style="font-size:18px;font-weight:700;margin-bottom:4px">
-        บันทึกสำเร็จ
-      </div>
+    // ✅ SweetAlert เดิมคุณ (อยู่ครบ)
+    await Swal.fire({
+      html: `
+        <div style="display:flex;flex-direction:column;align-items:center;padding:10px 5px">
 
-      <!-- ✅ SUB TEXT -->
-      <div style="font-size:13px;color:var(--muted)">
-        ข้อมูลถูกอัปเดตเรียบร้อยแล้ว
-      </div>
+          <div style="
+            width:70px;
+            height:70px;
+            border-radius:50%;
+            background:linear-gradient(135deg,#06c755,#00a94f);
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            box-shadow:0 8px 25px rgba(6,199,85,0.35);
+            margin-bottom:12px;
+          ">
+            <svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="white" stroke-width="3">
+              <path d="M5 13l4 4L19 7"/>
+            </svg>
+          </div>
 
-    </div>
-  `,
+          <div style="font-size:18px;font-weight:700;margin-bottom:4px">
+            บันทึกสำเร็จ
+          </div>
 
-  background: "var(--card)",
-  showConfirmButton: false,
-  timer: 2000,
+          <div style="font-size:13px;color:var(--muted)">
+            ข้อมูลถูกอัปเดตเรียบร้อยแล้ว
+          </div>
 
-  // 🔥 animation ระดับแอป
-  showClass: {
-    popup: "animate__animated animate__fadeInUp animate__faster"
-  },
-  hideClass: {
-    popup: "animate__animated animate__fadeOutDown animate__faster"
-  },
+        </div>
+      `,
+      background: "var(--card)",
+      showConfirmButton: false,
+      timer: 2000,
+      showClass: {
+        popup: "animate__animated animate__fadeInUp animate__faster"
+      },
+      hideClass: {
+        popup: "animate__animated animate__fadeOutDown animate__faster"
+      },
+      timerProgressBar: true,
+      didOpen: (popup) => {
+        popup.style.borderRadius = "18px";
+        popup.style.border = "1px solid rgba(6,199,85,0.25)";
+        popup.style.boxShadow = "0 15px 40px rgba(0,0,0,0.15), 0 5px 20px rgba(6,199,85,0.2)";
+        popup.style.backdropFilter = "blur(6px)";
+      }
+    });
 
-  // 🔥 progress bar
-  timerProgressBar: true,
-
-  // 🔥 glow + depth
-  didOpen: (popup) => {
-    popup.style.borderRadius = "18px";
-    popup.style.border = "1px solid rgba(6,199,85,0.25)";
-    popup.style.boxShadow = "0 15px 40px rgba(0,0,0,0.15), 0 5px 20px rgba(6,199,85,0.2)";
-    popup.style.backdropFilter = "blur(6px)";
-  }
-});
-
-checkBind();
+    checkBind();
 
   }catch(err){
     console.error(err);
