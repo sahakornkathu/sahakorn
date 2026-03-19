@@ -422,38 +422,6 @@
 
     hideLoading();
 
-    Swal.fire('เกิดข้อผิดพลาด', 'ไม่สามารถสั่งซื้อได้', 'error');
-
-    placeOrderBtn.disabled = false;
-
-  }
-
-});
-
-      placeOrderBtn.disabled = false; // 🔥 ปลดล็อก
-
-      return;
-    }
-
-    // ✅ สำเร็จ
-    cart = [];
-    saveCart();
-    updateCartUI();
-
-    hideLoading();
-
-    await Swal.fire({
-      icon: "success",
-      title: "สั่งซื้อสำเร็จ!",
-      text: "กรุณาตรวจสอบ LINE เพื่อชำระเงิน"
-    });
-
-  } catch (err) {
-
-    console.error('Order placement error:', err);
-
-    hideLoading();
-
     Swal.fire('เกิดข้อผิดพลาด', 'ไม่สามารถส่งออเดอร์ได้', 'error');
 
     placeOrderBtn.disabled = false;
