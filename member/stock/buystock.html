@@ -447,8 +447,8 @@
                 return;
             }
 
-            const idToken = liff.getIDToken();
-            await supabaseClient.auth.signInWithIdToken({ provider: 'line', token: idToken });
+            // const idToken = liff.getIDToken();
+            // await supabaseClient.auth.signInWithIdToken({ provider: 'line', token: idToken });
             userProfile = await liff.getProfile();
 
             await fetchMenu(true); 
