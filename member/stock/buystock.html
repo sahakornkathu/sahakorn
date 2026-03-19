@@ -308,9 +308,9 @@
             .order('id', { ascending: true })
             .range(menuOffset, menuOffset + PAGE_SIZE - 1);
         
-       if (!data?.success) {
-            console.error('Error fetching menu:', error);
-        } else if (data) {
+          if (error) {
+          console.error('Error fetching menu:', error);
+          } else if (data) {
             menu.push(...data);
             renderMenuItems(data);
             menuOffset += data.length;
@@ -344,9 +344,10 @@
     
    placeOrderBtn.addEventListener('click', async () => {
 
-  if (placeOrderBtn.disabled) return; // 🔥 กันกดรัว
+  // 🔥 กันกดรัว
+  if (placeOrderBtn.disabled) return;
 
-  placeOrderBtn.disabled = true; // 🔥 ล็อกปุ่ม
+  placeOrderBtn.disabled = true;
 
   showLoading('กำลังส่งออเดอร์...');
 
@@ -356,10 +357,10 @@
       body: { cart, userProfile },
     });
 
-    // ❌ เปลี่ยนตรงนี้ทั้งหมด
+    // 🔥 เช็คผลลัพธ์จาก backend (สำคัญ)
     if (!data?.success) {
 
-      hideLoading(); // 🔥 สำคัญ (ต้องมาก่อน Swal)
+      hideLoading();
 
       await Swal.fire({
         html: `
@@ -421,6 +422,38 @@
 
     hideLoading();
 
+    Swal.fire('เกิดข้อผิดพลาด', 'ไม่สามารถสั่งซื้อได้', 'error');
+
+    placeOrderBtn.disabled = false;
+
+  }
+
+});
+
+      placeOrderBtn.disabled = false; // 🔥 ปลดล็อก
+
+      return;
+    }
+
+    // ✅ สำเร็จ
+    cart = [];
+    saveCart();
+    updateCartUI();
+
+    hideLoading();
+
+    await Swal.fire({
+      icon: "success",
+      title: "สั่งซื้อสำเร็จ!",
+      text: "กรุณาตรวจสอบ LINE เพื่อชำระเงิน"
+    });
+
+  } catch (err) {
+
+    console.error('Order placement error:', err);
+
+    hideLoading();
+
     Swal.fire('เกิดข้อผิดพลาด', 'ไม่สามารถส่งออเดอร์ได้', 'error');
 
     placeOrderBtn.disabled = false;
@@ -428,21 +461,6 @@
   }
 });
 
-  return;
-}
-          
-            cart = [];
-            saveCart();
-            updateCartUI();
-            
-            Swal.fire('สั่งซื้อสำเร็จ!', 'กรุณาตรวจสอบข้อความใน LINE เพื่อชำระเงิน', 'success');
-        } catch (err) {
-            console.error('Order placement error:', err);
-            Swal.fire('เกิดข้อผิดพลาด', 'ไม่สามารถส่งออเดอร์ได้', 'error');
-        } finally {
-            hideLoading();
-        }
-    });
     
     searchInput.addEventListener('input', () => {
         clearTimeout(searchDebounce);
