@@ -732,7 +732,62 @@ async function saveMember(){
     });
 
     if(Object.keys(changes).length === 0){
-      alert("ไม่มีการเปลี่ยนแปลง");
+      await Swal.fire({
+  html: `
+    <div style="display:flex;flex-direction:column;align-items:center;padding:10px 5px">
+
+      <!-- ⚠️ ICON -->
+      <div style="
+        width:70px;
+        height:70px;
+        border-radius:50%;
+        background:linear-gradient(135deg,#ff9800,#ff5722);
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        box-shadow:0 8px 25px rgba(255,152,0,0.35);
+        margin-bottom:12px;
+      ">
+        <svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="white" stroke-width="3">
+          <path d="M12 8v4"/>
+          <circle cx="12" cy="16" r="1"/>
+        </svg>
+      </div>
+
+      <!-- TITLE -->
+      <div style="font-size:18px;font-weight:700;margin-bottom:4px">
+        ไม่มีการเปลี่ยนแปลง
+      </div>
+
+      <!-- SUB -->
+      <div style="font-size:13px;color:var(--muted)">
+        ข้อมูลยังเหมือนเดิม ไม่จำเป็นต้องบันทึก
+      </div>
+
+    </div>
+  `,
+  background: "var(--card)",
+  showConfirmButton: false,
+  timer: 1800,
+
+  showClass: {
+    popup: "animate__animated animate__fadeInUp animate__faster"
+  },
+  hideClass: {
+    popup: "animate__animated animate__fadeOutDown animate__faster"
+  },
+
+  timerProgressBar: true,
+
+  didOpen: (popup) => {
+    popup.style.borderRadius = "18px";
+    popup.style.border = "1px solid rgba(255,152,0,0.25)";
+    popup.style.boxShadow = "0 15px 40px rgba(0,0,0,0.15), 0 5px 20px rgba(255,152,0,0.2)";
+    popup.style.backdropFilter = "blur(6px)";
+  }
+});
+
+return;
       return;
     }
 // 🔄 SHOW LOADING (เพิ่ม)
