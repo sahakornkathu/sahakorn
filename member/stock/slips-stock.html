@@ -59,9 +59,7 @@ async function loadOrders() {
   console.log("ORDERS:", orders);
 
   // 🔥 filter ฝั่ง JS (แก้ปัญหา user_id ไม่ตรง)
-  const myOrders = orders.filter(o =>
-    String(o.user_id).trim() === String(userId).trim()
-  );
+const myOrders = orders;
 
   // 🔥 โหลด members
   const { data: members, error: memberError } = await sb
