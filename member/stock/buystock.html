@@ -414,7 +414,10 @@
       title: "สั่งซื้อสำเร็จ!",
       text: "กรุณาตรวจสอบ LINE เพื่อชำระเงิน"
     });
-
+// 👇 ใส่ตรงนี้
+if (liff.isInClient()) {
+  liff.closeWindow();
+}
   } catch (err) {
 
     console.error('Order placement error:', err);
