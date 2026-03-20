@@ -20,7 +20,7 @@ const LIFF_ID = "1660910795-7r8eqok6";
 const SUPABASE_URL = "https://ttottijljxoinptmhgtu.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y";
 
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let userId = null;
 
@@ -40,7 +40,7 @@ async function init() {
 
 // 📦 โหลดเฉพาะของตัวเอง + processing
 async function loadOrders() {
-  const { data, error } = await supabase
+  const { data, error } = await sb
     .from('historycart')
     .select('*')
     .eq('user_id', userId)
@@ -133,7 +133,7 @@ async function uploadSlip(orderId) {
   const filePath = `slips/${orderId}-${Date.now()}.jpg`;
 
   // upload
-  const { error: uploadError } = await supabase.storage
+  const { error: uploadError } = await sb.storage
     .from('slips')
     .upload(filePath, file);
 
@@ -143,14 +143,14 @@ async function uploadSlip(orderId) {
     return;
   }
 
-  const { data } = supabase.storage
+  const { data } = sb.storage
     .from('slips')
     .getPublicUrl(filePath);
 
   const slipUrl = data.publicUrl;
 
   // update + กัน race condition
-  const { error: updateError } = await supabase
+  const { error: updateError } = await sb
     .from('historycart')
     .update({
       slip_url: slipUrl,
