@@ -248,8 +248,28 @@
                     return;
                 }
                 
-                const idToken = liff.getIDToken();
-                await supabaseClient.auth.signInWithIdToken({ provider: 'line', token: idToken });
+                // const idToken = liff.getIDToken();
+                // await supabaseClient.auth.signInWithIdToken({ provider: 'line', token: idToken });
+
+              const idToken = liff.getIDToken();
+
+if (!idToken) {
+  alert("No ID Token");
+  return;
+}
+
+try {
+  const { data, error } = await supabaseClient.auth.signInWithIdToken({
+    provider: 'line',
+    token: idToken,
+  });
+
+  console.log("LOGIN SUCCESS", data);
+  if (error) throw error;
+
+} catch (err) {
+  console.error("LOGIN ERROR:", err);
+}
 
                 await loadInitialOrders();
                 await loadSalesSummary();
