@@ -204,7 +204,8 @@ fetch("https://ttottijljxoinptmhgtu.supabase.co/functions/v1/send-slip-confirm",
   },
   body: JSON.stringify({
     userId: userId,
-    orderId: orderId
+    orderId: orderId,
+    slipUrl: slipUrl   // 🔥 ต้องมีตัวนี้
   })
 }).catch(err => console.error("LINE ERROR:", err));
 
