@@ -11,20 +11,14 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <style>
-  .card {
-    transition: all 0.2s ease;
-  }
-  .card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-  }
+.card { transition: all 0.2s ease; }
+.card:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
 </style>
 </head>
 
 <body class="bg-gradient-to-br from-green-50 to-gray-100 min-h-screen p-4">
 
 <h1 class="text-2xl font-bold mb-6 text-center">📤 อัปโหลดสลิป</h1>
-
 <div id="orderList" class="space-y-4 max-w-md mx-auto"></div>
 
 <script>
@@ -50,12 +44,18 @@ async function init() {
   loadOrders();
 }
 
+// 📦 โหลดข้อมูล
 async function loadOrders() {
-  const { data: orders } = await sb
+  const { data: orders, error } = await sb
     .from('historycart')
     .select('*')
     .eq('status', 'processing')
     .order('created_at', { ascending: false });
+
+  if (error) {
+    Swal.fire("ผิดพลาด", "โหลดข้อมูลไม่ได้", "error");
+    return;
+  }
 
   const { data: members } = await sb
     .from('members')
@@ -69,6 +69,7 @@ async function loadOrders() {
   renderOrders(merged);
 }
 
+// 🎨 render
 function renderOrders(orders) {
   const container = document.getElementById('orderList');
   container.innerHTML = '';
@@ -103,7 +104,7 @@ function renderOrders(orders) {
         ? `<div class="mt-3 text-green-600 font-bold">✅ ส่งแล้ว</div>`
         : `
           <input type="file" accept="image/*" class="mt-3 block w-full text-sm" id="file-${order.id}">
-          <button onclick="uploadSlip(${order.id})"
+          <button onclick="uploadSlip(${order.id}, this)"
             class="mt-3 w-full bg-green-500 hover:bg-green-600 text-white py-2 rounded-xl transition">
             📤 ส่งสลิป
           </button>
@@ -115,78 +116,97 @@ function renderOrders(orders) {
   });
 }
 
-async function uploadSlip(orderId) {
+// 📤 upload (กันกดซ้ำ + await fetch)
+async function uploadSlip(orderId, btn) {
+
+  // 🔥 lock ปุ่ม
+  if (btn) {
+    btn.disabled = true;
+    btn.innerText = "กำลังส่ง...";
+  }
+
   const input = document.getElementById(`file-${orderId}`);
   const file = input.files[0];
 
   if (!file) {
     Swal.fire("แจ้งเตือน", "กรุณาเลือกไฟล์", "warning");
+    if (btn) {
+      btn.disabled = false;
+      btn.innerText = "📤 ส่งสลิป";
+    }
     return;
   }
 
   // 🔥 loading
   Swal.fire({
     title: 'กำลังอัปโหลด...',
-    text: 'กรุณารอสักครู่',
     allowOutsideClick: false,
     didOpen: () => Swal.showLoading()
   });
 
-  const filePath = `slips/${orderId}-${Date.now()}.jpg`;
+  try {
+    const filePath = `slips/${orderId}-${Date.now()}.jpg`;
 
-  const { error: uploadError } = await sb.storage
-    .from('slips')
-    .upload(filePath, file);
+    const { error: uploadError } = await sb.storage
+      .from('slips')
+      .upload(filePath, file);
 
-  if (uploadError) {
-    Swal.fire("ผิดพลาด", "อัปโหลดไม่สำเร็จ", "error");
-    return;
+    if (uploadError) throw uploadError;
+
+    const { data } = sb.storage
+      .from('slips')
+      .getPublicUrl(filePath);
+
+    const slipUrl = data.publicUrl;
+
+    // 🔥 update DB
+    const { error: updateError } = await sb
+      .from('historycart')
+      .update({
+        slip_url: slipUrl,
+        status: 'waiting_verify'
+      })
+      .eq('id', orderId);
+
+    if (updateError) throw updateError;
+
+    // 🔥 ยิง function (await แล้วกันซ้ำ)
+    await fetch("https://ttottijljxoinptmhgtu.supabase.co/functions/v1/send-slip-confirm", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        userId,
+        orderId,
+        slipUrl
+      })
+    });
+
+    // ✅ success + ปิด LIFF
+    Swal.fire({
+      icon: 'success',
+      title: 'ส่งสำเร็จ 🎉',
+      text: 'กำลังปิดหน้าต่าง...',
+      timer: 1500,
+      showConfirmButton: false
+    }).then(() => {
+      if (liff.isInClient()) {
+        liff.closeWindow();
+      }
+    });
+
+    loadOrders();
+
+  } catch (err) {
+    console.error(err);
+    Swal.fire("ผิดพลาด", "เกิดข้อผิดพลาด", "error");
+
+    if (btn) {
+      btn.disabled = false;
+      btn.innerText = "📤 ส่งสลิป";
+    }
   }
-
-  const { data } = sb.storage
-    .from('slips')
-    .getPublicUrl(filePath);
-
-  const slipUrl = data.publicUrl;
-
-  await sb
-    .from('historycart')
-    .update({
-      slip_url: slipUrl,
-      status: 'waiting_verify'
-    })
-    .eq('id', orderId);
-
-  // 🔥 แจ้ง backend
-  fetch("https://ttottijljxoinptmhgtu.supabase.co/functions/v1/send-slip-confirm", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ userId, orderId, slipUrl })
-  });
-
- try {
-  await fetch("https://ttottijljxoinptmhgtu.supabase.co/functions/v1/send-slip-confirm", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ userId, orderId, slipUrl })
-  });
-} catch (err) {
-  console.error(err);
-}
-
-Swal.fire({
-  icon: 'success',
-  title: 'ส่งสำเร็จ 🎉',
-  text: 'กำลังปิดหน้าต่าง...',
-  timer: 1500,
-  showConfirmButton: false
-}).then(() => {
-  if (liff.isInClient()) {
-    liff.closeWindow();
-  }
-});
-
-loadOrders();
 }
 
 init();
