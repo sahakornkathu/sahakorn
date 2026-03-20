@@ -195,7 +195,16 @@ async function uploadSlip(orderId) {
     alert("บันทึกไม่สำเร็จ");
     return;
   }
-
+// 🔥 ส่ง LINE แจ้ง user
+await fetch("https://ttottijljxoinptmhgtu.supabase.co/functions/v1/send-slip-confirm", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    userId: userId
+  })
+});
   alert("✅ ส่งสลิปเรียบร้อย");
   loadOrders();
 }
