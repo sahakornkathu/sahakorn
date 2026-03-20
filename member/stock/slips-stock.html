@@ -29,7 +29,9 @@ const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let userId = null;
+let isSubmitting = false; // 🔥 กันยิงซ้ำระดับระบบ
 
+// ================= INIT =================
 async function init() {
   await liff.init({ liffId: LIFF_ID });
 
@@ -44,7 +46,7 @@ async function init() {
   loadOrders();
 }
 
-// 📦 โหลดข้อมูล
+// ================= LOAD =================
 async function loadOrders() {
   const { data: orders, error } = await sb
     .from('historycart')
@@ -69,7 +71,7 @@ async function loadOrders() {
   renderOrders(merged);
 }
 
-// 🎨 render
+// ================= RENDER =================
 function renderOrders(orders) {
   const container = document.getElementById('orderList');
   container.innerHTML = '';
@@ -116,10 +118,17 @@ function renderOrders(orders) {
   });
 }
 
-// 📤 upload (กันกดซ้ำ + await fetch)
+// ================= UPLOAD =================
 async function uploadSlip(orderId, btn) {
 
-  // 🔥 lock ปุ่ม
+  // 🔥 กันยิงซ้ำ
+  if (isSubmitting) {
+    console.log("⛔ BLOCK DUPLICATE");
+    return;
+  }
+
+  isSubmitting = true;
+
   if (btn) {
     btn.disabled = true;
     btn.innerText = "กำลังส่ง...";
@@ -130,14 +139,10 @@ async function uploadSlip(orderId, btn) {
 
   if (!file) {
     Swal.fire("แจ้งเตือน", "กรุณาเลือกไฟล์", "warning");
-    if (btn) {
-      btn.disabled = false;
-      btn.innerText = "📤 ส่งสลิป";
-    }
+    resetBtn(btn);
     return;
   }
 
-  // 🔥 loading
   Swal.fire({
     title: 'กำลังอัปโหลด...',
     allowOutsideClick: false,
@@ -159,7 +164,6 @@ async function uploadSlip(orderId, btn) {
 
     const slipUrl = data.publicUrl;
 
-    // 🔥 update DB
     const { error: updateError } = await sb
       .from('historycart')
       .update({
@@ -170,7 +174,7 @@ async function uploadSlip(orderId, btn) {
 
     if (updateError) throw updateError;
 
-    // 🔥 ยิง function (await แล้วกันซ้ำ)
+    // 🔥 ยิง API (ครั้งเดียว)
     await fetch("https://ttottijljxoinptmhgtu.supabase.co/functions/v1/send-slip-confirm", {
       method: "POST",
       headers: {
@@ -183,7 +187,6 @@ async function uploadSlip(orderId, btn) {
       })
     });
 
-    // ✅ success + ปิด LIFF
     Swal.fire({
       icon: 'success',
       title: 'ส่งสำเร็จ 🎉',
@@ -201,11 +204,16 @@ async function uploadSlip(orderId, btn) {
   } catch (err) {
     console.error(err);
     Swal.fire("ผิดพลาด", "เกิดข้อผิดพลาด", "error");
+    resetBtn(btn);
+  }
+}
 
-    if (btn) {
-      btn.disabled = false;
-      btn.innerText = "📤 ส่งสลิป";
-    }
+// ================= RESET =================
+function resetBtn(btn) {
+  isSubmitting = false;
+  if (btn) {
+    btn.disabled = false;
+    btn.innerText = "📤 ส่งสลิป";
   }
 }
 
