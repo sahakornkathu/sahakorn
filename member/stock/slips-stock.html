@@ -1,19 +1,31 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8">
-  <title>อัปโหลดสลิป</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="UTF-8">
+<title>อัปโหลดสลิป</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<style>
+  .card {
+    transition: all 0.2s ease;
+  }
+  .card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+  }
+</style>
 </head>
 
-<body class="bg-gray-100 p-4">
+<body class="bg-gradient-to-br from-green-50 to-gray-100 min-h-screen p-4">
 
-<h1 class="text-xl font-bold mb-4">📤 อัปโหลดสลิป</h1>
-<div id="orderList" class="space-y-4"></div>
+<h1 class="text-2xl font-bold mb-6 text-center">📤 อัปโหลดสลิป</h1>
+
+<div id="orderList" class="space-y-4 max-w-md mx-auto"></div>
 
 <script>
 const LIFF_ID = "1660910795-7r8eqok6";
@@ -35,102 +47,64 @@ async function init() {
   const profile = await liff.getProfile();
   userId = profile.userId;
 
-  console.log("LIFF userId:", userId);
-
   loadOrders();
 }
 
-// 📦 โหลดข้อมูล (เวอร์ชันกันพัง)
 async function loadOrders() {
-
-  // 🔥 โหลดทั้งหมดก่อน แล้วค่อย filter
-  const { data: orders, error } = await sb
+  const { data: orders } = await sb
     .from('historycart')
     .select('*')
     .eq('status', 'processing')
     .order('created_at', { ascending: false });
 
-  if (error) {
-    console.error(error);
-    alert("โหลด order ไม่สำเร็จ");
-    return;
-  }
-
-  console.log("ORDERS:", orders);
-
-  // 🔥 filter ฝั่ง JS (แก้ปัญหา user_id ไม่ตรง)
-const myOrders = orders;
-
-  // 🔥 โหลด members
-  const { data: members, error: memberError } = await sb
+  const { data: members } = await sb
     .from('members')
     .select('member_id, line_user_id, first_name, last_name, "group"');
 
-  if (memberError) {
-    console.error(memberError);
-    alert("โหลด member ไม่สำเร็จ");
-    return;
-  }
-
-  // 🔥 map
-  const merged = myOrders.map(order => {
-    const m = members.find(x =>
-      String(x.line_user_id).trim() === String(order.user_id).trim()
-    );
-
-    return {
-      ...order,
-      members: m || {}
-    };
+  const merged = orders.map(order => {
+    const m = members.find(x => x.line_user_id === order.user_id);
+    return { ...order, members: m || {} };
   });
 
   renderOrders(merged);
 }
 
-// 🎨 render
 function renderOrders(orders) {
   const container = document.getElementById('orderList');
   container.innerHTML = '';
 
   if (!orders.length) {
-    container.innerHTML = `<div class="text-center text-gray-500">ไม่มีรายการค้างชำระ</div>`;
+    container.innerHTML = `<div class="text-center text-gray-400">ไม่มีรายการ</div>`;
     return;
   }
 
   orders.forEach(order => {
-
-    const isUploaded = order.slip_url && order.slip_url !== '';
+    const isUploaded = order.slip_url;
 
     const div = document.createElement('div');
-    div.className = "bg-white p-4 rounded-xl shadow";
+    div.className = "card bg-white p-5 rounded-2xl shadow";
 
     div.innerHTML = `
-      <div class="font-bold text-lg">ออเดอร์ #${order.id}</div>
+      <div class="flex justify-between items-center mb-2">
+        <div class="font-bold text-lg">#${order.id}</div>
+        <div class="text-green-600 font-semibold">${order.total_price}฿</div>
+      </div>
 
-      <div class="text-sm mt-2">
+      <div class="text-sm text-gray-600">
         👤 ${order.members?.first_name || '-'} ${order.members?.last_name || ''}
       </div>
 
-      <div class="text-sm text-gray-600">
-        🆔 รหัสสมาชิก: ${order.members?.member_id || '-'}
-      </div>
-
-      <div class="text-sm text-gray-600">
-        🏷 กลุ่ม: ${order.members?.group || '-'}
-      </div>
-
-      <div class="text-sm text-gray-600">
-        💰 ยอด: ${order.total_price} บาท
+      <div class="text-sm text-gray-500">
+        🆔 ${order.members?.member_id || '-'} | 🏷 ${order.members?.group || '-'}
       </div>
 
       ${
         isUploaded
-        ? `<div class="mt-3 text-green-600 font-bold">✅ ส่งสลิปแล้ว</div>`
+        ? `<div class="mt-3 text-green-600 font-bold">✅ ส่งแล้ว</div>`
         : `
-          <input type="file" accept="image/*" class="mt-3" id="file-${order.id}">
-          <button 
-            onclick="uploadSlip(${order.id})"
-            class="mt-3 w-full bg-green-500 text-white py-2 rounded-lg">
+          <input type="file" accept="image/*" class="mt-3 block w-full text-sm" id="file-${order.id}">
+          <button onclick="uploadSlip(${order.id})"
+            class="mt-3 w-full bg-green-500 hover:bg-green-600 text-white py-2 rounded-xl transition">
             📤 ส่งสลิป
           </button>
         `
@@ -141,27 +115,22 @@ function renderOrders(orders) {
   });
 }
 
-// 📤 upload
 async function uploadSlip(orderId) {
   const input = document.getElementById(`file-${orderId}`);
   const file = input.files[0];
 
   if (!file) {
-    alert("กรุณาเลือกไฟล์");
+    Swal.fire("แจ้งเตือน", "กรุณาเลือกไฟล์", "warning");
     return;
   }
 
-  const { data: checkOrder } = await sb
-    .from('historycart')
-    .select('slip_url')
-    .eq('id', orderId)
-    .single();
-
-  if (checkOrder?.slip_url) {
-    alert("❌ ออเดอร์นี้ส่งสลิปไปแล้ว");
-    loadOrders();
-    return;
-  }
+  // 🔥 loading
+  Swal.fire({
+    title: 'กำลังอัปโหลด...',
+    text: 'กรุณารอสักครู่',
+    allowOutsideClick: false,
+    didOpen: () => Swal.showLoading()
+  });
 
   const filePath = `slips/${orderId}-${Date.now()}.jpg`;
 
@@ -170,8 +139,7 @@ async function uploadSlip(orderId) {
     .upload(filePath, file);
 
   if (uploadError) {
-    console.error(uploadError);
-    alert("อัปโหลดไม่สำเร็จ");
+    Swal.fire("ผิดพลาด", "อัปโหลดไม่สำเร็จ", "error");
     return;
   }
 
@@ -181,36 +149,29 @@ async function uploadSlip(orderId) {
 
   const slipUrl = data.publicUrl;
 
-// update DB ก่อน
-const { error: updateError } = await sb
-  .from('historycart')
-  .update({
-    slip_url: slipUrl,
-    status: 'waiting_verify'
-  })
-  .eq('id', orderId);
+  await sb
+    .from('historycart')
+    .update({
+      slip_url: slipUrl,
+      status: 'waiting_verify'
+    })
+    .eq('id', orderId);
 
-if (updateError) {
-  console.error(updateError);
-  alert("บันทึกไม่สำเร็จ");
-  return;
-}
+  // 🔥 แจ้ง backend
+  fetch("https://ttottijljxoinptmhgtu.supabase.co/functions/v1/send-slip-confirm", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ userId, orderId, slipUrl })
+  });
 
-// 🔥 ยิง LINE (ไม่ต้อง await)
-fetch("https://ttottijljxoinptmhgtu.supabase.co/functions/v1/send-slip-confirm", {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json"
-  },
-  body: JSON.stringify({
-    userId: userId,
-    orderId: orderId,
-    slipUrl: slipUrl   // 🔥 ต้องมีตัวนี้
-  })
-}).catch(err => console.error("LINE ERROR:", err));
+  Swal.fire({
+    icon: 'success',
+    title: 'สำเร็จ!',
+    text: 'ส่งสลิปเรียบร้อยแล้ว',
+    confirmButtonColor: '#16a34a'
+  });
 
-alert("✅ ส่งสลิปเรียบร้อย");
-loadOrders();
+  loadOrders();
 }
 
 init();
