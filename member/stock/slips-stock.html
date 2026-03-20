@@ -18,7 +18,7 @@
 <script>
 const LIFF_ID = "1660910795-7r8eqok6";
 const SUPABASE_URL = "https://ttottijljxoinptmhgtu.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y"; // 🔥 แนะนำให้ซ่อน key
 
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -38,32 +38,49 @@ async function init() {
   loadOrders();
 }
 
-// 📦 โหลดเฉพาะของตัวเอง + processing
+// 📦 โหลดข้อมูล
 async function loadOrders() {
-  const { data, error } = await sb
+  // 1. โหลด order
+  const { data: orders, error } = await sb
     .from('historycart')
-    .select(`
-      *,
-      members (
-        first_name,
-        last_name,
-        group
-      )
-    `)
+    .select('*')
     .eq('user_id', userId)
     .eq('status', 'processing')
     .order('created_at', { ascending: false });
 
   if (error) {
-    alert("โหลดข้อมูลไม่สำเร็จ");
     console.error(error);
+    alert("โหลด order ไม่สำเร็จ");
     return;
   }
 
-  renderOrders(data);
+  // 2. โหลด members
+  const { data: members, error: memberError } = await sb
+    .from('members')
+    .select('line_user_id, first_name, last_name, "group"');
+
+  if (memberError) {
+    console.error(memberError);
+    alert("โหลด member ไม่สำเร็จ");
+    return;
+  }
+
+  // 3. map ให้เป็น members (มี s ตามที่คุณต้องการ)
+  const merged = orders.map(order => {
+    const m = members.find(x =>
+      String(x.line_user_id).trim() === String(order.user_id).trim()
+    );
+
+    return {
+      ...order,
+      members: m || {}   // 👈 ใช้ members (มี s)
+    };
+  });
+
+  renderOrders(merged);
 }
 
-// 🎨 แสดงผล
+// 🎨 render
 function renderOrders(orders) {
   const container = document.getElementById('orderList');
   container.innerHTML = '';
@@ -75,46 +92,45 @@ function renderOrders(orders) {
 
   orders.forEach(order => {
 
-    // 🔒 กันส่งซ้ำ
     const isUploaded = order.slip_url && order.slip_url !== '';
 
     const div = document.createElement('div');
     div.className = "bg-white p-4 rounded-xl shadow";
 
     div.innerHTML = `
-  <div class="font-bold text-lg">ออเดอร์ #${order.id}</div>
+      <div class="font-bold text-lg">ออเดอร์ #${order.id}</div>
 
-  <div class="text-sm mt-2">
-    👤 ${order.members?.first_name || '-'} ${order.members?.last_name || ''}
-  </div>
+      <div class="text-sm mt-2">
+        👤 ${order.members?.first_name || '-'} ${order.members?.last_name || ''}
+      </div>
 
-  <div class="text-sm text-gray-600">
-    🏷 กลุ่ม: ${order.members?.group || '-'}
-  </div>
+      <div class="text-sm text-gray-600">
+        🏷 กลุ่ม: ${order.members?.group || '-'}
+      </div>
 
-  <div class="text-sm text-gray-600">
-    💰 ยอด: ${order.total_price} บาท
-  </div>
+      <div class="text-sm text-gray-600">
+        💰 ยอด: ${order.total_price} บาท
+      </div>
 
-  ${
-    isUploaded
-    ? `<div class="mt-3 text-green-600 font-bold">✅ ส่งสลิปแล้ว</div>`
-    : `
-      <input type="file" accept="image/*" class="mt-3" id="file-${order.id}">
-      <button 
-        onclick="uploadSlip(${order.id})"
-        class="mt-3 w-full bg-green-500 text-white py-2 rounded-lg">
-        📤 ส่งสลิป
-      </button>
-    `
-  }
-`;
+      ${
+        isUploaded
+        ? `<div class="mt-3 text-green-600 font-bold">✅ ส่งสลิปแล้ว</div>`
+        : `
+          <input type="file" accept="image/*" class="mt-3" id="file-${order.id}">
+          <button 
+            onclick="uploadSlip(${order.id})"
+            class="mt-3 w-full bg-green-500 text-white py-2 rounded-lg">
+            📤 ส่งสลิป
+          </button>
+        `
+      }
+    `;
 
     container.appendChild(div);
   });
 }
 
-// 📤 อัปโหลด
+// 📤 upload
 async function uploadSlip(orderId) {
   const input = document.getElementById(`file-${orderId}`);
   const file = input.files[0];
@@ -124,14 +140,14 @@ async function uploadSlip(orderId) {
     return;
   }
 
-  // 🔥 เช็คซ้ำก่อน (กันยิง API ซ้ำ)
+  // 🔒 เช็คซ้ำ
   const { data: checkOrder } = await sb
     .from('historycart')
     .select('slip_url')
     .eq('id', orderId)
     .single();
 
-  if (checkOrder.slip_url) {
+  if (checkOrder?.slip_url) {
     alert("❌ ออเดอร์นี้ส่งสลิปไปแล้ว");
     loadOrders();
     return;
@@ -145,8 +161,8 @@ async function uploadSlip(orderId) {
     .upload(filePath, file);
 
   if (uploadError) {
-    alert("อัปโหลดไม่สำเร็จ");
     console.error(uploadError);
+    alert("อัปโหลดไม่สำเร็จ");
     return;
   }
 
@@ -156,7 +172,7 @@ async function uploadSlip(orderId) {
 
   const slipUrl = data.publicUrl;
 
-  // update + กัน race condition
+  // update
   const { error: updateError } = await sb
     .from('historycart')
     .update({
@@ -164,11 +180,11 @@ async function uploadSlip(orderId) {
       status: 'waiting_verify'
     })
     .eq('id', orderId)
-    .is('slip_url', null); // 🔥 กันส่งซ้ำระดับ DB
+    .is('slip_url', null);
 
   if (updateError) {
-    alert("บันทึกไม่สำเร็จ หรือมีการส่งซ้ำ");
     console.error(updateError);
+    alert("บันทึกไม่สำเร็จ หรือส่งซ้ำ");
     return;
   }
 
