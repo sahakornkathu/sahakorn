@@ -164,14 +164,24 @@ async function uploadSlip(orderId) {
     body: JSON.stringify({ userId, orderId, slipUrl })
   });
 
-  Swal.fire({
-    icon: 'success',
-    title: 'สำเร็จ!',
-    text: 'ส่งสลิปเรียบร้อยแล้ว',
-    confirmButtonColor: '#16a34a'
-  });
+ Swal.fire({
+  icon: 'success',
+  title: 'ส่งสำเร็จ 🎉',
+  text: 'ระบบกำลังปิดหน้าต่าง...',
+  showConfirmButton: false,
+  timer: 1500
+}).then(() => {
 
-  loadOrders();
+  // 🔥 ปิด LIFF
+  if (liff.isInClient()) {
+    liff.closeWindow();
+  } else {
+    window.close(); // fallback เผื่อเปิดใน browser
+  }
+
+});
+
+loadOrders();
 }
 
 init();
