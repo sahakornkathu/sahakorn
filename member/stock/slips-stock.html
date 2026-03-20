@@ -164,21 +164,26 @@ async function uploadSlip(orderId) {
     body: JSON.stringify({ userId, orderId, slipUrl })
   });
 
- Swal.fire({
+ try {
+  await fetch("https://ttottijljxoinptmhgtu.supabase.co/functions/v1/send-slip-confirm", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ userId, orderId, slipUrl })
+  });
+} catch (err) {
+  console.error(err);
+}
+
+Swal.fire({
   icon: 'success',
   title: 'ส่งสำเร็จ 🎉',
-  text: 'ระบบกำลังปิดหน้าต่าง...',
-  showConfirmButton: false,
-  timer: 1500
+  text: 'กำลังปิดหน้าต่าง...',
+  timer: 1500,
+  showConfirmButton: false
 }).then(() => {
-
-  // 🔥 ปิด LIFF
   if (liff.isInClient()) {
     liff.closeWindow();
-  } else {
-    window.close(); // fallback เผื่อเปิดใน browser
   }
-
 });
 
 loadOrders();
