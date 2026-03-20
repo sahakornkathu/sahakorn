@@ -181,32 +181,35 @@ async function uploadSlip(orderId) {
 
   const slipUrl = data.publicUrl;
 
-  const { error: updateError } = await sb
-    .from('historycart')
-    .update({
-      slip_url: slipUrl,
-      status: 'waiting_verify'
-    })
-    .eq('id', orderId)
-    .is('slip_url', null);
+// update DB ก่อน
+const { error: updateError } = await sb
+  .from('historycart')
+  .update({
+    slip_url: slipUrl,
+    status: 'waiting_verify'
+  })
+  .eq('id', orderId);
 
-  if (updateError) {
-    console.error(updateError);
-    alert("บันทึกไม่สำเร็จ");
-    return;
-  }
-// 🔥 ส่ง LINE แจ้ง user
-await fetch("https://ttottijljxoinptmhgtu.supabase.co/functions/v1/send-slip-confirm", {
+if (updateError) {
+  console.error(updateError);
+  alert("บันทึกไม่สำเร็จ");
+  return;
+}
+
+// 🔥 ยิง LINE (ไม่ต้อง await)
+fetch("https://ttottijljxoinptmhgtu.supabase.co/functions/v1/send-slip-confirm", {
   method: "POST",
   headers: {
     "Content-Type": "application/json"
   },
   body: JSON.stringify({
-    userId: userId
+    userId: userId,
+    orderId: orderId
   })
-});
-  alert("✅ ส่งสลิปเรียบร้อย");
-  loadOrders();
+}).catch(err => console.error("LINE ERROR:", err));
+
+alert("✅ ส่งสลิปเรียบร้อย");
+loadOrders();
 }
 
 init();
