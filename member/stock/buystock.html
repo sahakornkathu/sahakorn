@@ -449,11 +449,18 @@ if (liff.isInClient()) {
                 liff.login({ redirectUri: window.location.href });
                 return;
             }
-          const friendship = await liff.getFriendship();
+         const friendship = await liff.getFriendship();
 
-          if (!friendship.friendFlag) {
-          await liff.requestFriendship();
-            }
+if (!friendship.friendFlag) {
+  try {
+    await liff.requestFriendship();
+    return; // ❗หยุดรอ user
+  } catch (e) {
+    // 🔥 fallback 100%
+    window.location.href = "https://line.me/R/ti/p/@665czdeg";
+    return;
+  }
+}
           
             userProfile = await liff.getProfile();
 
