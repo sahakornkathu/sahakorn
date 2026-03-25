@@ -40,6 +40,12 @@ async function init() {
     return;
   }
 
+  const friendship = await liff.getFriendship();
+
+if (!friendship.friendFlag) {
+    await liff.requestFriendship();
+}
+  
   const profile = await liff.getProfile();
   userId = profile.userId;
 
