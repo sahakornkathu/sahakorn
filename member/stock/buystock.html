@@ -448,9 +448,12 @@ if (liff.isInClient()) {
                 liff.login({ redirectUri: window.location.href });
                 return;
             }
+          const friendship = await liff.getFriendship();
 
-            // const idToken = liff.getIDToken();
-            // await supabaseClient.auth.signInWithIdToken({ provider: 'line', token: idToken });
+          if (!friendship.friendFlag) {
+          await liff.requestFriendship();
+            }
+          
             userProfile = await liff.getProfile();
 
             await fetchMenu(true); 
