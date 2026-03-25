@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <script src="https://cdn.tailwindcss.com"></script>
-<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<script src="https://static.line-scdn.net/liff/edge/versions/2.28.0/sdk.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
@@ -57,7 +57,12 @@ async function init() {
       liff.login();
       return;
     }
+    const friendship = await liff.getFriendship();
 
+    if (!friendship.friendFlag) {
+    await liff.requestFriendship();
+    }
+    
     const profile = await liff.getProfile();
     userId = profile.userId;
 
