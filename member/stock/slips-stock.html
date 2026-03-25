@@ -33,43 +33,45 @@ let userId = null;
 let isSubmitting = false;
 
 // ================= INIT =================
-async function init() {
-  try {
-    await liff.init({ liffId: LIFF_ID });
+const LINE_ADD_FRIEND_URL = "https://line.me/R/ti/p/@YOUR_LINE_ID";
 
-    // ❗ บังคับเปิดผ่าน LINE เท่านั้น
+async function initLIFF() {
+  try {
+
+    await liff.init({
+      liffId: LIFF_ID,
+      withLoginOnExternalBrowser: true
+    });
+
+    // ❗ บังคับเปิดใน LINE
     if (!liff.isInClient()) {
-      Swal.fire({
-        icon: "warning",
-        title: "กรุณาเปิดผ่าน LINE",
-        text: "Mini App ใช้งานได้เฉพาะใน LINE เท่านั้น",
-        confirmButtonText: "เปิดใน LINE"
-      }).then(() => {
-        liff.openWindow({
-          url: window.location.href,
-          external: false
-        });
+      alert("กรุณาเปิดผ่าน LINE เท่านั้น");
+      liff.openWindow({
+        url: window.location.href,
+        external: false
       });
       return;
     }
 
+    // 🔐 Login
     if (!liff.isLoggedIn()) {
-      liff.login();
+      liff.login({ redirectUri: window.location.href });
       return;
     }
-    
-    
-    const profile = await liff.getProfile();
-    userId = profile.userId;
 
-    // ✅ ขอ Add Friend (Mini App ใช้ได้แน่นอน)
+    // 👤 profile
+    const profile = await liff.getProfile();
+    console.log("USER:", profile.userId);
+
+    // ❤️ friend + unblock
     await handleFriendship();
 
-    loadOrders();
+    // 👉 ทำงานต่อ
+    startApp(profile);
 
   } catch (err) {
-    console.error(err);
-    Swal.fire("ผิดพลาด", "LIFF init ไม่สำเร็จ", "error");
+    console.error("LIFF ERROR:", err);
+    alert("เกิดข้อผิดพลาด: " + err.message);
   }
 }
 
