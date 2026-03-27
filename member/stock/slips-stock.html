@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <script src="https://cdn.tailwindcss.com"></script>
-<script src="https://static.line-scdn.net/liff/edge/versions/2.28.0/sdk.js"></script>
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
@@ -22,71 +22,34 @@
 <div id="orderList" class="space-y-4 max-w-md mx-auto"></div>
 
 <script>
-const LIFF_ID = "2009600896-Xm88XP40";
-
+const LIFF_ID = "1660910795-7r8eqok6";
 const SUPABASE_URL = "https://ttottijljxoinptmhgtu.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y";
 
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let userId = null;
-let isSubmitting = false;
+let isSubmitting = false; // 🔥 กันยิงซ้ำระดับระบบ
 
 // ================= INIT =================
-const LINE_ADD_FRIEND_URL = "https://line.me/R/ti/p/@YOUR_LINE_ID";
+async function init() {
+  await liff.init({ liffId: LIFF_ID });
 
-async function initLIFF() {
-  try {
-
-    await liff.init({
-      liffId: LIFF_ID,
-      withLoginOnExternalBrowser: true
-    });
-
-    // ❗ บังคับเปิดใน LINE
-    if (!liff.isInClient()) {
-      alert("กรุณาเปิดผ่าน LINE เท่านั้น");
-      liff.openWindow({
-        url: window.location.href,
-        external: false
-      });
-      return;
-    }
-
-    // 🔐 Login
-    if (!liff.isLoggedIn()) {
-      liff.login({ redirectUri: window.location.href });
-      return;
-    }
-
-    // 👤 profile
-    const profile = await liff.getProfile();
-    console.log("USER:", profile.userId);
-
-    // ❤️ friend + unblock
-    await handleFriendship();
-
-    // 👉 ทำงานต่อ
-    startApp(profile);
-
-  } catch (err) {
-    console.error("LIFF ERROR:", err);
-    alert("เกิดข้อผิดพลาด: " + err.message);
+  if (!liff.isLoggedIn()) {
+    liff.login();
+    return;
   }
-}
+  // 🔥 เพิ่มตรงนี้
+  const friendship = await liff.getFriendship();
 
-// ================= FRIENDSHIP =================
-async function handleFriendship() {
-  try {
-    const friendship = await liff.getFriendship();
-
-    if (!friendship.friendFlag) {
-      await liff.requestFriendship();
-    }
-
-  } catch (e) {
-    console.log("Friendship error:", e);
+  if (!friendship.friendFlag) {
+    await liff.requestFriendship();
   }
+  
+  const profile = await liff.getProfile();
+  userId = profile.userId;
+
+  loadOrders();
 }
 
 // ================= LOAD =================
@@ -164,11 +127,18 @@ function renderOrders(orders) {
 // ================= UPLOAD =================
 async function uploadSlip(orderId, btn) {
 
-  if (isSubmitting) return;
+  // 🔥 กันยิงซ้ำ
+  if (isSubmitting) {
+    console.log("⛔ BLOCK DUPLICATE");
+    return;
+  }
+
   isSubmitting = true;
 
-  btn.disabled = true;
-  btn.innerText = "กำลังส่ง...";
+  if (btn) {
+    btn.disabled = true;
+    btn.innerText = "กำลังส่ง...";
+  }
 
   const input = document.getElementById(`file-${orderId}`);
   const file = input.files[0];
@@ -210,7 +180,7 @@ async function uploadSlip(orderId, btn) {
 
     if (updateError) throw updateError;
 
-    // ยิง API
+    // 🔥 ยิง API (ครั้งเดียว)
     await fetch("https://ttottijljxoinptmhgtu.supabase.co/functions/v1/send-slip-confirm", {
       method: "POST",
       headers: {
@@ -226,11 +196,16 @@ async function uploadSlip(orderId, btn) {
     Swal.fire({
       icon: 'success',
       title: 'ส่งสำเร็จ 🎉',
+      text: 'กำลังปิดหน้าต่าง...',
       timer: 1500,
       showConfirmButton: false
     }).then(() => {
-      liff.closeWindow();
+      if (liff.isInClient()) {
+        liff.closeWindow();
+      }
     });
+
+    loadOrders();
 
   } catch (err) {
     console.error(err);
@@ -242,8 +217,10 @@ async function uploadSlip(orderId, btn) {
 // ================= RESET =================
 function resetBtn(btn) {
   isSubmitting = false;
-  btn.disabled = false;
-  btn.innerText = "📤 ส่งสลิป";
+  if (btn) {
+    btn.disabled = false;
+    btn.innerText = "📤 ส่งสลิป";
+  }
 }
 
 init();
