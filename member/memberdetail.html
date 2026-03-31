@@ -961,27 +961,13 @@ async function loadMeeting(){
 /* SHARE */
 async function loadShare(){
   const dividendMap = await loadDividendMap();
-//   let year = document.getElementById("shareYearFilter")?.value;
+  let year = document.getElementById("shareYearFilter")?.value;
 
-// // 🔥 ถ้ายังไม่มีค่า → ใช้ปีปัจจุบัน
-// if(!year){
-//   year = getCurrentFiscalYear();
-// }
-let year = document.getElementById("shareYearFilter")?.value;
-
+// 🔥 ถ้ายังไม่มีค่า → ใช้ปีปัจจุบัน
 if(!year){
-  // 🔥 ดึงปีล่าสุดจาก DB แทน
-  const { data: years } = await sb
-    .from("member_share")
-    .select("fiscal_year")
-    .eq("member_id", member.member_id)
-    .order("fiscal_year", { ascending: false })
-    .limit(1);
-
-  if(years && years.length > 0){
-    year = years[0].fiscal_year;
-  }
+  year = getCurrentFiscalYear();
 }
+
 
   
   let query=sb
