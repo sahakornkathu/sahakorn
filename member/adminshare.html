@@ -580,7 +580,7 @@ const year=document.getElementById("yearFilter")?.value
 
 if(year && year!=="all"){
 
-query=query.eq("fiscal_year",year)
+query=query.eq("fiscal_year", Number(year))
 
 }
 
