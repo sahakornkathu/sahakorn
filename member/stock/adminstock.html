@@ -49,7 +49,7 @@ function getFiscalYear(){
 }
 
 // ==========================
-// 🔥 ฟังก์ชันเพิ่มหุ้น (NO 409)
+// 🔥 ฟังก์ชันหลัก (UPSERT ONLY)
 // ==========================
 async function addShareWithCarry(member_id, amount){
 
@@ -57,7 +57,7 @@ async function addShareWithCarry(member_id, amount){
 
   const fiscalYear = getFiscalYear();
 
-  // 🔹 ดึงปีล่าสุด
+  // 🔹 ปีล่าสุด
   const { data: last } = await supabaseClient
     .from("member_share")
     .select("*")
@@ -68,7 +68,7 @@ async function addShareWithCarry(member_id, amount){
 
   const lastBalance = last?.share_balance || 0;
 
-  // 🔹 ดึงปีปัจจุบัน
+  // 🔹 ปีปัจจุบัน
   const { data: current } = await supabaseClient
     .from("member_share")
     .select("*")
@@ -78,8 +78,8 @@ async function addShareWithCarry(member_id, amount){
 
   let share_begin = lastBalance;
   let share_buy = amount;
-  let share_balance = lastBalance + amount;
   let share_sell = 0;
+  let share_balance = lastBalance + amount;
 
   if(current){
     share_begin = current.share_begin || 0;
@@ -92,9 +92,7 @@ async function addShareWithCarry(member_id, amount){
       share_sell;
   }
 
-  // ==========================
-  // 🔥 UPSERT ONLY (แก้ 409)
-  // ==========================
+  // 🔥 UPSERT (ไม่มี 409)
   const { error } = await supabaseClient
     .from("member_share")
     .upsert({
@@ -109,8 +107,8 @@ async function addShareWithCarry(member_id, amount){
     });
 
   if(error){
-    console.error("❌ ERROR:", error);
-    alert(error.message);
+    console.error(error);
+    alert("❌ " + error.message);
     return;
   }
 
@@ -118,8 +116,10 @@ async function addShareWithCarry(member_id, amount){
 }
 
 // ==========================
-// 🔥 BUTTON
+// 🔥 FIX SCOPE (สำคัญมาก)
 // ==========================
+window.addShareWithCarry = addShareWithCarry;
+
 window.handleAddShare = function(){
   const member_id = document.getElementById("member_id").value.trim();
   const amount = Number(document.getElementById("amount").value);
