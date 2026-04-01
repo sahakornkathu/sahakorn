@@ -18,7 +18,7 @@
 <body>
 
 <div style="max-width:400px;margin:auto;padding:20px">
-  <h2 style="font-size:20px;font-weight:bold">🔥 เพิ่มหุ้น (ยกยอดอัตโนมัติ)</h2>
+  <h2>🔥 เพิ่มหุ้น (ยกยอดอัตโนมัติ)</h2>
 
   <input id="member_id" placeholder="member_id">
   <input id="amount" type="number" placeholder="จำนวนหุ้น">
@@ -56,7 +56,7 @@ function getFiscalYear(){
 }
 
 // ==========================
-// เพิ่มหุ้น
+// เพิ่มหุ้น + log
 // ==========================
 async function addShareWithCarry(member_id, amount){
 
@@ -95,6 +95,7 @@ async function addShareWithCarry(member_id, amount){
       share_sell;
   }
 
+  // 🔥 อัปเดตยอดรวม
   await supabaseClient
     .from("member_share")
     .upsert({
@@ -108,11 +109,22 @@ async function addShareWithCarry(member_id, amount){
       onConflict: "member_id,fiscal_year"
     });
 
-  alert("✅ เพิ่มหุ้นสำเร็จ");
+  // 🔥 บันทึก log (สำคัญ)
+  await supabaseClient
+    .from("member_share_fx")
+    .insert({
+      member_id: member_id,
+      fiscal_year: fiscalYear,
+      amount: amount,
+      type: "buy",
+      created_at: new Date().toISOString()
+    });
+
+  alert("✅ เพิ่มหุ้น + บันทึกสำเร็จ");
 }
 
 // ==========================
-// โหลดปีจาก DB
+// โหลดปี
 // ==========================
 async function loadYearOptions(member_id){
 
@@ -134,14 +146,13 @@ async function loadYearOptions(member_id){
     select.innerHTML += `<option value="${y}">${y}</option>`;
   });
 
-  // default ปีล่าสุด
   if(years.length){
     select.value = years[0];
   }
 }
 
 // ==========================
-// โหลดข้อมูลหุ้น
+// โหลดข้อมูล
 // ==========================
 async function loadShare(){
 
