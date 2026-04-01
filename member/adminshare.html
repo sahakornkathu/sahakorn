@@ -396,7 +396,7 @@ async function loadYearFilter(){
 const {data,error}=await sb
 .from("member_share_tx")
 .select("fiscal_year")
-.eq("member_id",member.member_id)
+.eq("member_id", Number(member.member_id))
 
 if(error){
 console.log(error)
@@ -469,8 +469,7 @@ const fiscal=getFiscalYear(iso)
 await sb
 .from("member_share_tx")
 .insert({
-
-member_id:member.member_id,
+member_id: Number(member.member_id),
 trans_date:iso,
 fiscal_year:fiscal,
 share_buy:buy,
