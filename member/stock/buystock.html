@@ -345,49 +345,49 @@
     
    placeOrderBtn.addEventListener('click', async () => {
 
-  // 🔥 เช็ค user profile ก่อน
-  if (!userProfile?.userId) {
-    Swal.fire('ผิดพลาด', 'ไม่พบข้อมูลผู้ใช้งาน', 'error');
-    return;
-  }
+//   // 🔥 เช็ค user profile ก่อน
+//   if (!userProfile?.userId) {
+//     Swal.fire('ผิดพลาด', 'ไม่พบข้อมูลผู้ใช้งาน', 'error');
+//     return;
+//   }
 
-  // 🔥 ดึงข้อมูล member จาก Supabase
-  const { data: member, error: memberError } = await supabaseClient
-    .from('member')
-    .select('line_user_id, line_picture, line_display_name')
-    .eq('line_user_id', userProfile.userId)
-    .maybeSingle();
-    console.log('USER:', userProfile.userId);
-    console.log('MEMBER:', member);
-    console.log('ERROR:', memberError);
-  // ❌ ไม่พบ member หรือข้อมูลไม่ครบ
-  if (
-    memberError ||
-    !member ||
-    !member.line_user_id ||
-    !member.line_picture ||
-    !member.line_display_name
- ) {
-  hideLoading();
+//   // 🔥 ดึงข้อมูล member จาก Supabase
+//   const { data: member, error: memberError } = await supabaseClient
+//     .from('member')
+//     .select('line_user_id, line_picture, line_display_name')
+//     .eq('line_user_id', userProfile.userId)
+//     .maybeSingle();
+//     console.log('USER:', userProfile.userId);
+//     console.log('MEMBER:', member);
+//     console.log('ERROR:', memberError);
+//   // ❌ ไม่พบ member หรือข้อมูลไม่ครบ
+//   if (
+//     memberError ||
+//     !member ||
+//     !member.line_user_id ||
+//     !member.line_picture ||
+//     !member.line_display_name
+//  ) {
+//   hideLoading();
 
-  await Swal.fire({
-    icon: 'warning',
-    title: 'ยังไม่ได้ลงทะเบียน',
-    html: `
-      <div>กรุณาลงทะเบียนก่อน</div>
-      <div style="font-size:12px;margin-top:5px;color:#999">
-        UID: ${userProfile.userId}
-      </div>
-    `,
-    confirmButtonText: 'ไปลงทะเบียน'
-  }).then((result) => {
-    if (result.isConfirmed) {
-      window.location.href = 'https://miniapp.line.me/2009012101-mBy1yERI';
-    }
-  });
+//   await Swal.fire({
+//     icon: 'warning',
+//     title: 'ยังไม่ได้ลงทะเบียน',
+//     html: `
+//       <div>กรุณาลงทะเบียนก่อน</div>
+//       <div style="font-size:12px;margin-top:5px;color:#999">
+//         UID: ${userProfile.userId}
+//       </div>
+//     `,
+//     confirmButtonText: 'ไปลงทะเบียน'
+//   }).then((result) => {
+//     if (result.isConfirmed) {
+//       window.location.href = 'https://miniapp.line.me/2009012101-mBy1yERI';
+//     }
+//   });
 
-  return;
-}
+//   return;
+// }
 
 
      
