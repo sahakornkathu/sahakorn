@@ -17,13 +17,16 @@
 
 <body>
 
+<!-- 🔥 UI เพิ่มหุ้น -->
 <div style="padding:20px">
-  <h2>🔥 ทดสอบเพิ่มหุ้น</h2>
+  <h2>🔥 เพิ่มหุ้น + ยกยอดอัตโนมัติ</h2>
 
-  <input id="member_id" placeholder="member_id">
-  <input id="amount" placeholder="จำนวนหุ้น" type="number">
+  <input id="member_id" placeholder="member_id" style="border:1px solid #ccc;padding:8px"><br><br>
+  <input id="amount" placeholder="จำนวนหุ้น" type="number" style="border:1px solid #ccc;padding:8px"><br><br>
 
-  <button onclick="handleAddShare()">เพิ่มหุ้น</button>
+  <button onclick="handleAddShare()" style="padding:10px;background:#06c755;color:white;border:none">
+    เพิ่มหุ้น
+  </button>
 </div>
 
 <script type="module">
@@ -41,7 +44,7 @@ const supabaseClient = createClient(
 );
 
 // ==========================
-// 🔥 ฟังก์ชันเดิม
+// 🔥 ฟังก์ชันเดิม (ตัวอย่าง)
 // ==========================
 async function loadSalesSummary(){
   const now = new Date();
@@ -65,7 +68,7 @@ function getFiscalYear(){
 }
 
 // ==========================
-// 🔥 ฟังก์ชันหลัก
+// 🔥 ฟังก์ชันเพิ่มหุ้น (กัน 409 แล้ว)
 // ==========================
 async function addShareWithCarry(member_id, amount){
 
@@ -74,7 +77,18 @@ async function addShareWithCarry(member_id, amount){
     const fiscalYear = getFiscalYear();
     console.log("ปีบัญชี:", fiscalYear);
 
-    // 🔹 เช็คปี
+    // 🔹 ดึงปีล่าสุด
+    const { data: last } = await supabaseClient
+      .from("member_share")
+      .select("*")
+      .eq("member_id", member_id)
+      .order("fiscal_year", { ascending:false })
+      .limit(1)
+      .maybeSingle();
+
+    const lastBalance = last?.share_balance || 0;
+
+    // 🔹 เช็คปีนี้มีไหม
     const { data: current } = await supabaseClient
       .from("member_share")
       .select("*")
@@ -82,58 +96,41 @@ async function addShareWithCarry(member_id, amount){
       .eq("fiscal_year", fiscalYear)
       .maybeSingle();
 
-    // =========================
-    // 🔥 ไม่มีปี → สร้างใหม่
-    // =========================
-    if(!current){
+    let share_begin = lastBalance;
+    let share_buy = amount;
+    let share_balance = lastBalance + amount;
 
-      const { data: last } = await supabaseClient
-        .from("member_share")
-        .select("*")
-        .eq("member_id", member_id)
-        .order("fiscal_year", { ascending:false })
-        .limit(1)
-        .maybeSingle();
+    // 🔥 ถ้ามีปีแล้ว → เอาค่าเดิมมาคำนวณ
+    if(current){
+      share_begin = current.share_begin || 0;
+      share_buy = (current.share_buy || 0) + amount;
+      share_balance =
+        (share_begin) +
+        share_buy -
+        (current.share_sell || 0);
+    }
 
-      const lastBalance = last?.share_balance || 0;
-
-      await supabaseClient.from("member_share").insert({
+    // 🔥 ใช้ UPSERT กัน 409
+    const { error } = await supabaseClient
+      .from("member_share")
+      .upsert({
         member_id: member_id,
         fiscal_year: fiscalYear,
-        share_begin: lastBalance,
-        share_buy: amount,
-        share_sell: 0,
-        share_balance: lastBalance + amount
+        share_begin: share_begin,
+        share_buy: share_buy,
+        share_sell: current?.share_sell || 0,
+        share_balance: share_balance
+      }, {
+        onConflict: "member_id,fiscal_year"
       });
 
-      console.log("✅ สร้างปีใหม่");
-
+    if(error){
+      console.log(error);
+      alert("บันทึกไม่สำเร็จ: " + error.message);
+      return;
     }
 
-    // =========================
-    // 🔥 มีปี → update
-    // =========================
-    else{
-
-      const newBuy = (current.share_buy || 0) + amount;
-
-      const newBalance =
-        (current.share_begin || 0) +
-        newBuy -
-        (current.share_sell || 0);
-
-      await supabaseClient
-        .from("member_share")
-        .update({
-          share_buy: newBuy,
-          share_balance: newBalance
-        })
-        .eq("id", current.id);
-
-      console.log("✅ อัปเดตปีเดิม");
-    }
-
-    alert("เพิ่มหุ้นสำเร็จ");
+    alert("เพิ่มหุ้น + ยกยอดสำเร็จ");
 
   }catch(err){
     console.error(err);
@@ -147,6 +144,11 @@ async function addShareWithCarry(member_id, amount){
 function handleAddShare(){
   const member_id = document.getElementById("member_id").value;
   const amount = Number(document.getElementById("amount").value);
+
+  if(!member_id || !amount){
+    alert("กรอกข้อมูลก่อน");
+    return;
+  }
 
   addShareWithCarry(member_id, amount);
 }
