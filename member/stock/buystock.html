@@ -345,6 +345,43 @@
     
    placeOrderBtn.addEventListener('click', async () => {
 
+  // 🔥 เช็ค user profile ก่อน
+  if (!userProfile?.userId) {
+    Swal.fire('ผิดพลาด', 'ไม่พบข้อมูลผู้ใช้งาน', 'error');
+    return;
+  }
+
+  // 🔥 ดึงข้อมูล member จาก Supabase
+  const { data: member, error: memberError } = await supabaseClient
+    .from('member')
+    .select('line_user_id, line_picture, line_display_name')
+    .eq('line_user_id', userProfile.userId)
+    .single();
+
+  // ❌ ไม่พบ member หรือข้อมูลไม่ครบ
+  if (
+    memberError ||
+    !member ||
+    !member.line_user_id ||
+    !member.line_picture ||
+    !member.line_display_name
+  ) {
+    await Swal.fire({
+      icon: 'warning',
+      title: 'ยังไม่ได้ลงทะเบียน',
+      html: 'กรุณาลงทะเบียนก่อนทำรายการ',
+      confirmButtonText: 'ไปลงทะเบียน'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        window.location.href = 'https://miniapp.line.me/2009012101-mBy1yERI';
+      }
+    });
+
+    return; // 🔥 หยุดการสั่งซื้อทันที
+  }
+
+
+     
   // 🔥 กันกดรัว
   if (placeOrderBtn.disabled) return;
 
