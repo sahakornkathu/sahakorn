@@ -641,8 +641,13 @@ html+=`
 <span>${isoToThai(r.trans_date)}</span>
 <span>${r.share_buy}</span>
 <span>${r.share_sell}</span>
+<span>
+<button onclick="deleteTx(${r.id})"
+style="background:red;color:white;padding:4px 8px;border:none;border-radius:6px">
+ลบ
+</button>
+</span>
 </div>
-
 `
 
 })
@@ -674,6 +679,91 @@ document.getElementById("reportBox").innerHTML=html
 
 document.getElementById("dailyDate").value =
 new Date().toISOString().split("T")[0]
+
+async function deleteTx(id){
+
+const confirm = await Swal.fire({
+  title: 'ยืนยันลบรายการ?',
+  text: 'ลบแล้วแก้ไขไม่ได้',
+  icon: 'warning',
+  showCancelButton: true,
+  confirmButtonText: 'ลบ',
+  cancelButtonText: 'ยกเลิก'
+})
+
+if(!confirm.isConfirmed) return
+
+// 🔥 ดึงข้อมูลก่อนลบ
+const { data: tx } = await sb
+  .from("member_share_tx")
+  .select("*")
+  .eq("id", id)
+  .single()
+
+if(!tx) return
+
+// 🔥 ลบรายการ
+await sb
+  .from("member_share_tx")
+  .delete()
+  .eq("id", id)
+
+// 🔥 คำนวณใหม่
+await recalcShare(tx.member_id, tx.fiscal_year)
+
+Swal.fire({
+  icon: 'success',
+  title: 'ลบสำเร็จ',
+  timer: 1200,
+  showConfirmButton: false
+})
+
+loadReport()
+}
+
+async function recalcShare(member_id, fiscal){
+
+// 🔥 ดึง transaction ทั้งปี
+const { data } = await sb
+  .from("member_share_tx")
+  .select("*")
+  .eq("member_id", member_id)
+  .eq("fiscal_year", fiscal)
+
+let totalBuy = 0
+let totalSell = 0
+
+data?.forEach(r=>{
+  totalBuy += Number(r.share_buy)
+  totalSell += Number(r.share_sell)
+})
+
+// 🔥 หา share_begin
+const lastYear = fiscal - 1
+
+const { data: last } = await sb
+  .from("member_share")
+  .select("share_balance")
+  .eq("member_id", member_id)
+  .eq("fiscal_year", lastYear)
+  .maybeSingle()
+
+let begin = last?.share_balance || 0
+
+const balance = begin + totalBuy - totalSell
+
+// 🔥 update summary
+await sb
+  .from("member_share")
+  .update({
+    share_buy: totalBuy,
+    share_sell: totalSell,
+    share_balance: balance
+  })
+  .eq("member_id", member_id)
+  .eq("fiscal_year", fiscal)
+
+}
 </script>
 
 </body>
