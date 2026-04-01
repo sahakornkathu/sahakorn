@@ -961,13 +961,26 @@ async function loadMeeting(){
 /* SHARE */
 async function loadShare(){
   const dividendMap = await loadDividendMap();
-  let year = document.getElementById("shareYearFilter")?.value;
+//   let year = document.getElementById("shareYearFilter")?.value;
 
-// 🔥 ถ้ายังไม่มีค่า → ใช้ปีปัจจุบัน
+// // 🔥 ถ้ายังไม่มีค่า → ใช้ปีปัจจุบัน
+// if(!year){
+//   year = getCurrentFiscalYear();
+// }
+let year = document.getElementById("shareYearFilter")?.value;
+
 if(!year){
-  year = getCurrentFiscalYear();
-}
+  // 🔥 เอาปีล่าสุดจาก DB แทน
+  const {data:latest} = await sb
+    .from("member_share")
+    .select("fiscal_year")
+    .eq("member_id",member.member_id)
+    .order("fiscal_year",{ascending:false})
+    .limit(1)
+    .single();
 
+  year = latest?.fiscal_year;
+}
 
   
   let query=sb
@@ -1136,11 +1149,6 @@ years.forEach(y=>{
   return map;
 } 
 
-
-function getCurrentFiscalYear(){
-  const today = new Date();
-  const month = today.getMonth() + 1; // 1-12
-  const year = today.getFullYear() + 543; // แปลงเป็น พ.ศ.
 
   // 🔥 ถ้า ม.ค.–มี.ค. → ยังเป็นปีบัญชีปีก่อน
  function getCurrentFiscalYear(){
