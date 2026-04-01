@@ -253,6 +253,12 @@ return `${day}/${month}/${year}`
 
 }
 
+function getTodayISO_TH(){
+  const now = new Date()
+  const th = new Date(now.getTime() + (7 * 60 * 60 * 1000))
+  return th.toISOString().split("T")[0]
+}
+
 /* คำนวณปีบัญชี */
 
 function getFiscalYear(iso){
@@ -676,10 +682,11 @@ document.getElementById("reportBox").innerHTML=html
 
 }
 
-document.getElementById("dailyDate").value =
-new Date().toISOString().split("T")[0]
-// 🔥 เพิ่มบรรทัดนี้
-loadDailyReport();
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("dailyDate").value = getTodayISO_TH()
+  loadDailyReport()
+})
+  
 async function deleteTx(id){
 
 const confirm = await Swal.fire({
