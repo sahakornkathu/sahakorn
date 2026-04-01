@@ -356,8 +356,10 @@
     .from('member')
     .select('line_user_id, line_picture, line_display_name')
     .eq('line_user_id', userProfile.userId)
-    .single();
-
+    .maybeSingle();
+    console.log('USER:', userProfile.userId);
+    console.log('MEMBER:', member);
+    console.log('ERROR:', memberError);
   // ❌ ไม่พบ member หรือข้อมูลไม่ครบ
   if (
     memberError ||
