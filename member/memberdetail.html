@@ -1143,10 +1143,17 @@ function getCurrentFiscalYear(){
   const year = today.getFullYear() + 543; // แปลงเป็น พ.ศ.
 
   // 🔥 ถ้า ม.ค.–มี.ค. → ยังเป็นปีบัญชีปีก่อน
-  if(month <= 3){
+ function getCurrentFiscalYear(){
+  const today = new Date();
+  const month = today.getMonth() + 1;
+  const year = today.getFullYear() + 543; // พ.ศ.
+
+  // 🔥 ก่อนเมษายน = ยังเป็นปีที่แล้ว
+  if(month < 4){
     return year - 1;
   }
 
+  // 🔥 ตั้งแต่เมษายน = ใช้ปีปัจจุบัน
   return year;
 }
   
