@@ -678,7 +678,8 @@ document.getElementById("reportBox").innerHTML=html
 
 document.getElementById("dailyDate").value =
 new Date().toISOString().split("T")[0]
-
+// 🔥 เพิ่มบรรทัดนี้
+loadDailyReport();
 async function deleteTx(id){
 
 const confirm = await Swal.fire({
