@@ -365,20 +365,27 @@
     !member.line_user_id ||
     !member.line_picture ||
     !member.line_display_name
-  ) {
-    await Swal.fire({
-      icon: 'warning',
-      title: 'ยังไม่ได้ลงทะเบียน',
-      html: 'กรุณาลงทะเบียนก่อนทำรายการ',
-      confirmButtonText: 'ไปลงทะเบียน'
-    }).then((result) => {
-      if (result.isConfirmed) {
-        window.location.href = 'https://miniapp.line.me/2009012101-mBy1yERI';
-      }
-    });
+ ) {
+  hideLoading();
 
-    return; // 🔥 หยุดการสั่งซื้อทันที
-  }
+  await Swal.fire({
+    icon: 'warning',
+    title: 'ยังไม่ได้ลงทะเบียน',
+    html: `
+      <div>กรุณาลงทะเบียนก่อน</div>
+      <div style="font-size:12px;margin-top:5px;color:#999">
+        UID: ${userProfile.userId}
+      </div>
+    `,
+    confirmButtonText: 'ไปลงทะเบียน'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      window.location.href = 'https://miniapp.line.me/2009012101-mBy1yERI';
+    }
+  });
+
+  return;
+}
 
 
      
