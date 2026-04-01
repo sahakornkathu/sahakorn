@@ -482,7 +482,7 @@ share_sell:sell
 const {data}=await sb
 .from("member_share")
 .select("*")
-.eq("member_id",member.member_id)
+.eq("member_id", Number(member.member_id))
 .eq("fiscal_year",fiscal)
 .maybeSingle()
 
@@ -515,7 +515,7 @@ const lastYear=fiscal-1
 const {data:last}=await sb
 .from("member_share")
 .select("share_balance")
-.eq("member_id",member.member_id)
+.eq("member_id", Number(member.member_id))
 .eq("fiscal_year",lastYear)
 .maybeSingle()
 
@@ -573,7 +573,7 @@ async function loadReport(){
 let query=sb
 .from("member_share_tx")
 .select("*")
-.eq("member_id",member.member_id)
+.eq("member_id", Number(member.member_id))
 
 const year=document.getElementById("yearFilter")?.value
 
