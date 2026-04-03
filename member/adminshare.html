@@ -396,6 +396,37 @@ html+=`
 document.getElementById("dailyReport").innerHTML=html
 
 }
+
+function appendDailyRow(tx){
+
+  const table = document.querySelector("#dailyReport table tbody")
+
+  // ถ้ายังไม่มี table → fallback ไปโหลดใหม่
+  if(!table){
+    loadDailyReport()
+    return
+  }
+
+  const tr = document.createElement("tr")
+
+  tr.innerHTML = `
+    <td>${tx.member_id}</td>
+    <td>${tx.first_name} ${tx.last_name}</td>
+    <td>${tx.group ?? "-"}</td>
+    <td>${tx.share_buy}</td>
+  `
+
+  // 🔥 เพิ่มแถวบนสุด
+  table.prepend(tr)
+
+  // 🔥 อัปเดตรวม
+  const totalCell = document.querySelector(".daily-total td:last-child")
+  if(totalCell){
+    const current = Number(totalCell.innerText || 0)
+    totalCell.innerText = current + Number(tx.share_buy)
+  }
+
+}
   
 async function loadYearFilter(){
 
@@ -472,16 +503,27 @@ const fiscal=getFiscalYear(iso)
 
 /* บันทึก transaction */
 
-await sb
+// await sb
+// .from("member_share_tx")
+// .insert({
+// member_id: Number(member.member_id),
+// trans_date:iso,
+// fiscal_year:fiscal,
+// share_buy:buy,
+// share_sell:sell
+
+// })
+  const { data: newTx } = await sb
 .from("member_share_tx")
 .insert({
-member_id: Number(member.member_id),
-trans_date:iso,
-fiscal_year:fiscal,
-share_buy:buy,
-share_sell:sell
-
+  member_id: Number(member.member_id),
+  trans_date: iso,
+  fiscal_year: fiscal,
+  share_buy: buy,
+  share_sell: sell
 })
+.select()
+.single()
 
 /* ตรวจ summary */
 
