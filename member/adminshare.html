@@ -374,11 +374,17 @@ data.forEach(r=>{
 total+=Number(r.share_buy)
 
 html+=`
-<tr>
+<tr id="row-${r.id}">
 <td>${r.member_id}</td>
 <td>${r.members.first_name} ${r.members.last_name}</td>
 <td>${r.members.group ?? "-"}</td>
 <td>${r.share_buy}</td>
+<td>
+<button onclick="deleteTx(${r.id}, ${r.share_buy})"
+style="background:red;color:white;padding:4px 8px;border:none;border-radius:6px">
+ลบ
+</button>
+</td>
 </tr>
 `
 
@@ -401,7 +407,6 @@ function appendDailyRow(tx){
 
   const table = document.querySelector("#dailyReport table tbody")
 
-  // ถ้ายังไม่มี table → fallback ไปโหลดใหม่
   if(!table){
     loadDailyReport()
     return
@@ -409,17 +414,23 @@ function appendDailyRow(tx){
 
   const tr = document.createElement("tr")
 
+  tr.id = `row-${tx.id}` // 🔥 สำคัญ
+
   tr.innerHTML = `
     <td>${tx.member_id}</td>
     <td>${tx.first_name} ${tx.last_name}</td>
     <td>${tx.group ?? "-"}</td>
     <td>${tx.share_buy}</td>
+    <td>
+      <button onclick="deleteTx(${tx.id}, ${tx.share_buy})"
+      style="background:red;color:white;padding:4px 8px;border:none;border-radius:6px">
+      ลบ
+      </button>
+    </td>
   `
 
-  // 🔥 เพิ่มแถวบนสุด
   table.prepend(tr)
 
-  // 🔥 อัปเดตรวม
   const totalCell = document.querySelector(".daily-total td:last-child")
   if(totalCell){
     const current = Number(totalCell.innerText || 0)
@@ -611,7 +622,18 @@ document.getElementById("sell").value=""
 /* โฟกัสกลับไปที่ช่องซื้อ */
 document.getElementById("buy").focus()
 loadReport()
-loadDailyReport()
+const selectedDate = document.getElementById("dailyDate").value
+
+if(selectedDate === newTx.trans_date){
+  appendDailyRow({
+    id: newTx.id,
+    member_id: newTx.member_id,
+    first_name: member.first_name,
+    last_name: member.last_name,
+    group: member.group,
+    share_buy: newTx.share_buy
+  })
+}
 }
 
 /* โหลดรายงาน */
@@ -689,7 +711,7 @@ html+=`
 <span>${r.share_buy}</span>
 <span>${r.share_sell}</span>
 <span>
-<button onclick="deleteTx(${r.id})"
+<button onclick="deleteTx(${r.id}, ${r.share_buy})"
 style="background:red;color:white;padding:4px 8px;border:none;border-radius:6px">
 ลบ
 </button>
@@ -729,7 +751,7 @@ document.addEventListener("DOMContentLoaded", () => {
   loadDailyReport()
 })
   
-async function deleteTx(id){
+async function deleteTx(id , share_buy){
 
 const confirm = await Swal.fire({
   title: 'ยืนยันลบรายการ?',
@@ -766,7 +788,17 @@ Swal.fire({
   timer: 1200,
   showConfirmButton: false
 })
+// 🔥 ลบ row ออกจากหน้า
+const row = document.getElementById(`row-${id}`)
+if(row) row.remove()
 
+// 🔥 อัปเดตรวม
+const totalCell = document.querySelector(".daily-total td:last-child")
+if(totalCell){
+  const current = Number(totalCell.innerText || 0)
+  totalCell.innerText = current - Number(share_buy)
+}
+  
 loadReport()
 }
 
