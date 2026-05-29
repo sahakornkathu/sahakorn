@@ -59,6 +59,7 @@ async function loadOrders() {
     .from('historycart')
     .select('*')
     .eq('status', 'processing')
+    .eq('user_id', userId) // ✅ สำคัญมาก กรองเฉพาะ UserId คนที่ล็อกอิน
     .order('created_at', { ascending: false });
 
   if (error) {
