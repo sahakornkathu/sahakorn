@@ -423,7 +423,7 @@ function appendDailyRow(tx){
 
   tr.innerHTML = `
     <td>${tx.member_id}</td>
-    <td>${tx.first_name} ${tx.last_name}</td>
+    <td>${tx.title ?? ""}${tx.first_name} ${tx.last_name}</td>
     <td>${tx.group ?? "-"}</td>
     <td>${tx.share_buy}</td>
     <td>
@@ -631,13 +631,14 @@ const selectedDate = document.getElementById("dailyDate").value
 
 if(selectedDate === newTx.trans_date){
   appendDailyRow({
-    id: newTx.id,
-    member_id: newTx.member_id,
-    first_name: member.first_name,
-    last_name: member.last_name,
-    group: member.group,
-    share_buy: newTx.share_buy
-  })
+  id: newTx.id,
+  member_id: newTx.member_id,
+  title: member.title,
+  first_name: member.first_name,
+  last_name: member.last_name,
+  group: member.group,
+  share_buy: newTx.share_buy
+})
 }
 }
 
