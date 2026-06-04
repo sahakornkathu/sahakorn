@@ -95,6 +95,10 @@ let normalPool=[]
 let cancelPool=[]   // ⭐ เพิ่มตัวนี้
 let winner=null
 
+  unction fullName(r){
+  const prefix = r.title || r.prefix || ''
+  return `${prefix}${r.first_name} ${r.last_name}`
+}
 // สุ่ม lock
   function shuffleArray(arr){
  for(let i = arr.length - 1; i > 0; i--){
@@ -249,7 +253,7 @@ const spinPool = [...lockPool, ...normalPool]
  const iv=setInterval(()=>{
 
   const r=spinPool[Math.floor(Math.random()*spinPool.length)]
-  box.innerText=r.first_name+' '+r.last_name
+  box.innerText = fullName(r)
   t++
 
   if(t>20){
@@ -275,7 +279,7 @@ if(lockPool.length > 0 && remainSlot <= lockPool.length){
 
 
    winner=finalPick
-   box.innerText=finalPick.first_name+' '+finalPick.last_name
+   box.innerText = fullName(finalPick)
    box.classList.add('glow')
    showPopup(finalPick)
   }
@@ -301,7 +305,7 @@ async function showPopup(r){
   title: '🎉 ผู้ได้รับสิทธิ์ 🎉',
   html: `
     <div class="text-3xl font-bold text-yellow-400 mt-2">
-      ${r.first_name} ${r.last_name}
+      ${fullName(r)}
     </div>
   `,
   background: '#0f172a',
@@ -329,13 +333,14 @@ if(!cancelPool.includes(r.member_id)){
  return
 }
 
- await sb.from('meeting_random').insert([{
-  member_id:r.member_id,
-  first_name:r.first_name,
-  last_name:r.last_name,
-  group:r.group,
-  fiscal_year:fiscalYear.value
- }])
+await sb.from('meeting_random').insert([{
+  member_id: r.member_id,
+  title: r.title || r.prefix || '',
+  first_name: r.first_name,
+  last_name: r.last_name,
+  group: r.group,
+  fiscal_year: fiscalYear.value
+}])
 
  winner=null
  loadPool()
@@ -360,6 +365,7 @@ async function printLetters(){
  // ===== ดึงข้อมูลสมาชิก =====
  const {data:members} = await sb.from('members')
   .select(`
+  title,
   member_id,
   house_no,
   moo,
@@ -433,7 +439,7 @@ body{
 
 <p><b>รหัสสมาชิก</b> ${r.member_id}</p>
 
-<p>เรียน คุณ ${r.first_name} ${r.last_name}</p>
+<p>เรียน ${fullName(r)}</p>
 
 <p>
 <b>ที่อยู่:</b>
@@ -483,6 +489,7 @@ async function printSignReport(){
  // ===== ดึงข้อมูลสมาชิก =====
  const {data:members} = await sb.from('members')
   .select(`
+  title,
   member_id,
   house_no,
   moo,
@@ -551,6 +558,7 @@ async function printSignReport(){
  <thead>
   <tr>
   <th style="width:8%">รหัสสมาชิก</th>
+  <th style="width:6%">คำนำหน้า</th>
   <th style="width:12%">ชื่อ</th>
   <th style="width:12%">สกุล</th>
   <th style="width:43%">ที่อยู่</th>
@@ -578,6 +586,7 @@ const addr = `${m.house_no||'-'}
   html += `
   <tr>
   <td>${r.member_id}</td>
+  <td>${r.title || r.prefix || ''}</td>
   <td>${r.first_name}</td>
   <td>${r.last_name}</td>
   <td>${addr}</td>
@@ -616,7 +625,7 @@ async function loadWinnerList(){
  ;(data||[]).forEach(r=>{
   winnerList.innerHTML+=`
   <div class="flex justify-between bg-slate-700 p-2 rounded mb-2">
-   <div>${r.first_name} ${r.last_name}</div>
+   <div>${fullName(r)}</div>
   </div>`
  })
 }
