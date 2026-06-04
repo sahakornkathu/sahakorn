@@ -274,9 +274,10 @@ async function loadSummary(){
 
 
 /* ===== LOAD MEMBERS ===== */
+/* ===== LOAD MEMBERS ===== */
 async function loadMembers(){
   let q=db.from('members')
-    .select('member_id,first_name,last_name,group,phone,gender,member_status',{count:'exact'})
+    .select('member_id,title,first_name,last_name,group,phone,gender,member_status',{count:'exact'})
     .order('member_id')
 
   if(fMemberId.value) q=q.eq('member_id',fMemberId.value)
@@ -289,10 +290,14 @@ async function loadMembers(){
   if(fJoinFrom.value) q = q.gte('join_date', fJoinFrom.value)
   if(fJoinTo.value)   q = q.lte('join_date', fJoinTo.value)
 
-
   const from=(page-1)*PAGE_SIZE
   const to=from+PAGE_SIZE-1
-  const {data,count}=await q.range(from,to)
+  const {data,count,error}=await q.range(from,to)
+
+  if(error){
+    alert(error.message)
+    return
+  }
 
   totalCount=count||0
   document.getElementById('resultCount').innerText=totalCount
@@ -300,13 +305,14 @@ async function loadMembers(){
     `หน้า ${page} / ${Math.max(1,Math.ceil(totalCount/PAGE_SIZE))}`
 
   rows.innerHTML=''
-  data.forEach(m=>{
+
+  ;(data || []).forEach(m=>{
     rows.innerHTML+=`
 <tr class="border-b hover:bg-blue-50">
 <td>${m.member_id}</td>
 <td>
   <span class="link" onclick="viewMember(${m.member_id})">
-    ${m.first_name||''} ${m.last_name||''}
+    ${m.title||''}${m.first_name||''} ${m.last_name||''}
   </span>
 </td>
 
