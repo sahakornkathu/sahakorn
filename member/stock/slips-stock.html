@@ -69,7 +69,7 @@ async function loadOrders() {
 
   const { data: members } = await sb
     .from('members')
-    .select('member_id, line_user_id, first_name, last_name, "group"');
+    .select('member_id, line_user_id, title, first_name, last_name, "group"');
 
   const merged = orders.map(order => {
     const m = members.find(x => x.line_user_id === order.user_id);
@@ -102,7 +102,7 @@ function renderOrders(orders) {
       </div>
 
       <div class="text-sm text-gray-600">
-        👤 ${order.members?.first_name || '-'} ${order.members?.last_name || ''}
+        👤 ${order.members?.title || ''}${order.members?.first_name || '-'} ${order.members?.last_name || ''}
       </div>
 
       <div class="text-sm text-gray-500">
