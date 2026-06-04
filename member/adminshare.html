@@ -344,7 +344,7 @@ const {data,error}=await sb
 .select(`
 member_id,
 share_buy,
-members(first_name,last_name,group)
+members(title,first_name,last_name,group)
 `)
 .eq("trans_date",date)
 
@@ -381,7 +381,7 @@ total+=Number(r.share_buy)
 html+=`
 <tr id="row-${r.id}">
 <td>${r.member_id}</td>
-<td>${r.members.first_name} ${r.members.last_name}</td>
+<td>${r.members.title ?? ""}${r.members.first_name} ${r.members.last_name}</td>
 <td>${r.members.group ?? "-"}</td>
 <td>${r.share_buy}</td>
 <td>
