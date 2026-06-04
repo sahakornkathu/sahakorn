@@ -428,7 +428,7 @@ async function printLetters(){
 
  const ids = winners.map(w=>w.member_id)
 
- const {data:members} = await sb.from('members')
+const {data:members, error:memberError} = await sb.from('members')
  .select(`
   member_id,
   title,
@@ -443,8 +443,14 @@ async function printLetters(){
   postal_code,
   phone
 `)
-  .in('member_id', ids)
+ .in('member_id', ids)
 
+if(memberError){
+ console.error(memberError)
+ Swal.fire('ดึงข้อมูลที่อยู่ไม่สำเร็จ', memberError.message, 'error')
+ return
+}
+  
  const memberMap = {}
  ;(members||[]).forEach(m=>{
   memberMap[m.member_id] = m
@@ -547,8 +553,8 @@ async function printSignReport(){
 
  const ids = winners.map(w=>w.member_id)
 
- const {data:members} = await sb.from('members')
-  .select(`
+const {data:members, error:memberError} = await sb.from('members')
+ .select(`
   member_id,
   title,
   prefix,
@@ -561,8 +567,14 @@ async function printSignReport(){
   province,
   postal_code
 `)
-  .in('member_id', ids)
+ .in('member_id', ids)
 
+if(memberError){
+ console.error(memberError)
+ Swal.fire('ดึงข้อมูลที่อยู่ไม่สำเร็จ', memberError.message, 'error')
+ return
+}
+  
  const memberMap = {}
  ;(members||[]).forEach(m=>{
   memberMap[m.member_id] = m
