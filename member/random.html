@@ -97,7 +97,6 @@ let normalPool=[]
 let cancelPool=[]
 let winner=null
 
-// ✅ ฟังก์ชันรวมคำนำหน้า + ชื่อ + นามสกุล
 function fullName(r){
   if(!r) return ''
   const prefix = r.title || r.prefix || ''
@@ -122,6 +121,12 @@ async function loadFiscalYear(){
 
  console.log('YEAR DATA:', data, error)
 
+ if(error){
+  console.error(error)
+  fiscalYear.innerHTML = '<option value="">โหลดปีบัญชีไม่สำเร็จ</option>'
+  return
+ }
+
  if(!data || data.length === 0){
   fiscalYear.innerHTML = '<option value="">ไม่มีปีบัญชี</option>'
   return
@@ -141,19 +146,59 @@ async function loadFiscalYear(){
 
 async function loadPool(){
 
- const g=groupSel.value
- const fy=fiscalYear.value
+ const g = groupSel.value
+ const fy = fiscalYear.value
 
- if(!g||!fy) return alert('เลือกกลุ่ม/ปี')
+ cancelPool = []
 
- const {data}=await sb.from('member_meeting')
+ if(!g || !fy) return alert('เลือกกลุ่ม/ปี')
+
+ const {data:meetingData, error:meetingError} = await sb.from('member_meeting')
  .select('*')
  .eq('meeting_type','ประชุมกลุ่ม')
  .eq('group',g)
  .eq('fiscal_year',fy)
 
- pool=data||[]
- remainBox.innerText=`ทั้งหมด ${pool.length}`
+ if(meetingError){
+  console.error(meetingError)
+  Swal.fire('โหลดรายชื่อไม่สำเร็จ', meetingError.message, 'error')
+  return
+ }
+
+ const list = meetingData || []
+ const ids = list.map(x => x.member_id).filter(Boolean)
+
+ let memberMap = {}
+
+ if(ids.length > 0){
+  const {data:members, error:memberError} = await sb.from('members')
+  .select(`
+    member_id,
+    title,
+    prefix
+  `)
+  .in('member_id', ids)
+
+  if(memberError){
+   console.error(memberError)
+  }
+
+  ;(members || []).forEach(m => {
+   memberMap[m.member_id] = m
+  })
+ }
+
+ pool = list.map(r => {
+  const m = memberMap[r.member_id] || {}
+
+  return {
+   ...r,
+   title: r.title || r.prefix || m.title || m.prefix || '',
+   prefix: r.prefix || m.prefix || ''
+  }
+ })
+
+ remainBox.innerText = `ทั้งหมด ${pool.length}`
  loadWinnerList()
 }
 
@@ -184,7 +229,6 @@ async function randomMember(){
   return
  }
 
- // ===== คนที่ได้แล้ว =====
  const {data:used}=await sb.from('meeting_random')
  .select('member_id')
  .eq('group',groupSel.value)
@@ -216,7 +260,6 @@ async function randomMember(){
   return
  }
 
- // ===== ตัดออก =====
  const available=pool.filter(p =>!usedIds.includes(p.member_id) &&!cancelPool.includes(p.member_id))
  lockPool=available.filter(m=>m.is_lock==true)
  normalPool=available.filter(m=>m.is_lock!=true)
@@ -262,15 +305,11 @@ async function randomMember(){
 
    let finalPick = null
 
-   // จำนวน slot ที่เหลือ
    const remainSlot = q - usedIds.length
 
-   // ถ้า slot ที่เหลือ <= จำนวน lock
-   // ต้องบังคับ lock
    if(lockPool.length > 0 && remainSlot <= lockPool.length){
     finalPick = lockPool[Math.floor(Math.random()*lockPool.length)]
    }else{
-    // สุ่มรวม
     let mixed = shuffleArray([
      ...lockPool,
      ...normalPool
@@ -324,7 +363,6 @@ async function showPopup(r){
 
  if(!res.isConfirmed){
 
-  // ⭐ เก็บรายชื่อที่กดยกเลิก
   if(!cancelPool.includes(r.member_id)){
     cancelPool.push(r.member_id)
   }
@@ -361,7 +399,6 @@ async function showPopup(r){
 
 async function printLetters(){
 
- // ===== รายชื่อผู้ได้รับสิทธิ์ =====
  const {data:winners} = await sb.from('meeting_random')
   .select('*')
   .eq('group', groupSel.value)
@@ -372,10 +409,8 @@ async function printLetters(){
   return
  }
 
- // ===== member_id =====
  const ids = winners.map(w=>w.member_id)
 
- // ===== ดึงข้อมูลสมาชิก =====
  const {data:members} = await sb.from('members')
   .select(`
   member_id,
@@ -398,7 +433,6 @@ async function printLetters(){
   memberMap[m.member_id] = m
  })
 
- // ===== HTML =====
  let html = `
  <html>
 <head>
@@ -440,10 +474,9 @@ body{
 
   const m = memberMap[r.member_id] || {}
 
-  // ✅ เผื่อข้อมูลเก่าใน meeting_random ไม่มี title ให้ดึงจาก members แทน
   const person = {
    ...r,
-   title: r.title || m.title || '',
+   title: r.title || r.prefix || m.title || m.prefix || '',
    prefix: r.prefix || m.prefix || ''
   }
 
@@ -493,7 +526,6 @@ ${m.house_no||'-'}
 
 async function printSignReport(){
 
- // ===== ผู้ได้รับสิทธิ์ =====
  const {data:winners} = await sb.from('meeting_random')
   .select('*')
   .eq('group', groupSel.value)
@@ -506,7 +538,6 @@ async function printSignReport(){
 
  const ids = winners.map(w=>w.member_id)
 
- // ===== ดึงข้อมูลสมาชิก =====
  const {data:members} = await sb.from('members')
   .select(`
   member_id,
@@ -528,7 +559,6 @@ async function printSignReport(){
   memberMap[m.member_id] = m
  })
 
- // ===== HTML PRINT =====
  let html = `
  <html>
  <head>
@@ -596,7 +626,6 @@ async function printSignReport(){
  winners.forEach(r=>{
 
   const m = memberMap[r.member_id] || {}
-
   const title = r.title || r.prefix || m.title || m.prefix || ''
 
   const addr = `${m.house_no||'-'} 
@@ -644,7 +673,6 @@ async function loadWinnerList(){
 
  const list = data || []
 
- // ⭐ แสดงจำนวน
  winnerTitle.innerText = `ผู้ได้รับสิทธิ์แล้ว (${list.length} คน)`
 
  winnerList.innerHTML=''
