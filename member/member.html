@@ -274,7 +274,7 @@ async function loadSummary(){
 
 
 /* ===== LOAD MEMBERS ===== */
-/* ===== LOAD MEMBERS ===== */
+
 async function loadMembers(){
   let q=db.from('members')
     .select('member_id,title,first_name,last_name,group,phone,gender,member_status',{count:'exact'})
