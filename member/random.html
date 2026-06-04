@@ -105,6 +105,23 @@ function fullName(r){
   return `${prefix}${firstName} ${lastName}`.trim()
 }
 
+function fullAddress(m){
+  if(!m) return '-'
+
+  const parts = []
+
+  if(m.house_no) parts.push(`บ้านเลขที่ ${m.house_no}`)
+  if(m.moo) parts.push(`ม.${m.moo}`)
+  if(m.village) parts.push(`หมู่บ้าน ${m.village}`)
+  if(m.street) parts.push(`ถ.${m.street}`)
+  if(m.subdistrict) parts.push(`ต.${m.subdistrict}`)
+  if(m.district) parts.push(`อ.${m.district}`)
+  if(m.province) parts.push(`จ.${m.province}`)
+  if(m.postal_code) parts.push(`${m.postal_code}`)
+
+  return parts.length ? parts.join(' ') : '-'
+}
+  
 // สุ่ม lock
 function shuffleArray(arr){
  for(let i = arr.length - 1; i > 0; i--){
@@ -412,18 +429,18 @@ async function printLetters(){
  const ids = winners.map(w=>w.member_id)
 
  const {data:members} = await sb.from('members')
-  .select(`
+ .select(`
   member_id,
   title,
   prefix,
   house_no,
   moo,
-  soi,
   village,
   street,
   subdistrict,
   district,
   province,
+  postal_code,
   phone
 `)
   .in('member_id', ids)
@@ -496,15 +513,7 @@ body{
 <p>เรียน ${fullName(person)}</p>
 
 <p>
-<b>ที่อยู่:</b>
-${m.house_no||'-'}
-ม.${m.moo||'-'}
-หมู่บ้าน ${m.village||'-'}
-ซ.${m.soi||'-'}
-ถ.${m.street||'-'}
-ต.${m.subdistrict||'-'}
-อ.${m.district||'-'}
-จ.${m.province||'-'}
+<b>ที่อยู่:</b> ${fullAddress(m)}
 </p>
 
 <p><b>โทรศัพท์:</b> ${m.phone||'-'}</p>
@@ -545,12 +554,12 @@ async function printSignReport(){
   prefix,
   house_no,
   moo,
-  soi,
   village,
   street,
   subdistrict,
   district,
-  province
+  province,
+  postal_code
 `)
   .in('member_id', ids)
 
@@ -628,14 +637,7 @@ async function printSignReport(){
   const m = memberMap[r.member_id] || {}
   const title = r.title || r.prefix || m.title || m.prefix || ''
 
-  const addr = `${m.house_no||'-'} 
-ม.${m.moo||'-'} 
-หมู่บ้าน${m.village||'-'} 
-ซ.${m.soi||'-'} 
-ถ.${m.street||'-'} 
-ต.${m.subdistrict||'-'} 
-อ.${m.district||'-'} 
-จ.${m.province||'-'}`
+  const addr = fullAddress(m)
 
   html += `
   <tr>
