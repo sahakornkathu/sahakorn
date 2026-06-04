@@ -316,8 +316,13 @@ document.getElementById("memberBox").innerHTML=`
 </div>
 
 <div class="row">
+<span>กลุ่ม</span>
+<span>${data.group ?? "-"}</span>
+</div>
+
+<div class="row">
 <span>ชื่อ</span>
-<span>${data.first_name} ${data.last_name}</span>
+<span>${data.title ?? ""}${data.first_name} ${data.last_name}</span>
 </div>
 
 </div>
