@@ -68,13 +68,15 @@
 <h2 id="winnerTitle" class="text-yellow-400 font-bold mb-3">ผู้ได้รับสิทธิ์แล้ว (0 คน)</h2>
 <div id="winnerList"></div>
 </div>
+
 <div class="flex justify-center mt-3">
   <button onclick="printLetters()"
     class="bg-green-600 hover:bg-green-700 px-6 py-2 rounded">
     🖨️ ปริ้นจดหมายส่งสมาชิก
   </button>
 </div>
-  <div class="flex justify-center mt-3">
+
+<div class="flex justify-center mt-3">
   <button onclick="printSignReport()"
     class="bg-purple-600 hover:bg-purple-700 px-6 py-2 rounded">
     🖨️ ปริ้นรายงานลงชื่อประชุมใหญ่
@@ -92,15 +94,20 @@ const sb = supabase.createClient(
 let pool=[]
 let lockPool=[]
 let normalPool=[]
-let cancelPool=[]   // ⭐ เพิ่มตัวนี้
+let cancelPool=[]
 let winner=null
 
-  unction fullName(r){
+// ✅ ฟังก์ชันรวมคำนำหน้า + ชื่อ + นามสกุล
+function fullName(r){
+  if(!r) return ''
   const prefix = r.title || r.prefix || ''
-  return `${prefix}${r.first_name} ${r.last_name}`
+  const firstName = r.first_name || ''
+  const lastName = r.last_name || ''
+  return `${prefix}${firstName} ${lastName}`.trim()
 }
+
 // สุ่ม lock
-  function shuffleArray(arr){
+function shuffleArray(arr){
  for(let i = arr.length - 1; i > 0; i--){
   const j = Math.floor(Math.random() * (i + 1))
   ;[arr[i], arr[j]] = [arr[j], arr[i]]
@@ -108,7 +115,6 @@ let winner=null
  return arr
 }
 
-  
 async function loadFiscalYear(){
  const {data, error} = await sb
   .from('member_meeting')
@@ -124,7 +130,7 @@ async function loadFiscalYear(){
  const years = [...new Set(
   data
    .map(d => d.fiscal_year)
-   .filter(Boolean) // ตัด null
+   .filter(Boolean)
  )]
 
  fiscalYear.innerHTML = '<option value="">ปีบัญชี</option>'
@@ -133,13 +139,10 @@ async function loadFiscalYear(){
  })
 }
 
-
 async function loadPool(){
 
  const g=groupSel.value
  const fy=fiscalYear.value
-
- // cancelPool=[]  // 
 
  if(!g||!fy) return alert('เลือกกลุ่ม/ปี')
 
@@ -155,32 +158,31 @@ async function loadPool(){
 }
 
 async function randomMember(){
- // if(!q) return alert('กรอกโควต้า')
-  const q = parseInt(quota.value || 0)
 
-if(!q){
- await Swal.fire({
-  icon: 'warning',
-  title: 'กรุณากรอกจำนวนสิทธิ์',
-  html: `
-    <div class="text-lg mt-2">
-      โปรดระบุจำนวนโควต้าก่อนสุ่ม
-    </div>
-  `,
-  background: '#0f172a',
-  color: '#fff',
-  confirmButtonText: 'ตกลง',
+ const q = parseInt(quota.value || 0)
 
-  showClass: {
-    popup: 'animate__animated animate__bounceIn'
-  },
-  hideClass: {
-    popup: 'animate__animated animate__fadeOut'
-  }
- })
- return
-}
+ if(!q){
+  await Swal.fire({
+   icon: 'warning',
+   title: 'กรุณากรอกจำนวนสิทธิ์',
+   html: `
+     <div class="text-lg mt-2">
+       โปรดระบุจำนวนโควต้าก่อนสุ่ม
+     </div>
+   `,
+   background: '#0f172a',
+   color: '#fff',
+   confirmButtonText: 'ตกลง',
 
+   showClass: {
+     popup: 'animate__animated animate__bounceIn'
+   },
+   hideClass: {
+     popup: 'animate__animated animate__fadeOut'
+   }
+  })
+  return
+ }
 
  // ===== คนที่ได้แล้ว =====
  const {data:used}=await sb.from('meeting_random')
@@ -189,66 +191,65 @@ if(!q){
  .eq('fiscal_year',fiscalYear.value)
 
  const usedIds=(used||[]).map(u=>u.member_id)
- // if(usedIds.length>=q) return alert('ครบโควต้าแล้ว')
-  if(usedIds.length >= q){
- await Swal.fire({
-  icon: 'info',
-  title: 'ครบจำนวนสิทธิ์แล้ว',
-  html: `
-    <div class="text-lg mt-2">
-      โควต้ากลุ่มนี้เต็มแล้ว<br>
-      ไม่สามารถสุ่มเพิ่มได้
-    </div>
-  `,
-  background: '#0f172a',
-  color: '#fff',
-  confirmButtonText: 'ตกลง',
 
-  showClass: {
-    popup: 'animate__animated animate__shakeX'
-  },
-  hideClass: {
-    popup: 'animate__animated animate__fadeOut'
-  }
- })
- return
-}
+ if(usedIds.length >= q){
+  await Swal.fire({
+   icon: 'info',
+   title: 'ครบจำนวนสิทธิ์แล้ว',
+   html: `
+     <div class="text-lg mt-2">
+       โควต้ากลุ่มนี้เต็มแล้ว<br>
+       ไม่สามารถสุ่มเพิ่มได้
+     </div>
+   `,
+   background: '#0f172a',
+   color: '#fff',
+   confirmButtonText: 'ตกลง',
 
+   showClass: {
+     popup: 'animate__animated animate__shakeX'
+   },
+   hideClass: {
+     popup: 'animate__animated animate__fadeOut'
+   }
+  })
+  return
+ }
 
  // ===== ตัดออก =====
  const available=pool.filter(p =>!usedIds.includes(p.member_id) &&!cancelPool.includes(p.member_id))
  lockPool=available.filter(m=>m.is_lock==true)
  normalPool=available.filter(m=>m.is_lock!=true)
 
- // if(available.length===0) return alert('ไม่มีคนเหลือ')
-  if(available.length === 0){
- await Swal.fire({
-  icon: 'info',
-  title: 'ไม่มีรายชื่อให้สุ่มแล้ว',
-  html: `
-    <div class="text-lg mt-2">
-      สมาชิกกลุ่มนี้ได้รับสิทธิ์ครบแล้ว<br>
-      หรือไม่มีรายชื่อคงเหลือ
-    </div>
-  `,
-  background: '#0f172a',
-  color: '#fff',
-  confirmButtonText: 'ตกลง',
+ if(available.length === 0){
+  await Swal.fire({
+   icon: 'info',
+   title: 'ไม่มีรายชื่อให้สุ่มแล้ว',
+   html: `
+     <div class="text-lg mt-2">
+       สมาชิกกลุ่มนี้ได้รับสิทธิ์ครบแล้ว<br>
+       หรือไม่มีรายชื่อคงเหลือ
+     </div>
+   `,
+   background: '#0f172a',
+   color: '#fff',
+   confirmButtonText: 'ตกลง',
 
-  showClass: {
-    popup: 'animate__animated animate__fadeInDown'
-  },
-  hideClass: {
-    popup: 'animate__animated animate__fadeOutUp'
-  }
- })
- return
-}
-
+   showClass: {
+     popup: 'animate__animated animate__fadeInDown'
+   },
+   hideClass: {
+     popup: 'animate__animated animate__fadeOutUp'
+   }
+  })
+  return
+ }
 
  let box=document.getElementById('spinBox')
  box.classList.remove('glow')
-const spinPool = [...lockPool, ...normalPool]
+
+ const spinPool = [...lockPool, ...normalPool]
+
  let t=0
  const iv=setInterval(()=>{
 
@@ -259,24 +260,23 @@ const spinPool = [...lockPool, ...normalPool]
   if(t>20){
    clearInterval(iv)
 
- let finalPick = null
+   let finalPick = null
 
-// จำนวน slot ที่เหลือ
-const remainSlot = q - usedIds.length
+   // จำนวน slot ที่เหลือ
+   const remainSlot = q - usedIds.length
 
-// ถ้า slot ที่เหลือ <= จำนวน lock
-// ต้องบังคับ lock
-if(lockPool.length > 0 && remainSlot <= lockPool.length){
- finalPick = lockPool[Math.floor(Math.random()*lockPool.length)]
-}else{
- // สุ่มรวม
- let mixed = shuffleArray([
-  ...lockPool,
-  ...normalPool
- ])
- finalPick = mixed[0]
-}
-
+   // ถ้า slot ที่เหลือ <= จำนวน lock
+   // ต้องบังคับ lock
+   if(lockPool.length > 0 && remainSlot <= lockPool.length){
+    finalPick = lockPool[Math.floor(Math.random()*lockPool.length)]
+   }else{
+    // สุ่มรวม
+    let mixed = shuffleArray([
+     ...lockPool,
+     ...normalPool
+    ])
+    finalPick = mixed[0]
+   }
 
    winner=finalPick
    box.innerText = fullName(finalPick)
@@ -295,7 +295,7 @@ async function showPopup(r){
  .eq('group',r.group)
  .eq('fiscal_year',fiscalYear.value)
 
- if(dup.length>0){
+ if((dup||[]).length>0){
   alert('ซ้ำ')
   winner=null
   return
@@ -322,25 +322,38 @@ async function showPopup(r){
   }
  })
 
-if(!res.isConfirmed){
+ if(!res.isConfirmed){
 
- // ⭐ เก็บรายชื่อที่กดยกเลิก
- // cancelPool.push(r.member_id)
-if(!cancelPool.includes(r.member_id)){
-  cancelPool.push(r.member_id)
-}
- winner=null
- return
-}
+  // ⭐ เก็บรายชื่อที่กดยกเลิก
+  if(!cancelPool.includes(r.member_id)){
+    cancelPool.push(r.member_id)
+  }
 
-await sb.from('meeting_random').insert([{
+  winner=null
+  return
+ }
+
+ const {error} = await sb.from('meeting_random').insert([{
   member_id: r.member_id,
   title: r.title || r.prefix || '',
   first_name: r.first_name,
   last_name: r.last_name,
   group: r.group,
   fiscal_year: fiscalYear.value
-}])
+ }])
+
+ if(error){
+  console.error(error)
+  await Swal.fire({
+   icon: 'error',
+   title: 'บันทึกไม่สำเร็จ',
+   text: error.message,
+   background: '#0f172a',
+   color: '#fff',
+   confirmButtonText: 'ตกลง'
+  })
+  return
+ }
 
  winner=null
  loadPool()
@@ -365,8 +378,9 @@ async function printLetters(){
  // ===== ดึงข้อมูลสมาชิก =====
  const {data:members} = await sb.from('members')
   .select(`
-  title,
   member_id,
+  title,
+  prefix,
   house_no,
   moo,
   soi,
@@ -380,7 +394,7 @@ async function printLetters(){
   .in('member_id', ids)
 
  const memberMap = {}
- members.forEach(m=>{
+ ;(members||[]).forEach(m=>{
   memberMap[m.member_id] = m
  })
 
@@ -426,6 +440,13 @@ body{
 
   const m = memberMap[r.member_id] || {}
 
+  // ✅ เผื่อข้อมูลเก่าใน meeting_random ไม่มี title ให้ดึงจาก members แทน
+  const person = {
+   ...r,
+   title: r.title || m.title || '',
+   prefix: r.prefix || m.prefix || ''
+  }
+
   html += `
 <div class="page">
 
@@ -439,7 +460,7 @@ body{
 
 <p><b>รหัสสมาชิก</b> ${r.member_id}</p>
 
-<p>เรียน ${fullName(r)}</p>
+<p>เรียน ${fullName(person)}</p>
 
 <p>
 <b>ที่อยู่:</b>
@@ -470,7 +491,6 @@ ${m.house_no||'-'}
  w.print()
 }
 
-
 async function printSignReport(){
 
  // ===== ผู้ได้รับสิทธิ์ =====
@@ -489,8 +509,9 @@ async function printSignReport(){
  // ===== ดึงข้อมูลสมาชิก =====
  const {data:members} = await sb.from('members')
   .select(`
-  title,
   member_id,
+  title,
+  prefix,
   house_no,
   moo,
   soi,
@@ -503,7 +524,7 @@ async function printSignReport(){
   .in('member_id', ids)
 
  const memberMap = {}
- members.forEach(m=>{
+ ;(members||[]).forEach(m=>{
   memberMap[m.member_id] = m
  })
 
@@ -511,7 +532,7 @@ async function printSignReport(){
  let html = `
  <html>
  <head>
-<h2>รายชื่อสมาชิกประชุมใหญ่ กลุ่มที่ ${groupSel.value}</h2>
+ <title>รายชื่อสมาชิกประชุมใหญ่</title>
  <style>
   @page{
     size:A4 landscape;
@@ -547,22 +568,25 @@ async function printSignReport(){
   .phoneSpace{
     height:28px;
   }
+
   .signSpace{
-  height:28px;
-}
+    height:28px;
+  }
  </style>
  </head>
  <body>
+
+ <h2>รายชื่อสมาชิกประชุมใหญ่ กลุ่มที่ ${groupSel.value}</h2>
 
  <table>
  <thead>
   <tr>
   <th style="width:8%">รหัสสมาชิก</th>
-  <th style="width:6%">คำนำหน้า</th>
+  <th style="width:7%">คำนำหน้า</th>
   <th style="width:12%">ชื่อ</th>
   <th style="width:12%">สกุล</th>
-  <th style="width:43%">ที่อยู่</th>
-  <th style="width:12%">เบอร์โทร</th>
+  <th style="width:37%">ที่อยู่</th>
+  <th style="width:11%">เบอร์โทร</th>
   <th style="width:13%">ลายเซ็น</th>
   </tr>
  </thead>
@@ -573,7 +597,9 @@ async function printSignReport(){
 
   const m = memberMap[r.member_id] || {}
 
-const addr = `${m.house_no||'-'} 
+  const title = r.title || r.prefix || m.title || m.prefix || ''
+
+  const addr = `${m.house_no||'-'} 
 ม.${m.moo||'-'} 
 หมู่บ้าน${m.village||'-'} 
 ซ.${m.soi||'-'} 
@@ -582,13 +608,12 @@ const addr = `${m.house_no||'-'}
 อ.${m.district||'-'} 
 จ.${m.province||'-'}`
 
-
   html += `
   <tr>
   <td>${r.member_id}</td>
-  <td>${r.title || r.prefix || ''}</td>
-  <td>${r.first_name}</td>
-  <td>${r.last_name}</td>
+  <td>${title}</td>
+  <td>${r.first_name || ''}</td>
+  <td>${r.last_name || ''}</td>
   <td>${addr}</td>
   <td class="phoneSpace"></td>
   <td class="signSpace"></td>
@@ -617,12 +642,14 @@ async function loadWinnerList(){
  .eq('group',groupSel.value)
  .eq('fiscal_year',fiscalYear.value)
 
+ const list = data || []
+
  // ⭐ แสดงจำนวน
- winnerTitle.innerText = `ผู้ได้รับสิทธิ์แล้ว (${data.length} คน)`
+ winnerTitle.innerText = `ผู้ได้รับสิทธิ์แล้ว (${list.length} คน)`
 
  winnerList.innerHTML=''
 
- ;(data||[]).forEach(r=>{
+ list.forEach(r=>{
   winnerList.innerHTML+=`
   <div class="flex justify-between bg-slate-700 p-2 rounded mb-2">
    <div>${fullName(r)}</div>
