@@ -183,6 +183,8 @@ const db = createClient(SUPABASE_URL, SUPABASE_KEY)
 
 let allData = [], page = 1, pageSize = 10
 let editing = false, editKey = null
+let originalMemberId = null
+let originalMeetingDate = null
 
 member_id.addEventListener('blur', async ()=>{
   const { data } = await db.from('members')
@@ -211,7 +213,14 @@ if(f_date_from.value) q = q.gte(dateField, f_date_from.value)
 if(f_date_to.value)   q = q.lte(dateField, f_date_to.value)
 
 
-  const { data } = await q.order('meeting_date', { ascending:false })
+  const { data, error } = await q.order('meeting_date', { ascending:false })
+
+  if(error){
+    console.error(error)
+    await Swal.fire('โหลดข้อมูลไม่สำเร็จ', error.message, 'error')
+    return
+  }
+
   allData = data || []
   resultCount.innerText = allData.length
   render()
@@ -250,6 +259,11 @@ window.editRowByIndex = async index=>{
 
   editing = true
   editKey = r.member_id + r.meeting_date
+
+  // ✅ เก็บค่าเดิมไว้ใช้ตอน update
+  // สำคัญมาก: ถ้าแก้วันที่ประชุม ต้องใช้วันที่เดิมค้นหาแถวเดิมก่อน
+  originalMemberId = r.member_id
+  originalMeetingDate = r.meeting_date
 
   member_id.value = r.member_id
   title.value = r.title
@@ -294,17 +308,33 @@ exitForm.onsubmit = async e=>{
   }
 
   if(editing){
-    await db.from('member_exit')
+    // ✅ ใช้ค่าเดิมค้นหาแถวที่จะ update
+    // เพื่อให้แก้ meeting_date แล้วบันทึกได้
+    const { error } = await db.from('member_exit')
       .update(payload)
-      .eq('member_id', payload.member_id)
-      .eq('meeting_date', payload.meeting_date)
+      .eq('member_id', originalMemberId)
+      .eq('meeting_date', originalMeetingDate)
+
+    if(error){
+      console.error(error)
+      await Swal.fire('บันทึกการแก้ไขไม่สำเร็จ', error.message, 'error')
+      return
+    }
+
   }else{
-    await db.from('member_exit').insert([payload])
+    const { error } = await db.from('member_exit').insert([payload])
+
+    if(error){
+      console.error(error)
+      await Swal.fire('บันทึกข้อมูลไม่สำเร็จ', error.message, 'error')
+      return
+    }
   }
 
   await syncStatus(payload.member_id)
+  await Swal.fire('สำเร็จ', editing ? 'แก้ไขข้อมูลเรียบร้อยแล้ว' : 'บันทึกข้อมูลเรียบร้อยแล้ว', 'success')
   clearEdit()
-  load()
+  await load()
 }
 
 window.del = async(id,date)=>{
@@ -336,6 +366,8 @@ async function syncStatus(id){
 window.clearEdit = ()=>{
   editing = false
   editKey = null
+  originalMemberId = null
+  originalMeetingDate = null
   exitForm.reset()
 }
 
@@ -346,8 +378,15 @@ window.clearEdit = ()=>{
 
   
 window.clearFilter = ()=>{
-  f_member_id.value = f_first_name.value = f_last_name.value =
-  f_group.value = f_status.value = f_date_from.value = f_date_to.value = ''
+  f_member_id.value = ''
+  f_first_name.value = ''
+  f_last_name.value = ''
+  f_group.value = ''
+  f_status.value = ''
+  f_date_from.value = ''
+  f_date_to.value = ''
+  f_date_type.value = 'meeting_date'
+  page = 1
   load()
 }
 
