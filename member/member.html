@@ -104,7 +104,25 @@
   <input id="f_group" class="input" placeholder="กลุ่ม">
   <input id="f_phone" class="input" placeholder="เบอร์โทร">
   <select id="f_gender" class="input"><option value="">เพศ</option><option>ชาย</option><option>หญิง</option></select>
-  <select id="f_status" class="input"><option value="">สถานะ</option><option>สมาชิก</option><option>สมาชิกสมทบ</option><option>ลาออก</option><option>เสียชีวิต</option></select>
+  <div class="input flex items-center gap-3 flex-wrap">
+    <span class="font-medium whitespace-nowrap">สถานะ</span>
+    <label class="flex items-center gap-1">
+      <input type="checkbox" class="f-status" value="สมาชิก">
+      สมาชิก
+    </label>
+    <label class="flex items-center gap-1">
+      <input type="checkbox" class="f-status" value="สมาชิกสมทบ">
+      สมาชิกสมทบ
+    </label>
+    <label class="flex items-center gap-1">
+      <input type="checkbox" class="f-status" value="ลาออก">
+      ลาออก
+    </label>
+    <label class="flex items-center gap-1">
+      <input type="checkbox" class="f-status" value="เสียชีวิต">
+      เสียชีวิต
+    </label>
+  </div>
   <input id="f_join_from" type="date" class="input" placeholder="วันที่สมัคร (จาก)">
   <input id="f_join_to" type="date" class="input" placeholder="วันที่สมัคร (ถึง)">
   <button class="btn gray" onclick="clearFilters()">ล้างกรอง</button>
@@ -166,7 +184,7 @@ const fLast  = document.getElementById('f_last_name')
 const fGroup = document.getElementById('f_group')
 const fPhone = document.getElementById('f_phone')
 const fGender= document.getElementById('f_gender')
-const fStatus= document.getElementById('f_status')
+const fStatus = document.querySelectorAll('.f-status')
 const fJoinFrom = document.getElementById('f_join_from')
 const fJoinTo   = document.getElementById('f_join_to')
 
@@ -210,10 +228,12 @@ form.addEventListener('submit',async e=>{
 })
 
 // select fields → ใช้ change
-;[
-  fGender,
-  fStatus
-].forEach(el=>{
+fGender.addEventListener('change',()=>{
+  page = 1
+  loadMembers()
+})
+
+fStatus.forEach(el=>{
   el.addEventListener('change',()=>{
     page = 1
     loadMembers()
@@ -234,7 +254,7 @@ window.clearFilters = ()=>{
   fGroup.value=''
   fPhone.value=''
   fGender.value=''
-  fStatus.value=''
+  fStatus.forEach(el => el.checked = false)
   fJoinFrom.value=''
   fJoinTo.value=''
   page=1
@@ -286,7 +306,11 @@ async function loadMembers(){
   if(fGroup.value) q=q.ilike('group','%'+fGroup.value+'%')
   if(fPhone.value) q=q.ilike('phone','%'+fPhone.value+'%')
   if(fGender.value) q=q.eq('gender',fGender.value)
-  if(fStatus.value) q=q.eq('member_status',fStatus.value)
+  const selectedStatus = [...fStatus]
+    .filter(el => el.checked)
+    .map(el => el.value)
+
+  if(selectedStatus.length) q=q.in('member_status', selectedStatus)
   if(fJoinFrom.value) q = q.gte('join_date', fJoinFrom.value)
   if(fJoinTo.value)   q = q.lte('join_date', fJoinTo.value)
 
@@ -459,7 +483,11 @@ window.exportExcel = async ()=>{
   if(fGroup.value)    q=q.ilike('group','%'+fGroup.value+'%')
   if(fPhone.value)    q=q.ilike('phone','%'+fPhone.value+'%')
   if(fGender.value)   q=q.eq('gender',fGender.value)
-  if(fStatus.value)   q=q.eq('member_status',fStatus.value)
+  const selectedStatus = [...fStatus]
+    .filter(el => el.checked)
+    .map(el => el.value)
+
+  if(selectedStatus.length) q=q.in('member_status', selectedStatus)
 
   // ✅ BETWEEN วันที่สมัคร
   if(fJoinFrom.value) q=q.gte('join_date', fJoinFrom.value)
@@ -498,7 +526,11 @@ window.printMemberReport = async ()=>{
     if(fGroup.value)    q=q.ilike('group','%'+fGroup.value+'%')
     if(fPhone.value)    q=q.ilike('phone','%'+fPhone.value+'%')
     if(fGender.value)   q=q.eq('gender', fGender.value)
-    if(fStatus.value)   q=q.eq('member_status', fStatus.value)
+    const selectedStatus = [...fStatus]
+    .filter(el => el.checked)
+    .map(el => el.value)
+
+  if(selectedStatus.length) q=q.in('member_status', selectedStatus)
 
     // ✅ filter วันที่สมัคร (between)
     if(fJoinFrom.value) q=q.gte('join_date', fJoinFrom.value)
@@ -634,7 +666,11 @@ window.printMemberLetter = async ()=>{
     if(fGroup.value)    q=q.ilike('group','%'+fGroup.value+'%')
     if(fPhone.value)    q=q.ilike('phone','%'+fPhone.value+'%')
     if(fGender.value)   q=q.eq('gender',fGender.value)
-    if(fStatus.value)   q=q.eq('member_status',fStatus.value)
+    const selectedStatus = [...fStatus]
+    .filter(el => el.checked)
+    .map(el => el.value)
+
+  if(selectedStatus.length) q=q.in('member_status', selectedStatus)
 
     // ✅ order + range ต้องอยู่ท้าย
     q = q.order('member_id')
@@ -742,6 +778,7 @@ window.checkPassword = async function () {
 .field{display:flex;align-items:center;gap:6px}
 .field label{width:120px}
 .field input,.field select,.input{flex:1;border:2px solid #94a3b8;border-radius:6px;padding:6px}
+.input input[type="checkbox"]{flex:0 0 auto;width:auto}
 .summary{background:#fff;border:2px solid;border-radius:12px;padding:12px;text-align:center}
 .summary .num{font-size:28px;font-weight:700}
 .green{border-color:#22c55e;color:#15803d}
