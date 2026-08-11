@@ -592,6 +592,7 @@ window.printMemberReport = async ()=>{
   const rowsHtml = allData.map(r=>`
 <tr>
   <td>${escapeHtml(r.member_id)}</td>
+  <td>${escapeHtml(r.title || '-')}</td>
   <td>${escapeHtml(r.first_name || '-')}</td>
   <td>${escapeHtml(r.last_name || '-')}</td>
   <td>${escapeHtml(r.group || '-')}</td>
@@ -665,12 +666,13 @@ th{
 }
 
 th:nth-child(1), td:nth-child(1){width:8%}
-th:nth-child(2), td:nth-child(2){width:12%}
-th:nth-child(3), td:nth-child(3){width:14%}
-th:nth-child(4), td:nth-child(4){width:8%}
-th:nth-child(5), td:nth-child(5){width:16%}
-th:nth-child(6), td:nth-child(6){width:32%}
-th:nth-child(7), td:nth-child(7){width:10%}
+th:nth-child(2), td:nth-child(2){width:8%}
+th:nth-child(3), td:nth-child(3){width:11%}
+th:nth-child(4), td:nth-child(4){width:13%}
+th:nth-child(5), td:nth-child(5){width:8%}
+th:nth-child(6), td:nth-child(6){width:15%}
+th:nth-child(7), td:nth-child(7){width:27%}
+th:nth-child(8), td:nth-child(8){width:10%}
 
 .address{
   text-align:left;
@@ -707,6 +709,7 @@ tr{
     <thead>
       <tr>
         <th>เลขทะเบียนสมาชิก</th>
+        <th>คำนำหน้า</th>
         <th>ชื่อ</th>
         <th>นามสกุล</th>
         <th>กลุ่ม</th>
