@@ -127,7 +127,7 @@
   <input id="f_join_to" type="date" class="input" placeholder="วันที่สมัคร (ถึง)">
   <button class="btn gray" onclick="clearFilters()">ล้างกรอง</button>
   <button class="btn green" onclick="exportExcel()">Export Excel</button>
-  <button class="btn blue" onclick="printMemberReport()">Print</button>
+  <button class="btn blue" onclick="printMemberReport()">🖨️ พิมพ์รายงาน</button>
   <button class="btn purple" onclick="printMemberLetter()">Print จดหมาย</button>
 
 </div>
@@ -510,42 +510,46 @@ window.exportExcel = async ()=>{
 }
 
 
-/* ===== PRINT ===== */
+/* ===== PRINT MEMBER REPORT ===== */
 window.printMemberReport = async ()=>{
   const pageSize = 1000
   let from = 0
   let allData = []
 
   while (true) {
-    let q = db.from('members').select('*')
+    let q = db.from('members')
+      .select('member_id,title,first_name,last_name,group,id_card,house_no,moo,street,soi,village,subdistrict,district,province,postal_code,member_status')
 
-    // ✅ FILTER ต้องมาก่อน
-    if(fMemberId.value) q=q.eq('member_id', fMemberId.value)
+    // ใช้ตัวกรองเดียวกับหน้าค้นหา
+    if(fMemberId.value) q=q.eq('member_id',fMemberId.value)
     if(fFirst.value)    q=q.ilike('first_name','%'+fFirst.value+'%')
     if(fLast.value)     q=q.ilike('last_name','%'+fLast.value+'%')
     if(fGroup.value)    q=q.ilike('group','%'+fGroup.value+'%')
     if(fPhone.value)    q=q.ilike('phone','%'+fPhone.value+'%')
-    if(fGender.value)   q=q.eq('gender', fGender.value)
+    if(fGender.value)   q=q.eq('gender',fGender.value)
+
     const selectedStatus = [...fStatus]
-    .filter(el => el.checked)
-    .map(el => el.value)
+      .filter(el => el.checked)
+      .map(el => el.value)
 
-  if(selectedStatus.length) q=q.in('member_status', selectedStatus)
+    if(selectedStatus.length) q=q.in('member_status', selectedStatus)
 
-    // ✅ filter วันที่สมัคร (between)
     if(fJoinFrom.value) q=q.gte('join_date', fJoinFrom.value)
     if(fJoinTo.value)   q=q.lte('join_date', fJoinTo.value)
 
-    // ✅ order + range ไว้ท้ายสุด
-    q = q.order('member_id')
-         .range(from, from + pageSize - 1)
+    q = q.order('member_id').range(from, from + pageSize - 1)
 
     const { data, error } = await q
-    if(error){ alert(error.message); return }
+
+    if(error){
+      alert(error.message)
+      return
+    }
 
     if(!data || data.length === 0) break
 
     allData = allData.concat(data)
+
     if(data.length < pageSize) break
     from += pageSize
   }
@@ -554,99 +558,185 @@ window.printMemberReport = async ()=>{
     alert('ไม่มีข้อมูลสำหรับพิมพ์')
     return
   }
-allData.sort((a, b) => Number(a.member_id) - Number(b.member_id))
-const today = new Date().toLocaleDateString('th-TH',{year:'numeric',month:'long',day:'numeric'})
 
+  // เรียงเลขสมาชิกจากน้อย → มาก
+  allData.sort((a, b) => Number(a.member_id) - Number(b.member_id))
 
-  
- const rowsHtml = allData.map((r,i)=>`
+  const today = new Date().toLocaleDateString('th-TH',{
+    year:'numeric',
+    month:'long',
+    day:'numeric'
+  })
+
+  const escapeHtml = value => String(value ?? '')
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#039;')
+
+  const makeAddress = r => {
+    return [
+      r.house_no ? `บ้านเลขที่ ${r.house_no}` : '',
+      r.moo ? `หมู่ ${r.moo}` : '',
+      r.street ? `ถนน ${r.street}` : '',
+      r.soi ? `ซอย ${r.soi}` : '',
+      r.village ? `หมู่บ้าน ${r.village}` : '',
+      r.subdistrict ? `ต.${r.subdistrict}` : '',
+      r.district ? `อ.${r.district}` : '',
+      r.province ? `จ.${r.province}` : '',
+      r.postal_code ? r.postal_code : ''
+    ].filter(Boolean).join(' ')
+  }
+
+  const rowsHtml = allData.map(r=>`
 <tr>
-  <td>${i+1}</td>
-  <td>${r.member_id}</td>
-  <td>${r.title||''}${r.first_name||''} ${r.last_name||''}</td>
-  <td style="text-align:left">
-    ${r.house_no||''} หมู่ ${r.moo||''}
-    ${r.village||''} ${r.subdistrict||''}
-    ซอย ${r.soi||''}
-    ${r.district||''} ${r.province||''}
-  </td>
-  <td>${r.phone||''}</td>
-  <td>${r.group||''}</td>
-  <td class="sign-cell"></td>
+  <td>${escapeHtml(r.member_id)}</td>
+  <td>${escapeHtml(r.first_name || '-')}</td>
+  <td>${escapeHtml(r.last_name || '-')}</td>
+  <td>${escapeHtml(r.group || '-')}</td>
+  <td>${escapeHtml(r.id_card || '-')}</td>
+  <td class="address">${escapeHtml(makeAddress(r) || '-')}</td>
+  <td>${escapeHtml(r.member_status || '-')}</td>
 </tr>
 `).join('')
 
+  const selectedStatusText = [...fStatus]
+    .filter(el => el.checked)
+    .map(el => el.value)
+    .join(', ')
 
   const html = `
 <html>
 <head>
 <meta charset="UTF-8">
+<title>รายงานสมาชิก</title>
 <style>
 @page{
-  margin:20mm;
-  @bottom-center{content:"หน้า " counter(page) " / " counter(pages);}
+  size:A4 landscape;
+  margin:12mm;
 }
-body{font-family:"TH Sarabun New",sans-serif;font-size:16px}
-.header-grid{
-  display:grid;
-  grid-template-columns:100px 1fr 100px;
-  align-items:center
+
+*{
+  box-sizing:border-box;
 }
-.logo{width:80px}
-.title-box{text-align:center}
+
+body{
+  font-family:"TH Sarabun New",Tahoma,sans-serif;
+  font-size:16px;
+  color:#000;
+  margin:0;
+}
+
+.header{
+  text-align:center;
+  margin-bottom:10px;
+}
+
+.header h2{
+  margin:0 0 3px;
+  font-size:24px;
+}
+
+.header .sub{
+  font-size:16px;
+  line-height:1.4;
+}
+
 table{
   width:100%;
   border-collapse:collapse;
-  margin-top:13px
+  table-layout:fixed;
+  margin-top:10px;
 }
+
 th,td{
   border:1px solid #000;
-  padding:6px;
-  text-align:center
+  padding:4px 5px;
+  vertical-align:middle;
+  text-align:center;
+  line-height:1.25;
+  word-break:break-word;
 }
-th{background:#f0f0f0}
-td:nth-child(4){text-align:left}
-td:last-child{height:40px}
+
+th{
+  background:#e5e7eb;
+  font-weight:bold;
+}
+
+th:nth-child(1), td:nth-child(1){width:8%}
+th:nth-child(2), td:nth-child(2){width:12%}
+th:nth-child(3), td:nth-child(3){width:14%}
+th:nth-child(4), td:nth-child(4){width:8%}
+th:nth-child(5), td:nth-child(5){width:16%}
+th:nth-child(6), td:nth-child(6){width:32%}
+th:nth-child(7), td:nth-child(7){width:10%}
+
+.address{
+  text-align:left;
+}
+
+thead{
+  display:table-header-group;
+}
+
+tr{
+  page-break-inside:avoid;
+}
+
+@media print{
+  body{
+    print-color-adjust:exact;
+    -webkit-print-color-adjust:exact;
+  }
+}
 </style>
 </head>
 
 <body>
-<div class="header-grid">
-  <div><img src="${COOP_LOGO_URL}" class="logo"></div>
-  <div class="title-box">
+  <div class="header">
     <h2>รายงานสมาชิก</h2>
-    ${fGroup.value ? `<div>กลุ่ม ${fGroup.value}</div>` : ''}
-    <div>ณ วันที่ ${today}</div>
-    <div>รวม ${allData.length} ราย</div>
+    <div class="sub">
+      ${fGroup.value ? `กลุ่ม ${escapeHtml(fGroup.value)}<br>` : ''}
+      ${selectedStatusText ? `สถานะ ${escapeHtml(selectedStatusText)}<br>` : ''}
+      ณ วันที่ ${today} | รวม ${allData.length.toLocaleString('th-TH')} ราย
+    </div>
   </div>
-  <div></div>
-</div>
 
-<table>
-<thead>
-<tr>
-  <th style="width:40px">ลำดับ</th>
-  <th style="width:50px">เลขสมาชิก</th>
-  <th style="width:200px">ชื่อ-นามสกุล</th>
-  <th>ที่อยู่</th>
-  <th style="width:120px">เบอร์โทร</th>
-  <th style="width:40px">กลุ่ม</th>
-  <th style="width:180px">ลายเซ็น</th>
-</tr>
-
-</thead>
-<tbody>
-${rowsHtml}
-</tbody>
-</table>
+  <table>
+    <thead>
+      <tr>
+        <th>เลขทะเบียนสมาชิก</th>
+        <th>ชื่อ</th>
+        <th>นามสกุล</th>
+        <th>กลุ่ม</th>
+        <th>เลขบัตรประชาชน</th>
+        <th>ที่อยู่</th>
+        <th>สถานะสมาชิก</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${rowsHtml}
+    </tbody>
+  </table>
 </body>
 </html>
 `
 
-  const w = window.open('')
+  const w = window.open('', '_blank')
+  if(!w){
+    alert('ไม่สามารถเปิดหน้าสำหรับพิมพ์ได้ กรุณาอนุญาต Pop-up ของเว็บไซต์นี้')
+    return
+  }
+
   w.document.write(html)
   w.document.close()
-  w.print()
+
+  // รอให้หน้าและ CSS พร้อมก่อนสั่งพิมพ์
+  w.onload = () => {
+    w.focus()
+    w.print()
+  }
 }
 
 /* ===== PRINT LETTER (FILTER + >1000 + 1 คน 1 หน้า) ===== */
