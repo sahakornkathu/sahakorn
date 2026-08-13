@@ -12,19 +12,8 @@
         tailwind.config = {
             theme: {
                 extend: {
-                    colors: {
-                        coop: {
-                            50: '#f0fdf4',
-                            100: '#dcfce7',
-                            200: '#bbf7d0',
-                            300: '#86efac',
-                            400: '#4ade80',
-                            500: '#22c55e',
-                            600: '#16a34a',
-                            700: '#15803d',
-                            800: '#166534',
-                            900: '#14532d'
-                        }
+                    fontFamily: {
+                        thai: ['Sarabun', 'Noto Sans Thai', 'sans-serif']
                     }
                 }
             }
@@ -40,78 +29,154 @@
             font-family: "Sarabun", "Noto Sans Thai", Arial, sans-serif;
         }
 
-        .card {
+        .menu-item {
             transition: all .25s ease;
         }
 
-        .card:hover {
-            transform: translateY(-5px);
+        .menu-item:hover {
+            transform: translateX(5px);
         }
 
-        .card:active {
-            transform: scale(.98);
+        .menu-item:active {
+            transform: scale(.99);
         }
 
-        .icon-box {
+        .icon {
             transition: all .25s ease;
         }
 
-        .card:hover .icon-box {
+        .menu-item:hover .icon {
             transform: scale(1.08);
         }
 
-        .gradient-header {
+        .header-bg {
             background:
-                radial-gradient(circle at 85% 20%, rgba(255,255,255,.18), transparent 30%),
-                linear-gradient(135deg, #166534 0%, #15803d 50%, #16a34a 100%);
+                radial-gradient(
+                    circle at 90% 10%,
+                    rgba(255,255,255,.18),
+                    transparent 28%
+                ),
+                linear-gradient(
+                    135deg,
+                    #14532d,
+                    #166534,
+                    #15803d
+                );
+        }
+
+        .soft-grid {
+            background-image:
+                linear-gradient(rgba(148,163,184,.06) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(148,163,184,.06) 1px, transparent 1px);
+            background-size: 32px 32px;
         }
     </style>
 </head>
 
-<body class="bg-slate-50 min-h-screen">
 
-    <!-- Header -->
-    <header class="gradient-header text-white shadow-lg">
+<body class="min-h-screen bg-slate-50 text-slate-800">
 
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-            <div class="flex items-center justify-between py-5">
+    <!-- =====================================================
+         HEADER
+    ====================================================== -->
 
-                <!-- Logo / Title -->
+    <header class="header-bg text-white">
+
+        <div class="max-w-6xl mx-auto px-5 sm:px-8">
+
+            <div class="py-7 sm:py-9">
+
+                <!-- Logo -->
                 <div class="flex items-center gap-4">
 
-                    <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl
-                                bg-white/15 backdrop-blur-sm
-                                flex items-center justify-center
-                                border border-white/20 shadow-lg">
+                    <div
+                        class="w-12 h-12 sm:w-14 sm:h-14
+                               rounded-2xl
+                               bg-white/15
+                               border border-white/20
+                               flex items-center justify-center
+                               backdrop-blur">
 
-                        <svg xmlns="http://www.w3.org/2000/svg"
-                             class="w-7 h-7 sm:w-8 sm:h-8"
-                             fill="none"
-                             viewBox="0 0 24 24"
-                             stroke="currentColor"
-                             stroke-width="1.8">
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            class="w-7 h-7 sm:w-8 sm:h-8"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            stroke-width="1.7">
 
-                            <path stroke-linecap="round"
-                                  stroke-linejoin="round"
-                                  d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7l8-4z"/>
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7l8-4z"/>
 
-                            <path stroke-linecap="round"
-                                  stroke-linejoin="round"
-                                  d="M8 12l2.5 2.5L16 9"/>
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="M8 12l2.5 2.5L16 9"/>
+
                         </svg>
 
                     </div>
 
+
                     <div>
-                        <h1 class="text-lg sm:text-2xl font-bold tracking-tight">
+
+                        <h1
+                            class="text-xl sm:text-2xl
+                                   font-bold">
+
                             ระบบจัดการสมาชิก
+
                         </h1>
 
-                        <p class="text-green-100 text-xs sm:text-sm mt-0.5">
+                        <p
+                            class="text-green-100
+                                   text-sm
+                                   mt-1">
+
                             สหกรณ์การเกษตรกะทู้ จำกัด
+
                         </p>
+
                     </div>
+
+                </div>
+
+
+                <!-- Intro -->
+                <div class="mt-8 sm:mt-10">
+
+                    <p
+                        class="text-green-200
+                               text-sm
+                               font-medium">
+
+                        MEMBER MANAGEMENT
+
+                    </p>
+
+                    <h2
+                        class="text-2xl sm:text-4xl
+                               font-bold
+                               mt-1">
+
+                        เลือกระบบที่ต้องการใช้งาน
+
+                    </h2>
+
+                    <p
+                        class="text-green-100
+                               text-sm sm:text-base
+                               mt-3
+                               max-w-xl">
+
+                        รวมระบบงานด้านสมาชิกไว้ในที่เดียว
+                        เพื่อให้การค้นหาและจัดการข้อมูล
+                        สะดวกและรวดเร็วยิ่งขึ้น
+
+                    </p>
 
                 </div>
 
@@ -122,408 +187,709 @@
     </header>
 
 
-    <!-- Main -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
 
-        <!-- Welcome -->
-        <section class="mb-8">
+    <!-- =====================================================
+         CONTENT
+    ====================================================== -->
 
-            <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+    <main class="soft-grid">
+
+
+        <div
+            class="max-w-6xl mx-auto
+                   px-5 sm:px-8
+                   py-8 sm:py-10">
+
+
+            <!-- Status -->
+            <div
+                class="flex
+                       items-center
+                       justify-between
+                       mb-5">
 
                 <div>
-                    <p class="text-sm font-medium text-coop-600 mb-1">
-                        MEMBER MANAGEMENT SYSTEM
-                    </p>
 
-                    <h2 class="text-2xl sm:text-3xl font-bold text-slate-800">
+                    <p
+                        class="text-xs
+                               uppercase
+                               tracking-wider
+                               text-slate-400
+                               font-semibold">
+
                         ระบบงานสมาชิก
-                    </h2>
 
-                    <p class="text-slate-500 mt-2 text-sm sm:text-base">
-                        เลือกระบบที่ต้องการใช้งาน
-                    </p>
-                </div>
-
-                <div class="hidden sm:flex items-center gap-2 text-sm text-slate-400">
-                    <span class="w-2 h-2 rounded-full bg-green-500"></span>
-                    ระบบพร้อมใช้งาน
-                </div>
-
-            </div>
-
-        </section>
-
-
-        <!-- Menu Cards -->
-        <section class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
-
-
-            <!-- Member -->
-            <a href="member.html"
-               class="card group bg-white rounded-3xl p-6
-                      border border-slate-200
-                      shadow-sm hover:shadow-xl
-                      hover:border-blue-200">
-
-                <div class="flex items-start justify-between">
-
-                    <div class="icon-box w-14 h-14 rounded-2xl
-                                bg-blue-50 text-blue-600
-                                flex items-center justify-center">
-
-                        <svg xmlns="http://www.w3.org/2000/svg"
-                             class="w-7 h-7"
-                             fill="none"
-                             viewBox="0 0 24 24"
-                             stroke="currentColor"
-                             stroke-width="1.8">
-
-                            <path stroke-linecap="round"
-                                  stroke-linejoin="round"
-                                  d="M15 19a4 4 0 00-8 0"/>
-
-                            <circle cx="11" cy="8" r="3"/>
-
-                            <path stroke-linecap="round"
-                                  stroke-linejoin="round"
-                                  d="M17 11a3 3 0 100-6M19 19a4 4 0 00-3-3.87"/>
-                        </svg>
-
-                    </div>
-
-                    <span class="text-slate-300 group-hover:text-blue-500
-                                 transition text-2xl">
-                        →
-                    </span>
-
-                </div>
-
-                <div class="mt-5">
-
-                    <h3 class="text-lg font-bold text-slate-800">
-                        ข้อมูลสมาชิก
-                    </h3>
-
-                    <p class="text-sm text-slate-500 mt-2 leading-relaxed">
-                        จัดการข้อมูลสมาชิกและสมาชิกสมทบ
-                        ค้นหา แก้ไข และพิมพ์รายงาน
                     </p>
 
                 </div>
 
-                <div class="mt-5 pt-4 border-t border-slate-100">
 
-                    <span class="text-sm font-semibold text-blue-600">
-                        เข้าสู่ระบบ
-                        <span class="ml-1">→</span>
+                <div
+                    class="flex
+                           items-center
+                           gap-2
+                           text-xs
+                           text-slate-500
+                           bg-white
+                           border
+                           border-slate-200
+                           rounded-full
+                           px-3 py-1.5
+                           shadow-sm">
+
+                    <span
+                        class="w-2 h-2
+                               rounded-full
+                               bg-green-500
+                               animate-pulse">
                     </span>
 
-                </div>
-
-            </a>
-
-
-            <!-- Member Exit -->
-            <a href="memberexit.html"
-               class="card group bg-white rounded-3xl p-6
-                      border border-slate-200
-                      shadow-sm hover:shadow-xl
-                      hover:border-red-200">
-
-                <div class="flex items-start justify-between">
-
-                    <div class="icon-box w-14 h-14 rounded-2xl
-                                bg-red-50 text-red-600
-                                flex items-center justify-center">
-
-                        <svg xmlns="http://www.w3.org/2000/svg"
-                             class="w-7 h-7"
-                             fill="none"
-                             viewBox="0 0 24 24"
-                             stroke="currentColor"
-                             stroke-width="1.8">
-
-                            <path stroke-linecap="round"
-                                  stroke-linejoin="round"
-                                  d="M15 19a4 4 0 00-8 0"/>
-
-                            <circle cx="11" cy="8" r="3"/>
-
-                            <path stroke-linecap="round"
-                                  stroke-linejoin="round"
-                                  d="M17 8h5M19.5 5.5v5"/>
-                        </svg>
-
-                    </div>
-
-                    <span class="text-slate-300 group-hover:text-red-500
-                                 transition text-2xl">
-                        →
-                    </span>
-
-                </div>
-
-                <div class="mt-5">
-
-                    <h3 class="text-lg font-bold text-slate-800">
-                        สมาชิกลาออก / เสียชีวิต
-                    </h3>
-
-                    <p class="text-sm text-slate-500 mt-2 leading-relaxed">
-                        บันทึกและตรวจสอบข้อมูลสมาชิก
-                        ที่ลาออกหรือเสียชีวิต
-                    </p>
-
-                </div>
-
-                <div class="mt-5 pt-4 border-t border-slate-100">
-
-                    <span class="text-sm font-semibold text-red-600">
-                        เข้าสู่ระบบ
-                        <span class="ml-1">→</span>
-                    </span>
-
-                </div>
-
-            </a>
-
-
-            <!-- Welfare -->
-            <a href="welfare.html"
-               class="card group bg-white rounded-3xl p-6
-                      border border-slate-200
-                      shadow-sm hover:shadow-xl
-                      hover:border-amber-200">
-
-                <div class="flex items-start justify-between">
-
-                    <div class="icon-box w-14 h-14 rounded-2xl
-                                bg-amber-50 text-amber-600
-                                flex items-center justify-center">
-
-                        <svg xmlns="http://www.w3.org/2000/svg"
-                             class="w-7 h-7"
-                             fill="none"
-                             viewBox="0 0 24 24"
-                             stroke="currentColor"
-                             stroke-width="1.8">
-
-                            <path stroke-linecap="round"
-                                  stroke-linejoin="round"
-                                  d="M20.8 8.7c0 5.1-8.8 10-8.8 10s-8.8-4.9-8.8-10A4.7 4.7 0 017.9 4c1.5 0 3 .7 4.1 1.9A5.1 5.1 0 0116.1 4a4.7 4.7 0 014.7 4.7z"/>
-                        </svg>
-
-                    </div>
-
-                    <span class="text-slate-300 group-hover:text-amber-500
-                                 transition text-2xl">
-                        →
-                    </span>
-
-                </div>
-
-                <div class="mt-5">
-
-                    <h3 class="text-lg font-bold text-slate-800">
-                        สวัสดิการสมาชิก
-                    </h3>
-
-                    <p class="text-sm text-slate-500 mt-2 leading-relaxed">
-                        บันทึกและตรวจสอบการรับสวัสดิการ
-                        พร้อมจำนวนเงินและรายละเอียด
-                    </p>
-
-                </div>
-
-                <div class="mt-5 pt-4 border-t border-slate-100">
-
-                    <span class="text-sm font-semibold text-amber-600">
-                        เข้าสู่ระบบ
-                        <span class="ml-1">→</span>
-                    </span>
-
-                </div>
-
-            </a>
-
-
-            <!-- Share -->
-            <a href="adminshare.html"
-               class="card group bg-white rounded-3xl p-6
-                      border border-slate-200
-                      shadow-sm hover:shadow-xl
-                      hover:border-coop-200">
-
-                <div class="flex items-start justify-between">
-
-                    <div class="icon-box w-14 h-14 rounded-2xl
-                                bg-coop-50 text-coop-600
-                                flex items-center justify-center">
-
-                        <svg xmlns="http://www.w3.org/2000/svg"
-                             class="w-7 h-7"
-                             fill="none"
-                             viewBox="0 0 24 24"
-                             stroke="currentColor"
-                             stroke-width="1.8">
-
-                            <circle cx="12" cy="12" r="8"/>
-
-                            <path stroke-linecap="round"
-                                  d="M12 7v10"/>
-
-                            <path stroke-linecap="round"
-                                  d="M15 9.5c-.7-.7-1.7-1-3-1-1.5 0-2.5.7-2.5 1.8 0 2.8 5.5 1.2 5.5 4.1 0 1.1-1 2-2.8 2-1.3 0-2.4-.4-3.2-1.2"/>
-                        </svg>
-
-                    </div>
-
-                    <span class="text-slate-300 group-hover:text-coop-600
-                                 transition text-2xl">
-                        →
-                    </span>
-
-                </div>
-
-                <div class="mt-5">
-
-                    <h3 class="text-lg font-bold text-slate-800">
-                        ลงหุ้นสมาชิก
-                    </h3>
-
-                    <p class="text-sm text-slate-500 mt-2 leading-relaxed">
-                        ตรวจสอบข้อมูลสมาชิก
-                        และจัดการรายการซื้อหุ้นประจำวัน
-                    </p>
-
-                </div>
-
-                <div class="mt-5 pt-4 border-t border-slate-100">
-
-                    <span class="text-sm font-semibold text-coop-600">
-                        เข้าสู่ระบบ
-                        <span class="ml-1">→</span>
-                    </span>
-
-                </div>
-
-            </a>
-
-        </section>
-
-
-        <!-- Quick Access -->
-        <section class="mt-8">
-
-            <div class="bg-white rounded-3xl border border-slate-200
-                        p-5 sm:p-6 shadow-sm">
-
-                <div class="flex items-center gap-3 mb-5">
-
-                    <div class="w-10 h-10 rounded-xl bg-coop-50
-                                text-coop-600 flex items-center justify-center">
-
-                        <svg xmlns="http://www.w3.org/2000/svg"
-                             class="w-5 h-5"
-                             fill="none"
-                             viewBox="0 0 24 24"
-                             stroke="currentColor"
-                             stroke-width="2">
-
-                            <path stroke-linecap="round"
-                                  stroke-linejoin="round"
-                                  d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                        </svg>
-
-                    </div>
-
-                    <div>
-                        <h3 class="font-bold text-slate-800">
-                            เมนูด่วน
-                        </h3>
-
-                        <p class="text-xs text-slate-400">
-                            เข้าถึงระบบที่ใช้งานบ่อย
-                        </p>
-                    </div>
-
-                </div>
-
-
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-
-                    <a href="member.html"
-                       class="flex items-center justify-center gap-2
-                              px-4 py-3 rounded-xl
-                              bg-slate-50 hover:bg-blue-50
-                              text-slate-600 hover:text-blue-600
-                              text-sm font-medium transition">
-
-                        👤
-                        <span>สมาชิก</span>
-
-                    </a>
-
-
-                    <a href="memberexit.html"
-                       class="flex items-center justify-center gap-2
-                              px-4 py-3 rounded-xl
-                              bg-slate-50 hover:bg-red-50
-                              text-slate-600 hover:text-red-600
-                              text-sm font-medium transition">
-
-                        📋
-                        <span>ลาออก / เสียชีวิต</span>
-
-                    </a>
-
-
-                    <a href="welfare.html"
-                       class="flex items-center justify-center gap-2
-                              px-4 py-3 rounded-xl
-                              bg-slate-50 hover:bg-amber-50
-                              text-slate-600 hover:text-amber-600
-                              text-sm font-medium transition">
-
-                        ❤️
-                        <span>สวัสดิการ</span>
-
-                    </a>
-
-
-                    <a href="adminshare.html"
-                       class="flex items-center justify-center gap-2
-                              px-4 py-3 rounded-xl
-                              bg-slate-50 hover:bg-green-50
-                              text-slate-600 hover:text-green-600
-                              text-sm font-medium transition">
-
-                        💰
-                        <span>ลงหุ้น</span>
-
-                    </a>
+                    พร้อมใช้งาน
 
                 </div>
 
             </div>
 
-        </section>
 
 
-        <!-- Footer -->
-        <footer class="text-center py-8">
+            <!-- =================================================
+                 MENU
+            ================================================== -->
 
-            <p class="text-sm text-slate-400">
-                ระบบจัดการสมาชิก
-            </p>
+            <div class="space-y-3">
 
-            <p class="text-xs text-slate-300 mt-1">
-                สหกรณ์การเกษตรกะทู้ จำกัด
-            </p>
 
-        </footer>
+                <!-- =================================================
+                     MEMBER
+                ================================================== -->
+
+                <a
+                    href="member.html"
+                    target="_blank"
+                    rel="noopener noreferrer"
+
+                    class="menu-item
+                           group
+                           block
+                           bg-white
+                           border
+                           border-slate-200
+                           rounded-2xl
+                           shadow-sm
+                           hover:shadow-lg
+                           hover:border-blue-200">
+
+
+                    <div
+                        class="p-4 sm:p-5
+                               flex
+                               items-center
+                               gap-4 sm:gap-5">
+
+
+                        <!-- Icon -->
+                        <div
+                            class="icon
+                                   shrink-0
+                                   w-14 h-14
+                                   sm:w-16 sm:h-16
+                                   rounded-2xl
+                                   bg-blue-50
+                                   text-blue-600
+                                   flex
+                                   items-center
+                                   justify-center">
+
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                class="w-7 h-7 sm:w-8 sm:h-8"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                                stroke-width="1.7">
+
+                                <circle
+                                    cx="9"
+                                    cy="8"
+                                    r="3"/>
+
+                                <path
+                                    stroke-linecap="round"
+                                    d="M3.5 19a5.5 5.5 0 0111 0"/>
+
+                                <path
+                                    stroke-linecap="round"
+                                    d="M16 5.5a3 3 0 010 5.8"/>
+
+                                <path
+                                    stroke-linecap="round"
+                                    d="M18 14.5a5 5 0 013 4.5"/>
+
+                            </svg>
+
+                        </div>
+
+
+                        <!-- Text -->
+                        <div class="min-w-0 flex-1">
+
+                            <div
+                                class="flex
+                                       items-center
+                                       gap-2
+                                       flex-wrap">
+
+                                <h3
+                                    class="font-bold
+                                           text-lg sm:text-xl
+                                           text-slate-800">
+
+                                    ข้อมูลสมาชิก
+
+                                </h3>
+
+                                <span
+                                    class="text-[10px]
+                                           sm:text-xs
+                                           px-2 py-0.5
+                                           rounded-full
+                                           bg-blue-50
+                                           text-blue-600
+                                           font-medium">
+
+                                    MEMBERS
+
+                                </span>
+
+                            </div>
+
+
+                            <p
+                                class="text-sm
+                                       text-slate-500
+                                       mt-1
+                                       line-clamp-2">
+
+                                ค้นหา ตรวจสอบ แก้ไข และจัดการ
+                                ข้อมูลสมาชิกและสมาชิกสมทบ
+
+                            </p>
+
+                        </div>
+
+
+                        <!-- Arrow -->
+                        <div
+                            class="shrink-0
+                                   w-10 h-10
+                                   rounded-xl
+                                   bg-slate-50
+                                   group-hover:bg-blue-50
+                                   flex
+                                   items-center
+                                   justify-center
+                                   text-slate-400
+                                   group-hover:text-blue-600
+                                   transition">
+
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                class="w-5 h-5"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                                stroke-width="2">
+
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    d="M9 5l7 7-7 7"/>
+
+                            </svg>
+
+                        </div>
+
+                    </div>
+
+                </a>
+
+
+
+                <!-- =================================================
+                     MEMBER EXIT
+                ================================================== -->
+
+                <a
+                    href="memberexit.html"
+                    target="_blank"
+                    rel="noopener noreferrer"
+
+                    class="menu-item
+                           group
+                           block
+                           bg-white
+                           border
+                           border-slate-200
+                           rounded-2xl
+                           shadow-sm
+                           hover:shadow-lg
+                           hover:border-red-200">
+
+
+                    <div
+                        class="p-4 sm:p-5
+                               flex
+                               items-center
+                               gap-4 sm:gap-5">
+
+
+                        <div
+                            class="icon
+                                   shrink-0
+                                   w-14 h-14
+                                   sm:w-16 sm:h-16
+                                   rounded-2xl
+                                   bg-red-50
+                                   text-red-600
+                                   flex
+                                   items-center
+                                   justify-center">
+
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                class="w-7 h-7 sm:w-8 sm:h-8"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                                stroke-width="1.7">
+
+                                <circle
+                                    cx="9"
+                                    cy="8"
+                                    r="3"/>
+
+                                <path
+                                    stroke-linecap="round"
+                                    d="M3.5 19a5.5 5.5 0 0111 0"/>
+
+                                <path
+                                    stroke-linecap="round"
+                                    d="M17 8h5"/>
+
+                                <path
+                                    stroke-linecap="round"
+                                    d="M19.5 5.5v5"/>
+
+                            </svg>
+
+                        </div>
+
+
+                        <div class="min-w-0 flex-1">
+
+                            <div
+                                class="flex
+                                       items-center
+                                       gap-2
+                                       flex-wrap">
+
+                                <h3
+                                    class="font-bold
+                                           text-lg sm:text-xl
+                                           text-slate-800">
+
+                                    สมาชิกลาออก / เสียชีวิต
+
+                                </h3>
+
+                                <span
+                                    class="text-[10px]
+                                           sm:text-xs
+                                           px-2 py-0.5
+                                           rounded-full
+                                           bg-red-50
+                                           text-red-600
+                                           font-medium">
+
+                                    MEMBER EXIT
+
+                                </span>
+
+                            </div>
+
+
+                            <p
+                                class="text-sm
+                                       text-slate-500
+                                       mt-1">
+
+                                บันทึก ตรวจสอบ และจัดการข้อมูล
+                                สมาชิกที่ลาออกหรือเสียชีวิต
+
+                            </p>
+
+                        </div>
+
+
+                        <div
+                            class="shrink-0
+                                   w-10 h-10
+                                   rounded-xl
+                                   bg-slate-50
+                                   group-hover:bg-red-50
+                                   flex
+                                   items-center
+                                   justify-center
+                                   text-slate-400
+                                   group-hover:text-red-600
+                                   transition">
+
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                class="w-5 h-5"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                                stroke-width="2">
+
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    d="M9 5l7 7-7 7"/>
+
+                            </svg>
+
+                        </div>
+
+                    </div>
+
+                </a>
+
+
+
+                <!-- =================================================
+                     WELFARE
+                ================================================== -->
+
+                <a
+                    href="welfare.html"
+                    target="_blank"
+                    rel="noopener noreferrer"
+
+                    class="menu-item
+                           group
+                           block
+                           bg-white
+                           border
+                           border-slate-200
+                           rounded-2xl
+                           shadow-sm
+                           hover:shadow-lg
+                           hover:border-amber-200">
+
+
+                    <div
+                        class="p-4 sm:p-5
+                               flex
+                               items-center
+                               gap-4 sm:gap-5">
+
+
+                        <div
+                            class="icon
+                                   shrink-0
+                                   w-14 h-14
+                                   sm:w-16 sm:h-16
+                                   rounded-2xl
+                                   bg-amber-50
+                                   text-amber-600
+                                   flex
+                                   items-center
+                                   justify-center">
+
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                class="w-7 h-7 sm:w-8 sm:h-8"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                                stroke-width="1.7">
+
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    d="M20.8 8.7c0 5.1-8.8 10-8.8 10s-8.8-4.9-8.8-10A4.7 4.7 0 017.9 4c1.5 0 3 .7 4.1 1.9A5.1 5.1 0 0116.1 4a4.7 4.7 0 014.7 4.7z"/>
+
+                            </svg>
+
+                        </div>
+
+
+                        <div class="min-w-0 flex-1">
+
+                            <div
+                                class="flex
+                                       items-center
+                                       gap-2
+                                       flex-wrap">
+
+                                <h3
+                                    class="font-bold
+                                           text-lg sm:text-xl
+                                           text-slate-800">
+
+                                    สวัสดิการสมาชิก
+
+                                </h3>
+
+                                <span
+                                    class="text-[10px]
+                                           sm:text-xs
+                                           px-2 py-0.5
+                                           rounded-full
+                                           bg-amber-50
+                                           text-amber-600
+                                           font-medium">
+
+                                    WELFARE
+
+                                </span>
+
+                            </div>
+
+
+                            <p
+                                class="text-sm
+                                       text-slate-500
+                                       mt-1">
+
+                                จัดการข้อมูลการรับสวัสดิการ
+                                ตรวจสอบรายการ และจำนวนเงิน
+
+                            </p>
+
+                        </div>
+
+
+                        <div
+                            class="shrink-0
+                                   w-10 h-10
+                                   rounded-xl
+                                   bg-slate-50
+                                   group-hover:bg-amber-50
+                                   flex
+                                   items-center
+                                   justify-center
+                                   text-slate-400
+                                   group-hover:text-amber-600
+                                   transition">
+
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                class="w-5 h-5"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                                stroke-width="2">
+
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    d="M9 5l7 7-7 7"/>
+
+                            </svg>
+
+                        </div>
+
+                    </div>
+
+                </a>
+
+
+
+                <!-- =================================================
+                     SHARE
+                ================================================== -->
+
+                <a
+                    href="adminshare.html"
+                    target="_blank"
+                    rel="noopener noreferrer"
+
+                    class="menu-item
+                           group
+                           block
+                           bg-white
+                           border
+                           border-slate-200
+                           rounded-2xl
+                           shadow-sm
+                           hover:shadow-lg
+                           hover:border-green-200">
+
+
+                    <div
+                        class="p-4 sm:p-5
+                               flex
+                               items-center
+                               gap-4 sm:gap-5">
+
+
+                        <div
+                            class="icon
+                                   shrink-0
+                                   w-14 h-14
+                                   sm:w-16 sm:h-16
+                                   rounded-2xl
+                                   bg-green-50
+                                   text-green-600
+                                   flex
+                                   items-center
+                                   justify-center">
+
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                class="w-7 h-7 sm:w-8 sm:h-8"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                                stroke-width="1.7">
+
+                                <circle
+                                    cx="12"
+                                    cy="12"
+                                    r="8"/>
+
+                                <path
+                                    stroke-linecap="round"
+                                    d="M12 7v10"/>
+
+                                <path
+                                    stroke-linecap="round"
+                                    d="M15 9.5c-.7-.7-1.7-1-3-1-1.5 0-2.5.7-2.5 1.8 0 2.8 5.5 1.2 5.5 4.1 0 1.1-1 2-2.8 2-1.3 0-2.4-.4-3.2-1.2"/>
+
+                            </svg>
+
+                        </div>
+
+
+                        <div class="min-w-0 flex-1">
+
+                            <div
+                                class="flex
+                                       items-center
+                                       gap-2
+                                       flex-wrap">
+
+                                <h3
+                                    class="font-bold
+                                           text-lg sm:text-xl
+                                           text-slate-800">
+
+                                    ลงหุ้นสมาชิก
+
+                                </h3>
+
+                                <span
+                                    class="text-[10px]
+                                           sm:text-xs
+                                           px-2 py-0.5
+                                           rounded-full
+                                           bg-green-50
+                                           text-green-600
+                                           font-medium">
+
+                                    SHARES
+
+                                </span>
+
+                            </div>
+
+
+                            <p
+                                class="text-sm
+                                       text-slate-500
+                                       mt-1">
+
+                                ตรวจสอบข้อมูลสมาชิก
+                                และบันทึกรายการซื้อหุ้น
+
+                            </p>
+
+                        </div>
+
+
+                        <div
+                            class="shrink-0
+                                   w-10 h-10
+                                   rounded-xl
+                                   bg-slate-50
+                                   group-hover:bg-green-50
+                                   flex
+                                   items-center
+                                   justify-center
+                                   text-slate-400
+                                   group-hover:text-green-600
+                                   transition">
+
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                class="w-5 h-5"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                                stroke-width="2">
+
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    d="M9 5l7 7-7 7"/>
+
+                            </svg>
+
+                        </div>
+
+                    </div>
+
+                </a>
+
+
+            </div>
+
+
+
+            <!-- =================================================
+                 FOOTER
+            ================================================== -->
+
+            <div
+                class="mt-8
+                       text-center">
+
+                <p
+                    class="text-xs
+                           text-slate-400">
+
+                    สหกรณ์การเกษตรกะทู้ จำกัด
+
+                </p>
+
+                <p
+                    class="text-[11px]
+                           text-slate-300
+                           mt-1">
+
+                    ระบบจัดการสมาชิก
+
+                </p>
+
+            </div>
+
+
+        </div>
 
     </main>
+
 
 </body>
 </html>
