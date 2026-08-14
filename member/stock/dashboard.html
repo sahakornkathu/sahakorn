@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="th">
 <head>
@@ -258,7 +259,7 @@
         <div class="brand-mark">K</div>
         <div>
           <div class="brand-title">KPI หุ้นสมาชิก</div>
-          <div class="brand-subtitle">ข้อมูลจริงจาก member_share · historycart · member</div>
+          <div class="brand-subtitle">ข้อมูลจริงจาก member_share · historycart · members</div>
         </div>
       </div>
       <div class="top-actions">
@@ -272,7 +273,7 @@
         <div>
           <p class="eyebrow">EXECUTIVE OVERVIEW</p>
           <h1>ภาพรวมทุนเรือนหุ้น</h1>
-          <p>ยอดรวมอ้างอิงจาก member_share · LINE เป็นข้อมูลแยกวิเคราะห์ ไม่บวกซ้ำ</p>
+          <p>ยอดรวมอ้างอิงจาก member_share เฉพาะสมาชิกปัจจุบัน · LINE เป็นข้อมูลแยกวิเคราะห์ ไม่บวกซ้ำ</p>
         </div>
         <div id="updatedAt" class="updated">—</div>
       </section>
@@ -439,6 +440,9 @@
       maximumFractionDigits: 2
     }).format(number(value))}%`;
     const text = (value) => String(value ?? "").trim();
+    const ACTIVE_MEMBER_STATUSES = new Set(["สมาชิก", "สมาชิกสมทบ"]);
+    const normalizeMemberStatus = (value) => text(value).replace(/\s+/g, "");
+    const isActiveMember = (value) => ACTIVE_MEMBER_STATUSES.has(normalizeMemberStatus(value));
     const escapeHtml = (value) => text(value).replace(/[&<>'"]/g, (char) => ({
       "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", "\"": "&quot;"
     })[char]);
@@ -493,11 +497,11 @@
       }).format(date);
     }
 
-    async function fetchAll(tableName, orderColumn) {
+    async function fetchAll(client, tableName, orderColumn) {
       const pageSize = 1000;
       const rows = [];
       for (let from = 0; ; from += pageSize) {
-        let query = state.client.from(tableName).select("*").range(from, from + pageSize - 1);
+        let query = client.from(tableName).select("*").range(from, from + pageSize - 1);
         if (orderColumn) query = query.order(orderColumn, { ascending: true });
         const { data, error } = await query;
         if (error) throw new Error(`${tableName}: ${error.message}`);
@@ -526,14 +530,16 @@
       return receipt?.completed_at || order.created_at;
     }
 
+    function snapshotTimestamp(row) {
+      const timestamp = new Date(row.updated_at || row.created_at || 0).getTime();
+      return Number.isFinite(timestamp) ? timestamp : 0;
+    }
+
     function isBetterSnapshot(next, current) {
       if (!current) return true;
-      if (number(next.share_balance) !== number(current.share_balance)) {
-        return number(next.share_balance) > number(current.share_balance);
-      }
-      if (number(next.share_buy) !== number(current.share_buy)) {
-        return number(next.share_buy) > number(current.share_buy);
-      }
+      const nextTimestamp = snapshotTimestamp(next);
+      const currentTimestamp = snapshotTimestamp(current);
+      if (nextTimestamp !== currentTimestamp) return nextTimestamp > currentTimestamp;
       return number(next.id) > number(current.id);
     }
 
@@ -541,9 +547,9 @@
       setLoading(true);
       try {
         const [members, rawShareRows, rawOrders] = await Promise.all([
-          fetchAll("members", "member_id"),
-          fetchAll("member_share", "member_id"),
-          fetchAll("historycart", "created_at")
+          fetchAll(state.client, "members", "member_id"),
+          fetchAll(state.client, "member_share", "member_id"),
+          fetchAll(state.client, "historycart", "created_at")
         ]);
 
         const memberById = new Map();
@@ -602,7 +608,7 @@
         $("#updatedAt").textContent = `อัปเดตล่าสุด ${formatThaiDate(new Date(), true)} น.`;
       } catch (error) {
         console.error(error);
-        alert(`โหลดข้อมูลไม่สำเร็จ\n${error.message}\n\nตรวจสอบ SUPABASE_URL, SUPABASE_ANON_KEY และสิทธิ์อ่านตาราง member, member_share, historycart`);
+        alert(`โหลดข้อมูลไม่สำเร็จ\n${error.message}\n\nตรวจสอบ URL, anon key และสิทธิ์อ่านตาราง members, member_share, historycart`);
       } finally {
         setLoading(false);
       }
@@ -623,9 +629,19 @@
       $("#yearFilter").value = state.selectedYear || "";
 
       const latestYear = state.selectedYear || years[0];
-      const relevant = state.shareRows.filter((row) => row.fiscal_year <= latestYear);
+      const relevant = state.shareRows.filter((row) => row.fiscal_year <= latestYear && isActiveMember(row.member_status));
       optionList($("#groupFilter"), [...new Set(relevant.map((row) => text(row.member_group)).filter(Boolean))].sort(naturalCompare), "ทุกกลุ่ม");
-      optionList($("#statusFilter"), [...new Set(relevant.map((row) => text(row.member_status)).filter(Boolean))].sort(naturalCompare), "ทุกสถานะ");
+
+      const statusSelect = $("#statusFilter");
+      const previousStatus = statusSelect.value;
+      const statuses = [...new Set(relevant.map((row) => text(row.member_status)).filter(Boolean))].sort(naturalCompare);
+      optionList(statusSelect, statuses, "ทุกสถานะ");
+
+      // เปิด Dashboard ด้วยสถานะ "สมาชิก" เพื่อไม่รวมผู้ลาออกและผู้เสียชีวิตในยอดเริ่มต้น
+      if (!previousStatus) {
+        const activeStatus = statuses.find((status) => text(status).replace(/\s+/g, "") === "สมาชิก");
+        if (activeStatus) statusSelect.value = activeStatus;
+      }
     }
 
     function buildSummaries(year) {
@@ -678,8 +694,10 @@
       const filters = selectedFilters();
       state.selectedYear = filters.year;
       const { summaries, yearOrders } = buildSummaries(filters.year);
-      state.summaries = summaries;
-      state.filtered = summaries.filter((row) => {
+      // ยอดรวมของ Dashboard นับเฉพาะสมาชิกปัจจุบันเท่านั้น
+      const activeSummaries = summaries.filter((row) => isActiveMember(row.member_status));
+      state.summaries = activeSummaries;
+      state.filtered = activeSummaries.filter((row) => {
         if (filters.group && row.member_group !== filters.group) return false;
         if (filters.status && row.member_status !== filters.status) return false;
         if (filters.channel === "line" && row.line_total <= 0) return false;
@@ -692,11 +710,7 @@
       });
 
       const visibleIds = new Set(state.filtered.map((row) => row.member_id));
-      const noMemberFilters = !filters.group && !filters.status && !filters.search && filters.channel === "all";
-      state.filteredOrders = yearOrders.filter((order) => {
-        if (noMemberFilters && !order.member_id) return true;
-        return visibleIds.has(text(order.member_id));
-      });
+      state.filteredOrders = yearOrders.filter((order) => visibleIds.has(text(order.member_id)));
 
       const balance = state.filtered.reduce((sum, row) => sum + row.share_balance, 0);
       const totalBuy = state.filtered.reduce((sum, row) => sum + row.share_buy, 0);
@@ -747,7 +761,7 @@
       const banner = $("#qualityBanner");
       banner.classList.toggle("ok", duplicateExtras === 0 && unmatched === 0);
       const duplicateText = duplicateExtras
-        ? `พบ snapshot member_share ซ้ำ ${money(duplicateExtras)} แถว ระบบเลือกยอดคงเหลือสูงสุดต่อสมาชิก/ปีแล้ว`
+        ? `พบ snapshot member_share ซ้ำ ${money(duplicateExtras)} แถว ระบบเลือกข้อมูลล่าสุดต่อสมาชิก/ปีแล้ว`
         : "ไม่พบ snapshot member_share ซ้ำในปีที่เลือก";
       const mappingText = unmatched
         ? `มีรายการ LINE ที่ยังจับคู่สมาชิกไม่ได้ ${money(unmatched)} รายการ`
@@ -925,7 +939,7 @@
       if (!configIsReady()) {
         const banner = $("#qualityBanner");
         banner.classList.remove("ok");
-        banner.innerHTML = "<strong>ยังไม่ได้ตั้งค่า Supabase:</strong><span>กรุณาใส่ SUPABASE_URL และ SUPABASE_ANON_KEY ในไฟล์ dashboard.html</span>";
+        banner.innerHTML = "<strong>ยังไม่ได้ตั้งค่า Supabase:</strong><span>กรุณาตรวจสอบ SUPABASE_URL และ SUPABASE_ANON_KEY ใน CONFIG</span>";
         return;
       }
       if (!window.supabase) {
