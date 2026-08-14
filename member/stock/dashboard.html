@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="th">
 <head>
@@ -114,7 +113,7 @@
 
     .filters {
       display: grid;
-      grid-template-columns: repeat(4, minmax(120px, 1fr)) minmax(200px, 1.7fr) auto;
+      grid-template-columns: repeat(5, minmax(120px, 1fr)) minmax(200px, 1.7fr) auto;
       gap: 10px;
       align-items: end;
       padding: 14px;
@@ -286,6 +285,16 @@
           <select id="yearFilter"></select>
         </div>
         <div class="filter">
+          <label for="quarterFilter">ไตรมาส</label>
+          <select id="quarterFilter">
+            <option value="">ทั้งปี</option>
+            <option value="1">ไตรมาส 1 · เม.ย.–มิ.ย.</option>
+            <option value="2">ไตรมาส 2 · ก.ค.–ก.ย.</option>
+            <option value="3">ไตรมาส 3 · ต.ค.–ธ.ค.</option>
+            <option value="4">ไตรมาส 4 · ม.ค.–มี.ค.</option>
+          </select>
+        </div>
+        <div class="filter">
           <label for="groupFilter">กลุ่มสมาชิก</label>
           <select id="groupFilter"><option value="">ทุกกลุ่ม</option></select>
         </div>
@@ -315,7 +324,7 @@
           <div id="balanceFoot" class="kpi-foot">—</div>
         </article>
         <article class="kpi-card">
-          <div class="kpi-label">ซื้อหุ้นรวม ปีบัญชีที่เลือก</div>
+          <div class="kpi-label">ซื้อหุ้นรวม ช่วงที่เลือก</div>
           <div class="kpi-value"><span id="buyKpi">0</span> <span class="kpi-unit">บาท</span></div>
           <div id="buyFoot" class="kpi-foot">—</div>
         </article>
@@ -425,8 +434,10 @@
       summaries: [],
       filtered: [],
       filteredOrders: [],
+      periodShareRows: [],
       charts: {},
-      selectedYear: null
+      selectedYear: null,
+      selectedQuarter: ""
     };
 
     const $ = (selector) => document.querySelector(selector);
@@ -473,10 +484,49 @@
 
     function thaiMonthOf(dateValue) {
       const date = new Date(dateValue);
+      if (Number.isNaN(date.getTime())) return null;
       const parts = new Intl.DateTimeFormat("en-US", {
         timeZone: "Asia/Bangkok", month: "numeric"
       }).formatToParts(date);
       return Number(parts.find((part) => part.type === "month").value);
+    }
+
+    function fiscalQuarterOf(dateValue) {
+      const month = thaiMonthOf(dateValue);
+      if (month >= 4 && month <= 6) return 1;
+      if (month >= 7 && month <= 9) return 2;
+      if (month >= 10 && month <= 12) return 3;
+      if (month >= 1 && month <= 3) return 4;
+      return null;
+    }
+
+    function quarterLabel(quarter) {
+      const labels = {
+        1: "ไตรมาส 1 (เมษายน–มิถุนายน)",
+        2: "ไตรมาส 2 (กรกฎาคม–กันยายน)",
+        3: "ไตรมาส 3 (ตุลาคม–ธันวาคม)",
+        4: "ไตรมาส 4 (มกราคม–มีนาคม)"
+      };
+      return labels[Number(quarter)] || "ทั้งปี";
+    }
+
+    function shareActivityDate(row) {
+      return row.created_at || row.updated_at;
+    }
+
+    function isShareRowInPeriod(row, year, quarter) {
+      if (Number(row.fiscal_year) !== Number(year)) return false;
+      if (!quarter) return true;
+      return fiscalQuarterOf(shareActivityDate(row)) === Number(quarter);
+    }
+
+    function isShareRowAtOrBeforePeriod(row, year, quarter) {
+      const rowYear = Number(row.fiscal_year);
+      if (rowYear < Number(year)) return true;
+      if (rowYear > Number(year)) return false;
+      if (!quarter) return true;
+      const rowQuarter = fiscalQuarterOf(shareActivityDate(row));
+      return rowQuarter !== null && rowQuarter <= Number(quarter);
     }
 
     function monthLabels() {
@@ -543,6 +593,14 @@
       return number(next.id) > number(current.id);
     }
 
+    function isLaterShareRow(next, current) {
+      if (!current) return true;
+      if (Number(next.fiscal_year) !== Number(current.fiscal_year)) {
+        return Number(next.fiscal_year) > Number(current.fiscal_year);
+      }
+      return isBetterSnapshot(next, current);
+    }
+
     async function loadData() {
       setLoading(true);
       try {
@@ -566,18 +624,9 @@
           if (lineUserId) memberByLineId.set(lineUserId, info);
         });
 
-        const snapshotMap = new Map();
-        rawShareRows.forEach((row) => {
-          const memberId = text(row.member_id);
-          const fiscalYear = Number(row.fiscal_year);
-          const key = `${memberId}|${fiscalYear}`;
-          const current = snapshotMap.get(key);
-          const count = (current?.duplicate_count || 0) + 1;
-          const chosen = isBetterSnapshot(row, current?.row) ? row : current?.row;
-          snapshotMap.set(key, { row: chosen, duplicate_count: count });
-        });
-
-        state.shareRows = [...snapshotMap.values()].map(({ row, duplicate_count }) => {
+        // เก็บทุกรายการไว้สำหรับรวมยอดซื้อรายปี/รายไตรมาส
+        // ส่วนยอดคงเหลือจะเลือก snapshot ล่าสุดของสมาชิกใน buildSummaries()
+        state.shareRows = rawShareRows.map((row) => {
           const member = memberById.get(text(row.member_id)) || {};
           return {
             ...row,
@@ -587,8 +636,7 @@
             share_begin: number(row.share_begin),
             share_buy: number(row.share_buy),
             share_sell: number(row.share_sell),
-            share_balance: number(row.share_balance),
-            duplicate_count
+            share_balance: number(row.share_balance)
           };
         });
 
@@ -633,29 +681,34 @@
       optionList($("#groupFilter"), [...new Set(relevant.map((row) => text(row.member_group)).filter(Boolean))].sort(naturalCompare), "ทุกกลุ่ม");
 
       const statusSelect = $("#statusFilter");
-      const previousStatus = statusSelect.value;
       const statuses = [...new Set(relevant.map((row) => text(row.member_status)).filter(Boolean))].sort(naturalCompare);
       optionList(statusSelect, statuses, "ทุกสถานะ");
-
-      // เปิด Dashboard ด้วยสถานะ "สมาชิก" เพื่อไม่รวมผู้ลาออกและผู้เสียชีวิตในยอดเริ่มต้น
-      if (!previousStatus) {
-        const activeStatus = statuses.find((status) => text(status).replace(/\s+/g, "") === "สมาชิก");
-        if (activeStatus) statusSelect.value = activeStatus;
-      }
     }
 
-    function buildSummaries(year) {
+    function buildSummaries(year, quarter) {
       const currentByMember = new Map();
-      const fiscalByMember = new Map();
+      const periodByMember = new Map();
+
       state.shareRows
-        .filter((row) => row.fiscal_year <= year)
-        .sort((a, b) => a.fiscal_year - b.fiscal_year)
+        .filter((row) => isShareRowAtOrBeforePeriod(row, year, quarter))
         .forEach((row) => {
-          currentByMember.set(text(row.member_id), row);
-          if (row.fiscal_year === year) fiscalByMember.set(text(row.member_id), row);
+          const memberId = text(row.member_id);
+          const current = currentByMember.get(memberId);
+          if (isLaterShareRow(row, current)) currentByMember.set(memberId, row);
         });
 
-      const yearOrders = state.orders.filter((order) => fiscalYearOf(order.completed_at) === year);
+      const periodShareRows = state.shareRows.filter((row) => isShareRowInPeriod(row, year, quarter));
+      periodShareRows.forEach((row) => {
+        const memberId = text(row.member_id);
+        const rows = periodByMember.get(memberId) || [];
+        rows.push(row);
+        periodByMember.set(memberId, rows);
+      });
+
+      const yearOrders = state.orders.filter((order) => {
+        if (fiscalYearOf(order.completed_at) !== Number(year)) return false;
+        return !quarter || fiscalQuarterOf(order.completed_at) === Number(quarter);
+      });
       const lineByMember = new Map();
       yearOrders.forEach((order) => {
         const id = text(order.member_id);
@@ -663,26 +716,31 @@
       });
 
       const summaries = [...currentByMember.entries()].map(([memberId, current]) => {
-        const fiscal = fiscalByMember.get(memberId);
+        const periodRows = [...(periodByMember.get(memberId) || [])].sort((a, b) => {
+          const timeDifference = snapshotTimestamp(a) - snapshotTimestamp(b);
+          return timeDifference || number(a.id) - number(b.id);
+        });
+        const firstPeriodRow = periodRows[0];
         return {
           member_id: memberId,
           member_name: text(current.member_name) || "ไม่พบชื่อ",
           member_group: text(current.member_group) || "ไม่ระบุกลุ่ม",
           member_status: text(current.member_status) || "ไม่ระบุ",
-          share_begin: fiscal ? fiscal.share_begin : current.share_balance,
-          share_buy: fiscal ? fiscal.share_buy : 0,
-          share_sell: fiscal ? fiscal.share_sell : 0,
+          share_begin: firstPeriodRow ? firstPeriodRow.share_begin : current.share_balance,
+          share_buy: periodRows.reduce((sum, row) => sum + row.share_buy, 0),
+          share_sell: periodRows.reduce((sum, row) => sum + row.share_sell, 0),
           share_balance: current.share_balance,
           line_total: lineByMember.get(memberId) || 0,
-          duplicate_count: fiscal ? fiscal.duplicate_count : 1
+          activity_count: periodRows.length
         };
       });
-      return { summaries, yearOrders };
+      return { summaries, yearOrders, periodShareRows };
     }
 
     function selectedFilters() {
       return {
         year: Number($("#yearFilter").value),
+        quarter: $("#quarterFilter").value,
         group: $("#groupFilter").value,
         status: $("#statusFilter").value,
         channel: $("#channelFilter").value,
@@ -693,7 +751,9 @@
     function render() {
       const filters = selectedFilters();
       state.selectedYear = filters.year;
-      const { summaries, yearOrders } = buildSummaries(filters.year);
+      state.selectedQuarter = filters.quarter;
+      const { summaries, yearOrders, periodShareRows } = buildSummaries(filters.year, filters.quarter);
+      state.periodShareRows = periodShareRows;
       // ยอดรวมของ Dashboard นับเฉพาะสมาชิกปัจจุบันเท่านั้น
       const activeSummaries = summaries.filter((row) => isActiveMember(row.member_status));
       state.summaries = activeSummaries;
@@ -718,24 +778,30 @@
       const ratio = totalBuy > 0 ? lineTotal / totalBuy * 100 : 0;
       const buyers = state.filtered.filter((row) => row.share_buy > 0).length;
       const lineBuyers = new Set(state.filteredOrders.map((row) => text(row.member_id)).filter(Boolean)).size;
-      const elapsed = elapsedFiscalMonths(filters.year);
-      const totalForecast = elapsed ? totalBuy / elapsed * 12 : 0;
-      const lineForecast = elapsed ? lineTotal / elapsed * 12 : 0;
+      const elapsed = elapsedPeriodMonths(filters.year, filters.quarter);
+      const projectionMonths = filters.quarter ? 3 : 12;
+      const totalForecast = elapsed ? totalBuy / elapsed * projectionMonths : 0;
+      const lineForecast = elapsed ? lineTotal / elapsed * projectionMonths : 0;
+      const selectedPeriodLabel = filters.quarter ? quarterLabel(filters.quarter) : `ปีบัญชี ${filters.year}`;
 
       $("#balanceKpi").textContent = money(balance);
       $("#buyKpi").textContent = money(totalBuy);
       $("#lineKpi").textContent = money(lineTotal);
       $("#ratioKpi").textContent = percent(ratio);
-      $("#balanceFoot").innerHTML = `<strong>${money(state.filtered.length)} คน</strong> ที่ตรงตามตัวกรอง`;
-      $("#buyFoot").innerHTML = `Run-rate ทั้งปี <strong>${money(totalForecast)} บาท</strong> จาก ${elapsed} เดือน`;
-      $("#lineFoot").innerHTML = `<strong>${money(state.filteredOrders.length)} รายการ</strong> · Run-rate ${money(lineForecast)} บาท`;
+      $("#balanceFoot").innerHTML = `<strong>${money(state.filtered.length)} คน</strong> · ยอดล่าสุดไม่เกิน ${selectedPeriodLabel}`;
+      $("#buyFoot").innerHTML = filters.quarter
+        ? `ประมาณการสิ้นไตรมาส <strong>${money(totalForecast)} บาท</strong> จาก ${elapsed} เดือน`
+        : `Run-rate ทั้งปี <strong>${money(totalForecast)} บาท</strong> จาก ${elapsed} เดือน`;
+      $("#lineFoot").innerHTML = filters.quarter
+        ? `<strong>${money(state.filteredOrders.length)} รายการ</strong> · ประมาณการสิ้นไตรมาส ${money(lineForecast)} บาท`
+        : `<strong>${money(state.filteredOrders.length)} รายการ</strong> · Run-rate ${money(lineForecast)} บาท`;
       $("#ratioFoot").textContent = `LINE ${money(lineTotal)} ÷ ยอดซื้อรวม ${money(totalBuy)}`;
       $("#memberCount").textContent = `${money(state.filtered.length)} คน`;
       $("#buyerCount").textContent = `${money(buyers)} คน`;
       $("#lineBuyerCount").textContent = `${money(lineBuyers)} คน`;
 
-      renderQuality(yearOrders, filters.year);
-      renderCharts(totalBuy, lineTotal, filters.year);
+      renderQuality(yearOrders, periodShareRows, filters.year, filters.quarter);
+      renderCharts(totalBuy, lineTotal, filters.year, filters.quarter);
       renderMemberTable();
       renderOrderTable();
     }
@@ -753,20 +819,49 @@
       return (currentMonth - CONFIG.FISCAL_YEAR_START_MONTH + 12) % 12 + 1;
     }
 
-    function renderQuality(yearOrders, year) {
-      const duplicateExtras = state.shareRows
-        .filter((row) => row.fiscal_year === year)
-        .reduce((sum, row) => sum + Math.max(0, row.duplicate_count - 1), 0);
+    function elapsedPeriodMonths(year, quarter) {
+      if (!quarter) return elapsedFiscalMonths(year);
+
+      const selectedYear = Number(year);
+      const selectedQuarter = Number(quarter);
+      const now = new Date();
+      const currentYear = fiscalYearOf(now);
+      const currentQuarter = fiscalQuarterOf(now);
+
+      if (selectedYear < currentYear || (selectedYear === currentYear && selectedQuarter < currentQuarter)) return 3;
+
+      const quarterStartMonth = { 1: 4, 2: 7, 3: 10, 4: 1 }[selectedQuarter];
+      const monthPosition = (dateValue) => {
+        const month = thaiMonthOf(dateValue);
+        return month ? (month - quarterStartMonth + 12) % 12 + 1 : 0;
+      };
+
+      if (selectedYear === currentYear && selectedQuarter === currentQuarter) {
+        return Math.min(3, Math.max(1, monthPosition(now)));
+      }
+
+      const monthsWithData = [
+        ...state.orders
+          .filter((order) => fiscalYearOf(order.completed_at) === selectedYear && fiscalQuarterOf(order.completed_at) === selectedQuarter)
+          .map((order) => monthPosition(order.completed_at)),
+        ...state.shareRows
+          .filter((row) => isShareRowInPeriod(row, selectedYear, selectedQuarter))
+          .map((row) => monthPosition(shareActivityDate(row)))
+      ].filter((month) => month >= 1 && month <= 3);
+      return monthsWithData.length ? Math.max(...monthsWithData) : 1;
+    }
+
+    function renderQuality(yearOrders, periodShareRows, year, quarter) {
       const unmatched = yearOrders.filter((order) => !order.member_id).length;
+      const activeShareRows = periodShareRows.filter((row) => isActiveMember(row.member_status)).length;
       const banner = $("#qualityBanner");
-      banner.classList.toggle("ok", duplicateExtras === 0 && unmatched === 0);
-      const duplicateText = duplicateExtras
-        ? `พบ snapshot member_share ซ้ำ ${money(duplicateExtras)} แถว ระบบเลือกข้อมูลล่าสุดต่อสมาชิก/ปีแล้ว`
-        : "ไม่พบ snapshot member_share ซ้ำในปีที่เลือก";
+      banner.classList.toggle("ok", unmatched === 0);
+      const periodText = quarter ? `${quarterLabel(quarter)} ปีบัญชี ${year}` : `ปีบัญชี ${year}`;
+      const shareText = `member_share ${money(activeShareRows)} รายการใน${periodText}`;
       const mappingText = unmatched
         ? `มีรายการ LINE ที่ยังจับคู่สมาชิกไม่ได้ ${money(unmatched)} รายการ`
         : `รายการ LINE ทั้ง ${money(yearOrders.length)} รายการจับคู่สมาชิกได้ครบ`;
-      banner.innerHTML = `<strong>คุณภาพข้อมูล:</strong><span>${duplicateText} · ${mappingText}</span>`;
+      banner.innerHTML = `<strong>ข้อมูลช่วงที่เลือก:</strong><span>${shareText} · ${mappingText}</span>`;
     }
 
     function destroyChart(name) {
@@ -774,22 +869,26 @@
       state.charts[name] = null;
     }
 
-    function renderCharts(totalBuy, lineTotal, year) {
+    function renderCharts(totalBuy, lineTotal, year, quarter) {
       if (!window.Chart) return;
       Chart.defaults.font.family = '"Noto Sans Thai", "Tahoma", system-ui, sans-serif';
       Chart.defaults.color = "#68776f";
-      const labels = monthLabels();
-      const monthly = Array(12).fill(0);
+      const allLabels = monthLabels();
+      const firstSlot = quarter ? (Number(quarter) - 1) * 3 : 0;
+      const slots = quarter ? [firstSlot, firstSlot + 1, firstSlot + 2] : Array.from({ length: 12 }, (_, index) => index);
+      const labels = slots.map((slot) => allLabels[slot]);
+      const monthly = Array(slots.length).fill(0);
       state.filteredOrders.forEach((order) => {
         const month = thaiMonthOf(order.completed_at);
         const slot = (month - CONFIG.FISCAL_YEAR_START_MONTH + 12) % 12;
-        monthly[slot] += order.total_price;
+        const chartIndex = slots.indexOf(slot);
+        if (chartIndex >= 0) monthly[chartIndex] += order.total_price;
       });
 
       destroyChart("monthly");
       state.charts.monthly = new Chart($("#monthlyChart"), {
         type: "bar",
-        data: { labels, datasets: [{ label: `ยอดผ่าน LINE ปี ${year}`, data: monthly, backgroundColor: "#17835c", borderRadius: 7, maxBarThickness: 38 }] },
+        data: { labels, datasets: [{ label: `ยอดผ่าน LINE ${quarter ? quarterLabel(quarter) : `ปี ${year}`}`, data: monthly, backgroundColor: "#17835c", borderRadius: 7, maxBarThickness: 38 }] },
         options: chartOptions({ currency: true })
       });
 
@@ -851,7 +950,8 @@
 
     function renderMemberTable() {
       const rows = [...state.filtered].sort((a, b) => b.share_buy - a.share_buy || b.share_balance - a.share_balance);
-      $("#memberTableSubtitle").textContent = `แสดง 20 อันดับแรกจาก ${money(rows.length)} คน · ส่งออก CSV ได้ครบตามตัวกรอง`;
+      const periodText = state.selectedQuarter ? `${quarterLabel(state.selectedQuarter)} ปีบัญชี ${state.selectedYear}` : `ปีบัญชี ${state.selectedYear}`;
+      $("#memberTableSubtitle").textContent = `${periodText} · แสดง 20 อันดับแรกจาก ${money(rows.length)} คน · ส่งออก CSV ได้ครบตามตัวกรอง`;
       const body = $("#memberTableBody");
       if (!rows.length) {
         body.innerHTML = '<tr><td colspan="9" class="empty-cell">ไม่พบข้อมูลตามตัวกรอง</td></tr>';
@@ -894,6 +994,7 @@
 
     function exportCsv() {
       const year = state.selectedYear;
+      const quarterSuffix = state.selectedQuarter ? `-q${state.selectedQuarter}` : "";
       const headers = ["member_id", "member_name", "group", "status", "share_begin", "share_buy", "share_sell", "share_balance", "line_total"];
       const lines = [headers.map(csvCell).join(",")];
       [...state.filtered].sort((a, b) => naturalCompare(a.member_id, b.member_id)).forEach((row) => {
@@ -906,13 +1007,13 @@
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `member-share-kpi-${year}.csv`;
+      link.download = `member-share-kpi-${year}${quarterSuffix}.csv`;
       link.click();
       URL.revokeObjectURL(url);
     }
 
     function bindEvents() {
-      ["#yearFilter", "#groupFilter", "#statusFilter", "#channelFilter"].forEach((selector) => {
+      ["#yearFilter", "#quarterFilter", "#groupFilter", "#statusFilter", "#channelFilter"].forEach((selector) => {
         $(selector).addEventListener("change", () => {
           if (selector === "#yearFilter") populateFilters();
           render();
@@ -924,6 +1025,7 @@
         searchTimer = setTimeout(render, 180);
       });
       $("#clearFilterButton").addEventListener("click", () => {
+        $("#quarterFilter").value = "";
         $("#groupFilter").value = "";
         $("#statusFilter").value = "";
         $("#channelFilter").value = "all";
