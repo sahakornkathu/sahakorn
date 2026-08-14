@@ -541,7 +541,7 @@
       setLoading(true);
       try {
         const [members, rawShareRows, rawOrders] = await Promise.all([
-          fetchAll("members", "member_id"),
+          fetchAll("member", "member_id"),
           fetchAll("member_share", "member_id"),
           fetchAll("historycart", "created_at")
         ]);
@@ -616,55 +616,17 @@
     }
 
     function populateFilters() {
-  const years = [...new Set(
-    state.shareRows.map((row) => row.fiscal_year).filter(Boolean)
-  )].sort((a, b) => b - a);
+      const years = [...new Set(state.shareRows.map((row) => row.fiscal_year).filter(Boolean))].sort((a, b) => b - a);
+      const previousYear = Number($("#yearFilter").value);
+      $("#yearFilter").innerHTML = years.map((year) => `<option value="${year}">${year}</option>`).join("");
+      state.selectedYear = years.includes(previousYear) ? previousYear : years[0];
+      $("#yearFilter").value = state.selectedYear || "";
 
-  const previousYear = Number($("#yearFilter").value);
-
-  $("#yearFilter").innerHTML = years
-    .map((year) => `<option value="${year}">${year}</option>`)
-    .join("");
-
-  state.selectedYear = years.includes(previousYear)
-    ? previousYear
-    : years[0];
-
-  $("#yearFilter").value = state.selectedYear || "";
-
-  const latestYear = state.selectedYear || years[0];
-  const relevant = state.shareRows.filter(
-    (row) => row.fiscal_year <= latestYear
-  );
-
-  optionList(
-    $("#groupFilter"),
-    [...new Set(
-      relevant.map((row) => text(row.member_group)).filter(Boolean)
-    )].sort(naturalCompare),
-    "ทุกกลุ่ม"
-  );
-
-  const statusSelect = $("#statusFilter");
-  const previousStatus = statusSelect.value;
-
-  const statuses = [...new Set(
-    relevant.map((row) => text(row.member_status)).filter(Boolean)
-  )].sort(naturalCompare);
-
-  optionList(statusSelect, statuses, "ทุกสถานะ");
-
-  // เปิดหน้า Dashboard ให้แสดงเฉพาะสมาชิกปัจจุบัน
-  if (!previousStatus) {
-    const activeStatus = statuses.find(
-      (status) => text(status).replace(/\s+/g, "") === "สมาชิก"
-    );
-
-    if (activeStatus) {
-      statusSelect.value = activeStatus;
+      const latestYear = state.selectedYear || years[0];
+      const relevant = state.shareRows.filter((row) => row.fiscal_year <= latestYear);
+      optionList($("#groupFilter"), [...new Set(relevant.map((row) => text(row.member_group)).filter(Boolean))].sort(naturalCompare), "ทุกกลุ่ม");
+      optionList($("#statusFilter"), [...new Set(relevant.map((row) => text(row.member_status)).filter(Boolean))].sort(naturalCompare), "ทุกสถานะ");
     }
-  }
-}
 
     function buildSummaries(year) {
       const currentByMember = new Map();
