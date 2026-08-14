@@ -1,0 +1,723 @@
+
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Dashboard KPI หุ้นสมาชิก สหกรณ์การเกษตรกะทู้ จำกัด">
+  <title>Dashboard KPI หุ้นสมาชิก</title>
+
+  <!-- ใช้สำหรับอ่านข้อมูล Supabase และสร้างกราฟ -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7"></script>
+
+  <style>
+    :root {
+      --green: #1e6b5c;
+      --green-dark: #123f36;
+      --green-soft: #e8f2ef;
+      --gold: #d89932;
+      --gold-soft: #fff4df;
+      --blue: #3f86a6;
+      --red: #b14f45;
+      --ink: #16231f;
+      --muted: #69766f;
+      --border: #dfe7e3;
+      --bg: #f2f5f3;
+      --card: #ffffff;
+      --shadow: 0 8px 26px rgba(31, 63, 54, .06);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--bg);
+      font-family: Tahoma, "Noto Sans Thai", Arial, sans-serif;
+      font-size: 14px;
+    }
+    button, input, select { font: inherit; }
+    button, select { cursor: pointer; }
+
+    .sidebar {
+      position: fixed;
+      inset: 0 auto 0 0;
+      z-index: 30;
+      width: 245px;
+      display: flex;
+      flex-direction: column;
+      padding: 28px 18px 22px;
+      color: #fff;
+      background: var(--green-dark);
+      transition: transform .25s ease;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; padding: 0 8px 26px; border-bottom: 1px solid rgba(255,255,255,.13); }
+    .brand-logo { width: 45px; height: 45px; display: grid; place-items: center; border-radius: 14px; color: var(--green-dark); background: #f0c363; font-size: 16px; font-weight: 900; }
+    .brand strong, .brand small { display: block; }
+    .brand strong { font-size: 15px; }
+    .brand small { margin-top: 3px; color: #a9c9c0; font-size: 10px; letter-spacing: .08em; }
+    .nav { display: grid; gap: 6px; margin-top: 26px; }
+    .nav a { display: flex; align-items: center; gap: 10px; padding: 12px 13px; color: #c8dbd5; border-radius: 10px; text-decoration: none; font-size: 13px; font-weight: 700; }
+    .nav a:hover, .nav a.active { color: #fff; background: rgba(255,255,255,.11); }
+    .nav-dot { width: 7px; height: 7px; border: 2px solid #91b7ac; border-radius: 50%; }
+    .nav a.active .nav-dot { border-color: #f0c363; background: #f0c363; box-shadow: 0 0 0 4px rgba(240,195,99,.13); }
+    .db-status { display: flex; align-items: center; gap: 10px; margin-top: auto; padding: 14px 12px; border: 1px solid rgba(255,255,255,.1); border-radius: 12px; background: rgba(0,0,0,.13); }
+    .db-dot { width: 9px; height: 9px; flex: 0 0 auto; border-radius: 50%; background: var(--gold); box-shadow: 0 0 0 4px rgba(216,153,50,.15); }
+    .db-status.connected .db-dot { background: #6bd19e; box-shadow: 0 0 0 4px rgba(107,209,158,.15); }
+    .db-status strong, .db-status small { display: block; }
+    .db-status strong { font-size: 11px; }
+    .db-status small { margin-top: 3px; color: #a9c9c0; font-size: 9px; }
+
+    .main { margin-left: 245px; min-width: 0; padding: 28px 30px 22px; }
+    .topbar { display: flex; align-items: center; gap: 18px; margin-bottom: 16px; }
+    .menu-btn { display: none; padding: 4px 8px; border: 0; background: transparent; font-size: 23px; }
+    .eyebrow, .section-label { margin: 0 0 5px; color: var(--green); font-size: 10px; font-weight: 900; letter-spacing: .12em; text-transform: uppercase; }
+    h1 { margin: 0; font-size: clamp(26px, 3vw, 36px); letter-spacing: -.035em; }
+    .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 12px; }
+    .actions { display: flex; gap: 8px; margin-left: auto; }
+    .btn { min-height: 40px; padding: 0 14px; border: 1px solid var(--border); border-radius: 10px; color: var(--ink); background: #fff; font-size: 11px; font-weight: 800; }
+    .btn:hover { border-color: #b8c8c1; }
+    .btn.primary { color: #fff; border-color: var(--green); background: var(--green); box-shadow: 0 5px 15px rgba(30,107,92,.18); }
+    .btn.primary:hover { background: #155044; }
+    .btn:disabled { cursor: wait; opacity: .6; }
+
+    .alert { display: flex; align-items: center; gap: 9px; min-height: 38px; margin-bottom: 14px; padding: 9px 12px; border: 1px solid var(--border); border-radius: 10px; color: var(--muted); background: rgba(255,255,255,.7); font-size: 10px; }
+    .alert strong { color: var(--ink); }
+    .alert-dot { width: 8px; height: 8px; flex: 0 0 auto; border-radius: 50%; background: var(--gold); }
+    .alert.live .alert-dot { background: #36ae76; }
+    .alert.error { color: #7e312a; border-color: #edc6c1; background: #fff1ef; }
+    .alert.error .alert-dot { background: var(--red); }
+
+    .filters { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; margin-bottom: 14px; padding: 12px; border-radius: 13px; background: #e7edea; }
+    .filter label { display: block; margin: 0 0 5px 3px; color: var(--muted); font-size: 9px; font-weight: 800; }
+    .filter input, .filter select { width: 100%; height: 37px; padding: 0 10px; color: var(--ink); border: 1px solid #d7e0dc; border-radius: 9px; outline: none; background: #fff; font-size: 11px; }
+    .filter input:focus, .filter select:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(30,107,92,.08); }
+
+    .kpi-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 12px; }
+    .card { min-width: 0; border: 1px solid var(--border); border-radius: 15px; background: var(--card); box-shadow: var(--shadow); }
+    .kpi { position: relative; min-height: 142px; overflow: hidden; padding: 17px; }
+    .kpi.featured::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 4px; background: var(--green); }
+    .kpi-title { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; color: var(--muted); font-size: 10px; font-weight: 800; }
+    .tag { display: inline-flex; align-items: center; min-height: 21px; padding: 0 7px; border-radius: 99px; color: var(--green); background: var(--green-soft); font-size: 8px; font-weight: 900; white-space: nowrap; }
+    .tag.gold { color: #966318; background: var(--gold-soft); }
+    .tag.blue { color: #246987; background: #e9f3f8; }
+    .tag.red { color: var(--red); background: #faecea; }
+    .kpi-value { display: block; margin: 13px 0 9px; font-size: clamp(23px, 2vw, 29px); letter-spacing: -.04em; }
+    .kpi-value small { color: var(--muted); font-size: 11px; }
+    .kpi-note { display: flex; gap: 5px; color: var(--muted); font-size: 9px; }
+    .positive { color: var(--green); font-weight: 900; }
+    .negative { color: var(--red); font-weight: 900; }
+
+    .grid-two { display: grid; grid-template-columns: minmax(0, 1.8fr) minmax(280px, .8fr); gap: 12px; margin-bottom: 12px; }
+    .grid-three { display: grid; grid-template-columns: 1.02fr 1fr .92fr; gap: 12px; margin-bottom: 12px; }
+    .grid-half { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+    .panel { padding: 18px; }
+    .panel-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
+    .panel-head h2 { margin: 0; font-size: 15px; letter-spacing: -.02em; }
+    .legend { display: flex; gap: 13px; color: var(--muted); font-size: 8px; }
+    .legend span::before { content: ""; display: inline-block; width: 15px; margin-right: 5px; vertical-align: middle; }
+    .legend .actual::before { border-top: 3px solid var(--green); }
+    .legend .forecast::before { border-top: 2px dashed var(--gold); }
+    .chart-box { position: relative; height: 260px; }
+    .chart-summary { display: grid; grid-template-columns: repeat(3, 1fr); margin-top: 8px; padding-top: 11px; border-top: 1px solid var(--border); }
+    .chart-summary > div { padding: 0 12px; border-right: 1px solid var(--border); }
+    .chart-summary > div:first-child { padding-left: 0; }
+    .chart-summary > div:last-child { border: 0; }
+    .chart-summary span, .chart-summary strong { display: block; }
+    .chart-summary span { color: var(--muted); font-size: 9px; }
+    .chart-summary strong { margin-top: 4px; font-size: 13px; }
+
+    .progress-ring { --progress: 0deg; position: relative; width: 136px; height: 136px; display: grid; place-items: center; margin: 20px auto; border-radius: 50%; background: conic-gradient(var(--green) 0 var(--progress), #e7eeeb var(--progress) 360deg); }
+    .progress-ring::after { content: ""; position: absolute; inset: 13px; border-radius: 50%; background: #fff; }
+    .progress-ring div { position: relative; z-index: 1; text-align: center; }
+    .progress-ring strong, .progress-ring span { display: block; }
+    .progress-ring strong { font-size: 25px; }
+    .progress-ring span { color: var(--muted); font-size: 9px; }
+    .target-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .target-pair div { padding: 9px; border-radius: 9px; color: var(--muted); background: #f5f8f6; font-size: 9px; }
+    .target-pair strong { display: block; margin-top: 3px; color: var(--ink); font-size: 11px; }
+    .forecast-box { margin-top: 10px; padding: 11px 12px; color: #fff; border-radius: 10px; background: #173f37; }
+    .forecast-box span, .forecast-box small { display: block; color: #add0c6; font-size: 8px; }
+    .forecast-box strong { display: block; margin: 3px 0; font-size: 18px; }
+
+    .donut-layout { display: grid; grid-template-columns: 150px 1fr; gap: 12px; align-items: center; }
+    .donut-box { position: relative; width: 145px; height: 145px; }
+    .donut-center { position: absolute; inset: 0; display: grid; place-content: center; pointer-events: none; text-align: center; }
+    .donut-center strong, .donut-center span { display: block; }
+    .donut-center strong { font-size: 22px; }
+    .donut-center span { color: var(--muted); font-size: 8px; }
+    .channel-list { display: grid; gap: 12px; }
+    .channel-item { display: grid; grid-template-columns: 8px 1fr auto; gap: 8px; align-items: center; }
+    .channel-color { width: 8px; height: 8px; border-radius: 50%; }
+    .channel-item span, .channel-item small { display: block; }
+    .channel-item span { font-size: 9px; font-weight: 800; }
+    .channel-item small { margin-top: 2px; color: var(--muted); font-size: 8px; font-weight: 400; }
+    .channel-item strong { font-size: 10px; }
+
+    .tier-list, .insight-list, .group-list, .action-list { display: grid; gap: 10px; }
+    .tier-top { display: flex; justify-content: space-between; gap: 8px; font-size: 9px; }
+    .tier-top span { color: var(--muted); }
+    .bar { height: 7px; margin: 6px 0 4px; overflow: hidden; border-radius: 99px; background: #edf1ef; }
+    .bar i { display: block; min-width: 2px; height: 100%; border-radius: inherit; }
+    .tier small { display: block; color: #8a9691; font-size: 7px; }
+    .insight { display: grid; grid-template-columns: 29px 1fr; gap: 9px; padding: 10px; border: 1px solid var(--border); border-radius: 10px; }
+    .insight > span { width: 29px; height: 29px; display: grid; place-items: center; border-radius: 8px; color: var(--green); background: var(--green-soft); font-size: 8px; font-weight: 900; }
+    .insight:nth-child(2) > span { color: #966318; background: var(--gold-soft); }
+    .insight:nth-child(3) > span { color: var(--blue); background: #e9f3f8; }
+    .insight strong { font-size: 9px; }
+    .insight p { margin: 3px 0 0; color: var(--muted); font-size: 8px; line-height: 1.5; }
+
+    .group-row { display: grid; grid-template-columns: 27px 100px 1fr 60px; gap: 9px; align-items: center; }
+    .rank { color: #9ba7a2; font-size: 9px; font-weight: 900; }
+    .group-name strong, .group-name small { display: block; }
+    .group-name strong { font-size: 9px; }
+    .group-name small { margin-top: 2px; color: var(--muted); font-size: 7px; }
+    .group-row .bar { margin: 0; }
+    .group-amount { text-align: right; font-size: 9px; }
+    .action { display: grid; grid-template-columns: 27px 1fr auto; gap: 9px; align-items: start; padding: 8px 0; border-bottom: 1px solid var(--border); }
+    .action:last-child { border: 0; }
+    .action > span { width: 27px; height: 27px; display: grid; place-items: center; color: var(--green); border-radius: 8px; background: var(--green-soft); font-size: 9px; font-weight: 900; }
+    .action strong { font-size: 9px; }
+    .action p { margin: 3px 0 0; color: var(--muted); font-size: 8px; line-height: 1.45; }
+    .action i { padding: 4px 7px; color: #966318; border-radius: 99px; background: var(--gold-soft); font-size: 7px; font-style: normal; font-weight: 900; white-space: nowrap; }
+
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; min-width: 800px; border-collapse: collapse; }
+    th { padding: 10px; color: #78847f; background: #f5f8f6; font-size: 8px; text-align: left; }
+    td { padding: 11px 10px; color: #394842; border-bottom: 1px solid #edf1ef; font-size: 9px; }
+    td strong, td small { display: block; }
+    td small { margin-top: 2px; color: #8a9691; font-size: 7px; }
+    .text-right { text-align: right; }
+    .amount { color: var(--ink); font-weight: 900; }
+    .badge { display: inline-flex; align-items: center; min-height: 21px; padding: 0 8px; border-radius: 99px; color: var(--green); background: var(--green-soft); font-size: 7px; font-weight: 900; }
+    .badge.line { color: #966318; background: var(--gold-soft); }
+    .empty { padding: 35px; color: var(--muted); text-align: center; font-size: 11px; }
+    .loading { position: fixed; inset: 0; z-index: 100; display: none; place-items: center; color: #fff; background: rgba(12,39,33,.5); backdrop-filter: blur(3px); }
+    .loading.show { display: grid; }
+    .loader-box { padding: 20px 28px; border-radius: 14px; background: var(--green-dark); font-size: 12px; font-weight: 800; }
+    footer { display: flex; justify-content: space-between; gap: 15px; padding: 10px 2px 2px; color: #86928d; font-size: 8px; }
+    .overlay { display: none; }
+
+    @media (max-width: 1180px) {
+      .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+      .grid-three { grid-template-columns: 1fr 1fr; }
+      .insight-panel { grid-column: 1 / -1; }
+      .insight-list { grid-template-columns: repeat(3, 1fr); }
+    }
+    @media (max-width: 920px) {
+      .sidebar { transform: translateX(-105%); }
+      .sidebar.open { transform: translateX(0); }
+      .main { margin-left: 0; padding: 22px 18px; }
+      .menu-btn { display: block; }
+      .overlay.show { position: fixed; inset: 0; z-index: 20; display: block; border: 0; background: rgba(8,31,25,.45); }
+      .grid-two, .grid-half { grid-template-columns: 1fr; }
+      .filters { grid-template-columns: repeat(3, 1fr); }
+    }
+    @media (max-width: 650px) {
+      .main { padding: 16px 12px; }
+      .topbar { align-items: flex-start; flex-wrap: wrap; }
+      .actions { width: 100%; margin-left: 42px; }
+      .actions .btn { flex: 1; }
+      .filters { grid-template-columns: 1fr 1fr; }
+      .kpi-grid, .grid-three { grid-template-columns: 1fr; }
+      .insight-panel { grid-column: auto; }
+      .insight-list { grid-template-columns: 1fr; }
+      .chart-box { height: 220px; }
+    }
+    @media (max-width: 440px) {
+      .filters { grid-template-columns: 1fr; }
+      .actions { margin-left: 0; }
+      .actions .refresh-btn { display: none; }
+      .donut-layout { grid-template-columns: 1fr; }
+      .donut-box { margin: auto; }
+      .legend { display: none; }
+    }
+    @media print {
+      body { background: #fff; }
+      .sidebar, .menu-btn, .actions, .filters, .alert, .overlay { display: none !important; }
+      .main { margin: 0; padding: 10px; }
+      .card { break-inside: avoid; box-shadow: none; }
+      .grid-three { grid-template-columns: repeat(3, 1fr); }
+    }
+  </style>
+</head>
+<body>
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="brand-logo">กท</div>
+      <div><strong>สหกรณ์กะทู้</strong><small>EXECUTIVE ANALYTICS</small></div>
+    </div>
+    <nav class="nav">
+      <a class="active" href="#overview"><span class="nav-dot"></span>ภาพรวมผู้บริหาร</a>
+      <a href="#trend"><span class="nav-dot"></span>แนวโน้มการซื้อหุ้น</a>
+      <a href="#members"><span class="nav-dot"></span>วิเคราะห์สมาชิก</a>
+      <a href="#groups"><span class="nav-dot"></span>ผลงานรายกลุ่ม</a>
+      <a href="#transactions"><span class="nav-dot"></span>รายการซื้อหุ้น</a>
+    </nav>
+    <div class="db-status" id="dbStatus">
+      <span class="db-dot"></span>
+      <div><strong id="dbStatusText">ยังไม่ได้ตั้งค่า Supabase</strong><small>ตาราง member_share</small></div>
+    </div>
+  </aside>
+
+  <button class="overlay" id="overlay" aria-label="ปิดเมนู"></button>
+
+  <main class="main" id="overview">
+    <header class="topbar">
+      <button class="menu-btn" id="menuBtn" type="button" aria-label="เปิดเมนู">☰</button>
+      <div>
+        <p class="eyebrow">รายงานสำหรับผู้บริหาร</p>
+        <h1>ภาพรวมการซื้อหุ้นสมาชิก</h1>
+        <p class="subtitle">ติดตามการเติบโต พฤติกรรมสมาชิก และผลลัพธ์จากช่องทาง LINE</p>
+      </div>
+      <div class="actions">
+        <button class="btn refresh-btn" id="refreshBtn" type="button">↻ อัปเดตข้อมูล</button>
+        <button class="btn" type="button" onclick="window.print()">พิมพ์รายงาน</button>
+        <button class="btn primary" id="exportBtn" type="button">ดาวน์โหลด CSV</button>
+      </div>
+    </header>
+
+    <div class="alert" id="alertBox">
+      <span class="alert-dot"></span>
+      <strong id="alertTitle">ข้อมูลตัวอย่าง</strong>
+      <span id="alertText">กรอก Supabase URL และ Anon Key ในส่วน CONFIG เพื่อใช้ข้อมูลจริง</span>
+    </div>
+
+    <section class="filters" aria-label="ตัวกรองข้อมูล">
+      <div class="filter"><label for="dateFrom">ตั้งแต่วันที่</label><input type="date" id="dateFrom"></div>
+      <div class="filter"><label for="dateTo">ถึงวันที่</label><input type="date" id="dateTo"></div>
+      <div class="filter"><label for="channelFilter">ช่องทาง</label><select id="channelFilter"><option value="all">ทั้งหมด</option><option value="LINE">LINE</option><option value="สำนักงาน">สำนักงาน</option><option value="อื่น ๆ">อื่น ๆ</option></select></div>
+      <div class="filter"><label for="groupFilter">กลุ่มสมาชิก</label><select id="groupFilter"><option value="all">ทั้งหมด</option></select></div>
+      <div class="filter"><label for="searchInput">ค้นหาสมาชิก</label><input type="search" id="searchInput" placeholder="เลขสมาชิก หรือชื่อ"></div>
+    </section>
+
+    <section class="kpi-grid">
+      <article class="card kpi featured">
+        <div class="kpi-title"><span>มูลค่าซื้อหุ้นสะสม</span><span class="tag" id="targetTag">เป้าหมาย 0%</span></div>
+        <strong class="kpi-value" id="totalValue">฿0</strong>
+        <div class="kpi-note"><span class="positive" id="monthGrowth">0%</span><span>จากเดือนก่อน</span></div>
+      </article>
+      <article class="card kpi">
+        <div class="kpi-title"><span>ซื้อหุ้นผ่าน LINE</span><span class="tag gold" id="lineTag">0% ของทั้งหมด</span></div>
+        <strong class="kpi-value" id="lineValue">฿0</strong>
+        <div class="kpi-note"><span class="positive">ช่องทางดิจิทัล</span><span>ติดตามผลแบบเรียลไทม์</span></div>
+      </article>
+      <article class="card kpi">
+        <div class="kpi-title"><span>สมาชิกที่ซื้อหุ้น</span><span class="tag blue">สมาชิก Active</span></div>
+        <strong class="kpi-value"><span id="memberValue">0</span> <small>ราย</small></strong>
+        <div class="kpi-note"><span class="positive" id="transactionValue">0 รายการ</span><span>ในช่วงที่เลือก</span></div>
+      </article>
+      <article class="card kpi">
+        <div class="kpi-title"><span>คาดการณ์สิ้นปี</span><span class="tag" id="forecastTag">กำลังคำนวณ</span></div>
+        <strong class="kpi-value" id="forecastValue">฿0</strong>
+        <div class="kpi-note"><span id="forecastPercent">0%</span><span>ของเป้าหมายประจำปี</span></div>
+      </article>
+    </section>
+
+    <section class="grid-two" id="trend">
+      <article class="card panel">
+        <div class="panel-head">
+          <div><p class="section-label">แนวโน้มรายเดือน</p><h2>มูลค่าการซื้อหุ้นและประมาณการ</h2></div>
+          <div class="legend"><span class="actual">ข้อมูลจริง</span><span class="forecast">ประมาณการ</span></div>
+        </div>
+        <div class="chart-box"><canvas id="trendChart"></canvas></div>
+        <div class="chart-summary">
+          <div><span>เดือนล่าสุด</span><strong id="latestMonthValue">฿0</strong></div>
+          <div><span>เติบโตจากเดือนแรก</span><strong class="positive" id="firstMonthGrowth">0%</strong></div>
+          <div><span>ค่าเฉลี่ยต่อเดือน</span><strong id="averageMonthValue">฿0</strong></div>
+        </div>
+      </article>
+
+      <article class="card panel">
+        <div class="panel-head"><div><p class="section-label">เป้าหมายประจำปี</p><h2 id="targetTitle">ความคืบหน้า</h2></div><span class="tag">ปี 2569</span></div>
+        <div class="progress-ring" id="progressRing"><div><strong id="progressPercent">0%</strong><span>ทำได้แล้ว</span></div></div>
+        <div class="target-pair">
+          <div>ปัจจุบัน<strong id="targetCurrent">฿0</strong></div>
+          <div>คงเหลือ<strong id="targetRemaining">฿0</strong></div>
+        </div>
+        <div class="forecast-box"><span>ประมาณการ ณ สิ้นปี</span><strong id="targetForecast">฿0</strong><small id="targetForecastNote">กำลังคำนวณ</small></div>
+      </article>
+    </section>
+
+    <section class="grid-three" id="members">
+      <article class="card panel">
+        <div class="panel-head"><div><p class="section-label">ช่องทางการซื้อ</p><h2>LINE เทียบกับสำนักงาน</h2></div></div>
+        <div class="donut-layout">
+          <div class="donut-box"><canvas id="channelChart"></canvas><div class="donut-center"><strong id="lineCenter">0%</strong><span>ผ่าน LINE</span></div></div>
+          <div class="channel-list" id="channelList"></div>
+        </div>
+      </article>
+
+      <article class="card panel">
+        <div class="panel-head"><div><p class="section-label">โครงสร้างสมาชิก</p><h2>สมาชิกตามมูลค่าซื้อหุ้น</h2></div></div>
+        <div class="tier-list" id="tierList"></div>
+      </article>
+
+      <article class="card panel insight-panel">
+        <div class="panel-head"><div><p class="section-label">Executive Insight</p><h2>ประเด็นที่ควรจับตา</h2></div></div>
+        <div class="insight-list" id="insightList"></div>
+      </article>
+    </section>
+
+    <section class="grid-half" id="groups">
+      <article class="card panel">
+        <div class="panel-head"><div><p class="section-label">ผลงานรายพื้นที่</p><h2>กลุ่มสมาชิกที่มียอดซื้อสูงสุด</h2></div></div>
+        <div class="group-list" id="groupList"></div>
+      </article>
+      <article class="card panel">
+        <div class="panel-head"><div><p class="section-label">ข้อเสนอแนะเชิงกลยุทธ์</p><h2>แผนเร่งผลลัพธ์ 90 วัน</h2></div></div>
+        <div class="action-list">
+          <div class="action"><span>1</span><div><strong>กระตุ้นสมาชิกที่ยังไม่เคยซื้อผ่าน LINE</strong><p>ส่ง Flex Message แบบเฉพาะกลุ่ม พร้อมยอดหุ้นปัจจุบันและปุ่มซื้อทันที</p></div><i>ผลกระทบสูง</i></div>
+          <div class="action"><span>2</span><div><strong>สร้างแคมเปญ “เพิ่มหุ้นเดือนละนิด”</strong><p>ตั้งเป้าซื้อขั้นต่ำ 500–1,000 บาท เพื่อสร้างพฤติกรรมต่อเนื่อง</p></div><i>ทำได้ทันที</i></div>
+          <div class="action"><span>3</span><div><strong>เจาะกลุ่มที่ต่ำกว่าเป้ารายพื้นที่</strong><p>ให้เจ้าหน้าที่ติดตาม 3 กลุ่มท้ายตารางและรายงานผลทุกสัปดาห์</p></div><i>ติดตามผล</i></div>
+        </div>
+      </article>
+    </section>
+
+    <section class="card panel" id="transactions">
+      <div class="panel-head"><div><p class="section-label">รายการล่าสุด</p><h2>การซื้อหุ้นของสมาชิก</h2></div><span class="tag" id="recordCount">0 รายการ</span></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>สมาชิก</th><th>กลุ่ม</th><th>วันที่</th><th>ช่องทาง</th><th class="text-right">จำนวนหุ้น</th><th class="text-right">มูลค่า</th><th>สถานะ</th></tr></thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+        <div class="empty" id="emptyState" hidden>ไม่พบข้อมูลที่ตรงกับตัวกรอง</div>
+      </div>
+    </section>
+
+    <footer><span>Dashboard KPI หุ้นสมาชิก • สหกรณ์การเกษตรกะทู้ จำกัด</span><span>ข้อมูลเพื่อการบริหารจัดการภายในองค์กร</span></footer>
+  </main>
+
+  <div class="loading" id="loading"><div class="loader-box">กำลังอ่านข้อมูล member_share...</div></div>
+
+  <script>
+    /* ============================================================
+       1) CONFIG: แก้เฉพาะส่วนนี้ก่อนใช้งานจริง
+       ============================================================ */
+    const CONFIG = {
+      SUPABASE_URL: "https://ttottijljxoinptmhgtu.supabase.co",
+      SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y",
+      TABLE_NAME: "member_share",
+      TARGET_AMOUNT: 30000000,
+      SHARE_VALUE_PER_UNIT: 10,
+      MAX_ROWS: 5000,
+      USE_DEMO_WHEN_NOT_CONFIGURED: true
+    };
+
+    /* ชื่อคอลัมน์ที่ระบบรองรับ หากตารางใช้ชื่ออื่นให้เพิ่มชื่อใน array */
+    const COLUMN_MAP = {
+      id: ["id", "share_id", "transaction_id"],
+      memberId: ["member_id", "member_no", "member_code", "registration_no"],
+      memberName: ["member_name", "full_name", "name", "display_name"],
+      group: ["group", "member_group", "group_name", "branch"],
+      amount: ["amount", "share_amount", "total_amount", "paid_amount", "value"],
+      shares: ["shares", "share_qty", "quantity", "qty", "units"],
+      channel: ["channel", "source", "purchase_channel", "created_via"],
+      date: ["purchase_date", "transaction_date", "created_at", "date", "paid_at"],
+      status: ["status", "payment_status"]
+    };
+
+    const THB = new Intl.NumberFormat("th-TH", { style: "currency", currency: "THB", maximumFractionDigits: 0 });
+    const NUM = new Intl.NumberFormat("th-TH", { maximumFractionDigits: 0 });
+    const MONTHS = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
+    let allRows = [];
+    let filteredRows = [];
+    let trendChart = null;
+    let channelChart = null;
+
+    const $ = id => document.getElementById(id);
+    const escapeHtml = value => String(value ?? "").replace(/[&<>'"]/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" }[char]));
+    const getValue = (row, keys) => {
+      for (const key of keys) if (row[key] !== undefined && row[key] !== null && row[key] !== "") return row[key];
+      return undefined;
+    };
+    const compactBaht = value => value >= 1000000 ? `${(value / 1000000).toFixed(value >= 10000000 ? 1 : 2)} ลบ.` : value >= 1000 ? `${(value / 1000).toFixed(0)}K` : NUM.format(value);
+    const percentChange = (current, previous) => previous ? ((current - previous) / previous) * 100 : 0;
+    const formatDate = date => {
+      const parsed = new Date(`${date}T00:00:00`);
+      return Number.isNaN(parsed.getTime()) ? date : `${parsed.getDate()} ${MONTHS[parsed.getMonth()]} ${parsed.getFullYear() + 543}`;
+    };
+
+    function normalizeDate(value) {
+      if (!value) return new Date().toISOString().slice(0, 10);
+      const parsed = new Date(String(value));
+      return Number.isNaN(parsed.getTime()) ? new Date().toISOString().slice(0, 10) : parsed.toISOString().slice(0, 10);
+    }
+
+    function normalizeRow(row, index) {
+      const rawShares = getValue(row, COLUMN_MAP.shares);
+      const rawAmount = getValue(row, COLUMN_MAP.amount);
+      const amount = Number(rawAmount ?? (Number(rawShares || 0) * CONFIG.SHARE_VALUE_PER_UNIT)) || 0;
+      const shares = Number(rawShares ?? (amount / CONFIG.SHARE_VALUE_PER_UNIT)) || 0;
+      const rawChannel = String(getValue(row, COLUMN_MAP.channel) || "สำนักงาน").toLowerCase();
+      const channel = rawChannel.includes("line") || row.line_user_id ? "LINE" : rawChannel.includes("office") || rawChannel.includes("สำนัก") ? "สำนักงาน" : "อื่น ๆ";
+
+      return {
+        id: String(getValue(row, COLUMN_MAP.id) ?? index + 1),
+        memberId: String(getValue(row, COLUMN_MAP.memberId) ?? "-"),
+        memberName: String(getValue(row, COLUMN_MAP.memberName) ?? "ไม่ระบุชื่อ"),
+        group: String(getValue(row, COLUMN_MAP.group) ?? "ไม่ระบุกลุ่ม"),
+        amount,
+        shares,
+        channel,
+        date: normalizeDate(getValue(row, COLUMN_MAP.date)),
+        status: String(getValue(row, COLUMN_MAP.status) ?? "สำเร็จ")
+      };
+    }
+
+    function makeDemoData() {
+      const names = ["สมชาย ใจดี", "กนกวรรณ มีสุข", "ประเสริฐ แก้วดี", "สายใจ รักงาน", "ณัฐวุฒิ พูนทรัพย์", "สุภาวดี ทองแท้", "วิชัย คงมั่น", "นฤมล แสงทอง", "ธนากร รุ่งเรือง", "พัชรี ชูศรี"];
+      const groups = ["กะทู้", "ป่าตอง", "กมลา", "ฉลอง", "ราไวย์", "เกาะแก้ว"];
+      const monthly = [1780000, 1940000, 2120000, 2010000, 2350000, 2520000, 2790000, 3230000];
+      const rows = [];
+      let id = 1;
+      monthly.forEach((total, month) => {
+        const count = 18 + month * 2;
+        let remaining = total;
+        for (let i = 0; i < count; i++) {
+          const amount = i === count - 1 ? remaining : Math.min(remaining, 45000 + ((i * 37 + month * 19) % 9) * 10000);
+          remaining -= amount;
+          rows.push({
+            id: String(id++), memberId: String(1001 + ((i * 13 + month * 41) % 736)).padStart(4, "0"),
+            memberName: names[(i + month * 2) % names.length], group: groups[(i * 2 + month) % groups.length],
+            amount, shares: Math.round(amount / CONFIG.SHARE_VALUE_PER_UNIT),
+            channel: (i + month) % 4 === 0 || (month >= 5 && i % 3 === 0) ? "LINE" : "สำนักงาน",
+            date: `2026-${String(month + 1).padStart(2, "0")}-${String(2 + ((i * 5 + month) % 25)).padStart(2, "0")}`,
+            status: "สำเร็จ"
+          });
+        }
+      });
+      return rows.sort((a, b) => b.date.localeCompare(a.date));
+    }
+
+    function isConfigured() {
+      return CONFIG.SUPABASE_URL.startsWith("https://") && !CONFIG.SUPABASE_URL.includes("YOUR_PROJECT") && CONFIG.SUPABASE_ANON_KEY && !CONFIG.SUPABASE_ANON_KEY.includes("YOUR_SUPABASE");
+    }
+
+    async function loadData() {
+      $("loading").classList.add("show");
+      $("refreshBtn").disabled = true;
+      try {
+        if (!isConfigured()) {
+          if (!CONFIG.USE_DEMO_WHEN_NOT_CONFIGURED) throw new Error("กรุณาตั้งค่า SUPABASE_URL และ SUPABASE_ANON_KEY");
+          allRows = makeDemoData();
+          setStatus("sample", "ข้อมูลตัวอย่าง", "กรอก Supabase URL และ Anon Key ในส่วน CONFIG เพื่อใช้ข้อมูลจริง");
+          $("dbStatusText").textContent = "โหมดข้อมูลตัวอย่าง";
+          $("dbStatus").classList.remove("connected");
+        } else {
+          const client = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+          const { data, error } = await client.from(CONFIG.TABLE_NAME).select("*").limit(CONFIG.MAX_ROWS);
+          if (error) throw error;
+          allRows = (data || []).map(normalizeRow).filter(row => row.amount > 0).sort((a, b) => b.date.localeCompare(a.date));
+          setStatus("live", "เชื่อมต่อ Supabase แล้ว", `อ่านข้อมูล ${NUM.format(allRows.length)} รายการจากตาราง ${CONFIG.TABLE_NAME}`);
+          $("dbStatusText").textContent = "เชื่อมต่อข้อมูลแล้ว";
+          $("dbStatus").classList.add("connected");
+        }
+        setupFilters();
+        applyFilters();
+      } catch (error) {
+        console.error(error);
+        allRows = CONFIG.USE_DEMO_WHEN_NOT_CONFIGURED ? makeDemoData() : [];
+        setStatus("error", "อ่านข้อมูลไม่สำเร็จ", error.message || "โปรดตรวจสอบการตั้งค่า Supabase และ RLS");
+        applyFilters();
+      } finally {
+        $("loading").classList.remove("show");
+        $("refreshBtn").disabled = false;
+      }
+    }
+
+    function setStatus(type, title, text) {
+      $("alertBox").className = `alert ${type === "live" ? "live" : type === "error" ? "error" : ""}`;
+      $("alertTitle").textContent = title;
+      $("alertText").textContent = text;
+    }
+
+    function setupFilters() {
+      const dates = allRows.map(row => row.date).sort();
+      if (dates.length) {
+        const latest = new Date(`${dates[dates.length - 1]}T00:00:00`);
+        $("dateTo").value = dates[dates.length - 1];
+        $("dateFrom").value = `${latest.getFullYear()}-01-01`;
+      }
+      const selected = $("groupFilter").value;
+      const groups = [...new Set(allRows.map(row => row.group))].sort((a, b) => a.localeCompare(b, "th"));
+      $("groupFilter").innerHTML = '<option value="all">ทั้งหมด</option>' + groups.map(group => `<option value="${escapeHtml(group)}">${escapeHtml(group)}</option>`).join("");
+      if (groups.includes(selected)) $("groupFilter").value = selected;
+    }
+
+    function applyFilters() {
+      const from = $("dateFrom").value;
+      const to = $("dateTo").value;
+      const channel = $("channelFilter").value;
+      const group = $("groupFilter").value;
+      const search = $("searchInput").value.trim().toLowerCase();
+      filteredRows = allRows.filter(row => {
+        const matchesDate = (!from || row.date >= from) && (!to || row.date <= to);
+        const matchesChannel = channel === "all" || row.channel === channel;
+        const matchesGroup = group === "all" || row.group === group;
+        const matchesSearch = !search || `${row.memberId} ${row.memberName} ${row.group}`.toLowerCase().includes(search);
+        return matchesDate && matchesChannel && matchesGroup && matchesSearch;
+      });
+      renderDashboard();
+    }
+
+    function calculateStats() {
+      const total = filteredRows.reduce((sum, row) => sum + row.amount, 0);
+      const lineTotal = filteredRows.filter(row => row.channel === "LINE").reduce((sum, row) => sum + row.amount, 0);
+      const officeTotal = filteredRows.filter(row => row.channel === "สำนักงาน").reduce((sum, row) => sum + row.amount, 0);
+      const otherTotal = Math.max(0, total - lineTotal - officeTotal);
+      const members = new Set(filteredRows.map(row => row.memberId)).size;
+      const monthly = Array(12).fill(0);
+      filteredRows.forEach(row => monthly[new Date(`${row.date}T00:00:00`).getMonth()] += row.amount);
+      const activeMonths = monthly.map((value, index) => value > 0 ? index : -1).filter(index => index >= 0);
+      const latestMonth = activeMonths.length ? activeMonths[activeMonths.length - 1] : 0;
+      const latestValue = monthly[latestMonth] || 0;
+      const previousValue = monthly[Math.max(latestMonth - 1, 0)] || latestValue;
+      const firstValue = monthly.find(value => value > 0) || 0;
+      const recent = monthly.slice(Math.max(0, latestMonth - 5), latestMonth + 1).filter(value => value > 0);
+      const growth = recent.length > 1 ? recent.slice(1).reduce((sum, value, i) => sum + ((value - recent[i]) / Math.max(recent[i], 1)), 0) / (recent.length - 1) : .05;
+      const safeGrowth = Math.max(-.02, Math.min(growth, .12));
+      const forecast = Array.from({ length: Math.max(0, 11 - latestMonth) }, (_, i) => latestValue * Math.pow(1 + safeGrowth, i + 1));
+      const projected = total + forecast.reduce((sum, value) => sum + value, 0);
+
+      const memberTotals = new Map();
+      const groupTotals = new Map();
+      filteredRows.forEach(row => {
+        memberTotals.set(row.memberId, (memberTotals.get(row.memberId) || 0) + row.amount);
+        const current = groupTotals.get(row.group) || { amount: 0, members: new Set() };
+        current.amount += row.amount;
+        current.members.add(row.memberId);
+        groupTotals.set(row.group, current);
+      });
+      const groups = [...groupTotals.entries()].map(([name, value]) => ({ name, amount: value.amount, members: value.members.size })).sort((a, b) => b.amount - a.amount);
+      const tiers = [
+        { name: "ตั้งแต่ 100,000 บาท", count: 0, color: "#1e6b5c" },
+        { name: "50,000–99,999 บาท", count: 0, color: "#d89932" },
+        { name: "10,000–49,999 บาท", count: 0, color: "#3f86a6" },
+        { name: "ต่ำกว่า 10,000 บาท", count: 0, color: "#c6cec9" }
+      ];
+      memberTotals.forEach(value => value >= 100000 ? tiers[0].count++ : value >= 50000 ? tiers[1].count++ : value >= 10000 ? tiers[2].count++ : tiers[3].count++);
+      return { total, lineTotal, officeTotal, otherTotal, members, monthly, latestMonth, latestValue, previousValue, firstValue, forecast, projected, groups, tiers };
+    }
+
+    function renderDashboard() {
+      const stats = calculateStats();
+      const linePercent = stats.total ? (stats.lineTotal / stats.total) * 100 : 0;
+      const targetPercent = Math.min(100, (stats.total / CONFIG.TARGET_AMOUNT) * 100);
+      const projectedPercent = (stats.projected / CONFIG.TARGET_AMOUNT) * 100;
+      const monthGrowth = percentChange(stats.latestValue, stats.previousValue);
+
+      $("totalValue").textContent = THB.format(stats.total);
+      $("lineValue").textContent = THB.format(stats.lineTotal);
+      $("memberValue").textContent = NUM.format(stats.members);
+      $("transactionValue").textContent = `${NUM.format(filteredRows.length)} รายการ`;
+      $("targetTag").textContent = `เป้าหมาย ${targetPercent.toFixed(1)}%`;
+      $("lineTag").textContent = `${linePercent.toFixed(1)}% ของทั้งหมด`;
+      $("monthGrowth").textContent = `${monthGrowth >= 0 ? "↑" : "↓"} ${Math.abs(monthGrowth).toFixed(1)}%`;
+      $("monthGrowth").className = monthGrowth >= 0 ? "positive" : "negative";
+      $("forecastValue").textContent = THB.format(stats.projected);
+      $("forecastPercent").textContent = `${projectedPercent.toFixed(1)}%`;
+      $("forecastPercent").className = projectedPercent >= 100 ? "positive" : "negative";
+      $("forecastTag").textContent = projectedPercent >= 100 ? "มีแนวโน้มถึงเป้า" : "ต้องเร่งเพิ่ม";
+      $("forecastTag").className = `tag ${projectedPercent >= 100 ? "" : "red"}`;
+
+      $("latestMonthValue").textContent = THB.format(stats.latestValue);
+      $("firstMonthGrowth").textContent = `${percentChange(stats.latestValue, stats.firstValue) >= 0 ? "+" : ""}${percentChange(stats.latestValue, stats.firstValue).toFixed(1)}%`;
+      $("averageMonthValue").textContent = THB.format(stats.total / Math.max(stats.latestMonth + 1, 1));
+      $("targetTitle").textContent = `ความคืบหน้า ${compactBaht(CONFIG.TARGET_AMOUNT)}`;
+      $("progressPercent").textContent = `${targetPercent.toFixed(1)}%`;
+      $("progressRing").style.setProperty("--progress", `${targetPercent * 3.6}deg`);
+      $("targetCurrent").textContent = THB.format(stats.total);
+      $("targetRemaining").textContent = THB.format(Math.max(0, CONFIG.TARGET_AMOUNT - stats.total));
+      $("targetForecast").textContent = THB.format(stats.projected);
+      $("targetForecastNote").textContent = projectedPercent >= 100 ? `สูงกว่าเป้า ${THB.format(stats.projected - CONFIG.TARGET_AMOUNT)}` : `ยังต่ำกว่าเป้า ${THB.format(CONFIG.TARGET_AMOUNT - stats.projected)}`;
+      $("recordCount").textContent = `${NUM.format(filteredRows.length)} รายการ`;
+      $("lineCenter").textContent = `${linePercent.toFixed(0)}%`;
+
+      renderTrendChart(stats);
+      renderChannelChart(stats);
+      renderTiers(stats);
+      renderGroups(stats);
+      renderInsights(stats, projectedPercent, linePercent);
+      renderTable();
+    }
+
+    function renderTrendChart(stats) {
+      if (trendChart) trendChart.destroy();
+      const actual = stats.monthly.map((value, index) => index <= stats.latestMonth && value > 0 ? value : null);
+      const forecast = Array(12).fill(null);
+      forecast[stats.latestMonth] = stats.latestValue;
+      stats.forecast.forEach((value, index) => { if (stats.latestMonth + index + 1 < 12) forecast[stats.latestMonth + index + 1] = value; });
+      trendChart = new Chart($("trendChart"), {
+        type: "line",
+        data: { labels: MONTHS, datasets: [
+          { label: "ข้อมูลจริง", data: actual, borderColor: "#1e6b5c", backgroundColor: "rgba(30,107,92,.12)", borderWidth: 3, pointRadius: 4, pointBackgroundColor: "#fff", pointBorderColor: "#1e6b5c", pointBorderWidth: 3, fill: true, tension: .35, spanGaps: false },
+          { label: "ประมาณการ", data: forecast, borderColor: "#d89932", borderWidth: 2.5, borderDash: [7, 7], pointRadius: 3, pointBackgroundColor: "#fff", pointBorderColor: "#d89932", fill: false, tension: .35, spanGaps: true }
+        ]},
+        options: { responsive: true, maintainAspectRatio: false, interaction: { intersect: false, mode: "index" }, plugins: { legend: { display: false }, tooltip: { callbacks: { label: context => `${context.dataset.label}: ${THB.format(context.raw || 0)}` } } }, scales: { x: { grid: { display: false }, ticks: { color: "#74817b", font: { size: 9 } } }, y: { beginAtZero: true, grid: { color: "#e8edeb" }, ticks: { color: "#74817b", font: { size: 9 }, callback: value => compactBaht(value) } } } }
+      });
+    }
+
+    function renderChannelChart(stats) {
+      if (channelChart) channelChart.destroy();
+      channelChart = new Chart($("channelChart"), { type: "doughnut", data: { labels: ["LINE", "สำนักงาน", "อื่น ๆ"], datasets: [{ data: [stats.lineTotal, stats.officeTotal, stats.otherTotal], backgroundColor: ["#d89932", "#1e6b5c", "#cbd4d0"], borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: "72%", plugins: { legend: { display: false }, tooltip: { callbacks: { label: context => `${context.label}: ${THB.format(context.raw || 0)}` } } } } });
+      const total = Math.max(stats.total, 1);
+      $("channelList").innerHTML = [
+        ["LINE", stats.lineTotal, "#d89932"], ["สำนักงาน", stats.officeTotal, "#1e6b5c"], ["อื่น ๆ", stats.otherTotal, "#cbd4d0"]
+      ].map(([name, value, color]) => `<div class="channel-item"><i class="channel-color" style="background:${color}"></i><span>${name}<small>${THB.format(value)}</small></span><strong>${((value / total) * 100).toFixed(1)}%</strong></div>`).join("");
+    }
+
+    function renderTiers(stats) {
+      $("tierList").innerHTML = stats.tiers.map(tier => {
+        const percent = stats.members ? (tier.count / stats.members) * 100 : 0;
+        return `<div class="tier"><div class="tier-top"><span>${tier.name}</span><strong>${NUM.format(tier.count)} ราย</strong></div><div class="bar"><i style="width:${percent}%;background:${tier.color}"></i></div><small>${percent.toFixed(1)}% ของสมาชิกที่ซื้อหุ้น</small></div>`;
+      }).join("");
+    }
+
+    function renderGroups(stats) {
+      const max = stats.groups[0]?.amount || 1;
+      $("groupList").innerHTML = stats.groups.length ? stats.groups.slice(0, 6).map((group, index) => `<div class="group-row"><span class="rank">${String(index + 1).padStart(2, "0")}</span><span class="group-name"><strong>กลุ่ม${escapeHtml(group.name)}</strong><small>${NUM.format(group.members)} สมาชิก</small></span><div class="bar"><i style="width:${(group.amount / max) * 100}%;background:#1e6b5c"></i></div><strong class="group-amount">${compactBaht(group.amount)}</strong></div>`).join("") : '<div class="empty">ไม่มีข้อมูลกลุ่มสมาชิก</div>';
+    }
+
+    function renderInsights(stats, projectedPercent, linePercent) {
+      const lowTier = stats.tiers[3].count;
+      const lowPercent = stats.members ? (lowTier / stats.members) * 100 : 0;
+      const insights = [
+        { title: `ยอดซื้อผ่าน LINE คิดเป็น ${linePercent.toFixed(1)}%`, text: linePercent >= 30 ? "ควรรักษาแคมเปญรายเดือนและข้อความเตือนซื้อหุ้น" : "ยังมีโอกาสกระตุ้นให้สมาชิกเปลี่ยนมาใช้ LINE มากขึ้น" },
+        { title: `สมาชิกมูลค่าต่ำมี ${lowTier} ราย`, text: `${lowPercent.toFixed(1)}% ของสมาชิกที่ซื้อหุ้น ควรออกแบบกิจกรรมยอดน้อยแต่สม่ำเสมอ` },
+        { title: projectedPercent >= 100 ? "แนวโน้มสิ้นปีสูงกว่าเป้า" : "แนวโน้มสิ้นปียังต่ำกว่าเป้า", text: projectedPercent >= 100 ? "รักษาอัตราการเติบโตในช่วงที่เหลือ" : `ควรเร่งเพิ่มอีก ${THB.format(Math.max(0, CONFIG.TARGET_AMOUNT - stats.projected))}` }
+      ];
+      $("insightList").innerHTML = insights.map((item, index) => `<div class="insight"><span>0${index + 1}</span><div><strong>${escapeHtml(item.title)}</strong><p>${escapeHtml(item.text)}</p></div></div>`).join("");
+    }
+
+    function renderTable() {
+      const rows = filteredRows.slice(0, 15);
+      $("emptyState").hidden = rows.length > 0;
+      $("tableBody").innerHTML = rows.map(row => `<tr><td><strong>${escapeHtml(row.memberName)}</strong><small>#${escapeHtml(row.memberId)}</small></td><td>${escapeHtml(row.group)}</td><td>${formatDate(row.date)}</td><td><span class="badge ${row.channel === "LINE" ? "line" : ""}">${escapeHtml(row.channel)}</span></td><td class="text-right">${NUM.format(row.shares)}</td><td class="text-right amount">${THB.format(row.amount)}</td><td><span class="badge">${escapeHtml(row.status)}</span></td></tr>`).join("");
+    }
+
+    function exportCsv() {
+      const header = ["เลขที่สมาชิก", "ชื่อสมาชิก", "กลุ่ม", "วันที่", "ช่องทาง", "จำนวนหุ้น", "มูลค่า", "สถานะ"];
+      const rows = filteredRows.map(row => [row.memberId, row.memberName, row.group, row.date, row.channel, row.shares, row.amount, row.status]);
+      const csv = "\uFEFF" + [header, ...rows].map(row => row.map(value => `"${String(value).replaceAll('"', '""')}"`).join(",")).join("\n");
+      const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `member-share-${new Date().toISOString().slice(0, 10)}.csv`;
+      link.click();
+      URL.revokeObjectURL(url);
+    }
+
+    ["dateFrom", "dateTo", "channelFilter", "groupFilter"].forEach(id => $(id).addEventListener("change", applyFilters));
+    $("searchInput").addEventListener("input", applyFilters);
+    $("refreshBtn").addEventListener("click", loadData);
+    $("exportBtn").addEventListener("click", exportCsv);
+    $("menuBtn").addEventListener("click", () => { $("sidebar").classList.toggle("open"); $("overlay").classList.toggle("show"); });
+    $("overlay").addEventListener("click", () => { $("sidebar").classList.remove("open"); $("overlay").classList.remove("show"); });
+    document.querySelectorAll(".nav a").forEach(link => link.addEventListener("click", () => { $("sidebar").classList.remove("open"); $("overlay").classList.remove("show"); }));
+
+    loadData();
+  </script>
+</body>
+</html>
