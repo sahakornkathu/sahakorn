@@ -541,7 +541,7 @@
       setLoading(true);
       try {
         const [members, rawShareRows, rawOrders] = await Promise.all([
-          fetchAll("member", "member_id"),
+          fetchAll("members", "member_id"),
           fetchAll("member_share", "member_id"),
           fetchAll("historycart", "created_at")
         ]);
