@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="th">
 <head>
@@ -6,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light">
   <title>Dashboard KPI หุ้นสมาชิก</title>
-  <script src="./member-data.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
   <style>
@@ -542,10 +540,8 @@
     async function loadData() {
       setLoading(true);
       try {
-        const members = Array.isArray(window.MEMBER_DATA) ? window.MEMBER_DATA : [];
-        if (!members.length) throw new Error("ไม่พบข้อมูลใน member-data.js");
-
-        const [rawShareRows, rawOrders] = await Promise.all([
+        const [members, rawShareRows, rawOrders] = await Promise.all([
+          fetchAll("member", "member_id"),
           fetchAll("member_share", "member_id"),
           fetchAll("historycart", "created_at")
         ]);
@@ -555,8 +551,8 @@
         members.forEach((member) => {
           const info = {
             member_id: text(member.member_id),
-            member_name: text(member.member_name) || "ไม่พบชื่อ",
-            member_group: text(member.member_group) || "ไม่ระบุกลุ่ม",
+            member_name: text([member.title, member.first_name, member.last_name].filter(Boolean).join(" ")) || "ไม่พบชื่อ",
+            member_group: text(member.group) || "ไม่ระบุกลุ่ม",
             member_status: text(member.member_status) || "ไม่ระบุ"
           };
           memberById.set(info.member_id, info);
@@ -606,7 +602,7 @@
         $("#updatedAt").textContent = `อัปเดตล่าสุด ${formatThaiDate(new Date(), true)} น.`;
       } catch (error) {
         console.error(error);
-        alert(`โหลดข้อมูลไม่สำเร็จ\n${error.message}\n\nตรวจสอบไฟล์ member-data.js, SUPABASE_URL, SUPABASE_ANON_KEY และสิทธิ์อ่านตาราง member_share, historycart`);
+        alert(`โหลดข้อมูลไม่สำเร็จ\n${error.message}\n\nตรวจสอบ SUPABASE_URL, SUPABASE_ANON_KEY และสิทธิ์อ่านตาราง member, member_share, historycart`);
       } finally {
         setLoading(false);
       }
