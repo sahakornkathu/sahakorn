@@ -421,12 +421,12 @@
         <div class="panel-head">
           <div>
             <h2 class="panel-title">รายการซื้อผ่าน LINE ล่าสุด</h2>
-            <p class="panel-subtitle">เฉพาะ historycart ที่ status = completed ในปีบัญชีที่เลือก</p>
+            <p class="panel-subtitle">เฉพาะ historycart ที่ status = completed · สมาชิกคนเดียวกันซื้อวันเดียวกันจะรวมยอดเป็นรายการเดียว</p>
           </div>
         </div>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>วันที่สำเร็จ</th><th>เลขคำสั่งซื้อ</th><th>สมาชิก</th><th>กลุ่ม</th><th class="num">ยอดเงิน</th></tr></thead>
+            <thead><tr><th>วันที่ซื้อ</th><th>จำนวนรายการ</th><th>สมาชิก</th><th>กลุ่ม</th><th class="num">ยอดรวม</th></tr></thead>
             <tbody id="orderTableBody"></tbody>
           </table>
         </div>
@@ -1085,19 +1085,65 @@
         </tr>`).join("");
     }
 
+    function bangkokDateKey(dateValue) {
+      const date = new Date(dateValue);
+      if (Number.isNaN(date.getTime())) return "invalid-date";
+      const parts = new Intl.DateTimeFormat("en-CA", {
+        timeZone: "Asia/Bangkok",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit"
+      }).formatToParts(date);
+      const value = (type) => parts.find((part) => part.type === type)?.value || "";
+      return `${value("year")}-${value("month")}-${value("day")}`;
+    }
+
     function renderOrderTable() {
-      const rows = [...state.filteredOrders].sort((a, b) => new Date(b.completed_at) - new Date(a.completed_at));
+      const grouped = new Map();
+
+      state.filteredOrders.forEach((order) => {
+        const memberId = text(order.member_id);
+        const memberName = text(order.member_name) || "ยังจับคู่ไม่ได้";
+        // ใช้ member_id เป็นหลักเพื่อไม่รวมคนละคนที่ชื่อซ้ำกัน
+        // ถ้าจับคู่สมาชิกไม่ได้จึงค่อยใช้ชื่อเป็น fallback
+        const personKey = memberId || `name:${memberName.toLocaleLowerCase("th")}`;
+        const dateKey = bangkokDateKey(order.completed_at);
+        const key = `${personKey}__${dateKey}`;
+        const current = grouped.get(key) || {
+          dateKey,
+          completed_at: order.completed_at,
+          member_id: memberId,
+          member_name: memberName,
+          member_group: text(order.member_group) || "—",
+          total_price: 0,
+          order_count: 0
+        };
+
+        current.total_price += number(order.total_price);
+        current.order_count += 1;
+        if (new Date(order.completed_at) > new Date(current.completed_at)) {
+          current.completed_at = order.completed_at;
+        }
+        grouped.set(key, current);
+      });
+
+      const rows = [...grouped.values()].sort((a, b) =>
+        new Date(b.completed_at) - new Date(a.completed_at)
+        || naturalCompare(a.member_name, b.member_name)
+      );
+
       const body = $("#orderTableBody");
       if (!rows.length) {
         body.innerHTML = '<tr><td colspan="5" class="empty-cell">ไม่พบรายการ LINE ตามตัวกรอง</td></tr>';
         return;
       }
+
       body.innerHTML = rows.slice(0, 15).map((row) => `
         <tr>
-          <td>${escapeHtml(formatThaiDate(row.completed_at, true))}</td>
-          <td>${escapeHtml(text(row.order_uuid).slice(0, 12) || row.id)}</td>
-          <td class="member-name">${escapeHtml(row.member_name || "ยังจับคู่ไม่ได้")}</td>
-          <td>${escapeHtml(row.member_group || "—")}</td>
+          <td>${escapeHtml(formatThaiDate(row.completed_at, false))}</td>
+          <td>${money(row.order_count)} รายการ</td>
+          <td class="member-name">${escapeHtml(row.member_name)}</td>
+          <td>${escapeHtml(row.member_group)}</td>
           <td class="num"><span class="badge line">${money(row.total_price)} บาท</span></td>
         </tr>`).join("");
     }
