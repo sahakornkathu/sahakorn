@@ -193,9 +193,23 @@
     .panel-subtitle { margin: 4px 0 0; color: var(--muted); font-size: 11px; }
     .panel-body { position: relative; min-height: 300px; padding: 16px 18px 18px; }
     .chart-box { height: 270px; }
-    .side-charts { display: grid; grid-template-rows: 1fr 1fr; gap: 14px; }
+    .side-charts { display: grid; grid-template-rows: 1fr; gap: 14px; }
     .side-charts .panel-body { min-height: 225px; }
-    .side-charts .chart-box { height: 190px; }
+    .side-charts .chart-box { height: 250px; }
+
+    /* กราฟยอดซื้อแยกตามกลุ่ม: แยกเต็มความกว้างเพื่อไม่ให้ข้อมูลซ้อนกัน */
+    .group-panel { margin-bottom: 14px; }
+    .group-chart-wrap { overflow-x: hidden; overflow-y: auto; }
+    .group-chart-box { height: 360px; min-height: 320px; }
+    .group-summary {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 16px;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+    .group-summary strong { color: var(--ink); }
 
     .table-panel { margin-top: 14px; overflow: hidden; }
     .table-actions { display: flex; align-items: center; gap: 8px; }
@@ -230,7 +244,7 @@
       .filters { grid-template-columns: repeat(3, 1fr); }
       .kpi-grid { grid-template-columns: repeat(2, 1fr); }
       .chart-grid { grid-template-columns: 1fr; }
-      .side-charts { grid-template-columns: 1fr 1fr; grid-template-rows: none; }
+      .side-charts { grid-template-columns: 1fr; grid-template-rows: none; }
     }
     @media (max-width: 720px) {
       .topbar { padding-inline: 14px; }
@@ -239,6 +253,7 @@
       .filters { grid-template-columns: 1fr 1fr; }
       .filter.search-filter { grid-column: 1 / -1; }
       .kpi-grid, .mini-grid, .side-charts { grid-template-columns: 1fr; }
+      .group-chart-box { min-height: 340px; }
       .kpi-card { min-height: 150px; }
       .panel-head { flex-direction: column; }
     }
@@ -366,15 +381,19 @@
             </div>
             <div class="panel-body"><div class="chart-box"><canvas id="shareChart"></canvas></div></div>
           </article>
-          <article class="panel">
-            <div class="panel-head">
-              <div>
-                <h2 class="panel-title">ยอดซื้อแยกตามกลุ่ม</h2>
-                <p class="panel-subtitle">เปรียบเทียบยอดรวมกับยอด LINE</p>
-              </div>
-            </div>
-            <div class="panel-body"><div class="chart-box"><canvas id="groupChart"></canvas></div></div>
-          </article>
+        </div>
+      </section>
+
+      <section class="panel group-panel">
+        <div class="panel-head">
+          <div>
+            <h2 class="panel-title">ยอดซื้อแยกตามกลุ่ม</h2>
+            <p class="panel-subtitle">เรียงจากยอดซื้อรวมมากไปน้อย · 1 กลุ่มต่อ 1 แถว เพื่อเปรียบเทียบได้ชัดเจน</p>
+            <div id="groupSummary" class="group-summary"></div>
+          </div>
+        </div>
+        <div class="panel-body group-chart-wrap">
+          <div id="groupChartBox" class="group-chart-box"><canvas id="groupChart"></canvas></div>
         </div>
       </section>
 
@@ -909,18 +928,91 @@
         item.line += row.line_total;
         groupMap.set(row.member_group, item);
       });
-      const groups = [...groupMap.keys()].sort(naturalCompare);
+      const groups = [...groupMap.keys()].sort((a, b) => {
+        const buyDiff = groupMap.get(b).buy - groupMap.get(a).buy;
+        return buyDiff || naturalCompare(a, b);
+      });
+
+      // เพิ่มความสูงตามจำนวนกลุ่ม ป้องกันชื่อกลุ่ม/แท่งกราฟซ้อนกัน
+      const groupChartHeight = Math.max(340, groups.length * 58 + 90);
+      $("#groupChartBox").style.height = `${groupChartHeight}px`;
+
+      const groupBuyTotal = groups.reduce((sum, group) => sum + groupMap.get(group).buy, 0);
+      const groupLineTotal = groups.reduce((sum, group) => sum + groupMap.get(group).line, 0);
+      $("#groupSummary").innerHTML = groups.length
+        ? `<span>จำนวนกลุ่ม <strong>${money(groups.length)}</strong></span>`
+          + `<span>ยอดซื้อรวม <strong>${money(groupBuyTotal)} บาท</strong></span>`
+          + `<span>ผ่าน LINE <strong>${money(groupLineTotal)} บาท</strong></span>`
+        : `<span>ไม่พบข้อมูลกลุ่มตามตัวกรอง</span>`;
+
       destroyChart("group");
       state.charts.group = new Chart($("#groupChart"), {
         type: "bar",
         data: {
           labels: groups.map((group) => `กลุ่ม ${group}`),
           datasets: [
-            { label: "ซื้อรวม", data: groups.map((group) => groupMap.get(group).buy), backgroundColor: "#17835c", borderRadius: 5 },
-            { label: "ผ่าน LINE", data: groups.map((group) => groupMap.get(group).line), backgroundColor: "#f0a522", borderRadius: 5 }
+            {
+              label: "ซื้อรวม",
+              data: groups.map((group) => groupMap.get(group).buy),
+              backgroundColor: "#17835c",
+              borderRadius: 6,
+              maxBarThickness: 18,
+              categoryPercentage: 0.72,
+              barPercentage: 0.86
+            },
+            {
+              label: "ผ่าน LINE",
+              data: groups.map((group) => groupMap.get(group).line),
+              backgroundColor: "#f0a522",
+              borderRadius: 6,
+              maxBarThickness: 18,
+              categoryPercentage: 0.72,
+              barPercentage: 0.86
+            }
           ]
         },
-        options: chartOptions({ currency: true, horizontal: true })
+        options: {
+          ...chartOptions({ currency: true, horizontal: true }),
+          layout: { padding: { left: 4, right: 12, top: 4, bottom: 4 } },
+          scales: {
+            x: {
+              beginAtZero: true,
+              grid: { color: "#edf1ef" },
+              ticks: { callback: compactMoney }
+            },
+            y: {
+              grid: { display: false },
+              ticks: {
+                autoSkip: false,
+                padding: 8,
+                font: { size: 12, weight: "600" }
+              }
+            }
+          },
+          plugins: {
+            legend: {
+              display: true,
+              position: "top",
+              align: "start",
+              labels: { boxWidth: 10, usePointStyle: true, padding: 16 }
+            },
+            tooltip: {
+              mode: "index",
+              intersect: false,
+              callbacks: {
+                title: (items) => items[0]?.label || "",
+                label: (ctx) => {
+                  const value = number(ctx.raw);
+                  const total = groupMap.get(groups[ctx.dataIndex])?.buy || 0;
+                  if (ctx.datasetIndex === 1 && total > 0) {
+                    return `${ctx.dataset.label}: ${money(value)} บาท (${percent(value / total * 100)})`;
+                  }
+                  return `${ctx.dataset.label}: ${money(value)} บาท`;
+                }
+              }
+            }
+          }
+        }
       });
     }
 
