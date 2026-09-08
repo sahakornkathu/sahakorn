@@ -923,9 +923,11 @@
 
       const groupMap = new Map();
       state.filtered.forEach((row) => {
-        const item = groupMap.get(row.member_group) || { buy: 0, line: 0 };
+        const item = groupMap.get(row.member_group) || { buy: 0, line: 0, buyers: 0, lineBuyers: 0 };
         item.buy += row.share_buy;
         item.line += row.line_total;
+        if (row.share_buy > 0) item.buyers += 1;
+        if (row.line_total > 0) item.lineBuyers += 1;
         groupMap.set(row.member_group, item);
       });
       const groups = [...groupMap.keys()].sort((a, b) => {
@@ -1003,11 +1005,20 @@
                 title: (items) => items[0]?.label || "",
                 label: (ctx) => {
                   const value = number(ctx.raw);
-                  const total = groupMap.get(groups[ctx.dataIndex])?.buy || 0;
-                  if (ctx.datasetIndex === 1 && total > 0) {
-                    return `${ctx.dataset.label}: ${money(value)} บาท (${percent(value / total * 100)})`;
+                  const group = groupMap.get(groups[ctx.dataIndex]) || { buy: 0, buyers: 0, lineBuyers: 0 };
+                  if (ctx.datasetIndex === 1 && group.buy > 0) {
+                    return `${ctx.dataset.label}: ${money(value)} บาท (${percent(value / group.buy * 100)})`;
                   }
                   return `${ctx.dataset.label}: ${money(value)} บาท`;
+                },
+                afterBody: (items) => {
+                  const index = items[0]?.dataIndex;
+                  if (index == null) return [];
+                  const group = groupMap.get(groups[index]) || { buyers: 0, lineBuyers: 0 };
+                  return [
+                    `ผู้ซื้อหุ้น: ${money(group.buyers)} คน`,
+                    `ผู้ซื้อผ่าน LINE: ${money(group.lineBuyers)} คน`
+                  ];
                 }
               }
             }
