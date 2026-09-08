@@ -975,6 +975,9 @@
         },
         options: {
           ...chartOptions({ currency: true, horizontal: true }),
+          // กราฟแนวนอนต้องเลือกหมวดตามแกน Y ไม่ใช่แกน X
+          // เพื่อให้เมาส์อยู่แถวกลุ่มใด Tooltip ก็อ้างอิงกลุ่มนั้นเสมอ
+          interaction: { mode: "index", axis: "y", intersect: false },
           layout: { padding: { left: 4, right: 12, top: 4, bottom: 4 } },
           scales: {
             x: {
@@ -1000,12 +1003,19 @@
             },
             tooltip: {
               mode: "index",
+              axis: "y",
               intersect: false,
               callbacks: {
-                title: (items) => items[0]?.label || "",
+                title: (items) => {
+                  const index = items[0]?.dataIndex;
+                  if (index == null) return "";
+                  const groupKey = groups[index];
+                  return groupKey == null ? "" : `กลุ่ม ${groupKey}`;
+                },
                 label: (ctx) => {
                   const value = number(ctx.raw);
-                  const group = groupMap.get(groups[ctx.dataIndex]) || { buy: 0, buyers: 0, lineBuyers: 0 };
+                  const groupKey = groups[ctx.dataIndex];
+                  const group = groupMap.get(groupKey) || { buy: 0, buyers: 0, lineBuyers: 0 };
                   if (ctx.datasetIndex === 1 && group.buy > 0) {
                     return `${ctx.dataset.label}: ${money(value)} บาท (${percent(value / group.buy * 100)})`;
                   }
@@ -1014,7 +1024,8 @@
                 afterBody: (items) => {
                   const index = items[0]?.dataIndex;
                   if (index == null) return [];
-                  const group = groupMap.get(groups[index]) || { buyers: 0, lineBuyers: 0 };
+                  const groupKey = groups[index];
+                  const group = groupMap.get(groupKey) || { buyers: 0, lineBuyers: 0 };
                   return [
                     `ผู้ซื้อหุ้น: ${money(group.buyers)} คน`,
                     `ผู้ซื้อผ่าน LINE: ${money(group.lineBuyers)} คน`
