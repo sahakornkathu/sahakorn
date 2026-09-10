@@ -1,0 +1,57 @@
+{
+  "id": "./index.html",
+  "name": "ระบบสมาชิกสหกรณ์การเกษตรกะทู้",
+  "short_name": "สมาชิกสหกรณ์",
+  "description": "ระบบจัดการข้อมูลสมาชิกและผู้รับผลประโยชน์ สหกรณ์การเกษตรกะทู้ จำกัด",
+  "lang": "th",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#eff6ff",
+  "theme_color": "#2563eb",
+  "icons": [
+    {
+      "src": "./icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "ข้อมูลสมาชิก",
+      "short_name": "สมาชิก",
+      "url": "./index.html",
+      "icons": [
+        {
+          "src": "./icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "ผู้รับผลประโยชน์",
+      "short_name": "ผู้รับผลประโยชน์",
+      "url": "./beneficiary.html",
+      "icons": [
+        {
+          "src": "./icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ]
+}
