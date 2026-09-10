@@ -93,6 +93,15 @@
 </div>
 </form>
 
+<!-- ===== BENEFICIARY PAGE ===== -->
+<div class="box flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+  <div>
+    <div class="font-bold text-emerald-700 text-lg">ผู้รับผลประโยชน์สมาชิก</div>
+    <div class="text-sm text-slate-500">ค้นหาสมาชิก บันทึกหนังสือ และจัดสรรเปอร์เซ็นต์ผู้รับผลประโยชน์</div>
+  </div>
+  <button class="btn green" type="button" onclick="window.open('beneficiary.html','_blank')">เปิดหน้าผู้รับผลประโยชน์</button>
+</div>
+
 <!-- ===== FILTER + EXPORT ===== -->
 <div class="box space-y-3">
 <h2 class="title text-center">ค้นหา / Export</h2>
@@ -345,11 +354,17 @@ async function loadMembers(){
 <td>${m.gender||''}</td>
 <td>${m.member_status||''}</td>
 <td>
+<button class="link text-emerald-700" onclick="openBeneficiary(${m.member_id})">ผู้รับผลประโยชน์</button>
 <button class="link" onclick="editMember(${m.member_id})">แก้ไข</button>
 <button class="link text-red-600" onclick="deleteMember(${m.member_id})">ลบ</button>
 </td>
 </tr>`
   })
+}
+
+/* ===== BENEFICIARY ===== */
+window.openBeneficiary = id=>{
+  window.open(`beneficiary.html?member_id=${encodeURIComponent(id)}`, '_blank')
 }
 
 /* ===== EDIT / DELETE ===== */
