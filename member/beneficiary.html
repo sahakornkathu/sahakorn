@@ -557,7 +557,7 @@ window.saveDocument = async function(){
 
   try{
     const {data, error} = await db.rpc('save_member_benefit_document', {
-      p_member_id: Number(selectedMember.member_id),
+      p_member_id: String(selectedMember.member_id),
       p_document_date: documentDate,
       p_document_no: documentNo,
       p_beneficiaries: beneficiaries,
