@@ -135,6 +135,11 @@
       <button class="btn btn-gray" type="button" onclick="resetDocumentForm()">ล้างข้อมูลหนังสือ</button>
     </div>
 
+    <div class="rounded-xl bg-slate-50 border border-slate-200 p-3 text-sm text-slate-600">
+      <b>การลบข้อมูล:</b> หากเป็นผู้รับผลประโยชน์ที่บันทึกแล้ว ให้กด <b>ลบรายการ</b> ที่บุคคลนั้นได้โดยตรง
+      ส่วนการลบหนังสือพร้อมผู้รับผลประโยชน์ทั้งหมด ให้ใช้ปุ่ม <b>ลบทั้งฉบับ</b> ในตารางประวัติด้านล่าง
+    </div>
+
     <div id="beneficiaryList" class="space-y-3"></div>
 
     <div class="flex flex-col sm:flex-row gap-3 pt-2">
@@ -264,6 +269,7 @@ window.addBeneficiary = function(data = {}){
   const card = document.createElement('div')
   card.className = 'benefit-card'
   card.dataset.row = n
+  if(data.id) card.dataset.beneficiaryId = data.id
   card.innerHTML = `
     <div class="flex items-center justify-between gap-3 mb-3">
       <div class="font-bold text-slate-700">ผู้รับผลประโยชน์ลำดับที่ <span class="benefit-order"></span></div>
@@ -305,10 +311,68 @@ window.addBeneficiary = function(data = {}){
   calcPercent()
 }
 
-window.removeBeneficiary = function(row){
-  document.querySelector(`.benefit-card[data-row="${row}"]`)?.remove()
+window.removeBeneficiary = async function(row){
+  const card = document.querySelector(`.benefit-card[data-row="${row}"]`)
+  if(!card) return
+
+  const beneficiaryId = card.dataset.beneficiaryId
+  const firstName = card.querySelector('.b-first')?.value?.trim() || ''
+  const lastName = card.querySelector('.b-last')?.value?.trim() || ''
+  const name = `${firstName} ${lastName}`.trim() || 'รายการนี้'
+
+  // รายการที่ยังไม่เคยบันทึก: ลบออกจากฟอร์มได้ทันที
+  if(!beneficiaryId){
+    card.remove()
+    renumberBeneficiaries()
+    calcPercent()
+    return
+  }
+
+  // รายการที่บันทึกแล้ว: ยืนยันก่อน และลบจากฐานข้อมูลจริง
+  const result = await Swal.fire({
+    title: 'ลบผู้รับผลประโยชน์?',
+    html: `ต้องการลบ <b>${esc(name)}</b> ออกจากหนังสือฉบับนี้หรือไม่?<br><span class="text-sm">หลังลบ กรุณาปรับเปอร์เซ็นต์ของผู้รับผลประโยชน์ที่เหลือให้รวมครบ 100%</span>`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'ลบผู้รับผลประโยชน์',
+    cancelButtonText: 'ยกเลิก',
+    confirmButtonColor: '#dc2626'
+  })
+
+  if(!result.isConfirmed) return
+
+  // ไม่อนุญาตลบคนสุดท้ายของหนังสือโดยตรง
+  const savedCards = [...document.querySelectorAll('.benefit-card')]
+    .filter(c => c.dataset.beneficiaryId)
+
+  if(savedCards.length <= 1){
+    await Swal.fire(
+      'ไม่สามารถลบคนสุดท้ายได้',
+      'ถ้าต้องการเอาผู้รับผลประโยชน์ออกทั้งหมด กรุณาใช้ปุ่ม “ลบหนังสือทั้งฉบับ” ในประวัติหนังสือ',
+      'warning'
+    )
+    return
+  }
+
+  const { error } = await db
+    .from('member_beneficiaries')
+    .delete()
+    .eq('id', beneficiaryId)
+
+  if(error){
+    Swal.fire('ลบไม่สำเร็จ', error.message, 'error')
+    return
+  }
+
+  card.remove()
   renumberBeneficiaries()
   calcPercent()
+
+  await Swal.fire(
+    'ลบเรียบร้อย',
+    'ลบผู้รับผลประโยชน์แล้ว กรุณาปรับเปอร์เซ็นต์ของผู้รับผลประโยชน์ที่เหลือให้รวมครบ 100% แล้วกดบันทึก',
+    'success'
+  )
 }
 
 function renumberBeneficiaries(){
@@ -325,6 +389,7 @@ window.copyMemberAddressToRow = function(row){
 
 function getBeneficiaries(){
   return [...document.querySelectorAll('.benefit-card')].map((card, idx) => ({
+    id: card.dataset.beneficiaryId ? Number(card.dataset.beneficiaryId) : null,
     sequence_no: idx + 1,
     first_name: card.querySelector('.b-first').value.trim(),
     last_name: card.querySelector('.b-last').value.trim(),
