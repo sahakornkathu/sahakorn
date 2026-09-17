@@ -533,7 +533,7 @@ window.printMemberReport = async ()=>{
 
   while (true) {
     let q = db.from('members')
-      .select('member_id,title,first_name,last_name,group,id_card,house_no,moo,street,soi,village,subdistrict,district,province,postal_code,member_status')
+      .select('member_id,title,first_name,last_name,group,id_card,house_no,moo,street,soi,village,subdistrict,district,province,postal_code,phone,member_status')
 
     // ใช้ตัวกรองเดียวกับหน้าค้นหา
     if(fMemberId.value) q=q.eq('member_id',fMemberId.value)
@@ -613,6 +613,7 @@ window.printMemberReport = async ()=>{
   <td>${escapeHtml(r.group || '-')}</td>
   <td>${escapeHtml(r.id_card || '-')}</td>
   <td class="address">${escapeHtml(makeAddress(r) || '-')}</td>
+  <td>${escapeHtml(r.phone || '-')}</td>
   <td>${escapeHtml(r.member_status || '-')}</td>
 </tr>
 `).join('')
@@ -686,8 +687,9 @@ th:nth-child(3), td:nth-child(3){width:11%}
 th:nth-child(4), td:nth-child(4){width:13%}
 th:nth-child(5), td:nth-child(5){width:8%}
 th:nth-child(6), td:nth-child(6){width:15%}
-th:nth-child(7), td:nth-child(7){width:27%}
+th:nth-child(7), td:nth-child(7){width:22%}
 th:nth-child(8), td:nth-child(8){width:10%}
+th:nth-child(9), td:nth-child(9){width:10%}
 
 .address{
   text-align:left;
@@ -730,6 +732,7 @@ tr{
         <th>กลุ่ม</th>
         <th>เลขบัตรประชาชน</th>
         <th>ที่อยู่</th>
+        <th>เบอร์โทรศัพท์</th>
         <th>สถานะสมาชิก</th>
       </tr>
     </thead>
