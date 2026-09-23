@@ -23,6 +23,15 @@
   .table-wrap{overflow:auto}
   th,td{white-space:nowrap}
 </style>
+
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#2563eb">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="สมาชิกสหกรณ์">
+<link rel="apple-touch-icon" href="./icons/icon-192.png">
+
 </head>
 
 <body class="bg-slate-50 text-slate-800">
@@ -107,7 +116,7 @@
         <input id="document_date" type="date" class="input">
       </div>
       <div>
-        <label class="block font-medium mb-1">เลขทะเบียนหนังสือ <span class="text-red-600">*</span></label>
+        <label class="block font-medium mb-1">เลขทะเบียนหนังสือ <span class="text-slate-400 text-sm">(ไม่บังคับ • ถ้ากรอกห้ามซ้ำ)</span></label>
         <input id="document_no" class="input" placeholder="เช่น 001/2569">
       </div>
     </div>
@@ -570,8 +579,8 @@ window.saveDocument = async function(){
   const documentNo = $('document_no').value.trim()
   const beneficiaries = getBeneficiaries()
 
-  if(!documentDate || !documentNo){
-    Swal.fire('ข้อมูลไม่ครบ', 'กรุณากรอกวันที่ทำหนังสือและเลขทะเบียนหนังสือ', 'warning')
+  if(!documentDate){
+    Swal.fire('ข้อมูลไม่ครบ', 'กรุณากรอกวันที่ทำหนังสือ', 'warning')
     return
   }
 
@@ -603,14 +612,20 @@ window.saveDocument = async function(){
     const {data, error} = await db.rpc('save_member_benefit_document', {
       p_member_id: String(selectedMember.member_id),
       p_document_date: documentDate,
-      p_document_no: documentNo,
+      p_document_no: documentNo || null,
       p_beneficiaries: beneficiaries,
       p_document_id: editingDocumentId
     })
 
     if(error) throw error
 
-    await Swal.fire('บันทึกสำเร็จ', `บันทึกหนังสือเลขที่ ${documentNo} เรียบร้อยแล้ว`, 'success')
+    await Swal.fire(
+      'บันทึกสำเร็จ',
+      documentNo
+        ? `บันทึกหนังสือเลขที่ ${documentNo} เรียบร้อยแล้ว`
+        : 'บันทึกข้อมูลผู้รับผลประโยชน์เรียบร้อยแล้ว',
+      'success'
+    )
     resetDocumentForm()
     await loadHistory()
   } catch(err){
@@ -744,7 +759,7 @@ async function loadHistory(){
       <tr class="border-t align-top hover:bg-slate-50">
         <td class="p-3 text-center">${esc(thaiDate(d.document_date))}</td>
         <td class="p-3 text-center">
-          <div class="font-bold text-blue-700">${esc(d.document_no)}</div>
+          <div class="font-bold text-blue-700">${esc(d.document_no || '-')}</div>
         </td>
         <td class="p-3">
           <div class="font-medium">${esc(memberName)}</div>
@@ -842,5 +857,126 @@ if(queryMemberId){
   await selectMember(queryMemberId)
 }
 </script>
+
+<!-- ===== PWA INSTALL ===== -->
+<div id="pwaInstallBar" class="hidden fixed left-3 right-3 bottom-3 z-[9999] max-w-xl mx-auto bg-white border border-blue-200 shadow-2xl rounded-2xl p-3">
+  <div class="flex items-center gap-3">
+    <img src="./icons/icon-192.png" alt="App" class="w-12 h-12 rounded-xl">
+    <div class="min-w-0 flex-1">
+      <div class="font-bold text-slate-800">ติดตั้งระบบสมาชิก</div>
+      <div id="pwaInstallText" class="text-xs text-slate-500">เพิ่มแอปไว้บนหน้าจอมือถือเพื่อเปิดใช้งานได้สะดวก</div>
+    </div>
+    <button id="pwaInstallBtn" type="button" class="px-3 py-2 rounded-lg bg-blue-600 text-white font-bold text-sm">ติดตั้ง</button>
+    <button id="pwaCloseBtn" type="button" class="px-2 py-2 text-slate-400 text-xl leading-none">×</button>
+  </div>
+</div>
+
+
+<script>
+(function(){
+  let deferredPrompt = null;
+
+  const ua = navigator.userAgent || '';
+  const isAndroid = /android/i.test(ua);
+  const isIOS = /iphone|ipad|ipod/i.test(ua);
+  const isStandalone =
+    window.matchMedia('(display-mode: standalone)').matches ||
+    window.navigator.standalone === true;
+
+  const bar = document.getElementById('pwaInstallBar');
+  const btn = document.getElementById('pwaInstallBtn');
+  const closeBtn = document.getElementById('pwaCloseBtn');
+  const text = document.getElementById('pwaInstallText');
+
+  function showBar(message, buttonText){
+    if(isStandalone || !bar) return;
+    if(message && text) text.textContent = message;
+    if(buttonText && btn) btn.textContent = buttonText;
+    bar.classList.remove('hidden');
+  }
+
+  // Show our own install helper immediately on mobile.
+  if(isAndroid && !isStandalone){
+    showBar(
+      'กดติดตั้ง หาก Chrome ยังไม่พร้อม ระบบจะแนะนำเมนูติดตั้งให้',
+      'ติดตั้ง'
+    );
+  } else if(isIOS && !isStandalone){
+    showBar(
+      'iPhone/iPad: แตะ Share แล้วเลือก “เพิ่มไปยังหน้าจอโฮม”',
+      'วิธีติดตั้ง'
+    );
+  }
+
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', async () => {
+      try {
+        const reg = await navigator.serviceWorker.register('./service-worker.js', {
+          scope: './'
+        });
+        console.log('PWA Service Worker ready:', reg.scope);
+      } catch(err) {
+        console.error('Service Worker registration failed:', err);
+      }
+    });
+  }
+
+  window.addEventListener('beforeinstallprompt', event => {
+    event.preventDefault();
+    deferredPrompt = event;
+    showBar('ระบบพร้อมติดตั้งเป็นแอปบนมือถือแล้ว', 'ติดตั้ง');
+  });
+
+  btn?.addEventListener('click', async () => {
+    if(isIOS){
+      await Swal.fire({
+        title: 'ติดตั้งบน iPhone / iPad',
+        html: 'เปิดหน้านี้ด้วยเบราว์เซอร์ แล้วแตะปุ่ม <b>Share</b> จากนั้นเลือก <b>เพิ่มไปยังหน้าจอโฮม</b>',
+        icon: 'info',
+        confirmButtonText: 'เข้าใจแล้ว'
+      });
+      return;
+    }
+
+    if(deferredPrompt){
+      try{
+        deferredPrompt.prompt();
+        const choice = await deferredPrompt.userChoice;
+        if(choice.outcome === 'accepted'){
+          bar?.classList.add('hidden');
+        }
+      } finally {
+        deferredPrompt = null;
+      }
+      return;
+    }
+
+    // Chrome hasn't emitted beforeinstallprompt yet.
+    await Swal.fire({
+      title: 'ติดตั้งจากเมนู Chrome',
+      html: `
+        <div style="text-align:left;line-height:1.8">
+          1. แตะเมนู <b>⋮</b> มุมขวาบนของ Chrome<br>
+          2. เลือก <b>ติดตั้งแอป</b> หรือ <b>เพิ่มไปยังหน้าจอหลัก</b><br>
+          3. กดยืนยัน <b>ติดตั้ง</b><br><br>
+          ถ้ายังไม่มีเมนูนี้ ให้รีเฟรชหน้าเว็บ 1 ครั้งหลังอัปโหลดไฟล์ PWA เวอร์ชันล่าสุด
+        </div>`,
+      icon: 'info',
+      confirmButtonText: 'ตกลง'
+    });
+  });
+
+  closeBtn?.addEventListener('click', () => {
+    bar?.classList.add('hidden');
+  });
+
+  window.addEventListener('appinstalled', () => {
+    deferredPrompt = null;
+    bar?.classList.add('hidden');
+    Swal.fire('ติดตั้งสำเร็จ', 'ระบบสมาชิกถูกเพิ่มเป็นแอปบนมือถือแล้ว', 'success');
+  });
+})();
+</script>
+
 </body>
 </html>
