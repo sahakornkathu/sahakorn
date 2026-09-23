@@ -1,857 +1,246 @@
-<!DOCTYPE html>
-
-<html lang="th">
-<head>
-
-<meta charset="UTF-8">
-<title>ซื้อขายหุ้นสหกรณ์</title>
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>ลงหุ้นสมาชิก</title><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <style>
-
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
 body{
-font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
-background:#eef2f7;
-margin:0;
-padding:20px;
+  margin:0;
+  padding:24px;
+  background:#eef2f7;
+  color:#17231e;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans Thai",Tahoma,sans-serif;
 }
-
-.container{
-max-width:700px;
-margin:auto;
+button,input,select{font:inherit}
+button{cursor:pointer}
+.desktop-shell{max-width:1100px;margin:0 auto}
+.desktop-topbar{
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  margin-bottom:18px;padding:18px 22px;border-radius:18px;
+  color:white;background:linear-gradient(135deg,#14532d,#166534,#15803d);
+  box-shadow:0 10px 28px rgba(20,83,45,.18)
 }
-
-/* card */
-
-.card{
-background:white;
-padding:22px;
-border-radius:14px;
-box-shadow:0 6px 18px rgba(0,0,0,0.08);
-margin-bottom:18px;
+.desktop-topbar h1{margin:0;font-size:25px}
+.desktop-topbar p{margin:4px 0 0;color:#dcfce7;font-size:13px}
+.home-link{
+  display:inline-flex;align-items:center;justify-content:center;min-height:44px;
+  padding:0 14px;border:1px solid rgba(255,255,255,.3);border-radius:11px;
+  color:white;text-decoration:none;background:rgba(255,255,255,.1);font-weight:750
 }
-
-/* title */
-
-h3{
-margin-top:0;
-margin-bottom:12px;
-font-size:18px;
+main{display:grid;gap:16px}
+.share-card{
+  background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:20px;
+  box-shadow:0 6px 20px rgba(15,23,42,.06)
 }
-
-/* label */
-
-label{
-font-weight:600;
-font-size:14px;
-display:block;
-margin-bottom:4px;
+.share-title{font-size:20px;font-weight:850;margin:0 0 14px;color:#166534}
+.mobile-field{display:grid;gap:6px}
+.mobile-field label{font-size:14px;font-weight:700;color:#475569}
+.mobile-input{
+  width:100%;min-height:44px;border:1px solid #cbd5e1;border-radius:10px;
+  padding:9px 11px;background:#fff;color:#0f172a;outline:none
 }
-
-/* input */
-
-input,select{
-width:100%;
-padding:11px;
-border-radius:8px;
-border:1px solid #d5d9e0;
-font-size:15px;
-margin-bottom:12px;
-box-sizing:border-box;
+.mobile-input:focus{border-color:#16a34a;box-shadow:0 0 0 3px rgba(22,163,74,.10)}
+.mobile-btn{
+  min-height:44px;border:0;border-radius:10px;padding:9px 15px;
+  font-weight:800
 }
-
-input:focus{
-outline:none;
-border-color:#06c755;
+.mobile-btn.primary{background:#166534;color:#fff}
+.mobile-btn.secondary{background:#64748b;color:#fff}
+.mobile-grid{display:grid;grid-template-columns:1fr;gap:12px}
+.mobile-grid.two{grid-template-columns:1fr 1fr}
+.mobile-kv{display:grid;grid-template-columns:160px minmax(0,1fr);gap:10px;padding:6px 0;border-bottom:1px solid #f1f5f9}
+.mobile-kv:last-child{border-bottom:0}
+.mobile-kv span:first-child{color:#64748b;font-weight:700}
+.mobile-empty{text-align:center;color:#64748b;padding:24px 10px}
+.report-list{display:grid;gap:10px}
+.report-row{
+  display:grid;grid-template-columns:repeat(4,minmax(0,1fr)) auto;
+  align-items:center;gap:10px;border:1px solid #e2e8f0;border-radius:12px;
+  padding:12px 14px;background:#f8fafc
 }
-
-/* button */
-
-button{
-width:100%;
-padding:12px;
-border:none;
-border-radius:8px;
-font-size:15px;
-cursor:pointer;
-background:#06c755;
-color:white;
-font-weight:600;
+.report-kv{display:grid;gap:3px;font-size:14px}
+.report-kv span:first-child{color:#64748b;font-size:12px}
+.amount-pos{color:#15803d;font-weight:800}
+.amount-neg{color:#dc2626;font-weight:800}
+.tx-actions{
+  display:grid;grid-template-columns:1fr 1fr;gap:7px;min-width:170px;
+  padding-left:10px;border-left:1px solid #e2e8f0
 }
-
-button:hover{
-background:#05b24b;
+.tx-btn{min-height:40px;border:0;border-radius:9px;font-size:14px;font-weight:800}
+.tx-edit{background:#f59e0b;color:#fff}
+.tx-delete{background:#dc2626;color:#fff}
+.editing-note{
+  margin-bottom:12px;padding:10px 12px;border-radius:10px;
+  background:#fff7ed;border:1px solid #fdba74;color:#9a3412;font-size:14px;font-weight:700
 }
-
-/* row */
-
-.row{
-display:flex;
-justify-content:space-between;
-align-items:center;
-padding:8px 0;
-border-bottom:1px solid #eee;
-font-size:14px;
+.form-actions{display:flex;gap:10px;margin-top:12px}
+.form-actions .mobile-btn{min-width:160px}
+.share-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:12px 0 16px}
+.share-summary-card{border:1px solid #e2e8f0;border-radius:12px;padding:14px;background:#fff}
+.share-summary-label{font-size:12px;color:#64748b;margin-bottom:5px}
+.share-summary-value{font-size:20px;font-weight:850}
+.share-summary-value.green{color:#15803d}
+.share-summary-value.red{color:#dc2626}
+.share-summary-value.blue{color:#2563eb}
+.share-summary-value.amber{color:#b45309}
+.filter-row{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:end}
+#loadBtn{width:auto;min-width:160px}
+#dailyReport .report-row:last-child{
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  background:#f1f5f9;font-weight:800
 }
-
-.row:last-child{
-border-bottom:none;
+@media(max-width:820px){
+  body{padding:10px}
+  .desktop-topbar{padding:14px;align-items:flex-start}
+  .desktop-topbar h1{font-size:20px}
+  .share-card{padding:14px}
+  .mobile-grid.two{grid-template-columns:1fr}
+  .share-summary{grid-template-columns:1fr 1fr}
+  .report-row{grid-template-columns:1fr 1fr}
+  .tx-actions{grid-column:1/-1;border-left:0;border-top:1px solid #e2e8f0;padding:10px 0 0}
+  .filter-row{grid-template-columns:1fr}
+  #loadBtn{width:100%}
 }
-
-/* table header */
-
-.header{
-font-weight:700;
-background:#f3f5f9;
-padding:10px 6px;
-border-radius:6px;
-margin-bottom:4px;
+@media(max-width:480px){
+  .desktop-topbar{flex-direction:column}
+  .home-link{width:100%}
+  .share-summary{grid-template-columns:1fr}
+  .report-row{grid-template-columns:1fr}
+  .mobile-kv{grid-template-columns:110px minmax(0,1fr)}
+  .form-actions{display:grid;grid-template-columns:1fr}
+  .form-actions .mobile-btn{width:100%;min-width:0}
+  #dailyReport .report-row:last-child{grid-template-columns:1fr}
 }
-
-/* fiscal year title */
-
-h4{
-margin-top:20px;
-margin-bottom:6px;
-color:#06c755;
-}
-
-/* summary */
-
-.summary{
-font-weight:600;
-background:#fafafa;
-}
-
-.daily-table{
-width:100%;
-border-collapse:collapse;
-margin-top:10px;
-font-size:14px;
-}
-
-.daily-table th{
-background:#f3f5f9;
-padding:10px;
-text-align:center;
-font-weight:700;
-border-bottom:2px solid #e5e7eb;
-}
-
-.daily-table td{
-padding:10px;
-border-bottom:1px solid #eee;
-text-align:center;
-}
-
-.daily-table tr:hover{
-background:#f9fafb;
-}
-
-.daily-total{
-font-weight:700;
-background:#f3f5f9;
-}
-  
+.swal2-popup{max-width:calc(100vw - 24px)!important}
 </style>
-
-</head>
-
-<body>
-
-<div class="container">
-
-<div class="card">
-
-<h3>ค้นหาสมาชิก</h3>
-
-<label>เลขสมาชิก</label> <input id="member_id">
-
-<button onclick="loadMember()">โหลดข้อมูล</button>
-
+</head><body>
+<div class="desktop-shell">
+<header class="desktop-topbar">
+  <div>
+    <h1>ลงหุ้นสมาชิก</h1>
+    <p>ซื้อ / ขายหุ้น • แก้ไข • ลบ • สรุปยอดคงเหลือ</p>
+  </div>
+  <a class="home-link" href="index.html">← กลับหน้าสมาชิก</a>
+</header>
+<main><section class="share-card">
+<h1 class="share-title">ค้นหาสมาชิก</h1>
+<div class="filter-row">
+  <div class="mobile-field">
+    <label>รหัสสมาชิก</label>
+    <input id="member_id" class="mobile-input" inputmode="numeric" placeholder="กรอกรหัสสมาชิก">
+  </div>
+  <button id="loadBtn" class="mobile-btn primary">โหลดข้อมูล</button>
 </div>
-
-<div id="memberBox"></div>
-
-<div id="formBox"></div>
-
-<div class="card">
-
-<label>ค้นหาปีบัญชี</label>
-
-<select id="yearFilter" onchange="loadReport()">
-<option value="all">ทุกปี</option>
-</select>
-
-</div>
-  
-<div id="reportBox"></div>
-  
-<div class="card">
-
-<h3>รายงานซื้อหุ้นประจำวัน</h3>
-
-<label>เลือกวันที่</label>
-<input type="date" id="dailyDate" onchange="loadDailyReport()">
-
-<div id="dailyReport"></div>
-
-</div>
-  
-</div>
-
-<script>
-
-const sb = window.supabase.createClient(
-"https://ttottijljxoinptmhgtu.supabase.co",
-"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y"
-)
-
-let member=null
-
-/* แปลง พ.ศ → ISO */
-
-function thaiToISO(date){
-
-const p=date.split("/")
-const day=p[0]
-const month=p[1]
-const year=p[2]-543
-
-return `${year}-${month}-${day}`
-
-}
-
-/* ISO → พ.ศ */
-
-function isoToThai(date){
-
-const d=new Date(date)
-
-const day=String(d.getDate()).padStart(2,"0")
-const month=String(d.getMonth()+1).padStart(2,"0")
-const year=d.getFullYear()+543
-
-return `${day}/${month}/${year}`
-
-}
-
-/* วันที่วันนี้ */
-
-function getTodayThai(){
-
-const d=new Date()
-
-const day=String(d.getDate()).padStart(2,"0")
-const month=String(d.getMonth()+1).padStart(2,"0")
-const year=d.getFullYear()+543
-
-return `${day}/${month}/${year}`
-
-}
-
-function getTodayISO_TH(){
-  const now = new Date()
-  const th = new Date(now.getTime() + (7 * 60 * 60 * 1000))
-  return th.toISOString().split("T")[0]
-}
-
-/* คำนวณปีบัญชี */
-
-function getFiscalYear(iso){
-
-const d=new Date(iso)
-
-const month=d.getMonth()+1
-const year=d.getFullYear()+543
-
-if(month>=4){
-
-return year
-
-}else{
-
-return year-1
-
-}
-
-}
-
-/* โหลดสมาชิก */
-
-async function loadMember(){
-
-const id=document.getElementById("member_id").value
-
-const {data}=await sb
-.from("members")
-.select("*")
-.eq("member_id",id)
-.maybeSingle()
-
-if(!data){
-
-Swal.fire({
-icon:'error',
-title:'ไม่พบสมาชิก'
-})
-return
-
-}
-
-member=data
-
-document.getElementById("memberBox").innerHTML=`
-
-<div class="card">
-
-<h3>ข้อมูลสมาชิก</h3>
-
-<div class="row">
-<span>รหัสสมาชิก</span>
-<span>${data.member_id}</span>
-</div>
-
-<div class="row">
-<span>กลุ่ม</span>
-<span>${data.group ?? "-"}</span>
-</div>
-
-<div class="row">
-<span>ชื่อ</span>
-<span>${data.title ?? ""}${data.first_name} ${data.last_name}</span>
-</div>
-
-</div>
-
-`
-
-showForm()
-loadYearFilter()
-loadReport()
-
-}
-
-async function loadDailyReport(){
-
-const date=document.getElementById("dailyDate").value
-
-const {data,error}=await sb
-.from("member_share_tx")
-.select(`
-member_id,
-share_buy,
-members(title,first_name,last_name,group)
-`)
-.eq("trans_date",date)
-
-if(error){
-console.log(error)
-return
-}
-
-if(!data || data.length===0){
-document.getElementById("dailyReport").innerHTML="ไม่มีรายการ"
-return
-}
-
-let total=0
-
-let html=`
-<table class="daily-table">
-
-<thead>
-<tr>
-<th>รหัส</th>
-<th>ชื่อ</th>
-<th>กลุ่ม</th>
-<th>ซื้อ</th>
-</tr>
-</thead>
-<tbody>
-`
-
-data.forEach(r=>{
-
-total+=Number(r.share_buy)
-
-html+=`
-<tr id="row-${r.id}">
-<td>${r.member_id}</td>
-<td>${r.members.title ?? ""}${r.members.first_name} ${r.members.last_name}</td>
-<td>${r.members.group ?? "-"}</td>
-<td>${r.share_buy}</td>
-<td>
-<button onclick="deleteTx(${r.id}, ${r.share_buy})"
-style="background:red;color:white;padding:4px 8px;border:none;border-radius:6px">
-ลบ
-</button>
-</td>
-</tr>
-`
-
-})
-
-html+=`
-<tr class="daily-total">
-<td colspan="3">รวม</td>
-<td>${total}</td>
-</tr>
-</tbody>
-</table>
-`
-
-document.getElementById("dailyReport").innerHTML=html
-
-}
-
-function appendDailyRow(tx){
-
-  const table = document.querySelector("#dailyReport table tbody")
-
-  if(!table){
-    loadDailyReport()
+</section><section id="memberBox"></section><section id="formBox"></section><section class="share-card"><h2 class="share-title">รายการซื้อ / ขายหุ้น</h2><div class="mobile-field"><label>ปีบัญชี</label><select id="yearFilter" class="mobile-input"><option value="all">ทุกปี</option></select></div><div id="shareTotals" class="share-summary"></div><div id="reportBox" class="report-list" style="margin-top:10px"></div></section><section class="share-card"><h2 class="share-title">รายงานหุ้นประจำวัน</h2><div class="mobile-field"><label>เลือกวันที่</label><input type="date" id="dailyDate" class="mobile-input"></div><div id="dailyReport" class="report-list" style="margin-top:10px"></div></section></main><script>
+const sb=window.supabase.createClient("https://ttottijljxoinptmhgtu.supabase.co","eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y");
+const $=id=>document.getElementById(id);
+let member=null,editingTxId=null,editingOriginalFiscalYear=null,txCache=new Map();
+const money=v=>Number(v||0).toLocaleString('th-TH',{minimumFractionDigits:0,maximumFractionDigits:2});
+function thaiToISO(v){const p=String(v||'').trim().split('/');if(p.length!==3)return null;const d=Number(p[0]),m=Number(p[1]),by=Number(p[2]);if(!Number.isInteger(d)||d<1||d>31||!Number.isInteger(m)||m<1||m>12||!Number.isInteger(by)||by<2400)return null;const y=by-543,iso=`${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;const t=new Date(`${iso}T00:00:00`);if(Number.isNaN(t.getTime())||t.getFullYear()!==y||t.getMonth()+1!==m||t.getDate()!==d)return null;return iso}
+function isoToThai(v){if(!v)return'-';const [y,m,d]=v.split('-').map(Number);return `${String(d).padStart(2,'0')}/${String(m).padStart(2,'0')}/${y+543}`}
+function todayThai(){const d=new Date();return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()+543}`}
+function fy(iso){const d=new Date(`${iso}T00:00:00`),y=d.getFullYear()+543,m=d.getMonth()+1;return m>=4?y:y-1}
+$('loadBtn').onclick=loadMember;
+$('member_id').addEventListener('keydown',e=>{if(e.key==='Enter')loadMember()});
+async function loadMember(){const id=$('member_id').value.trim();if(!id){Swal.fire('กรุณากรอกรหัสสมาชิก','','warning');return}const r=await sb.from('members').select('*').eq('member_id',id).maybeSingle();if(r.error){Swal.fire('โหลดข้อมูลไม่สำเร็จ',r.error.message,'error');return}if(!r.data){Swal.fire('ไม่พบสมาชิก','','error');return}member=r.data;editingTxId=null;editingOriginalFiscalYear=null;$('memberBox').innerHTML=`<div class="share-card"><h2 class="share-title">ข้อมูลสมาชิก</h2><div class="mobile-kv"><span>รหัส</span><span>${member.member_id}</span></div><div class="mobile-kv"><span>ชื่อ</span><span>${member.title||''}${member.first_name||''} ${member.last_name||''}</span></div><div class="mobile-kv"><span>กลุ่ม</span><span>${member.group||'-'}</span></div></div>`;renderShareForm();await loadYearFilter();await loadReport()}
+function renderShareForm(){$('formBox').innerHTML=`<div class="share-card" id="shareEditForm"><h2 id="shareFormTitle" class="share-title">บันทึกซื้อ / ขายหุ้น</h2><div id="editingNote" class="editing-note" style="display:none">กำลังแก้ไขรายการเดิม</div><div class="mobile-field"><label>วันที่ (พ.ศ.)</label><input id="date" class="mobile-input" value="${todayThai()}" placeholder="วว/ดด/พ.ศ."></div><div class="mobile-grid two" style="margin-top:10px"><div class="mobile-field"><label>ซื้อหุ้น</label><input id="buy" type="number" min="0" step="0.01" class="mobile-input"></div><div class="mobile-field"><label>ขายหุ้น</label><input id="sell" type="number" min="0" step="0.01" class="mobile-input"></div></div><div class="form-actions"><button id="saveShareBtn" class="mobile-btn primary" onclick="saveShare()">บันทึก</button><button id="cancelEditBtn" class="mobile-btn secondary" style="display:none" onclick="cancelEditTx()">ยกเลิกแก้ไข</button></div></div>`}
+async function loadYearFilter(){if(!member)return;const current=$('yearFilter').value||'all';const r=await sb.from('member_share_tx').select('fiscal_year').eq('member_id',Number(member.member_id));const years=[...new Set((r.data||[]).map(x=>Number(x.fiscal_year)))].filter(Number.isFinite).sort((a,b)=>b-a);$('yearFilter').innerHTML='<option value="all">ทุกปี</option>'+years.map(y=>`<option value="${y}">${y}</option>`).join('');if(current==='all'||years.includes(Number(current)))$('yearFilter').value=current}
+$('yearFilter').onchange=loadReport;
+async function rebuildShareSummary(memberId,fromFiscalYear){const mid=Number(memberId),start=Number(fromFiscalYear);const [txr,sr]=await Promise.all([sb.from('member_share_tx').select('id,fiscal_year,share_buy,share_sell').eq('member_id',mid).order('fiscal_year',{ascending:true}),sb.from('member_share').select('*').eq('member_id',mid).order('fiscal_year',{ascending:true})]);if(txr.error)throw txr.error;if(sr.error)throw sr.error;const txByYear=new Map();for(const tx of(txr.data||[])){const y=Number(tx.fiscal_year);if(!txByYear.has(y))txByYear.set(y,{buy:0,sell:0});const g=txByYear.get(y);g.buy+=Number(tx.share_buy||0);g.sell+=Number(tx.share_sell||0)}const sumByYear=new Map((sr.data||[]).map(s=>[Number(s.fiscal_year),s]));const years=[...new Set([...txByYear.keys(),...sumByYear.keys()])].filter(y=>Number.isFinite(y)&&y>=start).sort((a,b)=>a-b);if(!years.includes(start))years.unshift(start);let prevYear=null,prevBalance=null;for(const y of years){const ex=sumByYear.get(y),tot=txByYear.get(y)||{buy:0,sell:0};let begin;if(prevYear!==null&&y===prevYear+1)begin=Number(prevBalance||0);else if(ex)begin=Number(ex.share_begin||0);else begin=Number(sumByYear.get(y-1)?.share_balance||0);const buy=Number(tot.buy||0),sell=Number(tot.sell||0),balance=begin+buy-sell;if(ex){const u=await sb.from('member_share').update({share_begin:begin,share_buy:buy,share_sell:sell,share_balance:balance}).eq('id',ex.id);if(u.error)throw u.error}else{const ins=await sb.from('member_share').insert({member_id:mid,fiscal_year:y,share_begin:begin,share_buy:buy,share_sell:sell,share_balance:balance}).select().single();if(ins.error)throw ins.error;sumByYear.set(y,ins.data)}prevYear=y;prevBalance=balance}}
+window.saveShare=async()=>{if(!member)return;const iso=thaiToISO($('date').value),buy=Number($('buy').value||0),sell=Number($('sell').value||0);if(!iso){Swal.fire('วันที่ไม่ถูกต้อง','ใช้รูปแบบ วัน/เดือน/พ.ศ. เช่น 23/09/2569','warning');return}if(buy<0||sell<0){Swal.fire('จำนวนเงินไม่ถูกต้อง','ยอดซื้อและยอดขายต้องไม่ติดลบ','warning');return}if(!buy&&!sell){Swal.fire('กรุณาใส่ยอดซื้อหรือขาย','','warning');return}const fiscal=fy(iso),btn=$('saveShareBtn');btn.disabled=true;btn.textContent=editingTxId?'กำลังแก้ไข...':'กำลังบันทึก...';try{if(editingTxId){const oldYear=Number(editingOriginalFiscalYear);const r=await sb.from('member_share_tx').update({trans_date:iso,fiscal_year:fiscal,share_buy:buy,share_sell:sell}).eq('id',editingTxId).eq('member_id',Number(member.member_id));if(r.error)throw r.error;await rebuildShareSummary(member.member_id,Math.min(oldYear,fiscal));await Swal.fire({icon:'success',title:'แก้ไขสำเร็จ',timer:1100,showConfirmButton:false})}else{const r=await sb.from('member_share_tx').insert({member_id:Number(member.member_id),trans_date:iso,fiscal_year:fiscal,share_buy:buy,share_sell:sell});if(r.error)throw r.error;await rebuildShareSummary(member.member_id,fiscal);await Swal.fire({icon:'success',title:'บันทึกสำเร็จ',timer:1100,showConfirmButton:false})}resetShareForm();await loadYearFilter();await loadReport();if($('dailyDate').value)await loadDaily()}catch(err){console.error(err);Swal.fire(editingTxId?'แก้ไขไม่สำเร็จ':'บันทึกไม่สำเร็จ',err.message||String(err),'error')}finally{const b=$('saveShareBtn');if(b){b.disabled=false;b.textContent=editingTxId?'บันทึกการแก้ไข':'บันทึก'}}};
+function resetShareForm(){editingTxId=null;editingOriginalFiscalYear=null;if(!$('date'))return;$('date').value=todayThai();$('buy').value='';$('sell').value='';$('shareFormTitle').textContent='บันทึกซื้อ / ขายหุ้น';$('editingNote').style.display='none';$('cancelEditBtn').style.display='none';$('saveShareBtn').textContent='บันทึก'}
+window.cancelEditTx=()=>resetShareForm();
+window.editTx=async id=>{if(!member)return;let tx=txCache.get(Number(id));if(!tx){const r=await sb.from('member_share_tx').select('*').eq('id',id).eq('member_id',Number(member.member_id)).maybeSingle();if(r.error){Swal.fire('โหลดรายการไม่สำเร็จ',r.error.message,'error');return}tx=r.data}if(!tx){Swal.fire('ไม่พบรายการ','','error');return}editingTxId=Number(tx.id);editingOriginalFiscalYear=Number(tx.fiscal_year);$('date').value=isoToThai(tx.trans_date);$('buy').value=Number(tx.share_buy||0)||'';$('sell').value=Number(tx.share_sell||0)||'';$('shareFormTitle').textContent='แก้ไขรายการหุ้น';$('editingNote').style.display='block';$('saveShareBtn').textContent='บันทึกการแก้ไข';$('cancelEditBtn').style.display='block';$('shareEditForm').scrollIntoView({behavior:'smooth',block:'start'})};
+window.deleteTx=async id=>{if(!member)return;let tx=txCache.get(Number(id));if(!tx){const r=await sb.from('member_share_tx').select('*').eq('id',id).eq('member_id',Number(member.member_id)).maybeSingle();if(r.error){Swal.fire('โหลดรายการไม่สำเร็จ',r.error.message,'error');return}tx=r.data}if(!tx){Swal.fire('ไม่พบรายการ','','error');return}const ok=await Swal.fire({title:'ลบรายการหุ้น?',html:`วันที่ <b>${isoToThai(tx.trans_date)}</b><br>ซื้อ ${money(tx.share_buy)} บาท • ขาย ${money(tx.share_sell)} บาท<br><br><span style="color:#dc2626;font-weight:700">ระบบจะคำนวณยอดหุ้นใหม่หลังลบ</span>`,icon:'warning',showCancelButton:true,confirmButtonText:'ลบรายการ',cancelButtonText:'ยกเลิก',confirmButtonColor:'#dc2626'});if(!ok.isConfirmed)return;try{const r=await sb.from('member_share_tx').delete().eq('id',tx.id).eq('member_id',Number(member.member_id));if(r.error)throw r.error;await rebuildShareSummary(member.member_id,Number(tx.fiscal_year));if(editingTxId===Number(tx.id))resetShareForm();await Swal.fire({icon:'success',title:'ลบเรียบร้อย',timer:1000,showConfirmButton:false});await loadYearFilter();await loadReport();if($('dailyDate').value)await loadDaily()}catch(err){console.error(err);Swal.fire('ลบไม่สำเร็จ',err.message||String(err),'error')}};
+async function loadReport(){
+  if(!member){
+    $('shareTotals').innerHTML=''
+    $('reportBox').innerHTML='<div class="mobile-empty">กรุณาเลือกสมาชิก</div>'
     return
   }
 
-  const tr = document.createElement("tr")
+  const selectedYear=$('yearFilter').value
 
-  tr.id = `row-${tx.id}` // 🔥 สำคัญ
+  let q=sb.from('member_share_tx')
+    .select('*')
+    .eq('member_id',Number(member.member_id))
+    .order('trans_date',{ascending:false})
+    .order('id',{ascending:false})
 
-  tr.innerHTML = `
-    <td>${tx.member_id}</td>
-    <td>${tx.title ?? ""}${tx.first_name} ${tx.last_name}</td>
-    <td>${tx.group ?? "-"}</td>
-    <td>${tx.share_buy}</td>
-    <td>
-      <button onclick="deleteTx(${tx.id}, ${tx.share_buy})"
-      style="background:red;color:white;padding:4px 8px;border:none;border-radius:6px">
-      ลบ
-      </button>
-    </td>
-  `
-
-  table.prepend(tr)
-
-  const totalCell = document.querySelector(".daily-total td:last-child")
-  if(totalCell){
-    const current = Number(totalCell.innerText || 0)
-    totalCell.innerText = current + Number(tx.share_buy)
+  if(selectedYear!=='all'){
+    q=q.eq('fiscal_year',Number(selectedYear))
   }
 
+  const r=await q
+
+  if(r.error){
+    $('shareTotals').innerHTML=''
+    $('reportBox').innerHTML=`<div class="mobile-empty">${r.error.message}</div>`
+    return
+  }
+
+  const rows=r.data||[]
+  txCache=new Map(rows.map(x=>[Number(x.id),x]))
+
+  const totalBuy=rows.reduce((s,x)=>s+Number(x.share_buy||0),0)
+  const totalSell=rows.reduce((s,x)=>s+Number(x.share_sell||0),0)
+  const net=totalBuy-totalSell
+
+  let summaryQuery=sb.from('member_share')
+    .select('fiscal_year,share_balance')
+    .eq('member_id',Number(member.member_id))
+    .order('fiscal_year',{ascending:false})
+    .limit(1)
+
+  if(selectedYear!=='all'){
+    summaryQuery=sb.from('member_share')
+      .select('fiscal_year,share_balance')
+      .eq('member_id',Number(member.member_id))
+      .eq('fiscal_year',Number(selectedYear))
+      .limit(1)
+  }
+
+  const summaryResult=await summaryQuery
+  const summaryRow=summaryResult.data?.[0]||null
+  const balance=Number(summaryRow?.share_balance||0)
+  const balanceLabel=selectedYear==='all'
+    ? `หุ้นคงเหลือล่าสุด${summaryRow?.fiscal_year ? ` (ปี ${summaryRow.fiscal_year})` : ''}`
+    : `หุ้นคงเหลือปี ${selectedYear}`
+
+  $('shareTotals').innerHTML=`
+    <div class="share-summary-card">
+      <div class="share-summary-label">ซื้อรวม</div>
+      <div class="share-summary-value green">${money(totalBuy)} บาท</div>
+    </div>
+    <div class="share-summary-card">
+      <div class="share-summary-label">ขายรวม</div>
+      <div class="share-summary-value red">${money(totalSell)} บาท</div>
+    </div>
+    <div class="share-summary-card">
+      <div class="share-summary-label">สุทธิซื้อ - ขาย</div>
+      <div class="share-summary-value ${net>=0?'blue':'red'}">${money(net)} บาท</div>
+    </div>
+    <div class="share-summary-card">
+      <div class="share-summary-label">${balanceLabel}</div>
+      <div class="share-summary-value amber">${money(balance)} บาท</div>
+    </div>
+  `
+
+  $('reportBox').innerHTML=rows.length
+    ? rows.map(x=>`
+      <div class="report-row">
+        <div class="report-kv"><span>วันที่</span><b>${isoToThai(x.trans_date)}</b></div>
+        <div class="report-kv"><span>ปีบัญชี</span><span>${x.fiscal_year}</span></div>
+        <div class="report-kv"><span>ซื้อ</span><span class="amount-pos">${money(x.share_buy)} บาท</span></div>
+        <div class="report-kv"><span>ขาย</span><span class="amount-neg">${money(x.share_sell)} บาท</span></div>
+        <div class="tx-actions">
+          <button class="tx-btn tx-edit" onclick="editTx(${x.id})">แก้ไข</button>
+          <button class="tx-btn tx-delete" onclick="deleteTx(${x.id})">ลบ</button>
+        </div>
+      </div>
+    `).join('')
+    : '<div class="mobile-empty">ไม่มีรายการ</div>'
 }
-  
-async function loadYearFilter(){
+$('dailyDate').onchange=loadDaily;
+async function loadDaily(){const date=$('dailyDate').value;if(!date){$('dailyReport').innerHTML='';return}const r=await sb.from('member_share_tx').select('id,member_id,trans_date,fiscal_year,share_buy,share_sell,members(title,first_name,last_name,group)').eq('trans_date',date).order('id',{ascending:false});if(r.error){$('dailyReport').innerHTML=`<div class="mobile-empty">${r.error.message}</div>`;return}const rows=r.data||[];let totalBuy=0,totalSell=0;for(const x of rows)txCache.set(Number(x.id),x);$('dailyReport').innerHTML=rows.length?rows.map(x=>{totalBuy+=Number(x.share_buy||0);totalSell+=Number(x.share_sell||0);const current=member&&Number(x.member_id)===Number(member.member_id);return `<div class="report-row"><div class="report-kv"><span>รหัส</span><b>${x.member_id}</b></div><div class="report-kv"><span>ชื่อ</span><span>${x.members?.title||''}${x.members?.first_name||''} ${x.members?.last_name||''}</span></div><div class="report-kv"><span>กลุ่ม</span><span>${x.members?.group||'-'}</span></div><div class="report-kv"><span>ซื้อ</span><span class="amount-pos">${money(x.share_buy)} บาท</span></div><div class="report-kv"><span>ขาย</span><span class="amount-neg">${money(x.share_sell)} บาท</span></div>${current?`<div class="tx-actions"><button class="tx-btn tx-edit" onclick="editTx(${x.id})">แก้ไข</button><button class="tx-btn tx-delete" onclick="deleteTx(${x.id})">ลบ</button></div>`:''}</div>`}).join('')+`<div class="report-row"><div class="report-kv"><span>รวมซื้อ</span><b class="amount-pos">${money(totalBuy)} บาท</b></div><div class="report-kv"><span>รวมขาย</span><b class="amount-neg">${money(totalSell)} บาท</b></div><div class="report-kv"><span>สุทธิ</span><b class="${totalBuy-totalSell>=0?'amount-pos':'amount-neg'}">${money(totalBuy-totalSell)} บาท</b></div></div>`:'<div class="mobile-empty">ไม่มีรายการ</div>'}
 
-const {data,error}=await sb
-.from("member_share_tx")
-.select("fiscal_year")
-.eq("member_id", Number(member.member_id))
-
-if(error){
-console.log(error)
-return
-}
-
-if(!data || data.length===0){
-
-document.getElementById("yearFilter").innerHTML=
-'<option value="all">ทุกปี</option>'
-
-return
-}
-
-/* เอาปีบัญชีไม่ซ้ำ */
-
-const years=[...new Set(data.map(r=>r.fiscal_year))]
-
-years.sort((a,b)=>b-a)
-
-let html='<option value="all">ทุกปี</option>'
-
-years.forEach(y=>{
-html+=`<option value="${y}">${y}</option>`
-})
-
-document.getElementById("yearFilter").innerHTML=html
-
-}
-/* ฟอร์ม */
-
-function showForm(){
-
-document.getElementById("formBox").innerHTML=`
-
-<div class="card">
-
-<h3>บันทึกซื้อ / ขายหุ้น</h3>
-
-<label>วันที่ (พ.ศ.)</label>
-<input id="date" value="${getTodayThai()}">
-
-<label>ซื้อหุ้น</label>
-<input id="buy">
-
-<label>ขายหุ้น</label>
-<input id="sell">
-
-<button onclick="saveShare()">บันทึก</button>
-
-</div>
-
-`
-
-}
-
-/* บันทึก */
-
-async function saveShare(){
-
-const date=document.getElementById("date").value
-const buy=Number(document.getElementById("buy").value||0)
-const sell=Number(document.getElementById("sell").value||0)
-
-const iso=thaiToISO(date)
-const fiscal=getFiscalYear(iso)
-
-/* บันทึก transaction */
-
-// await sb
-// .from("member_share_tx")
-// .insert({
-// member_id: Number(member.member_id),
-// trans_date:iso,
-// fiscal_year:fiscal,
-// share_buy:buy,
-// share_sell:sell
-
-// })
-  const { data: newTx } = await sb
-.from("member_share_tx")
-.insert({
-  member_id: Number(member.member_id),
-  trans_date: iso,
-  fiscal_year: fiscal,
-  share_buy: buy,
-  share_sell: sell
-})
-.select()
-.single()
-
-/* ตรวจ summary */
-
-const {data}=await sb
-.from("member_share")
-.select("*")
-.eq("member_id", Number(member.member_id))
-.eq("fiscal_year",fiscal)
-.maybeSingle()
-
-if(data){
-
-/* update ปีเดิม */
-
-const newBuy=data.share_buy+buy
-const newSell=data.share_sell+sell
-
-const balance=data.share_begin + newBuy - newSell
-
-await sb
-.from("member_share")
-.update({
-
-share_buy:newBuy,
-share_sell:newSell,
-share_balance:balance
-
-})
-.eq("id",data.id)
-
-}else{
-
-/* หา balance ปีที่แล้ว */
-
-const lastYear=fiscal-1
-
-const {data:last}=await sb
-.from("member_share")
-.select("share_balance")
-.eq("member_id", Number(member.member_id))
-.eq("fiscal_year",lastYear)
-.maybeSingle()
-
-let begin=0
-
-if(last){
-
-begin=last.share_balance
-
-}
-
-/* insert ปีใหม่ */
-
-const newBuy=buy
-const newSell=sell
-
-const balance=begin + newBuy - newSell
-
-await sb
-.from("member_share")
-.insert({
-
-member_id:member.member_id,
-fiscal_year:fiscal,
-share_begin:begin,
-share_buy:newBuy,
-share_sell:newSell,
-share_balance:balance
-
-})
-
-}
-
-Swal.fire({
-icon: 'success',
-title: 'บันทึกสำเร็จ',
-text: 'ข้อมูลหุ้นถูกบันทึกแล้ว',
-timer: 1500,
-showConfirmButton: false
-})
-/* เคลียร์ช่อง input */
-document.getElementById("buy").value=""
-document.getElementById("sell").value=""
-
-/* โฟกัสกลับไปที่ช่องซื้อ */
-document.getElementById("buy").focus()
-loadReport()
-const selectedDate = document.getElementById("dailyDate").value
-
-if(selectedDate === newTx.trans_date){
-  appendDailyRow({
-  id: newTx.id,
-  member_id: newTx.member_id,
-  title: member.title,
-  first_name: member.first_name,
-  last_name: member.last_name,
-  group: member.group,
-  share_buy: newTx.share_buy
-})
-}
-}
-
-/* โหลดรายงาน */
-
-async function loadReport(){
-
-let query=sb
-.from("member_share_tx")
-.select("*")
-.eq("member_id", Number(member.member_id))
-
-const year=document.getElementById("yearFilter")?.value
-
-if(year && year!=="all"){
-
-query=query.eq("fiscal_year", Number(year))
-
-}
-
-const {data}=await query
-.order("fiscal_year",{ascending:false})
-.order("trans_date",{ascending:true})
-
-let html=`<div class="card"><h3>รายงานซื้อขายหุ้น</h3>`
-
-let currentYear=null
-let totalBuy=0
-let totalSell=0
-
-data?.forEach(r=>{
-
-if(currentYear!==r.fiscal_year){
-
-if(currentYear!==null){
-
-html+=`
-<div class="row header">
-<span>รวมซื้อ ${totalBuy}</span>
-<span>รวมขาย ${totalSell}</span>
-</div>
-<div class="row">
-<span>คงเหลือ</span>
-<span>${totalBuy-totalSell}</span>
-</div>
-<br>
-`
-
-}
-
-currentYear=r.fiscal_year
-totalBuy=0
-totalSell=0
-
-html+=`
-
-<h4>ปีบัญชี ${currentYear}</h4>
-
-<div class="row header">
-<span>วันที่</span>
-<span>ซื้อหุ้น</span>
-<span>ขายหุ้น</span>
-</div>
-
-`
-
-}
-
-totalBuy+=Number(r.share_buy)
-totalSell+=Number(r.share_sell)
-
-html+=`
-
-<div class="row">
-<span>${isoToThai(r.trans_date)}</span>
-<span>${r.share_buy}</span>
-<span>${r.share_sell}</span>
-<span>
-<button onclick="deleteTx(${r.id}, ${r.share_buy})"
-style="background:red;color:white;padding:4px 8px;border:none;border-radius:6px">
-ลบ
-</button>
-</span>
-</div>
-`
-
-})
-
-html+=`
-
-<div class="row summary">
-<span>รวมซื้อ</span>
-<span>${totalBuy}</span>
-</div>
-
-<div class="row summary">
-<span>รวมขาย</span>
-<span>${totalSell}</span>
-</div>
-
-<div class="row">
-<span>คงเหลือ</span>
-<span>${totalBuy-totalSell}</span>
-</div>
-
-</div>
-
-`
-
-document.getElementById("reportBox").innerHTML=html
-
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-  document.getElementById("dailyDate").value = getTodayISO_TH()
-  loadDailyReport()
-})
-  
-async function deleteTx(id , share_buy){
-
-const confirm = await Swal.fire({
-  title: 'ยืนยันลบรายการ?',
-  text: 'ลบแล้วแก้ไขไม่ได้',
-  icon: 'warning',
-  showCancelButton: true,
-  confirmButtonText: 'ลบ',
-  cancelButtonText: 'ยกเลิก'
-})
-
-if(!confirm.isConfirmed) return
-
-// 🔥 ดึงข้อมูลก่อนลบ
-const { data: tx } = await sb
-  .from("member_share_tx")
-  .select("*")
-  .eq("id", id)
-  .single()
-
-if(!tx) return
-
-// 🔥 ลบรายการ
-await sb
-  .from("member_share_tx")
-  .delete()
-  .eq("id", id)
-
-// 🔥 คำนวณใหม่
-await recalcShare(tx.member_id, tx.fiscal_year)
-
-Swal.fire({
-  icon: 'success',
-  title: 'ลบสำเร็จ',
-  timer: 1200,
-  showConfirmButton: false
-})
-// 🔥 ลบ row ออกจากหน้า
-const row = document.getElementById(`row-${id}`)
-if(row) row.remove()
-
-// 🔥 อัปเดตรวม
-const totalCell = document.querySelector(".daily-total td:last-child")
-if(totalCell){
-  const current = Number(totalCell.innerText || 0)
-  totalCell.innerText = current - Number(share_buy)
-}
-  
-loadReport()
-}
-
-async function recalcShare(member_id, fiscal){
-
-// 🔥 ดึง transaction ทั้งปี
-const { data } = await sb
-  .from("member_share_tx")
-  .select("*")
-  .eq("member_id", member_id)
-  .eq("fiscal_year", fiscal)
-
-let totalBuy = 0
-let totalSell = 0
-
-data?.forEach(r=>{
-  totalBuy += Number(r.share_buy)
-  totalSell += Number(r.share_sell)
-})
-
-// 🔥 หา share_begin
-const lastYear = fiscal - 1
-
-const { data: last } = await sb
-  .from("member_share")
-  .select("share_balance")
-  .eq("member_id", member_id)
-  .eq("fiscal_year", lastYear)
-  .maybeSingle()
-
-let begin = last?.share_balance || 0
-
-const balance = begin + totalBuy - totalSell
-
-// 🔥 update summary
-await sb
-  .from("member_share")
-  .update({
-    share_buy: totalBuy,
-    share_sell: totalSell,
-    share_balance: balance
-  })
-  .eq("member_id", member_id)
-  .eq("fiscal_year", fiscal)
-
-}
-</script>
-
-</body>
-</html>
+</script></main></div></body></html>
