@@ -171,7 +171,11 @@
       <input id="h_document_no" class="input" placeholder="เลขทะเบียนหนังสือ">
       <input id="h_beneficiary_name" class="input" placeholder="ชื่อ / นามสกุลผู้รับผลประโยชน์">
       <input id="h_percent" class="input" type="number" min="0" max="100" step="0.01" placeholder="เปอร์เซ็นต์ เช่น 50">
-      <input id="h_document_date" class="input" type="date" title="วันที่ทำหนังสือ">
+      <div>
+        <label for="h_document_date" class="block text-sm font-medium mb-1">วันที่ทำหนังสือ (พ.ศ.)</label>
+        <input id="h_document_date" class="input" type="text" inputmode="numeric" placeholder="เช่น 07/10/2569" aria-describedby="historyDateHelp">
+        <div id="historyDateHelp" class="text-xs text-slate-500 mt-1">วัน/เดือน/ปี พ.ศ.</div>
+      </div>
     </div>
 
     <div class="flex flex-wrap items-center gap-3 text-sm text-slate-500">
@@ -238,8 +242,42 @@ function makeMemberAddress(m){
 
 function thaiDate(dateStr){
   if(!dateStr) return '-'
-  const d = new Date(dateStr + 'T00:00:00')
-  return d.toLocaleDateString('th-TH', {day:'numeric', month:'long', year:'numeric'})
+  const match = String(dateStr).match(/^(\d{4})-(\d{2})-(\d{2})(?:$|T| )/)
+  if(!match) return '-'
+  const [, yearText, monthText, dayText] = match
+  const year = Number(yearText)
+  const month = Number(monthText)
+  const day = Number(dayText)
+  // ข้อมูลเก่าบางรายการบันทึกปี พ.ศ. ไว้โดยตรง จึงไม่บวก 543 ซ้ำ
+  const gregorianYear = year >= 2400 ? year - 543 : year
+  if(!validDocumentDate(gregorianYear, month, day)) return '-'
+  const months = [
+    'มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน',
+    'กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'
+  ]
+  return `${day} ${months[month - 1]} พ.ศ. ${gregorianYear + 543}`
+}
+
+function validDocumentDate(year, month, day){
+  const date = new Date(Date.UTC(year, month - 1, day))
+  return year >= 1000 && date.getUTCFullYear() === year &&
+    date.getUTCMonth() === month - 1 && date.getUTCDate() === day
+}
+
+function historyDateFilter(value){
+  const raw = String(value || '').trim().replace(/[๐-๙]/g,
+    digit => String('๐๑๒๓๔๕๖๗๘๙'.indexOf(digit)))
+  if(!raw) return {date:'', legacyDate:''}
+  const match = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/)
+  if(!match) return null
+  const [, dayText, monthText, yearText] = match
+  const buddhistYear = Number(yearText)
+  const year = buddhistYear - 543
+  const month = Number(monthText)
+  const day = Number(dayText)
+  if(buddhistYear < 2400 || !validDocumentDate(year, month, day)) return null
+  const suffix = `${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`
+  return {date:`${year}-${suffix}`, legacyDate:`${buddhistYear}-${suffix}`}
 }
 
 function normalizePercent(v){
@@ -642,7 +680,17 @@ async function loadHistory(){
   const documentNoFilter = $('h_document_no')?.value?.trim() || ''
   const beneficiaryNameFilter = $('h_beneficiary_name')?.value?.trim().toLowerCase() || ''
   const percentFilterRaw = $('h_percent')?.value?.trim() || ''
-  const documentDateFilter = $('h_document_date')?.value || ''
+  const documentDateFilter = historyDateFilter($('h_document_date')?.value)
+  const dateInput = $('h_document_date')
+  const dateHelp = $('historyDateHelp')
+  if(dateInput) dateInput.setAttribute('aria-invalid', String(!documentDateFilter))
+  if(dateHelp){
+    dateHelp.textContent = documentDateFilter
+      ? 'วัน/เดือน/ปี พ.ศ.' : 'กรุณากรอกวันที่จริง เช่น 07/10/2569'
+    dateHelp.className = documentDateFilter
+      ? 'text-xs text-slate-500 mt-1' : 'text-xs text-red-600 mt-1'
+  }
+  if(!documentDateFilter) return
 
   let q = db.from('member_benefit_documents')
     .select('id,member_id,document_date,document_no,created_at,updated_at')
@@ -654,8 +702,8 @@ async function loadHistory(){
     q = q.ilike('document_no', `%${documentNoFilter}%`)
   }
 
-  if(documentDateFilter){
-    q = q.eq('document_date', documentDateFilter)
+  if(documentDateFilter.date){
+    q = q.or(`document_date.eq.${documentDateFilter.date},document_date.eq.${documentDateFilter.legacyDate}`)
   }
 
   const {data: docs, error} = await q
