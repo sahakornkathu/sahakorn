@@ -26,32 +26,32 @@
   #printPreview{position:fixed;inset:0;z-index:20000;overflow:auto;background:#e2e8f0;padding:24px}
   #printPreview[hidden]{display:none}
   .print-toolbar{max-width:210mm;margin:0 auto 16px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
-  .benefit-paper{box-sizing:border-box;width:210mm;min-height:297mm;margin:auto;padding:12mm 14mm;background:#fff;color:#111;font-family:"TH Sarabun New","Sarabun",Tahoma,sans-serif;font-size:14px;line-height:1.6;box-shadow:0 4px 24px #0f172a20}
-  .benefit-paper .paper-header{position:relative;min-height:24mm;text-align:center}
+  .benefit-paper{box-sizing:border-box;width:210mm;min-height:297mm;margin:auto;padding:12mm 14mm;background:#fff;color:#111;font-family:"TH Sarabun New","Sarabun",Tahoma,sans-serif;font-size:14px;line-height:1.5;box-shadow:0 4px 24px #0f172a20}
+  .benefit-paper .paper-header{position:relative;min-height:22mm;text-align:center}
   .benefit-paper .coop-logo{display:block;width:21mm;height:21mm;object-fit:contain;margin:0 auto}
   .benefit-paper .registry-box{position:absolute;top:0;right:0;width:54mm;border:1px solid #111;padding:7px 10px;text-align:left;font-size:12px;line-height:1.8}
-  .benefit-paper h1{text-align:center;font-size:19px;font-weight:700;margin:3mm 0 4mm}
+  .benefit-paper h1{text-align:center;font-size:19px;font-weight:700;margin:2mm 0 3mm}
   .benefit-paper .paper-meta{text-align:right;margin-bottom:3mm}
-  .benefit-paper .paper-intro,.benefit-paper .paper-intent,.benefit-paper .paper-declaration{margin:2mm 0;text-indent:2em;text-align:justify}
+  .benefit-paper .paper-intro,.benefit-paper .paper-intent,.benefit-paper .paper-declaration{margin:1.5mm 0;text-indent:2em;text-align:justify}
   .benefit-paper .form-value{border-bottom:1px dotted #555;padding:0 4px;overflow-wrap:anywhere}
   .benefit-paper .blank-value{display:inline-block;min-width:22mm;height:1em;vertical-align:baseline;border-bottom:1px dotted #555}
-  .benefit-paper table{border-collapse:collapse;width:100%;table-layout:fixed;font-size:12.5px;line-height:1.65;margin:3mm 0}
+  .benefit-paper table{border-collapse:collapse;width:100%;table-layout:fixed;font-size:12px;line-height:1.6;margin:2mm 0}
   .benefit-paper th,.benefit-paper td{border:1px solid #111;padding:5px 7px;white-space:normal;overflow-wrap:anywhere;vertical-align:top}
-  .benefit-paper th{font-weight:700;text-align:center;vertical-align:middle;height:15mm}
-  .benefit-paper .beneficiary-form-row{height:25mm}
+  .benefit-paper th{font-weight:700;text-align:center;vertical-align:middle;height:12mm}
+  .benefit-paper .beneficiary-form-row{height:21mm}
   .benefit-paper .beneficiary-form-row td:first-child,.benefit-paper .beneficiary-form-row td:nth-child(4){text-align:center;vertical-align:middle}
   .benefit-paper .form-field{display:flex;align-items:baseline;gap:3px;min-height:1.6em}
   .benefit-paper .form-field-label{flex:none}
   .benefit-paper .form-field-value{flex:1;min-width:0;border-bottom:1px dotted #555;overflow-wrap:anywhere;min-height:1.2em}
   .benefit-paper .other-conditions td{height:14mm}
   .benefit-paper .condition-line{border-bottom:1px dotted #555;min-height:1.6em}
-  .benefit-paper .paper-signatures{break-inside:avoid;page-break-inside:avoid;margin-top:4mm}
-  .benefit-paper .maker-signature{width:63%;margin:0 0 5mm auto;text-align:center}
+  .benefit-paper .paper-signatures{break-inside:avoid;page-break-inside:avoid;margin-top:3mm}
+  .benefit-paper .maker-signature{width:63%;margin:0 0 4mm auto;text-align:center}
   .benefit-paper .witness-signatures{display:grid;grid-template-columns:1fr 1fr;gap:12mm;text-align:center}
   .benefit-paper .sign-line{display:inline-block;width:42mm;min-height:7mm;border-bottom:1px dotted #333;vertical-align:bottom;margin:0 3px}
   .benefit-paper .printed-name{overflow-wrap:anywhere;min-height:1.6em}
   .benefit-paper .witness-name{margin-top:2px}
-  .benefit-paper .paper-notes{font-size:12px;margin-top:5mm;break-inside:avoid;page-break-inside:avoid}
+  .benefit-paper .paper-notes{font-size:12px;margin-top:3mm;break-inside:avoid;page-break-inside:avoid}
   .benefit-paper .paper-notes p{margin:0}
   @media(max-width:800px){#printPreview{padding:12px}.benefit-paper{width:100%;min-height:0;padding:20px 16px}.benefit-paper .registry-box{position:static;margin:3mm 0 3mm auto}.benefit-paper .witness-signatures{gap:14px}.benefit-paper .sign-line{width:65%}}
   @page{size:A4 portrait;margin:12mm 14mm}
@@ -60,9 +60,9 @@
     body.print-preview-open > :not(#printPreview){display:none!important}
     #printPreview{position:static;padding:0;overflow:visible;background:#fff}
     .print-toolbar{display:none!important}
-    .benefit-paper{width:auto;min-height:0;margin:0;padding:0;box-shadow:none;font-size:11pt;line-height:1.5}
-    .benefit-paper h1{font-size:15pt}
-    .benefit-paper table{font-size:9.5pt}
+    .benefit-paper{width:auto;min-height:0;margin:0;padding:0;box-shadow:none;font-size:10.5pt;line-height:1.5}
+    .benefit-paper h1{font-size:14.25pt}
+    .benefit-paper table{font-size:9pt}
     .benefit-paper .registry-box{position:absolute;margin:0;font-size:9pt}
     .benefit-paper thead{display:table-header-group}
     .benefit-paper tr{break-inside:avoid;page-break-inside:avoid}
