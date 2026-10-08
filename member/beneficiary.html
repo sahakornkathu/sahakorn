@@ -531,6 +531,10 @@ window.addBeneficiary = function(data = {}){
         <label class="block text-sm font-medium mb-1">นามสกุล <span class="text-red-600">*</span></label>
         <input class="input b-last" value="${esc(data.last_name || '')}" placeholder="นามสกุล">
       </div>
+      <div>
+        <label for="beneficiary-relationship-${n}" class="block text-sm font-medium mb-1">ความสัมพันธ์กับสมาชิก</label>
+        <input id="beneficiary-relationship-${n}" class="input b-relationship" value="${esc(data.relationship || '')}" placeholder="เช่น บุตร คู่สมรส บิดา มารดา">
+      </div>
       <div class="lg:col-span-2">
         <label class="block text-sm font-medium mb-1">ที่อยู่</label>
         <div class="flex gap-2">
@@ -639,6 +643,7 @@ function getBeneficiaries(){
     sequence_no: idx + 1,
     first_name: card.querySelector('.b-first').value.trim(),
     last_name: card.querySelector('.b-last').value.trim(),
+    relationship: card.querySelector('.b-relationship').value.trim() || null,
     address: card.querySelector('.b-address').value.trim() || null,
     phone: card.querySelector('.b-phone').value.trim() || null,
     benefit_percent: normalizePercent(card.querySelector('.b-percent').value)
