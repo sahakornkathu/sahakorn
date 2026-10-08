@@ -39,6 +39,12 @@
   .benefit-paper .member-info-field{display:inline-flex;align-items:baseline;gap:4px;max-width:100%;margin-right:6px;vertical-align:baseline;text-indent:0}
   .benefit-paper .member-info-label{flex:none;white-space:nowrap}
   .benefit-paper .member-info-field .form-value{min-width:0}
+  .benefit-paper .member-info-row{display:grid;column-gap:10px;text-indent:0;break-inside:avoid}
+  .benefit-paper .member-address-row{grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1.3fr) minmax(0,1.2fr) minmax(0,1.1fr)}
+  .benefit-paper .member-contact-row{grid-template-columns:minmax(0,1fr) minmax(0,1.3fr) minmax(0,1.5fr)}
+  .benefit-paper .member-info-row .member-info-field{display:flex;margin-right:0}
+  .benefit-paper .member-info-row .form-value{flex:1;min-width:0}
+  .benefit-paper .member-info-row .blank-value{flex:1;min-width:0}
   .benefit-paper table{border-collapse:collapse;width:100%;table-layout:fixed;font-size:12px;line-height:1.6;margin:2mm 0}
   .benefit-paper th,.benefit-paper td{border:1px solid #111;padding:5px 7px;white-space:normal;overflow-wrap:anywhere;vertical-align:top}
   .benefit-paper th{font-weight:700;text-align:center;vertical-align:middle;height:12mm}
@@ -57,7 +63,7 @@
   .benefit-paper .witness-name{margin-top:2px}
   .benefit-paper .paper-notes{font-size:12px;margin-top:3mm;break-inside:avoid;page-break-inside:avoid}
   .benefit-paper .paper-notes p{margin:0}
-  @media(max-width:800px){#printPreview{padding:12px}.benefit-paper{width:100%;min-height:0;padding:20px 16px}.benefit-paper .registry-box{position:static;margin:3mm 0 3mm auto}.benefit-paper .witness-signatures{gap:14px}.benefit-paper .sign-line{width:65%}}
+  @media(max-width:800px){#printPreview{padding:12px}.benefit-paper{width:100%;min-height:0;padding:20px 16px}.benefit-paper .registry-box{position:static;margin:3mm 0 3mm auto}.benefit-paper .witness-signatures{gap:14px}.benefit-paper .sign-line{width:65%}.benefit-paper .member-info-row{grid-template-columns:repeat(2,minmax(0,1fr));row-gap:3px}}
   @page{size:A4 portrait;margin:12mm 14mm}
   @media print{
     body.print-preview-open{overflow:visible;background:#fff}
@@ -68,6 +74,8 @@
     .benefit-paper h1{font-size:14.25pt}
     .benefit-paper table{font-size:9pt}
     .benefit-paper .registry-box{position:absolute;margin:0;font-size:9pt}
+    .benefit-paper .member-address-row{grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1.3fr) minmax(0,1.2fr) minmax(0,1.1fr);row-gap:0}
+    .benefit-paper .member-contact-row{grid-template-columns:minmax(0,1fr) minmax(0,1.3fr) minmax(0,1.5fr);row-gap:0}
     .benefit-paper thead{display:table-header-group}
     .benefit-paper tr{break-inside:avoid;page-break-inside:avoid}
     .benefit-paper .witness-signatures{grid-template-columns:1fr 1fr;gap:12mm}
@@ -373,10 +381,10 @@ function benefitPrintHtml(doc, member, beneficiaries){
     <h1>หนังสือตั้งผู้รับโอนประโยชน์</h1>
     <div class="paper-meta"><div>เขียนที่ สหกรณ์การเกษตรกะทู้ จำกัด</div><div>วันที่ ${value(thaiDate(doc.document_date))}</div></div>
     <p class="paper-intro">${memberField('ข้าพเจ้า', memberName)} ${memberField('สมาชิกเลขที่', member.member_id)} ที่อยู่สามารถติดต่อได้สะดวก
-      ${memberField('บ้านเลขที่', member.house_no)} ${memberField('หมู่ที่', member.moo)}<br>
-      ${memberField('ซอย', member.soi)} ${memberField('ถนน', member.street)}
-      ${memberField('ตำบล/แขวง', member.subdistrict)} ${memberField('อำเภอ/เขต', member.district)} ${memberField('จังหวัด', member.province)}
-      ${memberField('รหัสไปรษณีย์', member.postal_code)} ${memberField('โทรศัพท์ (บ้าน)', member.phone_alt)} ${memberField('โทรศัพท์ (มือถือ)', member.phone)}</p>
+      ${memberField('บ้านเลขที่', member.house_no)} ${memberField('หมู่ที่', member.moo)}
+      <span class="member-info-row member-address-row">${memberField('ซอย', member.soi)} ${memberField('ถนน', member.street)}
+        ${memberField('ตำบล/แขวง', member.subdistrict)} ${memberField('อำเภอ/เขต', member.district)} ${memberField('จังหวัด', member.province)}</span>
+      <span class="member-info-row member-contact-row">${memberField('รหัสไปรษณีย์', member.postal_code)} ${memberField('โทรศัพท์ (บ้าน)', member.phone_alt)} ${memberField('โทรศัพท์ (มือถือ)', member.phone)}</span></p>
     <p class="paper-intent">ข้าพเจ้าขอตั้งบุคคลดังต่อไปนี้เป็นผู้รับโอนประโยชน์ใน เงินค่าหุ้น เงินฝาก เงินปันผล เงินเฉลี่ยคืน เงินสินไหม เงินสวัสดิการ หรือเงินอื่นใดที่ข้าพเจ้าพึงได้รับจากสหกรณ์ เมื่อข้าพเจ้าถึงแก่ความตาย ทั้งนี้ ให้ยกเลิกหนังสือตั้งผู้รับโอนประโยชน์ฉบับก่อนหน้านี้ (ถ้ามี)</p>
     <table aria-label="รายชื่อผู้รับโอนประโยชน์ในแบบฟอร์ม">
       <colgroup><col style="width:7%"><col style="width:29%"><col style="width:34%"><col style="width:9%"><col style="width:21%"></colgroup>
