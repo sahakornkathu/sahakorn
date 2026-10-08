@@ -22,6 +22,39 @@
   .badge{display:inline-flex;align-items:center;border-radius:999px;padding:4px 9px;font-size:12px;font-weight:700}
   .table-wrap{overflow:auto}
   th,td{white-space:nowrap}
+  body.print-preview-open{overflow:hidden}
+  #printPreview{position:fixed;inset:0;z-index:20000;overflow:auto;background:#e2e8f0;padding:24px}
+  #printPreview[hidden]{display:none}
+  .print-toolbar{max-width:210mm;margin:0 auto 16px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+  .benefit-paper{box-sizing:border-box;width:210mm;min-height:297mm;margin:auto;padding:18mm 17mm;background:#fff;color:#111;font-family:Tahoma,"Noto Sans Thai",sans-serif;font-size:14px;line-height:1.8;box-shadow:0 4px 24px #0f172a20}
+  .benefit-paper h1{text-align:center;font-size:21px;font-weight:700;margin:0 0 4px}
+  .benefit-paper .coop-name{text-align:center;font-size:18px;font-weight:700;margin-bottom:22px}
+  .benefit-paper .paper-meta{text-align:right;margin-bottom:20px}
+  .benefit-paper .paper-intro{margin:0 0 18px;text-indent:2em}
+  .benefit-paper table{border-collapse:collapse;width:100%;table-layout:fixed;font-size:13px;line-height:1.65}
+  .benefit-paper th,.benefit-paper td{border:1px solid #333;padding:8px 6px;white-space:normal;overflow-wrap:anywhere;vertical-align:top}
+  .benefit-paper th{font-weight:700;text-align:center;background:#f1f5f9}
+  .benefit-paper .paper-total{text-align:right;font-weight:700;margin:12px 0 24px}
+  .benefit-paper .paper-signatures{break-inside:avoid;page-break-inside:avoid;margin-top:30px}
+  .benefit-paper .maker-signature{width:75%;margin:0 auto 28px;text-align:center}
+  .benefit-paper .witness-signatures{display:grid;grid-template-columns:1fr 1fr;gap:24px;text-align:center}
+  .benefit-paper .sign-line{display:block;border-bottom:1px dotted #333;width:100%;height:32px;margin:4px 0 8px}
+  .benefit-paper .printed-name{overflow-wrap:anywhere;min-height:26px}
+  .benefit-paper .witness-name{margin-top:4px;white-space:nowrap}
+  @media(max-width:800px){#printPreview{padding:12px}.benefit-paper{width:100%;min-height:0;padding:22px 16px}.benefit-paper .witness-signatures{gap:14px}.benefit-paper .witness-name{white-space:normal}}
+  @page{size:A4 portrait;margin:16mm}
+  @media print{
+    body.print-preview-open{overflow:visible;background:#fff}
+    body.print-preview-open > :not(#printPreview){display:none!important}
+    #printPreview{position:static;padding:0;overflow:visible;background:#fff}
+    .print-toolbar{display:none!important}
+    .benefit-paper{width:auto;min-height:0;margin:0;padding:0;box-shadow:none;font-size:12pt;line-height:1.65}
+    .benefit-paper h1{font-size:18pt}.benefit-paper .coop-name{font-size:15pt}
+    .benefit-paper table{font-size:10.5pt}
+    .benefit-paper thead{display:table-header-group}
+    .benefit-paper tr{break-inside:avoid;page-break-inside:avoid}
+    .benefit-paper .witness-signatures{grid-template-columns:1fr 1fr;gap:24px}
+  }
 </style>
 
 <link rel="manifest" href="./manifest.json">
@@ -203,6 +236,17 @@
 
 </div>
 
+<section id="printPreview" role="dialog" aria-modal="true" aria-label="แบบฟอร์มหนังสือตั้งผู้รับผลประโยชน์" hidden>
+  <div class="print-toolbar">
+    <div class="font-bold text-slate-700">แบบฟอร์ม A4 · ผู้ทำหนังสือและพยาน 2 คน</div>
+    <div class="flex flex-wrap gap-2">
+      <button type="button" id="printFormBtn" class="btn btn-blue" onclick="printBenefitForm()">พิมพ์ / บันทึก PDF</button>
+      <button type="button" id="closePrintBtn" class="btn btn-gray" onclick="closePrintPreview()">กลับหน้าผู้รับผลประโยชน์</button>
+    </div>
+  </div>
+  <article id="benefitPrintPaper" class="benefit-paper"></article>
+</section>
+
 <script type="module">
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -284,6 +328,97 @@ function normalizePercent(v){
   const n = Number(v)
   if(!Number.isFinite(n)) return 0
   return Math.round(n * 100) / 100
+}
+
+function benefitPrintHtml(doc, member, beneficiaries){
+  const memberName = `${member.title || ''}${member.first_name || ''} ${member.last_name || ''}`.trim()
+  const address = makeMemberAddress(member) || '-'
+  const total = beneficiaries.reduce((sum, b) => sum + normalizePercent(b.benefit_percent), 0)
+  const rows = beneficiaries.map((b, index) => `
+    <tr>
+      <td style="text-align:center">${index + 1}</td>
+      <td>${esc(`${b.first_name || ''} ${b.last_name || ''}`.trim())}</td>
+      <td>${esc(b.address || '-')}</td>
+      <td>${esc(b.phone || '-')}</td>
+      <td style="text-align:center">${normalizePercent(b.benefit_percent).toLocaleString('th-TH',{maximumFractionDigits:2})}%</td>
+    </tr>`).join('')
+  return `
+    <h1>หนังสือตั้งผู้รับผลประโยชน์</h1>
+    <div class="coop-name">สหกรณ์การเกษตรกะทู้ จำกัด</div>
+    <div class="paper-meta">
+      <div>เลขทะเบียนหนังสือ ${esc(doc.document_no || '-')}</div>
+      <div>วันที่ ${esc(thaiDate(doc.document_date))}</div>
+    </div>
+    <p class="paper-intro">ข้าพเจ้า <strong>${esc(memberName)}</strong> สมาชิกเลขทะเบียน <strong>${esc(member.member_id)}</strong>
+      กลุ่ม ${esc(member.group || '-')} ที่อยู่ ${esc(address)} เบอร์โทรศัพท์ ${esc(member.phone || '-')}
+      ขอแจ้งรายชื่อผู้รับผลประโยชน์และสัดส่วนการรับผลประโยชน์ ดังต่อไปนี้</p>
+    <table aria-label="รายชื่อผู้รับผลประโยชน์ในแบบฟอร์ม">
+      <colgroup><col style="width:7%"><col style="width:26%"><col style="width:37%"><col style="width:17%"><col style="width:13%"></colgroup>
+      <thead><tr><th>ลำดับ</th><th>ชื่อ - นามสกุล</th><th>ที่อยู่</th><th>เบอร์โทรศัพท์</th><th>สัดส่วน</th></tr></thead>
+      <tbody>${rows || '<tr><td colspan="5" style="text-align:center">ไม่มีข้อมูลผู้รับผลประโยชน์</td></tr>'}</tbody>
+    </table>
+    <div class="paper-total">รวมสัดส่วนการรับผลประโยชน์ ${total.toLocaleString('th-TH',{maximumFractionDigits:2})}%</div>
+    <p>ข้าพเจ้าได้ตรวจสอบรายละเอียดข้างต้นแล้ว จึงลงลายมือชื่อไว้ต่อหน้าพยานทั้งสองคน</p>
+    <div class="paper-signatures">
+      <div class="maker-signature">
+        <div>ลงชื่อ <span class="sign-line"></span>ผู้ทำหนังสือ</div>
+        <div class="printed-name">(${esc(memberName)})</div>
+      </div>
+      <div class="witness-signatures">
+        <div><div>ลงชื่อ <span class="sign-line"></span>พยานคนที่ 1</div><div class="witness-name">(................................................)</div></div>
+        <div><div>ลงชื่อ <span class="sign-line"></span>พยานคนที่ 2</div><div class="witness-name">(................................................)</div></div>
+      </div>
+    </div>`
+}
+
+let printReturnFocus = null
+function openPrintPreview(doc, member, beneficiaries){
+  printReturnFocus = document.activeElement
+  $('benefitPrintPaper').innerHTML = benefitPrintHtml(doc, member, beneficiaries)
+  $('printPreview').hidden = false
+  $('printPreview').scrollTop = 0
+  document.body.classList.add('print-preview-open')
+  $('printFormBtn').focus()
+}
+
+window.closePrintPreview = function(){
+  $('printPreview').hidden = true
+  document.body.classList.remove('print-preview-open')
+  printReturnFocus?.focus()
+}
+
+window.printBenefitForm = async function(){
+  if($('printPreview').hidden) return
+  if(document.fonts?.ready) await document.fonts.ready
+  window.print()
+}
+
+$('printPreview').addEventListener('keydown', event => {
+  if(event.key === 'Escape') closePrintPreview()
+  if(event.key === 'Tab'){
+    const target = document.activeElement === $('printFormBtn') ? $('closePrintBtn') : $('printFormBtn')
+    event.preventDefault()
+    target.focus()
+  }
+})
+
+window.printDocument = async function(id, button){
+  if(button) button.disabled = true
+  try{
+    const {data: doc, error} = await db.from('member_benefit_documents').select('*').eq('id', id).single()
+    if(error) throw error
+    const [memberResult, beneficiariesResult] = await Promise.all([
+      db.from('members').select('*').eq('member_id', doc.member_id).single(),
+      db.from('member_beneficiaries').select('*').eq('document_id', id).order('sequence_no')
+    ])
+    if(memberResult.error) throw memberResult.error
+    if(beneficiariesResult.error) throw beneficiariesResult.error
+    openPrintPreview(doc, memberResult.data, beneficiariesResult.data || [])
+  } catch(error){
+    Swal.fire('เปิดแบบฟอร์มไม่สำเร็จ', error.message || String(error), 'error')
+  } finally{
+    if(button) button.disabled = false
+  }
 }
 
 function calcPercent(){
@@ -643,6 +778,7 @@ window.saveDocument = async function(){
   }
 
   const saveBtn = $('saveBtn')
+  const savedMember = {...selectedMember}
   saveBtn.disabled = true
   saveBtn.textContent = 'กำลังบันทึก...'
 
@@ -657,15 +793,21 @@ window.saveDocument = async function(){
 
     if(error) throw error
 
-    await Swal.fire(
-      'บันทึกสำเร็จ',
-      documentNo
+    const result = await Swal.fire({
+      title: 'บันทึกสำเร็จ',
+      text: documentNo
         ? `บันทึกหนังสือเลขที่ ${documentNo} เรียบร้อยแล้ว`
         : 'บันทึกข้อมูลผู้รับผลประโยชน์เรียบร้อยแล้ว',
-      'success'
-    )
+      icon: 'success',
+      showCancelButton: true,
+      confirmButtonText: 'ดูแบบฟอร์ม / พิมพ์',
+      cancelButtonText: 'ปิด'
+    })
     resetDocumentForm()
     await loadHistory()
+    if(result.isConfirmed){
+      openPrintPreview({document_date:documentDate, document_no:documentNo}, savedMember, beneficiaries)
+    }
   } catch(err){
     Swal.fire('บันทึกไม่สำเร็จ', err.message || String(err), 'error')
   } finally{
@@ -824,6 +966,7 @@ async function loadHistory(){
         </td>
         <td class="p-3">
           <div class="flex flex-col gap-2 min-w-[110px]">
+            <button class="btn btn-blue" onclick="printDocument(${d.id}, this)">พิมพ์แบบฟอร์ม</button>
             <button class="btn btn-amber" onclick="editDocument(${d.id})">แก้ไข</button>
             <button class="btn btn-red" onclick="deleteDocument(${d.id}, '${esc(d.document_no)}')">ลบทั้งฉบับ</button>
           </div>
