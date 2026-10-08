@@ -41,7 +41,7 @@
   .benefit-paper .member-info-field .form-value{min-width:0}
   .benefit-paper .member-info-row{display:grid;column-gap:10px;text-indent:0;break-inside:avoid}
   .benefit-paper .member-address-row{grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1.3fr) minmax(0,1.2fr) minmax(0,1.1fr)}
-  .benefit-paper .member-contact-row{grid-template-columns:minmax(0,1fr) minmax(0,1.3fr) minmax(0,1.5fr)}
+  .benefit-paper .member-contact-row{grid-template-columns:repeat(2,minmax(0,1fr))}
   .benefit-paper .member-info-row .member-info-field{display:flex;margin-right:0}
   .benefit-paper .member-info-row .form-value{flex:1;min-width:0}
   .benefit-paper .member-info-row .blank-value{flex:1;min-width:0}
@@ -75,7 +75,7 @@
     .benefit-paper table{font-size:9pt}
     .benefit-paper .registry-box{position:absolute;margin:0;font-size:9pt}
     .benefit-paper .member-address-row{grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1.3fr) minmax(0,1.2fr) minmax(0,1.1fr);row-gap:0}
-    .benefit-paper .member-contact-row{grid-template-columns:minmax(0,1fr) minmax(0,1.3fr) minmax(0,1.5fr);row-gap:0}
+    .benefit-paper .member-contact-row{grid-template-columns:repeat(2,minmax(0,1fr));row-gap:0}
     .benefit-paper thead{display:table-header-group}
     .benefit-paper tr{break-inside:avoid;page-break-inside:avoid}
     .benefit-paper .witness-signatures{grid-template-columns:1fr 1fr;gap:12mm}
@@ -384,7 +384,7 @@ function benefitPrintHtml(doc, member, beneficiaries){
       ${memberField('บ้านเลขที่', member.house_no)} ${memberField('หมู่ที่', member.moo)}
       <span class="member-info-row member-address-row">${memberField('ซอย', member.soi)} ${memberField('ถนน', member.street)}
         ${memberField('ตำบล/แขวง', member.subdistrict)} ${memberField('อำเภอ/เขต', member.district)} ${memberField('จังหวัด', member.province)}</span>
-      <span class="member-info-row member-contact-row">${memberField('รหัสไปรษณีย์', member.postal_code)} ${memberField('โทรศัพท์ (บ้าน)', member.phone_alt)} ${memberField('โทรศัพท์ (มือถือ)', member.phone)}</span></p>
+      <span class="member-info-row member-contact-row">${memberField('โทรศัพท์ (บ้าน)', member.phone_alt)} ${memberField('โทรศัพท์ (มือถือ)', member.phone)}</span></p>
     <p class="paper-intent">ข้าพเจ้าขอตั้งบุคคลดังต่อไปนี้เป็นผู้รับโอนประโยชน์ใน เงินค่าหุ้น เงินฝาก เงินปันผล เงินเฉลี่ยคืน เงินสินไหม เงินสวัสดิการ หรือเงินอื่นใดที่ข้าพเจ้าพึงได้รับจากสหกรณ์ เมื่อข้าพเจ้าถึงแก่ความตาย ทั้งนี้ ให้ยกเลิกหนังสือตั้งผู้รับโอนประโยชน์ฉบับก่อนหน้านี้ (ถ้ามี)</p>
     <table aria-label="รายชื่อผู้รับโอนประโยชน์ในแบบฟอร์ม">
       <colgroup><col style="width:7%"><col style="width:29%"><col style="width:34%"><col style="width:9%"><col style="width:21%"></colgroup>
