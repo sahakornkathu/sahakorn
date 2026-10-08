@@ -347,6 +347,7 @@ function benefitPrintHtml(doc, member, beneficiaries){
     <div class="coop-name">สหกรณ์การเกษตรกะทู้ จำกัด</div>
     <div class="paper-meta">
       <div>เลขทะเบียนหนังสือ ${esc(doc.document_no || '-')}</div>
+      <div>เขียนที่ สหกรณ์การเกษตรกะทู้ จำกัด</div>
       <div>วันที่ ${esc(thaiDate(doc.document_date))}</div>
     </div>
     <p class="paper-intro">ข้าพเจ้า <strong>${esc(memberName)}</strong> สมาชิกเลขทะเบียน <strong>${esc(member.member_id)}</strong>
