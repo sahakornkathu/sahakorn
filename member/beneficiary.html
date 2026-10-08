@@ -26,34 +26,49 @@
   #printPreview{position:fixed;inset:0;z-index:20000;overflow:auto;background:#e2e8f0;padding:24px}
   #printPreview[hidden]{display:none}
   .print-toolbar{max-width:210mm;margin:0 auto 16px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
-  .benefit-paper{box-sizing:border-box;width:210mm;min-height:297mm;margin:auto;padding:18mm 17mm;background:#fff;color:#111;font-family:Tahoma,"Noto Sans Thai",sans-serif;font-size:14px;line-height:1.8;box-shadow:0 4px 24px #0f172a20}
-  .benefit-paper h1{text-align:center;font-size:21px;font-weight:700;margin:0 0 4px}
-  .benefit-paper .coop-name{text-align:center;font-size:18px;font-weight:700;margin-bottom:22px}
-  .benefit-paper .paper-meta{text-align:right;margin-bottom:20px}
-  .benefit-paper .paper-intro{margin:0 0 18px;text-indent:2em}
-  .benefit-paper table{border-collapse:collapse;width:100%;table-layout:fixed;font-size:13px;line-height:1.65}
-  .benefit-paper th,.benefit-paper td{border:1px solid #333;padding:8px 6px;white-space:normal;overflow-wrap:anywhere;vertical-align:top}
-  .benefit-paper th{font-weight:700;text-align:center;background:#f1f5f9}
-  .benefit-paper .paper-total{text-align:right;font-weight:700;margin:12px 0 24px}
-  .benefit-paper .paper-signatures{break-inside:avoid;page-break-inside:avoid;margin-top:30px}
-  .benefit-paper .maker-signature{width:75%;margin:0 auto 28px;text-align:center}
-  .benefit-paper .witness-signatures{display:grid;grid-template-columns:1fr 1fr;gap:24px;text-align:center}
-  .benefit-paper .sign-line{display:block;border-bottom:1px dotted #333;width:100%;height:32px;margin:4px 0 8px}
-  .benefit-paper .printed-name{overflow-wrap:anywhere;min-height:26px}
-  .benefit-paper .witness-name{margin-top:4px;white-space:nowrap}
-  @media(max-width:800px){#printPreview{padding:12px}.benefit-paper{width:100%;min-height:0;padding:22px 16px}.benefit-paper .witness-signatures{gap:14px}.benefit-paper .witness-name{white-space:normal}}
-  @page{size:A4 portrait;margin:16mm}
+  .benefit-paper{box-sizing:border-box;width:210mm;min-height:297mm;margin:auto;padding:12mm 14mm;background:#fff;color:#111;font-family:"TH Sarabun New","Sarabun",Tahoma,sans-serif;font-size:14px;line-height:1.6;box-shadow:0 4px 24px #0f172a20}
+  .benefit-paper .paper-header{position:relative;min-height:24mm;text-align:center}
+  .benefit-paper .coop-logo{display:block;width:21mm;height:21mm;object-fit:contain;margin:0 auto}
+  .benefit-paper .registry-box{position:absolute;top:0;right:0;width:54mm;border:1px solid #111;padding:7px 10px;text-align:left;font-size:12px;line-height:1.8}
+  .benefit-paper h1{text-align:center;font-size:19px;font-weight:700;margin:3mm 0 4mm}
+  .benefit-paper .paper-meta{text-align:right;margin-bottom:3mm}
+  .benefit-paper .paper-intro,.benefit-paper .paper-intent,.benefit-paper .paper-declaration{margin:2mm 0;text-indent:2em;text-align:justify}
+  .benefit-paper .form-value{border-bottom:1px dotted #555;padding:0 4px;overflow-wrap:anywhere}
+  .benefit-paper .blank-value{display:inline-block;min-width:22mm;height:1em;vertical-align:baseline;border-bottom:1px dotted #555}
+  .benefit-paper table{border-collapse:collapse;width:100%;table-layout:fixed;font-size:12.5px;line-height:1.65;margin:3mm 0}
+  .benefit-paper th,.benefit-paper td{border:1px solid #111;padding:5px 7px;white-space:normal;overflow-wrap:anywhere;vertical-align:top}
+  .benefit-paper th{font-weight:700;text-align:center;vertical-align:middle;height:15mm}
+  .benefit-paper .beneficiary-form-row{height:25mm}
+  .benefit-paper .beneficiary-form-row td:first-child,.benefit-paper .beneficiary-form-row td:nth-child(4){text-align:center;vertical-align:middle}
+  .benefit-paper .form-field{display:flex;align-items:baseline;gap:3px;min-height:1.6em}
+  .benefit-paper .form-field-label{flex:none}
+  .benefit-paper .form-field-value{flex:1;min-width:0;border-bottom:1px dotted #555;overflow-wrap:anywhere;min-height:1.2em}
+  .benefit-paper .other-conditions td{height:14mm}
+  .benefit-paper .condition-line{border-bottom:1px dotted #555;min-height:1.6em}
+  .benefit-paper .paper-signatures{break-inside:avoid;page-break-inside:avoid;margin-top:4mm}
+  .benefit-paper .maker-signature{width:63%;margin:0 0 5mm auto;text-align:center}
+  .benefit-paper .witness-signatures{display:grid;grid-template-columns:1fr 1fr;gap:12mm;text-align:center}
+  .benefit-paper .sign-line{display:inline-block;width:42mm;min-height:7mm;border-bottom:1px dotted #333;vertical-align:bottom;margin:0 3px}
+  .benefit-paper .printed-name{overflow-wrap:anywhere;min-height:1.6em}
+  .benefit-paper .witness-name{margin-top:2px}
+  .benefit-paper .paper-notes{font-size:12px;margin-top:5mm;break-inside:avoid;page-break-inside:avoid}
+  .benefit-paper .paper-notes p{margin:0}
+  @media(max-width:800px){#printPreview{padding:12px}.benefit-paper{width:100%;min-height:0;padding:20px 16px}.benefit-paper .registry-box{position:static;margin:3mm 0 3mm auto}.benefit-paper .witness-signatures{gap:14px}.benefit-paper .sign-line{width:65%}}
+  @page{size:A4 portrait;margin:12mm 14mm}
   @media print{
     body.print-preview-open{overflow:visible;background:#fff}
     body.print-preview-open > :not(#printPreview){display:none!important}
     #printPreview{position:static;padding:0;overflow:visible;background:#fff}
     .print-toolbar{display:none!important}
-    .benefit-paper{width:auto;min-height:0;margin:0;padding:0;box-shadow:none;font-size:12pt;line-height:1.65}
-    .benefit-paper h1{font-size:18pt}.benefit-paper .coop-name{font-size:15pt}
-    .benefit-paper table{font-size:10.5pt}
+    .benefit-paper{width:auto;min-height:0;margin:0;padding:0;box-shadow:none;font-size:11pt;line-height:1.5}
+    .benefit-paper h1{font-size:15pt}
+    .benefit-paper table{font-size:9.5pt}
+    .benefit-paper .registry-box{position:absolute;margin:0;font-size:9pt}
     .benefit-paper thead{display:table-header-group}
     .benefit-paper tr{break-inside:avoid;page-break-inside:avoid}
-    .benefit-paper .witness-signatures{grid-template-columns:1fr 1fr;gap:24px}
+    .benefit-paper .witness-signatures{grid-template-columns:1fr 1fr;gap:12mm}
+    .benefit-paper .sign-line{width:42mm}
+    .benefit-paper .paper-notes{font-size:9pt}
   }
 </style>
 
@@ -236,7 +251,7 @@
 
 </div>
 
-<section id="printPreview" role="dialog" aria-modal="true" aria-label="แบบฟอร์มหนังสือตั้งผู้รับผลประโยชน์" hidden>
+<section id="printPreview" role="dialog" aria-modal="true" aria-label="แบบฟอร์มหนังสือตั้งผู้รับโอนประโยชน์" hidden>
   <div class="print-toolbar">
     <div class="font-bold text-slate-700">แบบฟอร์ม A4 · ผู้ทำหนังสือและพยาน 2 คน</div>
     <div class="flex flex-wrap gap-2">
@@ -332,44 +347,46 @@ function normalizePercent(v){
 
 function benefitPrintHtml(doc, member, beneficiaries){
   const memberName = `${member.title || ''}${member.first_name || ''} ${member.last_name || ''}`.trim()
-  const address = makeMemberAddress(member) || '-'
-  const total = beneficiaries.reduce((sum, b) => sum + normalizePercent(b.benefit_percent), 0)
-  const rows = beneficiaries.map((b, index) => `
-    <tr>
-      <td style="text-align:center">${index + 1}</td>
-      <td>${esc(`${b.first_name || ''} ${b.last_name || ''}`.trim())}</td>
-      <td>${esc(b.address || '-')}</td>
-      <td>${esc(b.phone || '-')}</td>
-      <td style="text-align:center">${normalizePercent(b.benefit_percent).toLocaleString('th-TH',{maximumFractionDigits:2})}%</td>
-    </tr>`).join('')
+  const value = text => text && String(text).trim() !== '-'
+    ? `<span class="form-value">${esc(text)}</span>` : '<span class="blank-value"></span>'
+  const field = (label, text) => `<div class="form-field"><span class="form-field-label">${label}</span><span class="form-field-value">${esc(text && String(text).trim() !== '-' ? text : '')}</span></div>`
+  const tableRows = Array.from({length:Math.max(4, beneficiaries.length)}, (_, index) => {
+    const b = beneficiaries[index]
+    return `<tr class="beneficiary-form-row">
+      <td>${index + 1}</td>
+      <td>${field('ชื่อ', b?.first_name)}${field('นามสกุล', b?.last_name)}${field('เกี่ยวข้องเป็น', b?.relationship)}</td>
+      <td>${field('ที่อยู่', b?.address)}${field('รหัสไปรษณีย์', b?.postal_code)}${field('โทรศัพท์', b?.phone)}</td>
+      <td>${b ? `${normalizePercent(b.benefit_percent).toLocaleString('th-TH',{maximumFractionDigits:2})}%` : ''}</td>
+      <td>${esc(b?.remark || '')}</td>
+    </tr>`
+  }).join('')
   return `
-    <h1>หนังสือตั้งผู้รับผลประโยชน์</h1>
-    <div class="coop-name">สหกรณ์การเกษตรกะทู้ จำกัด</div>
-    <div class="paper-meta">
-      <div>เลขทะเบียนหนังสือ ${esc(doc.document_no || '-')}</div>
-      <div>เขียนที่ สหกรณ์การเกษตรกะทู้ จำกัด</div>
-      <div>วันที่ ${esc(thaiDate(doc.document_date))}</div>
+    <div class="paper-header">
+      <img class="coop-logo" src="./cooperative-logo.png" alt="โลโก้สหกรณ์การเกษตรกะทู้ จำกัด">
+      <div class="registry-box"><div>ทะเบียนเลขที่ ${value(doc.document_no)}</div><div>วันที่ ${value(thaiDate(doc.document_date))}</div></div>
     </div>
-    <p class="paper-intro">ข้าพเจ้า <strong>${esc(memberName)}</strong> สมาชิกเลขทะเบียน <strong>${esc(member.member_id)}</strong>
-      กลุ่ม ${esc(member.group || '-')} ที่อยู่ ${esc(address)} เบอร์โทรศัพท์ ${esc(member.phone || '-')}
-      ขอแจ้งรายชื่อผู้รับผลประโยชน์และสัดส่วนการรับผลประโยชน์ ดังต่อไปนี้</p>
-    <table aria-label="รายชื่อผู้รับผลประโยชน์ในแบบฟอร์ม">
-      <colgroup><col style="width:7%"><col style="width:26%"><col style="width:37%"><col style="width:17%"><col style="width:13%"></colgroup>
-      <thead><tr><th>ลำดับ</th><th>ชื่อ - นามสกุล</th><th>ที่อยู่</th><th>เบอร์โทรศัพท์</th><th>สัดส่วน</th></tr></thead>
-      <tbody>${rows || '<tr><td colspan="5" style="text-align:center">ไม่มีข้อมูลผู้รับผลประโยชน์</td></tr>'}</tbody>
+    <h1>หนังสือตั้งผู้รับโอนประโยชน์</h1>
+    <div class="paper-meta"><div>เขียนที่ สหกรณ์การเกษตรกะทู้ จำกัด</div><div>วันที่ ${value(thaiDate(doc.document_date))}</div></div>
+    <p class="paper-intro">ข้าพเจ้า ${value(memberName)} สมาชิกเลขที่ ${value(member.member_id)} ที่อยู่สามารถติดต่อได้สะดวก
+      บ้านเลขที่ ${value(member.house_no)} หมู่ที่ ${value(member.moo)} ซอย ${value(member.soi)} ถนน ${value(member.street)}
+      ตำบล/แขวง ${value(member.subdistrict)} อำเภอ/เขต ${value(member.district)} จังหวัด ${value(member.province)}
+      รหัสไปรษณีย์ ${value(member.postal_code)} โทรศัพท์ (บ้าน) ${value(member.phone_alt)} โทรศัพท์ (มือถือ) ${value(member.phone)}</p>
+    <p class="paper-intent">ข้าพเจ้าขอตั้งบุคคลดังต่อไปนี้เป็นผู้รับโอนประโยชน์ใน เงินค่าหุ้น เงินฝาก เงินปันผล เงินเฉลี่ยคืน เงินสินไหม เงินสวัสดิการ หรือเงินอื่นใดที่ข้าพเจ้าพึงได้รับจากสหกรณ์ เมื่อข้าพเจ้าถึงแก่ความตาย ทั้งนี้ ให้ยกเลิกหนังสือตั้งผู้รับโอนประโยชน์ฉบับก่อนหน้านี้ (ถ้ามี)</p>
+    <table aria-label="รายชื่อผู้รับโอนประโยชน์ในแบบฟอร์ม">
+      <colgroup><col style="width:7%"><col style="width:29%"><col style="width:34%"><col style="width:9%"><col style="width:21%"></colgroup>
+      <thead><tr><th>ลำดับ</th><th>ชื่อ - สกุล</th><th>ที่อยู่ (โดยละเอียด)</th><th>ให้ได้รับ<br>ร้อยละ<br>(%)</th><th>หมายเหตุ</th></tr></thead>
+      <tbody>${tableRows}</tbody>
+      <tbody><tr class="other-conditions"><td colspan="5"><div class="condition-line">เงื่อนไขอื่น ๆ ${esc(doc.other_conditions || '')}</div><div class="condition-line"></div></td></tr></tbody>
     </table>
-    <div class="paper-total">รวมสัดส่วนการรับผลประโยชน์ ${total.toLocaleString('th-TH',{maximumFractionDigits:2})}%</div>
-    <p>ข้าพเจ้าได้ตรวจสอบรายละเอียดข้างต้นแล้ว จึงลงลายมือชื่อไว้ต่อหน้าพยานทั้งสองคน</p>
+    <p class="paper-declaration">ข้าพเจ้าขอยืนยันว่าในการกำหนดตั้งผู้รับโอนประโยชน์ของข้าพเจ้าได้กระทำขึ้นในขณะที่ข้าพเจ้ามีสติสัมปชัญญะสมบูรณ์ทุกประการ ทั้งนี้ ได้อ่านคำแนะนำการตั้งผู้รับโอนประโยชน์ด้านหลังหนังสือฉบับนี้เป็นที่เข้าใจแล้ว จึงลงลายมือชื่อไว้เป็นหลักฐานต่อหน้าพยาน</p>
     <div class="paper-signatures">
-      <div class="maker-signature">
-        <div>ลงชื่อ <span class="sign-line"></span>ผู้ทำหนังสือ</div>
-        <div class="printed-name">(${esc(memberName)})</div>
-      </div>
+      <div class="maker-signature"><div>ลงชื่อ<span class="sign-line"></span>สมาชิกผู้แสดงเจตนา</div><div class="printed-name">(${esc(memberName)})</div></div>
       <div class="witness-signatures">
-        <div><div>ลงชื่อ <span class="sign-line"></span>พยานคนที่ 1</div><div class="witness-name">(................................................)</div></div>
-        <div><div>ลงชื่อ <span class="sign-line"></span>พยานคนที่ 2</div><div class="witness-name">(................................................)</div></div>
+        <div><div>ลงชื่อ<span class="sign-line"></span>พยาน</div><div class="witness-name">(................................................)</div></div>
+        <div><div>ลงชื่อ<span class="sign-line"></span>พยาน</div><div class="witness-name">(................................................)</div></div>
       </div>
-    </div>`
+    </div>
+    <div class="paper-notes"><p>หมายเหตุ 1. ต้องมีผู้ลงลายมือชื่อเป็นพยานจำนวน 2 คน และพยานต้องมิใช่เป็นผู้รับโอนประโยชน์</p><p style="padding-left:4.5em">2. โปรดอ่านข้อแนะนำการตั้งผู้รับโอนประโยชน์ด้านหลังหนังสือฉบับนี้</p></div>`
 }
 
 let printReturnFocus = null
@@ -391,6 +408,17 @@ window.closePrintPreview = function(){
 window.printBenefitForm = async function(){
   if($('printPreview').hidden) return
   if(document.fonts?.ready) await document.fonts.ready
+  const logo = $('benefitPrintPaper').querySelector('.coop-logo')
+  if(logo && !logo.complete){
+    try{ await logo.decode() } catch{
+      Swal.fire('โลโก้ยังโหลดไม่สำเร็จ', 'กรุณาลองเปิดแบบฟอร์มอีกครั้ง', 'warning')
+      return
+    }
+  }
+  if(logo && !logo.naturalWidth){
+    Swal.fire('โลโก้ยังโหลดไม่สำเร็จ', 'กรุณาลองเปิดแบบฟอร์มอีกครั้ง', 'warning')
+    return
+  }
   window.print()
 }
 
