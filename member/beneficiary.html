@@ -35,6 +35,10 @@
   .benefit-paper .paper-intro,.benefit-paper .paper-intent,.benefit-paper .paper-declaration{margin:1.5mm 0;text-indent:2em;text-align:justify}
   .benefit-paper .form-value{border-bottom:1px dotted #555;padding:0 4px;overflow-wrap:anywhere}
   .benefit-paper .blank-value{display:inline-block;min-width:22mm;height:1em;vertical-align:baseline;border-bottom:1px dotted #555}
+  .benefit-paper .paper-intro{text-align:left}
+  .benefit-paper .member-info-field{display:inline-flex;align-items:baseline;gap:4px;max-width:100%;margin-right:6px;vertical-align:baseline;text-indent:0}
+  .benefit-paper .member-info-label{flex:none;white-space:nowrap}
+  .benefit-paper .member-info-field .form-value{min-width:0}
   .benefit-paper table{border-collapse:collapse;width:100%;table-layout:fixed;font-size:12px;line-height:1.6;margin:2mm 0}
   .benefit-paper th,.benefit-paper td{border:1px solid #111;padding:5px 7px;white-space:normal;overflow-wrap:anywhere;vertical-align:top}
   .benefit-paper th{font-weight:700;text-align:center;vertical-align:middle;height:12mm}
@@ -349,6 +353,7 @@ function benefitPrintHtml(doc, member, beneficiaries){
   const memberName = `${member.title || ''}${member.first_name || ''} ${member.last_name || ''}`.trim()
   const value = text => text && String(text).trim() !== '-'
     ? `<span class="form-value">${esc(text)}</span>` : '<span class="blank-value"></span>'
+  const memberField = (label, text) => `<span class="member-info-field"><span class="member-info-label">${label}</span>${value(text)}</span>`
   const field = (label, text) => `<div class="form-field"><span class="form-field-label">${label}</span><span class="form-field-value">${esc(text && String(text).trim() !== '-' ? text : '')}</span></div>`
   const tableRows = Array.from({length:Math.max(4, beneficiaries.length)}, (_, index) => {
     const b = beneficiaries[index]
@@ -367,10 +372,11 @@ function benefitPrintHtml(doc, member, beneficiaries){
     </div>
     <h1>หนังสือตั้งผู้รับโอนประโยชน์</h1>
     <div class="paper-meta"><div>เขียนที่ สหกรณ์การเกษตรกะทู้ จำกัด</div><div>วันที่ ${value(thaiDate(doc.document_date))}</div></div>
-    <p class="paper-intro">ข้าพเจ้า ${value(memberName)} สมาชิกเลขที่ ${value(member.member_id)} ที่อยู่สามารถติดต่อได้สะดวก
-      บ้านเลขที่ ${value(member.house_no)} หมู่ที่ ${value(member.moo)} ซอย ${value(member.soi)} ถนน ${value(member.street)}
-      ตำบล/แขวง ${value(member.subdistrict)} อำเภอ/เขต ${value(member.district)} จังหวัด ${value(member.province)}
-      รหัสไปรษณีย์ ${value(member.postal_code)} โทรศัพท์ (บ้าน) ${value(member.phone_alt)} โทรศัพท์ (มือถือ) ${value(member.phone)}</p>
+    <p class="paper-intro">${memberField('ข้าพเจ้า', memberName)} ${memberField('สมาชิกเลขที่', member.member_id)} ที่อยู่สามารถติดต่อได้สะดวก
+      ${memberField('บ้านเลขที่', member.house_no)} ${memberField('หมู่ที่', member.moo)}<br>
+      ${memberField('ซอย', member.soi)} ${memberField('ถนน', member.street)}
+      ${memberField('ตำบล/แขวง', member.subdistrict)} ${memberField('อำเภอ/เขต', member.district)} ${memberField('จังหวัด', member.province)}
+      ${memberField('รหัสไปรษณีย์', member.postal_code)} ${memberField('โทรศัพท์ (บ้าน)', member.phone_alt)} ${memberField('โทรศัพท์ (มือถือ)', member.phone)}</p>
     <p class="paper-intent">ข้าพเจ้าขอตั้งบุคคลดังต่อไปนี้เป็นผู้รับโอนประโยชน์ใน เงินค่าหุ้น เงินฝาก เงินปันผล เงินเฉลี่ยคืน เงินสินไหม เงินสวัสดิการ หรือเงินอื่นใดที่ข้าพเจ้าพึงได้รับจากสหกรณ์ เมื่อข้าพเจ้าถึงแก่ความตาย ทั้งนี้ ให้ยกเลิกหนังสือตั้งผู้รับโอนประโยชน์ฉบับก่อนหน้านี้ (ถ้ามี)</p>
     <table aria-label="รายชื่อผู้รับโอนประโยชน์ในแบบฟอร์ม">
       <colgroup><col style="width:7%"><col style="width:29%"><col style="width:34%"><col style="width:9%"><col style="width:21%"></colgroup>
