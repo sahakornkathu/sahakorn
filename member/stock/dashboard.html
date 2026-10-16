@@ -1,0 +1,1450 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Dashboard KPI หุ้นสมาชิก</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+  <style>
+    :root {
+      --green-950: #073d2a;
+      --green-900: #0b4b34;
+      --green-800: #126447;
+      --green-700: #17835c;
+      --green-600: #1a9a69;
+      --green-100: #dff5ea;
+      --green-50: #f1fbf6;
+      --amber: #f0a522;
+      --amber-100: #fff2d6;
+      --red: #c43f48;
+      --red-100: #ffe6e8;
+      --ink: #17231e;
+      --muted: #68776f;
+      --line: #dfe8e3;
+      --surface: #ffffff;
+      --canvas: #f3f7f5;
+      --shadow: 0 12px 36px rgba(19, 69, 49, .08);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: "Noto Sans Thai", "Tahoma", system-ui, sans-serif;
+      color: var(--ink);
+      background: var(--canvas);
+      line-height: 1.45;
+    }
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+    .hidden { display: none !important; }
+
+    .brand-mark {
+      width: 52px;
+      height: 52px;
+      display: grid;
+      place-items: center;
+      border-radius: 16px;
+      color: white;
+      background: linear-gradient(145deg, var(--green-600), var(--green-900));
+      font-size: 25px;
+      font-weight: 800;
+      box-shadow: 0 10px 22px rgba(23, 131, 92, .28);
+    }
+    .app-shell { min-height: 100vh; }
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 12px clamp(18px, 4vw, 56px);
+      color: white;
+      background: rgba(7, 61, 42, .96);
+      backdrop-filter: blur(14px);
+      box-shadow: 0 8px 24px rgba(7, 61, 42, .14);
+    }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand .brand-mark { width: 42px; height: 42px; border-radius: 13px; font-size: 20px; }
+    .brand-title { font-weight: 800; line-height: 1.15; }
+    .brand-subtitle { margin-top: 3px; color: #bfe6d4; font-size: 12px; }
+    .top-actions { display: flex; align-items: center; gap: 8px; }
+    .ghost-btn, .icon-btn {
+      border: 1px solid rgba(255,255,255,.25);
+      border-radius: 10px;
+      padding: 8px 11px;
+      color: white;
+      background: rgba(255,255,255,.07);
+      font-weight: 650;
+    }
+    .ghost-btn:hover, .icon-btn:hover { background: rgba(255,255,255,.14); }
+
+    main { width: min(1500px, 100%); margin: 0 auto; padding: 26px clamp(16px, 3vw, 44px) 56px; }
+    .hero {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 20px;
+      margin-bottom: 18px;
+    }
+    .eyebrow { margin: 0 0 6px; color: var(--green-700); font-size: 12px; font-weight: 800; letter-spacing: .08em; }
+    .hero h1 { margin: 0; font-size: clamp(27px, 3vw, 38px); letter-spacing: -.02em; }
+    .hero p { margin: 7px 0 0; color: var(--muted); }
+    .updated { color: var(--muted); font-size: 12px; white-space: nowrap; }
+
+    .quality-banner {
+      display: flex;
+      align-items: start;
+      gap: 10px;
+      margin: 0 0 16px;
+      padding: 12px 14px;
+      border: 1px solid #efd49c;
+      border-radius: 13px;
+      color: #654914;
+      background: var(--amber-100);
+      font-size: 13px;
+    }
+    .quality-banner.ok { border-color: #bfe5d2; color: #14583f; background: var(--green-50); }
+
+    .filters {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 10px;
+      align-items: end;
+      padding: 14px;
+      margin-bottom: 16px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+    .filter { display: grid; gap: 5px; }
+    .filter.period-control { display: none; }
+    .filter.period-control.active { display: grid; }
+    .filter.search-filter { min-width: 220px; }
+    .filter label { color: var(--muted); font-size: 11px; font-weight: 750; }
+    .filter input, .filter select {
+      width: 100%;
+      height: 40px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 0 10px;
+      outline: none;
+      background: white;
+    }
+    .filter input:focus, .filter select:focus { border-color: var(--green-600); box-shadow: 0 0 0 3px rgba(26,154,105,.1); }
+    .action-btn {
+      height: 40px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 0 13px;
+      color: var(--green-900);
+      background: var(--green-50);
+      font-weight: 750;
+      white-space: nowrap;
+    }
+    .action-btn:hover { border-color: #a5d5bc; background: #e7f8ef; }
+
+    .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 14px; }
+    .kpi-card {
+      position: relative;
+      min-height: 166px;
+      overflow: hidden;
+      padding: 20px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+    .kpi-card::after {
+      content: "";
+      position: absolute;
+      top: -32px;
+      right: -32px;
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      background: var(--green-100);
+    }
+    .kpi-card.line-card::after { background: var(--amber-100); }
+    .kpi-label { position: relative; z-index: 1; color: var(--muted); font-size: 13px; font-weight: 700; }
+    .kpi-value { position: relative; z-index: 1; margin-top: 11px; font-size: clamp(25px, 2.4vw, 35px); font-weight: 850; letter-spacing: -.04em; }
+    .kpi-unit { font-size: 13px; font-weight: 650; color: var(--muted); }
+    .kpi-foot { position: absolute; left: 20px; right: 20px; bottom: 17px; color: var(--muted); font-size: 11px; }
+    .kpi-foot strong { color: var(--green-700); }
+
+    .mini-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 14px; }
+    .mini-card { padding: 15px 18px; border: 1px solid var(--line); border-radius: 14px; background: white; }
+    .mini-card span { display: block; color: var(--muted); font-size: 12px; }
+    .mini-card strong { display: block; margin-top: 5px; font-size: 20px; }
+
+    .chart-grid { display: grid; grid-template-columns: 1.55fr 1fr; gap: 14px; margin-bottom: 14px; }
+    .panel {
+      min-width: 0;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: white;
+      box-shadow: var(--shadow);
+    }
+    .panel-head { display: flex; align-items: start; justify-content: space-between; gap: 12px; padding: 18px 20px 0; }
+    .panel-title { margin: 0; font-size: 16px; }
+    .panel-subtitle { margin: 4px 0 0; color: var(--muted); font-size: 11px; }
+    .panel-body { position: relative; min-height: 300px; padding: 16px 18px 18px; }
+    .chart-box { height: 270px; }
+    .side-charts { display: grid; grid-template-rows: 1fr; gap: 14px; }
+    .side-charts .panel-body { min-height: 225px; }
+    .side-charts .chart-box { height: 250px; }
+
+    /* กราฟยอดซื้อแยกตามกลุ่ม: แยกเต็มความกว้างเพื่อไม่ให้ข้อมูลซ้อนกัน */
+    .group-panel { margin-bottom: 14px; }
+    .group-chart-wrap { overflow-x: hidden; overflow-y: auto; }
+    .group-chart-box { height: 360px; min-height: 320px; }
+    .group-summary {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 16px;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+    .group-summary strong { color: var(--ink); }
+
+    .table-panel { margin-top: 14px; overflow: hidden; }
+    .table-actions { display: flex; align-items: center; gap: 8px; }
+    .small-btn { border: 1px solid var(--line); border-radius: 9px; padding: 7px 10px; color: var(--green-900); background: white; font-size: 12px; font-weight: 700; }
+    .table-wrap { overflow: auto; padding: 14px 18px 18px; }
+    table { width: 100%; border-collapse: collapse; white-space: nowrap; font-size: 12px; }
+    th { padding: 10px 11px; color: var(--muted); background: #f6f9f7; text-align: left; font-size: 11px; }
+    td { padding: 11px; border-bottom: 1px solid #edf1ef; }
+    th.num, td.num { text-align: right; font-variant-numeric: tabular-nums; }
+    tbody tr:hover { background: var(--green-50); }
+    .member-name { font-weight: 700; }
+    .badge { display: inline-flex; align-items: center; border-radius: 999px; padding: 4px 8px; color: #176043; background: var(--green-100); font-size: 10px; font-weight: 750; }
+    .badge.line { color: #7b5310; background: var(--amber-100); }
+    .empty-cell { padding: 28px; color: var(--muted); text-align: center !important; }
+    .footer-note { margin: 22px 0 0; color: var(--muted); text-align: center; font-size: 11px; }
+
+    .loading {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      display: grid;
+      place-items: center;
+      color: white;
+      background: rgba(7, 61, 42, .72);
+      backdrop-filter: blur(4px);
+    }
+    .loading-box { display: grid; justify-items: center; gap: 12px; font-weight: 750; }
+    .spinner { width: 38px; height: 38px; border: 4px solid rgba(255,255,255,.25); border-top-color: white; border-radius: 50%; animation: spin .8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @media (max-width: 1100px) {
+      .filters { grid-template-columns: repeat(3, 1fr); }
+      .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+      .chart-grid { grid-template-columns: 1fr; }
+      .side-charts { grid-template-columns: 1fr; grid-template-rows: none; }
+    }
+    @media (max-width: 720px) {
+      .topbar { padding-inline: 14px; }
+      .brand-subtitle, .print-btn { display: none; }
+      .hero { align-items: start; flex-direction: column; }
+      .filters { grid-template-columns: 1fr 1fr; }
+      .filter.search-filter { grid-column: 1 / -1; }
+      .kpi-grid, .mini-grid, .side-charts { grid-template-columns: 1fr; }
+      .group-chart-box { min-height: 340px; }
+      .kpi-card { min-height: 150px; }
+      .panel-head { flex-direction: column; }
+    }
+    @media print {
+      body { background: white; }
+      .topbar, .filters, .quality-banner, .table-actions, .footer-note { display: none !important; }
+      main { padding: 0; }
+      .panel, .kpi-card, .mini-card { box-shadow: none; break-inside: avoid; }
+      .chart-grid { grid-template-columns: 1.55fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div id="appView" class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark">K</div>
+        <div>
+          <div class="brand-title">KPI หุ้นสมาชิก</div>
+          <div class="brand-subtitle">ข้อมูลจริงจาก member_share_tx · member_share · members</div>
+        </div>
+      </div>
+      <div class="top-actions">
+        <button id="reloadButton" class="icon-btn" type="button" title="โหลดข้อมูลใหม่">↻</button>
+        <button class="ghost-btn print-btn" type="button" onclick="window.print()">พิมพ์</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div>
+          <p class="eyebrow">EXECUTIVE OVERVIEW</p>
+          <h1>ภาพรวมทุนเรือนหุ้น</h1>
+          <p>คำนวณรายการซื้อ–ขายจาก member_share_tx และตรวจยอดคงเหลือกับ member_share</p>
+        </div>
+        <div id="updatedAt" class="updated">—</div>
+      </section>
+
+      <div id="qualityBanner" class="quality-banner ok">กำลังตรวจสอบคุณภาพข้อมูล…</div>
+
+      <section class="filters" aria-label="ตัวกรอง">
+        <div class="filter">
+          <label for="periodMode">รูปแบบช่วงเวลา</label>
+          <select id="periodMode">
+            <option value="between">รายวัน (ระหว่างวันที่)</option>
+            <option value="month">รายเดือน</option>
+            <option value="year" selected>รายปี</option>
+            <option value="quarter">รายไตรมาส</option>
+          </select>
+        </div>
+        <div class="filter period-control" data-period-modes="year quarter">
+          <label for="yearFilter">ปีบัญชี (พ.ศ.)</label>
+          <select id="yearFilter"></select>
+        </div>
+        <div class="filter period-control" data-period-modes="quarter">
+          <label for="quarterFilter">ไตรมาส</label>
+          <select id="quarterFilter">
+            <option value="1">ไตรมาส 1 · เม.ย.–มิ.ย.</option>
+            <option value="2">ไตรมาส 2 · ก.ค.–ก.ย.</option>
+            <option value="3">ไตรมาส 3 · ต.ค.–ธ.ค.</option>
+            <option value="4">ไตรมาส 4 · ม.ค.–มี.ค.</option>
+          </select>
+        </div>
+        <div class="filter period-control" data-period-modes="month">
+          <label for="monthFilter">เดือน</label>
+          <input id="monthFilter" type="month">
+        </div>
+        <div class="filter period-control" data-period-modes="between">
+          <label for="startDateFilter">ตั้งแต่วันที่</label>
+          <input id="startDateFilter" type="date">
+        </div>
+        <div class="filter period-control" data-period-modes="between">
+          <label for="endDateFilter">ถึงวันที่</label>
+          <input id="endDateFilter" type="date">
+        </div>
+        <div class="filter">
+          <label for="groupFilter">กลุ่มสมาชิก</label>
+          <select id="groupFilter"><option value="">ทุกกลุ่ม</option></select>
+        </div>
+        <div class="filter">
+          <label for="statusFilter">สถานะสมาชิก</label>
+          <select id="statusFilter"><option value="">ทุกสถานะ</option></select>
+        </div>
+        <div class="filter">
+          <label for="channelFilter">การซื้อผ่าน LINE</label>
+          <select id="channelFilter">
+            <option value="all">ทั้งหมด</option>
+            <option value="line">ซื้อผ่าน LINE</option>
+            <option value="nonline">ไม่ได้ซื้อผ่าน LINE</option>
+          </select>
+        </div>
+        <div class="filter search-filter">
+          <label for="searchFilter">ค้นหาสมาชิก</label>
+          <input id="searchFilter" type="search" placeholder="รหัสสมาชิก หรือชื่อ">
+        </div>
+        <button id="clearFilterButton" class="action-btn" type="button">ล้างตัวกรอง</button>
+      </section>
+
+      <section class="kpi-grid">
+        <article class="kpi-card">
+          <div class="kpi-label">ยอดยกมาก่อนช่วง</div>
+          <div class="kpi-value"><span id="openingKpi">0</span> <span class="kpi-unit">บาท</span></div>
+          <div id="openingFoot" class="kpi-foot">—</div>
+        </article>
+        <article class="kpi-card">
+          <div id="buyLabel" class="kpi-label">ยอดซื้อระหว่างปี</div>
+          <div class="kpi-value"><span id="buyKpi">0</span> <span class="kpi-unit">บาท</span></div>
+          <div id="buyFoot" class="kpi-foot">—</div>
+        </article>
+        <article class="kpi-card">
+          <div class="kpi-label">ยอดขายหุ้นระหว่างช่วง</div>
+          <div class="kpi-value"><span id="sellKpi">0</span> <span class="kpi-unit">บาท</span></div>
+          <div id="sellFoot" class="kpi-foot">—</div>
+        </article>
+        <article class="kpi-card line-card">
+          <div class="kpi-label">ยอดคงเหลือสิ้นช่วง</div>
+          <div class="kpi-value"><span id="balanceKpi">0</span> <span class="kpi-unit">บาท</span></div>
+          <div id="balanceFoot" class="kpi-foot">ยอดยกมา + ซื้อ − ขาย</div>
+        </article>
+      </section>
+
+      <section class="mini-grid">
+        <article class="mini-card"><span>สมาชิกที่แสดง</span><strong id="memberCount">0 คน</strong></article>
+        <article class="mini-card"><span>สมาชิกที่ซื้อหุ้นในช่วง</span><strong id="buyerCount">0 คน</strong></article>
+        <article class="mini-card"><span>ซื้อผ่าน LINE ในช่วง</span><strong id="lineSummary">0 บาท</strong></article>
+      </section>
+
+      <section class="chart-grid">
+        <article class="panel">
+          <div class="panel-head">
+            <div>
+              <h2 class="panel-title">ยอดซื้อหุ้นตามเดือน</h2>
+              <p id="monthlyChartSubtitle" class="panel-subtitle">รวมจากวันที่ทำรายการจริงใน member_share_tx</p>
+            </div>
+          </div>
+          <div class="panel-body"><div class="chart-box"><canvas id="monthlyChart"></canvas></div></div>
+        </article>
+        <div class="side-charts">
+          <article class="panel">
+            <div class="panel-head">
+              <div>
+                <h2 class="panel-title">LINE เทียบยอดซื้อรวม</h2>
+                <p class="panel-subtitle">LINE เป็นส่วนหนึ่งของยอดรวม</p>
+              </div>
+            </div>
+            <div class="panel-body"><div class="chart-box"><canvas id="shareChart"></canvas></div></div>
+          </article>
+        </div>
+      </section>
+
+      <section class="panel group-panel">
+        <div class="panel-head">
+          <div>
+            <h2 class="panel-title">ยอดซื้อแยกตามกลุ่ม</h2>
+            <p class="panel-subtitle">เรียงจากยอดซื้อรวมมากไปน้อย · 1 กลุ่มต่อ 1 แถว เพื่อเปรียบเทียบได้ชัดเจน</p>
+            <div id="groupSummary" class="group-summary"></div>
+          </div>
+        </div>
+        <div class="panel-body group-chart-wrap">
+          <div id="groupChartBox" class="group-chart-box"><canvas id="groupChart"></canvas></div>
+        </div>
+      </section>
+
+      <section class="panel table-panel">
+        <div class="panel-head">
+          <div>
+            <h2 class="panel-title">รายละเอียดสมาชิก</h2>
+            <p id="memberTableSubtitle" class="panel-subtitle">เรียงตามยอดซื้อหุ้นในปี</p>
+          </div>
+          <div class="table-actions"><button id="exportButton" class="small-btn" type="button">ส่งออก CSV</button></div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>รหัส</th><th>ชื่อสมาชิก</th><th>กลุ่ม</th><th>สถานะ</th>
+              <th class="num">ยอดยกมาก่อนช่วง</th><th class="num">ซื้อในช่วง</th><th class="num">ขายในช่วง</th>
+              <th class="num">คงเหลือสิ้นช่วง</th><th class="num">ผ่าน LINE</th>
+            </tr></thead>
+            <tbody id="memberTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel table-panel">
+        <div class="panel-head">
+          <div>
+            <h2 class="panel-title">รายการซื้อผ่าน LINE ล่าสุด</h2>
+            <p class="panel-subtitle">เฉพาะ historycart ที่ status = completed · สมาชิกคนเดียวกันซื้อวันเดียวกันจะรวมยอดเป็นรายการเดียว</p>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>วันที่ซื้อ</th><th>จำนวนรายการ</th><th>สมาชิก</th><th>กลุ่ม</th><th class="num">ยอดรวม</th></tr></thead>
+            <tbody id="orderTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <p class="footer-note">แหล่งคำนวณ: member_share_tx.trans_date · ยอดสรุปรายปี: member_share · เวลา Asia/Bangkok</p>
+    </main>
+  </div>
+
+  <div id="loadingView" class="loading hidden"><div class="loading-box"><div class="spinner"></div><span id="loadingText">กำลังโหลดข้อมูลจริง…</span></div></div>
+
+  <script>
+    const CONFIG = {
+      SUPABASE_URL: "https://ttottijljxoinptmhgtu.supabase.co",
+      SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0b3R0aWpsanhvaW5wdG1oZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTYxODQsImV4cCI6MjA3MzU5MjE4NH0.XnIf3xLzSbZDwFVKWjLTCiF4jnnDMQ1W95EI-v6F-3Y",
+      FISCAL_YEAR_START_MONTH: 4,
+      CURRENCY_PER_SHARE: 10
+    };
+
+    const state = {
+      client: null,
+      members: [],
+      memberById: new Map(),
+      summaryRows: [],
+      summaryByMemberYear: new Map(),
+      transactions: [],
+      transactionTotalsByMemberYear: new Map(),
+      coverageByYear: new Map(),
+      orders: [],
+      summaries: [],
+      filtered: [],
+      filteredOrders: [],
+      filteredTransactions: [],
+      charts: {},
+      selectedPeriod: null
+    };
+
+    const $ = (selector) => document.querySelector(selector);
+    const number = (value) => Number(value || 0);
+    const money = (value, digits = 0) => new Intl.NumberFormat("th-TH", {
+      minimumFractionDigits: digits,
+      maximumFractionDigits: digits
+    }).format(number(value));
+    const percent = (value) => `${new Intl.NumberFormat("th-TH", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(number(value))}%`;
+    const text = (value) => String(value ?? "").trim();
+    const ACTIVE_MEMBER_STATUSES = new Set(["สมาชิก", "สมาชิกสมทบ"]);
+    const normalizeMemberStatus = (value) => text(value).replace(/\s+/g, "");
+    const isActiveMember = (value) => ACTIVE_MEMBER_STATUSES.has(normalizeMemberStatus(value));
+    const escapeHtml = (value) => text(value).replace(/[&<>'"]/g, (char) => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", "\"": "&quot;"
+    })[char]);
+    const naturalCompare = (a, b) => text(a).localeCompare(text(b), "th", { numeric: true });
+
+    function configIsReady() {
+      return /^https:\/\/.+\.supabase\.co\/?$/.test(CONFIG.SUPABASE_URL)
+        && !CONFIG.SUPABASE_URL.includes("YOUR_PROJECT")
+        && CONFIG.SUPABASE_ANON_KEY
+        && !CONFIG.SUPABASE_ANON_KEY.includes("YOUR_SUPABASE");
+    }
+
+    function setLoading(show, message = "กำลังโหลดข้อมูลจริง…") {
+      $("#loadingText").textContent = message;
+      $("#loadingView").classList.toggle("hidden", !show);
+    }
+
+    function bangkokDateKey(dateValue = new Date()) {
+      const date = new Date(dateValue);
+      if (Number.isNaN(date.getTime())) return "";
+      const parts = new Intl.DateTimeFormat("en-CA", {
+        timeZone: "Asia/Bangkok", year: "numeric", month: "2-digit", day: "2-digit"
+      }).formatToParts(date);
+      const value = (type) => parts.find((part) => part.type === type)?.value || "";
+      return `${value("year")}-${value("month")}-${value("day")}`;
+    }
+
+    function normalizeDateKey(dateValue) {
+      const raw = text(dateValue);
+      if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+      return bangkokDateKey(dateValue);
+    }
+
+    function parseDateKey(dateKey) {
+      const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(text(dateKey));
+      if (!match) return null;
+      const date = new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])));
+      return Number.isNaN(date.getTime()) ? null : date;
+    }
+
+    function dateKeyFromUtcDate(date) {
+      return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}-${String(date.getUTCDate()).padStart(2, "0")}`;
+    }
+
+    function addDays(dateKey, days) {
+      const date = parseDateKey(dateKey);
+      if (!date) return "";
+      date.setUTCDate(date.getUTCDate() + Number(days));
+      return dateKeyFromUtcDate(date);
+    }
+
+    function addMonths(monthKey, months) {
+      const match = /^(\d{4})-(\d{2})$/.exec(text(monthKey));
+      if (!match) return "";
+      const date = new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1 + Number(months), 1));
+      return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}`;
+    }
+
+    function fiscalYearOfDateKey(dateKey) {
+      const match = /^(\d{4})-(\d{2})-\d{2}$/.exec(text(dateKey));
+      if (!match) return null;
+      const year = Number(match[1]);
+      const month = Number(match[2]);
+      return month >= CONFIG.FISCAL_YEAR_START_MONTH ? year + 543 : year + 542;
+    }
+
+    function fiscalYearOf(dateValue) {
+      return fiscalYearOfDateKey(normalizeDateKey(dateValue));
+    }
+
+    function thaiMonthOf(dateValue) {
+      const key = normalizeDateKey(dateValue);
+      return key ? Number(key.slice(5, 7)) : null;
+    }
+
+    function fiscalQuarterOf(dateValue) {
+      const month = thaiMonthOf(dateValue);
+      if (month >= 4 && month <= 6) return 1;
+      if (month >= 7 && month <= 9) return 2;
+      if (month >= 10 && month <= 12) return 3;
+      if (month >= 1 && month <= 3) return 4;
+      return null;
+    }
+
+    function quarterLabel(quarter) {
+      const labels = {
+        1: "ไตรมาส 1 (เมษายน–มิถุนายน)",
+        2: "ไตรมาส 2 (กรกฎาคม–กันยายน)",
+        3: "ไตรมาส 3 (ตุลาคม–ธันวาคม)",
+        4: "ไตรมาส 4 (มกราคม–มีนาคม)"
+      };
+      return labels[Number(quarter)] || "ทั้งปี";
+    }
+
+    function fiscalYearBounds(fiscalYear) {
+      const startYear = Number(fiscalYear) - 543;
+      return { start: `${startYear}-04-01`, endExclusive: `${startYear + 1}-04-01` };
+    }
+
+    function quarterBounds(fiscalYear, quarter) {
+      const startYear = Number(fiscalYear) - 543;
+      const starts = {
+        1: `${startYear}-04-01`,
+        2: `${startYear}-07-01`,
+        3: `${startYear}-10-01`,
+        4: `${startYear + 1}-01-01`
+      };
+      const ends = {
+        1: `${startYear}-07-01`,
+        2: `${startYear}-10-01`,
+        3: `${startYear + 1}-01-01`,
+        4: `${startYear + 1}-04-01`
+      };
+      return { start: starts[Number(quarter)], endExclusive: ends[Number(quarter)] };
+    }
+
+    function inPeriod(dateKey, period) {
+      return dateKey >= period.start && dateKey < period.endExclusive;
+    }
+
+    function formatThaiDate(dateValue, withTime = false) {
+      const date = new Date(dateValue);
+      if (Number.isNaN(date.getTime())) return "—";
+      return new Intl.DateTimeFormat("th-TH", {
+        timeZone: "Asia/Bangkok",
+        day: "2-digit", month: "short", year: "numeric",
+        ...(withTime ? { hour: "2-digit", minute: "2-digit" } : {})
+      }).format(date);
+    }
+
+    async function fetchAll(client, tableName, orderColumn) {
+      const pageSize = 1000;
+      const rows = [];
+      for (let from = 0; ; from += pageSize) {
+        let query = client.from(tableName).select("*").range(from, from + pageSize - 1);
+        if (orderColumn) query = query.order(orderColumn, { ascending: true });
+        const { data, error } = await query;
+        if (error) throw new Error(`${tableName}: ${error.message}`);
+        rows.push(...data);
+        if (data.length < pageSize) break;
+      }
+      return rows;
+    }
+
+    function findLineUserId(member) {
+      const lineIdPattern = /^U[0-9a-fA-F]{32}$/;
+      const normalColumn = text(member.line_user_id);
+      if (lineIdPattern.test(normalColumn)) return normalColumn;
+      for (const value of Object.values(member)) {
+        const candidate = text(value);
+        if (lineIdPattern.test(candidate)) return candidate;
+      }
+      return "";
+    }
+
+    function completedAt(order) {
+      let receipt = order.receipt_info;
+      if (typeof receipt === "string") {
+        try { receipt = JSON.parse(receipt); } catch (_) { receipt = null; }
+      }
+      return receipt?.completed_at || order.created_at;
+    }
+
+    function snapshotTimestamp(row) {
+      const timestamp = new Date(row.updated_at || row.created_at || 0).getTime();
+      return Number.isFinite(timestamp) ? timestamp : 0;
+    }
+
+    function isBetterSnapshot(next, current) {
+      if (!current) return true;
+      const nextTimestamp = snapshotTimestamp(next);
+      const currentTimestamp = snapshotTimestamp(current);
+      if (nextTimestamp !== currentTimestamp) return nextTimestamp > currentTimestamp;
+      return number(next.id) > number(current.id);
+    }
+
+    function summaryKey(memberId, fiscalYear) {
+      return `${text(memberId)}|${Number(fiscalYear)}`;
+    }
+
+    function buildDataIndexes() {
+      state.summaryByMemberYear = new Map();
+      state.summaryRows.forEach((row) => {
+        const key = summaryKey(row.member_id, row.fiscal_year);
+        const current = state.summaryByMemberYear.get(key);
+        if (isBetterSnapshot(row, current)) state.summaryByMemberYear.set(key, row);
+      });
+
+      state.transactionTotalsByMemberYear = new Map();
+      state.transactions.forEach((row) => {
+        const key = summaryKey(row.member_id, row.fiscal_year);
+        const current = state.transactionTotalsByMemberYear.get(key) || { buy: 0, sell: 0, count: 0 };
+        current.buy += row.share_buy;
+        current.sell += row.share_sell;
+        current.count += 1;
+        state.transactionTotalsByMemberYear.set(key, current);
+      });
+
+      const years = [...new Set([
+        ...state.summaryRows.map((row) => row.fiscal_year),
+        ...state.transactions.map((row) => row.fiscal_year)
+      ])].filter(Number.isFinite);
+      state.coverageByYear = new Map();
+      years.forEach((year) => {
+        let mismatches = 0;
+        let compared = 0;
+        let transactionCount = 0;
+        state.members.filter((member) => isActiveMember(member.member_status)).forEach((member) => {
+          const key = summaryKey(member.member_id, year);
+          const summary = state.summaryByMemberYear.get(key);
+          const transactions = state.transactionTotalsByMemberYear.get(key) || { buy: 0, sell: 0, count: 0 };
+          transactionCount += transactions.count;
+          if (!summary && transactions.count === 0) return;
+          compared += 1;
+          if (!summary
+            || Math.abs(summary.share_buy - transactions.buy) > 0.001
+            || Math.abs(summary.share_sell - transactions.sell) > 0.001
+            || Math.abs(summary.share_balance - (summary.share_begin + transactions.buy - transactions.sell)) > 0.001) {
+            mismatches += 1;
+          }
+        });
+        state.coverageByYear.set(Number(year), {
+          complete: mismatches === 0,
+          mismatches,
+          compared,
+          transactionCount
+        });
+      });
+    }
+
+    function summaryFor(memberId, fiscalYear) {
+      return state.summaryByMemberYear.get(summaryKey(memberId, fiscalYear)) || null;
+    }
+
+    function latestSummaryBefore(memberId, fiscalYear) {
+      let selected = null;
+      state.summaryByMemberYear.forEach((row) => {
+        if (text(row.member_id) !== text(memberId) || Number(row.fiscal_year) >= Number(fiscalYear)) return;
+        if (!selected || Number(row.fiscal_year) > Number(selected.fiscal_year)
+          || (Number(row.fiscal_year) === Number(selected.fiscal_year) && isBetterSnapshot(row, selected))) {
+          selected = row;
+        }
+      });
+      return selected;
+    }
+
+    function openingAtDate(memberId, startDate) {
+      const fiscalYear = fiscalYearOfDateKey(startDate);
+      const currentSummary = summaryFor(memberId, fiscalYear);
+      const previousSummary = latestSummaryBefore(memberId, fiscalYear);
+      const base = currentSummary ? currentSummary.share_begin : number(previousSummary?.share_balance);
+      const fiscalStart = fiscalYearBounds(fiscalYear).start;
+      const priorNet = state.transactions
+        .filter((row) => text(row.member_id) === text(memberId)
+          && row.trans_date >= fiscalStart && row.trans_date < startDate)
+        .reduce((sum, row) => sum + row.share_buy - row.share_sell, 0);
+      return base + priorNet;
+    }
+
+    async function loadData() {
+      setLoading(true);
+      try {
+        const [members, rawSummaryRows, rawTransactions, rawOrders] = await Promise.all([
+          fetchAll(state.client, "members", "member_id"),
+          fetchAll(state.client, "member_share", "id"),
+          fetchAll(state.client, "member_share_tx", "id"),
+          fetchAll(state.client, "historycart", "created_at")
+        ]);
+
+        const memberById = new Map();
+        const memberByLineId = new Map();
+        state.members = members.map((member) => {
+          const info = {
+            member_id: text(member.member_id),
+            member_name: text([member.title, member.first_name, member.last_name].filter(Boolean).join(" ")) || "ไม่พบชื่อ",
+            member_group: text(member.group) || "ไม่ระบุกลุ่ม",
+            member_status: text(member.member_status) || "ไม่ระบุ"
+          };
+          memberById.set(info.member_id, info);
+          const lineUserId = findLineUserId(member);
+          if (lineUserId) memberByLineId.set(lineUserId, info);
+          return { ...member, ...info };
+        });
+        state.memberById = memberById;
+
+        state.summaryRows = rawSummaryRows.map((row) => {
+          const member = memberById.get(text(row.member_id)) || {};
+          return {
+            ...row,
+            ...member,
+            member_id: text(row.member_id),
+            fiscal_year: Number(row.fiscal_year),
+            share_begin: number(row.share_begin),
+            share_buy: number(row.share_buy),
+            share_sell: number(row.share_sell),
+            share_balance: number(row.share_balance)
+          };
+        });
+
+        state.transactions = rawTransactions.map((row) => {
+          const member = memberById.get(text(row.member_id)) || {};
+          return {
+            ...row,
+            ...member,
+            member_id: text(row.member_id),
+            fiscal_year: Number(row.fiscal_year),
+            trans_date: normalizeDateKey(row.trans_date),
+            share_buy: number(row.share_buy),
+            share_sell: number(row.share_sell)
+          };
+        }).filter((row) => row.member_id && row.trans_date);
+
+        state.orders = rawOrders
+          .filter((row) => text(row.status).toLowerCase() === "completed")
+          .map((row) => {
+            const member = memberByLineId.get(text(row.user_id)) || {};
+            return {
+              ...row,
+              ...member,
+              completed_at: completedAt(row),
+              completed_date: normalizeDateKey(completedAt(row)),
+              total_price: number(row.total_price)
+            };
+          });
+        buildDataIndexes();
+        populateFilters();
+        render();
+        $("#updatedAt").textContent = `อัปเดตล่าสุด ${formatThaiDate(new Date(), true)} น.`;
+      } catch (error) {
+        console.error(error);
+        alert(`โหลดข้อมูลไม่สำเร็จ\n${error.message}\n\nตรวจสอบ URL, anon key และสิทธิ์อ่านตาราง members, member_share, member_share_tx, historycart`);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    function optionList(select, values, allLabel) {
+      const previous = select.value;
+      select.innerHTML = `<option value="">${escapeHtml(allLabel)}</option>`
+        + values.map((value) => `<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`).join("");
+      if (values.map(String).includes(previous)) select.value = previous;
+    }
+
+    function populateFilters() {
+      const years = [...new Set([
+        ...state.summaryRows.map((row) => row.fiscal_year),
+        ...state.transactions.map((row) => row.fiscal_year)
+      ].filter(Boolean))].sort((a, b) => b - a);
+      const previousYear = Number($("#yearFilter").value);
+      $("#yearFilter").innerHTML = years.map((year) => `<option value="${year}">${year}</option>`).join("");
+      const currentFiscalYear = fiscalYearOfDateKey(bangkokDateKey());
+      const selectedYear = years.includes(previousYear)
+        ? previousYear
+        : (years.includes(currentFiscalYear) ? currentFiscalYear : years[0]);
+      $("#yearFilter").value = selectedYear || "";
+
+      const today = bangkokDateKey();
+      const currentMonth = today.slice(0, 7);
+      if (!$("#monthFilter").value) $("#monthFilter").value = currentMonth;
+      const yearBounds = fiscalYearBounds(selectedYear || currentFiscalYear);
+      if (!$("#startDateFilter").value) $("#startDateFilter").value = yearBounds.start;
+      if (!$("#endDateFilter").value) $("#endDateFilter").value = today;
+      $("#quarterFilter").value = String(fiscalQuarterOf(today) || 1);
+
+      const relevant = state.members.filter((member) => isActiveMember(member.member_status));
+      optionList($("#groupFilter"), [...new Set(relevant.map((row) => text(row.member_group)).filter(Boolean))].sort(naturalCompare), "ทุกกลุ่ม");
+
+      const statusSelect = $("#statusFilter");
+      const statuses = [...new Set(relevant.map((row) => text(row.member_status)).filter(Boolean))].sort(naturalCompare);
+      optionList(statusSelect, statuses, "ทุกสถานะสมาชิกปัจจุบัน");
+      updatePeriodControls();
+    }
+
+    function updatePeriodControls() {
+      const mode = $("#periodMode").value;
+      document.querySelectorAll(".period-control").forEach((control) => {
+        const modes = text(control.dataset.periodModes).split(/\s+/).filter(Boolean);
+        control.classList.toggle("active", modes.includes(mode));
+      });
+    }
+
+    function formatThaiDateKey(dateKey) {
+      const date = parseDateKey(dateKey);
+      return date ? new Intl.DateTimeFormat("th-TH", {
+        day: "2-digit", month: "short", year: "numeric", timeZone: "UTC"
+      }).format(date) : "—";
+    }
+
+    function selectedPeriod() {
+      const mode = $("#periodMode").value;
+      if (mode === "year") {
+        const fiscalYear = Number($("#yearFilter").value);
+        const bounds = fiscalYearBounds(fiscalYear);
+        return { mode, fiscalYear, ...bounds, label: `ปีบัญชี ${fiscalYear}` };
+      }
+      if (mode === "quarter") {
+        const fiscalYear = Number($("#yearFilter").value);
+        const quarter = Number($("#quarterFilter").value);
+        const bounds = quarterBounds(fiscalYear, quarter);
+        return { mode, fiscalYear, quarter, ...bounds, label: `${quarterLabel(quarter)} ปีบัญชี ${fiscalYear}` };
+      }
+      if (mode === "month") {
+        const month = $("#monthFilter").value;
+        if (!/^\d{4}-\d{2}$/.test(month)) throw new Error("กรุณาเลือกเดือน");
+        const start = `${month}-01`;
+        const endExclusive = `${addMonths(month, 1)}-01`;
+        const monthDate = parseDateKey(start);
+        const label = monthDate
+          ? new Intl.DateTimeFormat("th-TH", { month: "long", year: "numeric", timeZone: "UTC" }).format(monthDate)
+          : month;
+        return { mode, fiscalYear: fiscalYearOfDateKey(start), start, endExclusive, label: `เดือน${label}` };
+      }
+      const start = $("#startDateFilter").value;
+      const end = $("#endDateFilter").value;
+      if (!parseDateKey(start) || !parseDateKey(end)) throw new Error("กรุณาเลือกวันที่เริ่มต้นและวันที่สิ้นสุด");
+      if (start > end) throw new Error("วันที่เริ่มต้นต้องไม่เกินวันที่สิ้นสุด");
+      return {
+        mode: "between",
+        fiscalYear: fiscalYearOfDateKey(start),
+        start,
+        endExclusive: addDays(end, 1),
+        label: `${formatThaiDateKey(start)} – ${formatThaiDateKey(end)}`
+      };
+    }
+
+    function fiscalYearsInPeriod(period) {
+      const startYear = fiscalYearOfDateKey(period.start);
+      const endYear = fiscalYearOfDateKey(addDays(period.endExclusive, -1));
+      const years = [];
+      for (let year = startYear; year <= endYear; year += 1) years.push(year);
+      return years;
+    }
+
+    function isExactFiscalYear(period) {
+      const bounds = fiscalYearBounds(period.fiscalYear);
+      return period.start === bounds.start && period.endExclusive === bounds.endExclusive;
+    }
+
+    function periodDetailIsComplete(period) {
+      return fiscalYearsInPeriod(period).every((year) => state.coverageByYear.get(year)?.complete === true);
+    }
+
+    function buildSummaries(period) {
+      const completeDetail = periodDetailIsComplete(period);
+      const annualSummaryFallback = isExactFiscalYear(period) && !completeDetail;
+      const unsupported = !completeDetail && !annualSummaryFallback;
+      const periodTransactions = unsupported ? [] : state.transactions.filter((row) => inPeriod(row.trans_date, period));
+      const periodOrders = state.orders.filter((order) => order.completed_date && inPeriod(order.completed_date, period));
+      const transactionsByMember = new Map();
+      periodTransactions.forEach((row) => {
+        const item = transactionsByMember.get(row.member_id) || { buy: 0, sell: 0, count: 0 };
+        item.buy += row.share_buy;
+        item.sell += row.share_sell;
+        item.count += 1;
+        transactionsByMember.set(row.member_id, item);
+      });
+      const lineByMember = new Map();
+      periodOrders.forEach((order) => {
+        const id = text(order.member_id);
+        if (id) lineByMember.set(id, (lineByMember.get(id) || 0) + order.total_price);
+      });
+
+      const summaries = unsupported ? [] : state.members
+        .filter((member) => isActiveMember(member.member_status))
+        .map((member) => {
+          const memberId = member.member_id;
+          let opening;
+          let buy;
+          let sell;
+          let closing;
+          let activityCount;
+          if (annualSummaryFallback) {
+            const summary = summaryFor(memberId, period.fiscalYear);
+            const prior = latestSummaryBefore(memberId, period.fiscalYear);
+            opening = summary ? summary.share_begin : number(prior?.share_balance);
+            buy = number(summary?.share_buy);
+            sell = number(summary?.share_sell);
+            closing = summary ? summary.share_balance : opening;
+            activityCount = buy || sell ? 1 : 0;
+          } else {
+            const totals = transactionsByMember.get(memberId) || { buy: 0, sell: 0, count: 0 };
+            opening = openingAtDate(memberId, period.start);
+            buy = totals.buy;
+            sell = totals.sell;
+            closing = opening + buy - sell;
+            activityCount = totals.count;
+          }
+          return {
+            member_id: memberId,
+            member_name: member.member_name,
+            member_group: member.member_group,
+            member_status: member.member_status,
+            share_begin: opening,
+            share_buy: buy,
+            share_sell: sell,
+            share_balance: closing,
+            line_total: lineByMember.get(memberId) || 0,
+            activity_count: activityCount
+          };
+        });
+      return { summaries, periodTransactions, periodOrders, completeDetail, annualSummaryFallback, unsupported };
+    }
+
+    function selectedFilters() {
+      return {
+        group: $("#groupFilter").value,
+        status: $("#statusFilter").value,
+        channel: $("#channelFilter").value,
+        search: text($("#searchFilter").value).toLocaleLowerCase("th")
+      };
+    }
+
+    function render() {
+      let period;
+      try {
+        period = selectedPeriod();
+      } catch (error) {
+        const banner = $("#qualityBanner");
+        banner.classList.remove("ok");
+        banner.innerHTML = `<strong>ช่วงเวลาไม่ถูกต้อง:</strong><span>${escapeHtml(error.message)}</span>`;
+        return;
+      }
+      state.selectedPeriod = period;
+      const filters = selectedFilters();
+      const build = buildSummaries(period);
+      state.summaries = build.summaries;
+      state.filtered = build.summaries.filter((row) => {
+        if (filters.group && row.member_group !== filters.group) return false;
+        if (filters.status && row.member_status !== filters.status) return false;
+        if (filters.channel === "line" && row.line_total <= 0) return false;
+        if (filters.channel === "nonline" && row.line_total > 0) return false;
+        if (filters.search) {
+          const haystack = `${row.member_id} ${row.member_name}`.toLocaleLowerCase("th");
+          if (!haystack.includes(filters.search)) return false;
+        }
+        return true;
+      });
+
+      const visibleIds = new Set(state.filtered.map((row) => row.member_id));
+      state.filteredOrders = build.periodOrders.filter((order) => visibleIds.has(text(order.member_id)));
+      state.filteredTransactions = build.periodTransactions.filter((row) => visibleIds.has(text(row.member_id)));
+
+      const opening = state.filtered.reduce((sum, row) => sum + row.share_begin, 0);
+      const totalBuy = state.filtered.reduce((sum, row) => sum + row.share_buy, 0);
+      const totalSell = state.filtered.reduce((sum, row) => sum + row.share_sell, 0);
+      const balance = state.filtered.reduce((sum, row) => sum + row.share_balance, 0);
+      const lineTotal = state.filteredOrders.reduce((sum, row) => sum + row.total_price, 0);
+      const lineRatio = totalBuy > 0 ? lineTotal / totalBuy * 100 : 0;
+      const buyers = state.filtered.filter((row) => row.share_buy > 0).length;
+      const buyTransactions = state.filtered.reduce((sum, row) => sum + row.activity_count, 0);
+      const reconciliationDifference = balance - (opening + totalBuy - totalSell);
+
+      $("#openingKpi").textContent = money(opening);
+      $("#buyKpi").textContent = money(totalBuy);
+      $("#sellKpi").textContent = money(totalSell);
+      $("#balanceKpi").textContent = money(balance);
+      $("#openingFoot").textContent = `ยอดก่อน ${formatThaiDateKey(period.start)}`;
+      $("#buyLabel").textContent = period.mode === "year" ? "ยอดซื้อระหว่างปี" : "ยอดซื้อระหว่างช่วง";
+      $("#monthlyChartSubtitle").textContent = build.completeDetail
+        ? "รวมจากวันที่ทำรายการจริงใน member_share_tx"
+        : "ไม่มีรายละเอียดรายวันครบ จึงไม่แยกยอดรายเดือนแบบคาดเดา";
+      $("#buyFoot").innerHTML = build.annualSummaryFallback
+        ? `<strong>ยอดสรุประบบหลัก</strong> · ${escapeHtml(period.label)}`
+        : `<strong>${money(buyTransactions)} รายการ</strong> · ${escapeHtml(period.label)}`;
+      $("#sellFoot").textContent = `รวมรายการขายใน ${period.label}`;
+      $("#balanceFoot").textContent = `${money(opening)} + ${money(totalBuy)} − ${money(totalSell)}`;
+      $("#memberCount").textContent = `${money(state.filtered.length)} คน`;
+      $("#buyerCount").textContent = `${money(buyers)} คน`;
+      $("#lineSummary").textContent = `${money(lineTotal)} บาท (${percent(lineRatio)})`;
+
+      renderQuality(build, period, reconciliationDifference);
+      renderCharts(totalBuy, lineTotal, period);
+      renderMemberTable();
+      renderOrderTable();
+    }
+
+    function renderQuality(build, period, reconciliationDifference) {
+      const unmatched = build.periodOrders.filter((order) => !order.member_id).length;
+      const banner = $("#qualityBanner");
+      const reconciled = Math.abs(reconciliationDifference) < 0.001;
+      banner.classList.toggle("ok", !build.unsupported && !build.annualSummaryFallback && reconciled && unmatched === 0);
+      if (build.unsupported) {
+        const years = fiscalYearsInPeriod(period).filter((year) => !state.coverageByYear.get(year)?.complete);
+        banner.innerHTML = `<strong>ไม่มีรายละเอียดรายวันครบ:</strong><span>ปีบัญชี ${years.join(", ")} มีเฉพาะยอดสรุปรายปี จึงไม่แสดงรายวัน/เดือน/ไตรมาสแบบคาดเดา กรุณาเลือก “รายปี” สำหรับปีดังกล่าว</span>`;
+        return;
+      }
+      if (build.annualSummaryFallback) {
+        banner.innerHTML = `<strong>รายงานรายปี:</strong><span>${escapeHtml(period.label)} ใช้ยอดยกมา ซื้อ ขาย และคงเหลือจาก member_share เพราะยังไม่มีรายการ member_share_tx รายวันครบ</span>`;
+        return;
+      }
+      const mappingText = unmatched
+        ? `มีรายการ LINE จับคู่สมาชิกไม่ได้ ${money(unmatched)} รายการ`
+        : `รายการ LINE ${money(build.periodOrders.length)} รายการจับคู่สมาชิกได้ครบ`;
+      banner.innerHTML = `<strong>ตรวจสูตรแล้ว:</strong><span>ใช้ member_share_tx ${money(state.filteredTransactions.length)} รายการตามตัวกรอง · ยอดยกมา + ซื้อ − ขาย = คงเหลือ (ส่วนต่าง ${money(reconciliationDifference, 2)} บาท) · ${mappingText}</span>`;
+    }
+
+    function destroyChart(name) {
+      if (state.charts[name]) state.charts[name].destroy();
+      state.charts[name] = null;
+    }
+
+    function monthKeysForPeriod(period) {
+      const keys = [];
+      const lastMonth = addDays(period.endExclusive, -1).slice(0, 7);
+      let month = period.start.slice(0, 7);
+      for (let guard = 0; month && month <= lastMonth && guard < 120; guard += 1) {
+        keys.push(month);
+        month = addMonths(month, 1);
+      }
+      return keys;
+    }
+
+    function formatThaiMonth(monthKey) {
+      const date = parseDateKey(`${monthKey}-01`);
+      return date ? new Intl.DateTimeFormat("th-TH", {
+        month: "short", year: "2-digit", timeZone: "UTC"
+      }).format(date) : monthKey;
+    }
+
+    function renderCharts(totalBuy, lineTotal, period) {
+      if (!window.Chart) return;
+      Chart.defaults.font.family = '"Noto Sans Thai", "Tahoma", system-ui, sans-serif';
+      Chart.defaults.color = "#68776f";
+      const monthKeys = monthKeysForPeriod(period);
+      const labels = monthKeys.map(formatThaiMonth);
+      const monthly = Array(monthKeys.length).fill(0);
+      state.filteredTransactions.forEach((transaction) => {
+        const chartIndex = monthKeys.indexOf(transaction.trans_date.slice(0, 7));
+        if (chartIndex >= 0) monthly[chartIndex] += transaction.share_buy;
+      });
+
+      destroyChart("monthly");
+      state.charts.monthly = new Chart($("#monthlyChart"), {
+        type: "bar",
+        data: { labels, datasets: [{ label: `ยอดซื้อหุ้น · ${period.label}`, data: monthly, backgroundColor: "#17835c", borderRadius: 7, maxBarThickness: 38 }] },
+        options: chartOptions({ currency: true })
+      });
+
+      destroyChart("share");
+      state.charts.share = new Chart($("#shareChart"), {
+        type: "doughnut",
+        data: {
+          labels: ["ผ่าน LINE", "ช่องทางอื่น/ยอดส่วนที่เหลือ"],
+          datasets: [{ data: [lineTotal, Math.max(0, totalBuy - lineTotal)], backgroundColor: ["#f0a522", "#17835c"], borderWidth: 0, hoverOffset: 4 }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, cutout: "68%", plugins: { legend: { position: "bottom", labels: { boxWidth: 10, usePointStyle: true } }, tooltip: { callbacks: { label: (ctx) => `${ctx.label}: ${money(ctx.raw)} บาท` } } } }
+      });
+
+      const groupMap = new Map();
+      state.filtered.forEach((row) => {
+        const item = groupMap.get(row.member_group) || { buy: 0, line: 0, buyers: 0, lineBuyers: 0 };
+        item.buy += row.share_buy;
+        item.line += row.line_total;
+        if (row.share_buy > 0) item.buyers += 1;
+        if (row.line_total > 0) item.lineBuyers += 1;
+        groupMap.set(row.member_group, item);
+      });
+      const groups = [...groupMap.keys()].sort((a, b) => {
+        const buyDiff = groupMap.get(b).buy - groupMap.get(a).buy;
+        return buyDiff || naturalCompare(a, b);
+      });
+
+      // เพิ่มความสูงตามจำนวนกลุ่ม ป้องกันชื่อกลุ่ม/แท่งกราฟซ้อนกัน
+      const groupChartHeight = Math.max(340, groups.length * 58 + 90);
+      $("#groupChartBox").style.height = `${groupChartHeight}px`;
+
+      const groupBuyTotal = groups.reduce((sum, group) => sum + groupMap.get(group).buy, 0);
+      const groupLineTotal = groups.reduce((sum, group) => sum + groupMap.get(group).line, 0);
+      $("#groupSummary").innerHTML = groups.length
+        ? `<span>จำนวนกลุ่ม <strong>${money(groups.length)}</strong></span>`
+          + `<span>ยอดซื้อรวม <strong>${money(groupBuyTotal)} บาท</strong></span>`
+          + `<span>ผ่าน LINE <strong>${money(groupLineTotal)} บาท</strong></span>`
+        : `<span>ไม่พบข้อมูลกลุ่มตามตัวกรอง</span>`;
+
+      destroyChart("group");
+      state.charts.group = new Chart($("#groupChart"), {
+        type: "bar",
+        data: {
+          labels: groups.map((group) => `กลุ่ม ${group}`),
+          datasets: [
+            {
+              label: "ซื้อรวม",
+              data: groups.map((group) => groupMap.get(group).buy),
+              backgroundColor: "#17835c",
+              borderRadius: 6,
+              maxBarThickness: 18,
+              categoryPercentage: 0.72,
+              barPercentage: 0.86
+            },
+            {
+              label: "ผ่าน LINE",
+              data: groups.map((group) => groupMap.get(group).line),
+              backgroundColor: "#f0a522",
+              borderRadius: 6,
+              maxBarThickness: 18,
+              categoryPercentage: 0.72,
+              barPercentage: 0.86
+            }
+          ]
+        },
+        options: {
+          ...chartOptions({ currency: true, horizontal: true }),
+          // กราฟแนวนอนต้องเลือกหมวดตามแกน Y ไม่ใช่แกน X
+          // เพื่อให้เมาส์อยู่แถวกลุ่มใด Tooltip ก็อ้างอิงกลุ่มนั้นเสมอ
+          interaction: { mode: "index", axis: "y", intersect: false },
+          layout: { padding: { left: 4, right: 12, top: 4, bottom: 4 } },
+          scales: {
+            x: {
+              beginAtZero: true,
+              grid: { color: "#edf1ef" },
+              ticks: { callback: compactMoney }
+            },
+            y: {
+              grid: { display: false },
+              ticks: {
+                autoSkip: false,
+                padding: 8,
+                font: { size: 12, weight: "600" }
+              }
+            }
+          },
+          plugins: {
+            legend: {
+              display: true,
+              position: "top",
+              align: "start",
+              labels: { boxWidth: 10, usePointStyle: true, padding: 16 }
+            },
+            tooltip: {
+              mode: "index",
+              axis: "y",
+              intersect: false,
+              callbacks: {
+                title: (items) => {
+                  const index = items[0]?.dataIndex;
+                  if (index == null) return "";
+                  const groupKey = groups[index];
+                  return groupKey == null ? "" : `กลุ่ม ${groupKey}`;
+                },
+                label: (ctx) => {
+                  const value = number(ctx.raw);
+                  const groupKey = groups[ctx.dataIndex];
+                  const group = groupMap.get(groupKey) || { buy: 0, buyers: 0, lineBuyers: 0 };
+                  if (ctx.datasetIndex === 1 && group.buy > 0) {
+                    return `${ctx.dataset.label}: ${money(value)} บาท (${percent(value / group.buy * 100)})`;
+                  }
+                  return `${ctx.dataset.label}: ${money(value)} บาท`;
+                },
+                afterBody: (items) => {
+                  const index = items[0]?.dataIndex;
+                  if (index == null) return [];
+                  const groupKey = groups[index];
+                  const group = groupMap.get(groupKey) || { buyers: 0, lineBuyers: 0 };
+                  return [
+                    `ผู้ซื้อหุ้น: ${money(group.buyers)} คน`,
+                    `ผู้ซื้อผ่าน LINE: ${money(group.lineBuyers)} คน`
+                  ];
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function chartOptions({ currency = false, horizontal = false } = {}) {
+      return {
+        responsive: true,
+        maintainAspectRatio: false,
+        indexAxis: horizontal ? "y" : "x",
+        interaction: { mode: "index", intersect: false },
+        scales: {
+          x: { grid: { display: false }, ticks: horizontal && currency ? { callback: compactMoney } : {} },
+          y: { beginAtZero: true, grid: { color: "#edf1ef" }, ticks: !horizontal && currency ? { callback: compactMoney } : {} }
+        },
+        plugins: {
+          legend: { display: horizontal, position: "bottom", labels: { boxWidth: 10, usePointStyle: true } },
+          tooltip: currency ? { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${money(ctx.raw)} บาท` } } : {}
+        }
+      };
+    }
+
+    function compactMoney(value) {
+      const n = number(value);
+      if (Math.abs(n) >= 1000000) return `${money(n / 1000000, 1)} ล.`;
+      if (Math.abs(n) >= 1000) return `${money(n / 1000, 0)} พ.`;
+      return money(n);
+    }
+
+    function renderMemberTable() {
+      const rows = [...state.filtered].sort((a, b) => b.share_buy - a.share_buy || b.share_balance - a.share_balance);
+      const periodText = state.selectedPeriod?.label || "ช่วงเวลาที่เลือก";
+      $("#memberTableSubtitle").textContent = `${periodText} · แสดง 20 อันดับแรกจาก ${money(rows.length)} คน · ส่งออก CSV ได้ครบตามตัวกรอง`;
+      const body = $("#memberTableBody");
+      if (!rows.length) {
+        body.innerHTML = '<tr><td colspan="9" class="empty-cell">ไม่พบข้อมูลตามตัวกรอง</td></tr>';
+        return;
+      }
+      body.innerHTML = rows.slice(0, 20).map((row) => `
+        <tr>
+          <td>${escapeHtml(row.member_id)}</td>
+          <td class="member-name">${escapeHtml(row.member_name)}</td>
+          <td><span class="badge">${escapeHtml(row.member_group)}</span></td>
+          <td>${escapeHtml(row.member_status)}</td>
+          <td class="num">${money(row.share_begin)}</td>
+          <td class="num">${money(row.share_buy)}</td>
+          <td class="num">${money(row.share_sell)}</td>
+          <td class="num"><strong>${money(row.share_balance)}</strong></td>
+          <td class="num">${row.line_total > 0 ? `<span class="badge line">${money(row.line_total)}</span>` : "—"}</td>
+        </tr>`).join("");
+    }
+
+    function renderOrderTable() {
+      const grouped = new Map();
+
+      state.filteredOrders.forEach((order) => {
+        const memberId = text(order.member_id);
+        const memberName = text(order.member_name) || "ยังจับคู่ไม่ได้";
+        // ใช้ member_id เป็นหลักเพื่อไม่รวมคนละคนที่ชื่อซ้ำกัน
+        // ถ้าจับคู่สมาชิกไม่ได้จึงค่อยใช้ชื่อเป็น fallback
+        const personKey = memberId || `name:${memberName.toLocaleLowerCase("th")}`;
+        const dateKey = bangkokDateKey(order.completed_at);
+        const key = `${personKey}__${dateKey}`;
+        const current = grouped.get(key) || {
+          dateKey,
+          completed_at: order.completed_at,
+          member_id: memberId,
+          member_name: memberName,
+          member_group: text(order.member_group) || "—",
+          total_price: 0,
+          order_count: 0
+        };
+
+        current.total_price += number(order.total_price);
+        current.order_count += 1;
+        if (new Date(order.completed_at) > new Date(current.completed_at)) {
+          current.completed_at = order.completed_at;
+        }
+        grouped.set(key, current);
+      });
+
+      const rows = [...grouped.values()].sort((a, b) =>
+        new Date(b.completed_at) - new Date(a.completed_at)
+        || naturalCompare(a.member_name, b.member_name)
+      );
+
+      const body = $("#orderTableBody");
+      if (!rows.length) {
+        body.innerHTML = '<tr><td colspan="5" class="empty-cell">ไม่พบรายการ LINE ตามตัวกรอง</td></tr>';
+        return;
+      }
+
+      body.innerHTML = rows.slice(0, 15).map((row) => `
+        <tr>
+          <td>${escapeHtml(formatThaiDate(row.completed_at, false))}</td>
+          <td>${money(row.order_count)} รายการ</td>
+          <td class="member-name">${escapeHtml(row.member_name)}</td>
+          <td>${escapeHtml(row.member_group)}</td>
+          <td class="num"><span class="badge line">${money(row.total_price)} บาท</span></td>
+        </tr>`).join("");
+    }
+
+    function csvCell(value) {
+      return `"${String(value ?? "").replace(/"/g, '""')}"`;
+    }
+
+    function exportCsv() {
+      const period = state.selectedPeriod;
+      if (!period) return;
+      const headers = ["member_id", "member_name", "group", "status", "share_begin", "share_buy", "share_sell", "share_balance", "line_total"];
+      const lines = [headers.map(csvCell).join(",")];
+      [...state.filtered].sort((a, b) => naturalCompare(a.member_id, b.member_id)).forEach((row) => {
+        lines.push([
+          row.member_id, row.member_name, row.member_group, row.member_status,
+          row.share_begin, row.share_buy, row.share_sell, row.share_balance, row.line_total
+        ].map(csvCell).join(","));
+      });
+      const blob = new Blob(["\uFEFF" + lines.join("\r\n")], { type: "text/csv;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `member-share-kpi-${period.mode}-${period.start}-to-${addDays(period.endExclusive, -1)}.csv`;
+      link.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function bindEvents() {
+      $("#periodMode").addEventListener("change", () => {
+        updatePeriodControls();
+        render();
+      });
+      [
+        "#yearFilter", "#quarterFilter", "#monthFilter", "#startDateFilter", "#endDateFilter",
+        "#groupFilter", "#statusFilter", "#channelFilter"
+      ].forEach((selector) => {
+        $(selector).addEventListener("change", render);
+      });
+      let searchTimer;
+      $("#searchFilter").addEventListener("input", () => {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(render, 180);
+      });
+      $("#clearFilterButton").addEventListener("click", () => {
+        const today = bangkokDateKey();
+        const currentFiscalYear = fiscalYearOfDateKey(today);
+        const availableYears = [...$("#yearFilter").options].map((option) => Number(option.value));
+        const selectedYear = availableYears.includes(currentFiscalYear) ? currentFiscalYear : availableYears[0];
+        $("#periodMode").value = "year";
+        $("#yearFilter").value = selectedYear || "";
+        $("#quarterFilter").value = String(fiscalQuarterOf(today) || 1);
+        $("#monthFilter").value = today.slice(0, 7);
+        const bounds = fiscalYearBounds(selectedYear || currentFiscalYear);
+        $("#startDateFilter").value = bounds.start;
+        $("#endDateFilter").value = today;
+        $("#groupFilter").value = "";
+        $("#statusFilter").value = "";
+        $("#channelFilter").value = "all";
+        $("#searchFilter").value = "";
+        updatePeriodControls();
+        render();
+      });
+      $("#reloadButton").addEventListener("click", loadData);
+      $("#exportButton").addEventListener("click", exportCsv);
+    }
+
+    async function init() {
+      bindEvents();
+      if (!configIsReady()) {
+        const banner = $("#qualityBanner");
+        banner.classList.remove("ok");
+        banner.innerHTML = "<strong>ยังไม่ได้ตั้งค่า Supabase:</strong><span>กรุณาตรวจสอบ SUPABASE_URL และ SUPABASE_ANON_KEY ใน CONFIG</span>";
+        return;
+      }
+      if (!window.supabase) {
+        const banner = $("#qualityBanner");
+        banner.classList.remove("ok");
+        banner.textContent = "โหลด Supabase library ไม่สำเร็จ กรุณาตรวจสอบอินเทอร์เน็ต";
+        return;
+      }
+      state.client = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+      await loadData();
+    }
+
+    init();
+  </script>
+</body>
+</html>
