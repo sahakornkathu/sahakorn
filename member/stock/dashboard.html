@@ -708,7 +708,7 @@
         let mismatches = 0;
         let compared = 0;
         let transactionCount = 0;
-        state.members.filter((member) => isActiveMember(member.member_status)).forEach((member) => {
+        state.members.forEach((member) => {
           const key = summaryKey(member.member_id, year);
           const summary = state.summaryByMemberYear.get(key);
           const transactions = state.transactionTotalsByMemberYear.get(key) || { buy: 0, sell: 0, count: 0 };
@@ -865,12 +865,12 @@
       if (!$("#endDateFilter").value) $("#endDateFilter").value = today;
       $("#quarterFilter").value = String(fiscalQuarterOf(today) || 1);
 
-      const relevant = state.members.filter((member) => isActiveMember(member.member_status));
+      const relevant = state.members;
       optionList($("#groupFilter"), [...new Set(relevant.map((row) => text(row.member_group)).filter(Boolean))].sort(naturalCompare), "ทุกกลุ่ม");
 
       const statusSelect = $("#statusFilter");
       const statuses = [...new Set(relevant.map((row) => text(row.member_status)).filter(Boolean))].sort(naturalCompare);
-      optionList(statusSelect, statuses, "ทุกสถานะสมาชิกปัจจุบัน");
+      optionList(statusSelect, statuses, "ทุกสถานะ");
       updatePeriodControls();
     }
 
@@ -964,7 +964,6 @@
       });
 
       const summaries = unsupported ? [] : state.members
-        .filter((member) => isActiveMember(member.member_status))
         .map((member) => {
           const memberId = member.member_id;
           let opening;
