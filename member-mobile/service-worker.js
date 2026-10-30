@@ -1,4 +1,4 @@
-const CACHE = 'kathu-member-mobile-launch-v2';
+const CACHE = 'kathu-member-mobile-committee-v3';
 const BASE = '/sahakorn/member-mobile/';
 const HOME = BASE + 'index.html';
 

@@ -85,6 +85,10 @@
     <select id="member_status"><option value="">--</option><option>สมาชิก</option><option>สมาชิกสมทบ</option><option>ลาออก</option><option>เสียชีวิต</option></select>
   </div>
 
+  <div class="field"><label>ตำแหน่งกรรมการ</label>
+    <input id="committee_position" type="text" maxlength="100" placeholder="เว้นว่างหากไม่ใช่กรรมการ">
+  </div>
+
   <div class="field"><label>สถานภาพสมรส</label>
     <select id="marital_status"><option value="">--</option><option>โสด</option><option>สมรส</option></select>
   </div>
@@ -166,6 +170,7 @@
   <th>โทร</th>
   <th>เพศ</th>
   <th>สถานะ</th>
+  <th>ตำแหน่งกรรมการ</th>
   <th>จัดการ</th>
 </tr>
 </thead>
@@ -232,6 +237,7 @@ form.addEventListener('submit',async e=>{
   e.preventDefault()
   const data={}
   Array.from(form.elements).forEach(el=>{ if(el.id) data[el.id]=el.value||null })
+  data.committee_position=String(data.committee_position||'').trim()||null
 
   const { error } = await db.from('members').upsert([data],{onConflict:'member_id'})
   if(error){ alert(error.message); return }
@@ -357,7 +363,7 @@ async function loadMembers(){
     const joinToValue = fJoinTo?.value || ''
 
     let q=db.from('members')
-      .select('member_id,title,first_name,last_name,group,phone,gender,member_status',{count:'exact'})
+      .select('member_id,title,first_name,last_name,group,phone,gender,member_status,committee_position',{count:'exact'})
       .order('member_id')
 
     // member_id ในฐานข้อมูลเป็น text → ใช้ ilike เพื่อค้นหาได้ทั้งเต็มรหัสและบางส่วน
@@ -397,7 +403,7 @@ async function loadMembers(){
     if(!data || data.length === 0){
       rows.innerHTML = `
         <tr class="member-row">
-          <td colspan="7" class="p-6 text-center text-slate-500">
+          <td colspan="8" class="p-6 text-center text-slate-500">
             ไม่พบข้อมูลสมาชิกตามเงื่อนไขที่ค้นหา
           </td>
         </tr>`
@@ -424,6 +430,7 @@ async function loadMembers(){
 <td data-label="โทร">${escapeHtml(m.phone||'-')}</td>
 <td data-label="เพศ">${escapeHtml(m.gender||'-')}</td>
 <td data-label="สถานะ"><span class="member-status-badge">${escapeHtml(m.member_status||'-')}</span></td>
+<td data-label="ตำแหน่งกรรมการ">${escapeHtml(m.committee_position||'-')}</td>
 <td data-label="จัดการ" class="member-actions-cell">
   <div class="member-row-actions">
     <button type="button"
@@ -455,7 +462,7 @@ async function loadMembers(){
     if(rows){
       rows.innerHTML = `
         <tr class="member-row">
-          <td colspan="7" class="p-5 text-center text-red-600">
+          <td colspan="8" class="p-5 text-center text-red-600">
             โหลดข้อมูลสมาชิกไม่สำเร็จ: ${escapeHtml(err?.message || err)}
           </td>
         </tr>`
@@ -545,6 +552,7 @@ window.viewMember = async function(id){
     <div>วันเกิด : ${show(data.birthday)}</div>
     <div>อายุ : ${show(data.age)}</div>
     <div>สถานะสมาชิก : ${show(data.member_status)}</div>
+    <div>ตำแหน่งกรรมการ : ${show(data.committee_position)}</div>
     <div>วันที่สมัคร : ${show(data.join_date)}</div>
   </div>`
 
@@ -657,7 +665,7 @@ window.printMemberReport = async ()=>{
 
   while (true) {
     let q = db.from('members')
-      .select('member_id,title,first_name,last_name,group,id_card,house_no,moo,street,soi,village,subdistrict,district,province,postal_code,member_status')
+      .select('member_id,title,first_name,last_name,group,id_card,house_no,moo,street,soi,village,subdistrict,district,province,postal_code,member_status,committee_position')
 
     // ใช้ตัวกรองเดียวกับหน้าค้นหา
     if(fMemberId.value) q=q.eq('member_id',fMemberId.value)
@@ -738,6 +746,7 @@ window.printMemberReport = async ()=>{
   <td>${escapeHtml(r.id_card || '-')}</td>
   <td class="address">${escapeHtml(makeAddress(r) || '-')}</td>
   <td>${escapeHtml(r.member_status || '-')}</td>
+  <td>${escapeHtml(r.committee_position || '-')}</td>
 </tr>
 `).join('')
 
@@ -805,14 +814,15 @@ th{
   font-weight:bold;
 }
 
-th:nth-child(1), td:nth-child(1){width:8%}
-th:nth-child(2), td:nth-child(2){width:8%}
-th:nth-child(3), td:nth-child(3){width:11%}
-th:nth-child(4), td:nth-child(4){width:13%}
-th:nth-child(5), td:nth-child(5){width:8%}
-th:nth-child(6), td:nth-child(6){width:15%}
-th:nth-child(7), td:nth-child(7){width:27%}
-th:nth-child(8), td:nth-child(8){width:10%}
+th:nth-child(1), td:nth-child(1){width:7%}
+th:nth-child(2), td:nth-child(2){width:7%}
+th:nth-child(3), td:nth-child(3){width:10%}
+th:nth-child(4), td:nth-child(4){width:12%}
+th:nth-child(5), td:nth-child(5){width:7%}
+th:nth-child(6), td:nth-child(6){width:14%}
+th:nth-child(7), td:nth-child(7){width:24%}
+th:nth-child(8), td:nth-child(8){width:9%}
+th:nth-child(9), td:nth-child(9){width:10%}
 
 .address{
   text-align:left;
@@ -856,6 +866,7 @@ tr{
         <th>เลขบัตรประชาชน</th>
         <th>ที่อยู่</th>
         <th>สถานะสมาชิก</th>
+        <th>ตำแหน่งกรรมการ</th>
       </tr>
     </thead>
     <tbody>
