@@ -1,0 +1,318 @@
+/* Shared light/dark theme for every member web and mobile page.
+   Palette follows the KPI dashboard: cooperative green, quiet surfaces and clear data contrast. */
+:root {
+  color-scheme: light;
+  --member-green-950: #073d2a;
+  --member-green-900: #0b4b34;
+  --member-green-800: #126447;
+  --member-green-700: #17835c;
+  --member-green-600: #1a9a69;
+  --member-green-100: #dff5ea;
+  --member-green-50: #f1fbf6;
+  --member-amber-100: #fff2d6;
+  --member-red-100: #ffe6e8;
+  --member-canvas: #f3f7f5;
+  --member-surface: #ffffff;
+  --member-surface-soft: #f6f9f7;
+  --member-input: #ffffff;
+  --member-ink: #17231e;
+  --member-muted: #68776f;
+  --member-line: #dfe8e3;
+  --member-shadow: 0 12px 36px rgba(19, 69, 49, .08);
+
+  /* Dashboard-compatible aliases. */
+  --ink: var(--member-ink);
+  --muted: var(--member-muted);
+  --line: var(--member-line);
+  --surface: var(--member-surface);
+  --canvas: var(--member-canvas);
+  --green-950: var(--member-green-950);
+  --green-900: var(--member-green-900);
+  --green-800: var(--member-green-800);
+  --green-700: var(--member-green-700);
+  --green-600: var(--member-green-600);
+  --green-100: var(--member-green-100);
+  --green-50: var(--member-green-50);
+  --amber-100: var(--member-amber-100);
+  --red-100: var(--member-red-100);
+  --shadow: var(--member-shadow);
+}
+
+html[data-member-theme="dark"] {
+  color-scheme: dark;
+  --member-green-950: #061c13;
+  --member-green-900: #0a3b2a;
+  --member-green-800: #126447;
+  --member-green-700: #4ade9a;
+  --member-green-600: #34c98a;
+  --member-green-100: #173d2e;
+  --member-green-50: #0f2d22;
+  --member-amber-100: #3b2c0e;
+  --member-red-100: #3b171c;
+  --member-canvas: #07120e;
+  --member-surface: #10231b;
+  --member-surface-soft: #0c1d16;
+  --member-input: #091912;
+  --member-ink: #edf7f2;
+  --member-muted: #9fb6aa;
+  --member-line: #29483b;
+  --member-shadow: 0 14px 38px rgba(0, 0, 0, .28);
+}
+
+html[data-member-theme] {
+  min-height: 100%;
+  background: var(--member-canvas) !important;
+}
+
+html[data-member-theme] body {
+  min-height: 100%;
+  background: var(--member-canvas) !important;
+  color: var(--member-ink) !important;
+  transition: background-color .2s ease, color .2s ease;
+}
+
+html[data-member-theme] :where(.box, .card, .panel, .filters, .kpi-card, .mini-card,
+  .summary, .share-card, .share-summary-card, .report-row, .dark-card, .dark-row,
+  .member-list-box, .filter-box, .tabs, .menu-item, .stat-card, .content-card,
+  .form-card, .table-container, .modal-content, .section-card, .admin-card,
+  .glass-card, [class*="-card"]) {
+  background-color: var(--member-surface) !important;
+  border-color: var(--member-line) !important;
+  box-shadow: var(--member-shadow);
+}
+
+html[data-member-theme] :where(.mobile-nav, .topbar) {
+  color: #fff !important;
+  background: rgba(7, 61, 42, .97) !important;
+  border-color: rgba(255, 255, 255, .16) !important;
+}
+
+html[data-member-theme="dark"] :where(.mobile-nav, .topbar) {
+  background: rgba(6, 28, 19, .98) !important;
+}
+
+html[data-member-theme] .header-bg {
+  background:
+    radial-gradient(circle at 90% 10%, rgba(255,255,255,.16), transparent 28%),
+    linear-gradient(135deg, var(--member-green-950), var(--member-green-900), var(--member-green-800)) !important;
+}
+
+html[data-member-theme] :where(input:not([type="checkbox"]):not([type="radio"]), select, textarea,
+  .input, .mobile-input, .dark-input, .filter-select) {
+  color: var(--member-ink) !important;
+  background-color: var(--member-input) !important;
+  border-color: var(--member-line) !important;
+}
+
+html[data-member-theme] :where(input, select, textarea)::placeholder {
+  color: var(--member-muted) !important;
+  opacity: .85;
+}
+
+html[data-member-theme] :where(option) {
+  color: var(--member-ink);
+  background: var(--member-input);
+}
+
+html[data-member-theme] :where(label, .dark-field label, .filter label, .kpi-label,
+  .kpi-unit, .kpi-foot, .panel-subtitle, .updated, .footer-note, .env-box,
+  .dark-kv b, .share-summary-label) {
+  color: var(--member-muted) !important;
+}
+
+html[data-member-theme] :where(.title, .dark-title, .panel-title, .share-title,
+  .member-name, .group-summary strong, h1, h2, h3, h4) {
+  color: var(--member-ink);
+}
+
+html[data-member-theme] :where(table) {
+  color: var(--member-ink) !important;
+  background: transparent !important;
+}
+
+html[data-member-theme] :where(thead, th) {
+  color: var(--member-muted) !important;
+  background-color: var(--member-surface-soft) !important;
+  border-color: var(--member-line) !important;
+}
+
+html[data-member-theme] :where(td, tbody tr, .member-row) {
+  color: var(--member-ink) !important;
+  border-color: var(--member-line) !important;
+}
+
+html[data-member-theme] tbody tr:hover {
+  background-color: var(--member-green-50) !important;
+}
+
+html[data-member-theme] :where(.quality-banner) {
+  color: #7a5a16 !important;
+  background: var(--member-amber-100) !important;
+  border-color: color-mix(in srgb, #f0a522 50%, var(--member-line)) !important;
+}
+
+html[data-member-theme] :where(.quality-banner.ok) {
+  color: var(--member-green-700) !important;
+  background: var(--member-green-50) !important;
+  border-color: var(--member-line) !important;
+}
+
+html[data-member-theme] :where(.action-btn, .small-btn, .btn.gray, .mobile-btn.gray,
+  .mobile-btn.secondary, .secondary, .cancel-btn) {
+  color: var(--member-ink) !important;
+  background: var(--member-surface-soft) !important;
+  border-color: var(--member-line) !important;
+}
+
+html[data-member-theme] :where(a:not(.mobile-nav a)) {
+  color: var(--member-green-700);
+}
+
+html[data-member-theme] :where(.swal2-popup) {
+  color: var(--member-ink) !important;
+  background: var(--member-surface) !important;
+}
+
+html[data-member-theme] :where(.swal2-title, .swal2-html-container, .swal2-label) {
+  color: var(--member-ink) !important;
+}
+
+html[data-member-theme] :where(.swal2-input, .swal2-select, .swal2-textarea) {
+  color: var(--member-ink) !important;
+  background: var(--member-input) !important;
+  border-color: var(--member-line) !important;
+}
+
+/* Tailwind utility backgrounds/text used by the legacy member pages. */
+html[data-member-theme] :where(.bg-white, [class*="bg-white"], .bg-slate-50,
+  [class*="bg-slate-50"], .bg-gray-50, [class*="bg-gray-50"], .bg-blue-50,
+  [class*="bg-blue-50"]) {
+  background-color: var(--member-surface) !important;
+}
+
+html[data-member-theme] :where(.bg-blue-100, [class*="bg-blue-100"], .bg-slate-100,
+  [class*="bg-slate-100"], .bg-gray-100, [class*="bg-gray-100"]) {
+  background-color: var(--member-surface-soft) !important;
+}
+
+html[data-member-theme="dark"] :where(.text-slate-900, .text-slate-800, .text-slate-700,
+  .text-gray-900, .text-gray-800, .text-gray-700, [class*="text-slate-8"],
+  [class*="text-slate-7"], [class*="text-gray-8"], [class*="text-gray-7"]) {
+  color: var(--member-ink) !important;
+}
+
+html[data-member-theme="dark"] :where(.text-slate-600, .text-slate-500, .text-slate-400,
+  .text-gray-600, .text-gray-500, .text-gray-400, [class*="text-slate-5"],
+  [class*="text-slate-4"], [class*="text-gray-5"], [class*="text-gray-4"]) {
+  color: var(--member-muted) !important;
+}
+
+html[data-member-theme] :where(.border-slate-100, .border-slate-200, .border-slate-300,
+  .border-gray-100, .border-gray-200, .border-gray-300, .border-blue-100,
+  .border-blue-200, [class*="border-slate-"], [class*="border-gray-"],
+  [class*="border-blue-"]) {
+  border-color: var(--member-line) !important;
+}
+
+/* Pages that were formerly hard-coded dark now support both modes. */
+html[data-member-theme="light"] :where(.dark-card, .dark-row) {
+  color: var(--member-ink) !important;
+  background: var(--member-surface) !important;
+}
+
+html[data-member-theme="light"] :where(.dark-title) {
+  color: var(--member-green-700) !important;
+}
+
+html[data-member-theme="light"] :where(.dark-input) {
+  color: var(--member-ink) !important;
+  background: var(--member-input) !important;
+}
+
+html[data-member-theme="dark"] :where(.member-status-badge, .badge) {
+  color: #8ff0bd !important;
+  background: var(--member-green-100) !important;
+}
+
+html[data-member-theme="dark"] :where(.badge.line) {
+  color: #ffd77d !important;
+  background: var(--member-amber-100) !important;
+}
+
+html[data-member-theme] ::selection {
+  color: #fff;
+  background: var(--member-green-700);
+}
+
+html[data-member-theme="dark"] {
+  scrollbar-color: var(--member-line) var(--member-canvas);
+}
+
+.member-theme-toggle {
+  position: fixed !important;
+  right: max(14px, env(safe-area-inset-right)) !important;
+  bottom: max(14px, env(safe-area-inset-bottom)) !important;
+  z-index: 2147483000 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 7px !important;
+  min-width: 48px !important;
+  min-height: 48px !important;
+  width: auto !important;
+  height: auto !important;
+  margin: 0 !important;
+  padding: 10px 14px !important;
+  border: 1px solid rgba(255,255,255,.24) !important;
+  border-radius: 999px !important;
+  color: #fff !important;
+  background: linear-gradient(145deg, var(--member-green-600), var(--member-green-950)) !important;
+  box-shadow: 0 10px 30px rgba(0,0,0,.28) !important;
+  font: 750 13px/1.1 "Noto Sans Thai", "Sarabun", system-ui, sans-serif !important;
+  cursor: pointer !important;
+  user-select: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+  transition: transform .16s ease, box-shadow .16s ease !important;
+}
+
+.member-theme-toggle:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 14px 34px rgba(0,0,0,.34) !important;
+}
+
+.member-theme-toggle:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--member-green-600) 45%, white) !important;
+  outline-offset: 3px !important;
+}
+
+.member-theme-toggle__icon {
+  display: inline-grid;
+  width: 20px;
+  height: 20px;
+  place-items: center;
+  font-size: 18px;
+  line-height: 1;
+}
+
+@media (max-width: 640px) {
+  .member-theme-toggle {
+    width: 48px !important;
+    min-width: 48px !important;
+    padding: 0 !important;
+  }
+  .member-theme-toggle__label { display: none !important; }
+}
+
+@media print {
+  .member-theme-toggle { display: none !important; }
+  html[data-member-theme], html[data-member-theme] body {
+    color: #000 !important;
+    background: #fff !important;
+  }
+  html[data-member-theme] :where(.box, .card, .panel, .filters, .kpi-card, .mini-card,
+    .summary, .share-card, .report-row, .dark-card, .dark-row, [class*="-card"]) {
+    color: #000 !important;
+    background: #fff !important;
+    box-shadow: none !important;
+  }
+}

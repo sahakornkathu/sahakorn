@@ -1,4 +1,4 @@
-const CACHE = 'kathu-member-mobile-committee-v3';
+const CACHE = 'kathu-member-mobile-theme-v4';
 const BASE = '/sahakorn/member-mobile/';
 const HOME = BASE + 'index.html';
 
@@ -14,7 +14,9 @@ const LOCAL = [
   BASE + 'manifest.json',
   BASE + 'icons/icon-192.png',
   BASE + 'icons/icon-512.png',
-  BASE + 'icons/icon-maskable-512.png'
+  BASE + 'icons/icon-maskable-512.png',
+  '/sahakorn/member/member-theme.css?v=theme-1',
+  '/sahakorn/member/member-theme.js?v=theme-1'
 ];
 
 self.addEventListener('install', event => {

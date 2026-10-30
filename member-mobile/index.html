@@ -78,7 +78,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <link rel="apple-touch-icon" href="./icons/icon-192.png">
 <link rel="stylesheet" href="./mobile.css">
-<style>.install-mobile{width:100%;min-height:50px;border:0;border-radius:14px;background:white;color:#166534;font-size:16px;font-weight:850;box-shadow:0 8px 20px rgba(0,0,0,.15);margin-top:16px}</style></head>
+<style>.install-mobile{width:100%;min-height:50px;border:0;border-radius:14px;background:white;color:#166534;font-size:16px;font-weight:850;box-shadow:0 8px 20px rgba(0,0,0,.15);margin-top:16px}</style><link rel="stylesheet" href="../member/member-theme.css?v=theme-1">
+<script src="../member/member-theme.js?v=theme-1"></script>
+</head>
 
 
 <body class="min-h-screen bg-slate-50 text-slate-800">
@@ -1043,6 +1045,6 @@
     </main>
 
 
-<script>(()=>{let p=null;const b=document.getElementById('installBtn'),h=document.getElementById('installHint');const standalone=matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;if(standalone&&b){b.style.display='none';if(h)h.style.display='none'}if('serviceWorker'in navigator){addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js?v=committee-v3',{scope:'/sahakorn/member-mobile/'}).catch(console.error))}addEventListener('beforeinstallprompt',e=>{e.preventDefault();p=e;if(h)h.textContent='พร้อมติดตั้งแล้ว กดปุ่มด้านบนได้เลย'});b?.addEventListener('click',async()=>{if(/iphone|ipad|ipod/i.test(navigator.userAgent)){alert('iPhone/iPad: เปิดด้วย Safari → Share → เพิ่มไปยังหน้าจอโฮม');return}if(p){p.prompt();await p.userChoice;p=null;return}alert('Chrome: แตะเมนู ⋮ → ติดตั้งแอป หรือ เพิ่มไปยังหน้าจอหลัก')});addEventListener('appinstalled',()=>{if(b)b.style.display='none';if(h)h.style.display='none'})})();</script>
+<script>(()=>{let p=null;const b=document.getElementById('installBtn'),h=document.getElementById('installHint');const standalone=matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;if(standalone&&b){b.style.display='none';if(h)h.style.display='none'}if('serviceWorker'in navigator){addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js?v=theme-v4',{scope:'/sahakorn/member-mobile/'}).catch(console.error))}addEventListener('beforeinstallprompt',e=>{e.preventDefault();p=e;if(h)h.textContent='พร้อมติดตั้งแล้ว กดปุ่มด้านบนได้เลย'});b?.addEventListener('click',async()=>{if(/iphone|ipad|ipod/i.test(navigator.userAgent)){alert('iPhone/iPad: เปิดด้วย Safari → Share → เพิ่มไปยังหน้าจอโฮม');return}if(p){p.prompt();await p.userChoice;p=null;return}alert('Chrome: แตะเมนู ⋮ → ติดตั้งแอป หรือ เพิ่มไปยังหน้าจอหลัก')});addEventListener('appinstalled',()=>{if(b)b.style.display='none';if(h)h.style.display='none'})})();</script>
 </body>
 </html>
